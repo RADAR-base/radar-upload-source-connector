@@ -1,4 +1,4 @@
-# RADAR Manual data upload connector
+# RADAR Manual data upload Kafka connector
 
 The manual data upload Kafka connector will have the following components:
 
