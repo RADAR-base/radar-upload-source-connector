@@ -18,21 +18,21 @@ GET /sourceTypes
 ```json
 {
   "sourceTypes": [
-	  {
-	    "name": "Mp3Audio",
-		  "contentTypes": ["application/mp3", "audio/mp3"],
-		  "topics": [
-		    "high_quality_mp3_audio",
-		    "low_quality_mp3_audio"
-	    ],
-	    "requiresTime": true
-	  },
-	  {
-	    "name": "WrittenText",
-		  "contentTypes": ["text/csv", "text/json"],
-		  "topics": ["written_text"],
-			"requiresTime": false
-	  }
+    {
+      "name": "Mp3Audio",
+      "contentTypes": ["application/mp3", "audio/mp3"],
+      "topics": [
+        "high_quality_mp3_audio",
+        "low_quality_mp3_audio"
+      ],
+      "requiresTime": true
+    },
+    {
+      "name": "WrittenText",
+      "contentTypes": ["text/csv", "text/json"],
+      "topics": ["written_text"],
+      "requiresTime": false
+    }
   ]
 }
 ```
@@ -62,13 +62,13 @@ Location: /records/{id}
 ```json
 {
   "id": 12,
-  "projectId": {projectId},
-  "userId": {userId},
+  "projectId": "radar-test",
+  "userId": "testUser",
   "name": "Gibson.mp3",
   "sourceType": "Mp3Audio", 
   "dateTime": "2019-03-04T00:00:00",
   "timeZoneOffset": 0,
-  "dateTimeAdded": "2019-03-04T01:23:45Z"
+  "dateTimeAdded": "2019-03-04T01:23:45Z",
   "dateTimeUploaded": null,
   "status": "READY",
   "logs": null,
@@ -95,18 +95,18 @@ GET /records?projectId=radar-test&userId=testUser&status=ready&limit=10&lastId=1
   "limit": 10,
   "records": [
     {
-		  "id": 12,
-		  "projectId": {projectId},
-		  "userId": {userId},
-		  "name": "Gibson.mp3",
-		  "converter": "Mp3Audio",
-		  "dateTime": "2019-03-04T00:00:00",
-		  "timeZoneOffset": 0,
-		  "dateTimeUploaded": "2019-03-04T01:23:45Z"
-		  "dateTimeCommitted": null,
-		  "status": "READY",
-		  "logs": "/records/12/logs"
-		}
+      "id": 12,
+      "projectId": "radar-test",
+      "userId": "testUser",
+      "name": "Gibson.mp3",
+      "converter": "Mp3Audio",
+      "dateTime": "2019-03-04T00:00:00",
+      "timeZoneOffset": 0,
+      "dateTimeUploaded": "2019-03-04T01:23:45Z",
+      "dateTimeCommitted": null,
+      "status": "READY",
+      "logs": "/records/12/logs"
+    }
   ]
 }
 ```
@@ -122,18 +122,18 @@ Returns
   "limit": 10,
   "records": [
     {
-		  "id": 12,
-		  "projectId": {projectId},
-		  "userId": {userId},
-		  "name": "Gibson.mp3",
-		  "converter": "Mp3Audio",
-		  "dateTime": "2019-03-04T00:00:00",
-		  "timeZoneOffset": 0,
-		  "dateTimeUploaded": "2019-03-04T01:23:45Z"
-		  "dateTimeCommitted": null,
-		  "status": "READY",
-		  "revision": 1,
-		}
+      "id": 12,
+      "projectId": "radar-test",
+      "userId": "testUser",
+      "name": "Gibson.mp3",
+      "converter": "Mp3Audio",
+      "dateTime": "2019-03-04T00:00:00",
+      "timeZoneOffset": 0,
+      "dateTimeUploaded": "2019-03-04T01:23:45Z",
+      "dateTimeCommitted": null,
+      "status": "READY",
+      "revision": 1,
+    }
   ]
 }
 ```
@@ -157,13 +157,13 @@ HTTP 200
 ```json
 {
   "id": 12,
-  "projectId": {projectId},
-  "userId": {userId},
+  "projectId": "radar-test",
+  "userId": "testUser",
   "name": "Gibson.mp3",
   "converter": "Mp3Audio",
   "dateTime": "2019-03-04T00:00:00",
   "timeZoneOffset": 0,
-  "dateTimeUploaded": "2019-03-04T01:23:45Z"
+  "dateTimeUploaded": "2019-03-04T01:23:45Z",
   "dateTimeCommitted": null,
   "status": "PROCESSING",
   "revision": 2
@@ -178,7 +178,7 @@ POST /records/{fileId}
 ```json
 {
   "revision": 2,
-  "status": "FAILED" | "SUCCEEDED"
+  "status": "FAILED | SUCCEEDED",
   "logs": "..."
 }
 ```
@@ -188,13 +188,13 @@ Returns
 ```json
 {
   "id": 12,
-  "projectId": {projectId},
-  "userId": {userId},
+  "projectId": "radar-test",
+  "userId": "testUser",
   "name": "Gibson.mp3",
   "converter": "Mp3Audio",
   "dateTime": "2019-03-04T00:00:00",
   "timeZoneOffset": 0,
-  "dateTimeUploaded": "2019-03-04T01:23:45Z"
+  "dateTimeUploaded": "2019-03-04T01:23:45Z",
   "dateTimeCommitted": null,
   "status": "SUCCEEDED",
   "revision": 3
