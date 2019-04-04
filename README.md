@@ -8,6 +8,9 @@ The manual data upload Kafka connector will have the following components:
 
 The frontend reads project settings from the ManagementPortal and uses the ManagementPortal permission system to manage projects. It can upload files with given file types to the backend and can report the status of the files. The backend stores files and file metadata, and manages updates. Finally, Kafka source connector reads file records from the data upload backend and processes them with custom converters.
 
+It will use approximately the following architecture:
+![Architecture diagram](https://github.com/RADAR-base/radar-upload-source-connector/raw/master/docs/architecture.png)
+
 ## Data upload backend
 
 The backend should have the following API calls
