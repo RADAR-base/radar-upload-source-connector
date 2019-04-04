@@ -75,7 +75,7 @@ X-Progress-ID: <random-UUID>
 Content-Type: multipart/form-data
 
 ------Boundary12345
-projectId=radar-test&userId=testUser&sourceType=Mp3Audio
+projectId=radar-test&userId=testUser&sourceType=Mp3Audio&sourceId=source
 
 ------Boundary12345
 Content-Disposition: form-data; name="fileUpload1[]"; filename="Gibson.mp3"
@@ -94,12 +94,15 @@ Location: /records/{id}
   "id": 12,
   "projectId": "radar-test",
   "userId": "testUser",
-  "name": "Gibson.mp3",
+  "sourceId": "source",
+  "time": "2019-03-04T00:00:00",
+  "fileName": "Gibson.mp3",
   "sourceType": "Mp3Audio", 
   "dateTime": "2019-03-04T00:00:00",
   "timeZoneOffset": 0,
-  "dateTimeAdded": "2019-03-04T01:23:45Z",
-  "dateTimeUploaded": null,
+  "created": "2019-03-04T01:23:45Z",
+  "modified": "2019-03-04T01:23:45Z",
+  "committed": null,
   "status": "READY",
   "statusMessage": "Data has succesfully been uploaded to the backend.",
   "logs": null,
@@ -117,11 +120,13 @@ GET /records/{id}/logs
 ...
 ```
 
+**Reset a record to initial state to allow reprocessing** POST /records/{id}/reset with empty body.
+
 **Get records for given filters**<br>
 GET /records<br>
 GET /records?projectId=radar-test&userId=testUser&status=ready&limit=10&lastId=11
 
-```
+```json
 {
   "limit": 10,
   "records": [
@@ -129,12 +134,14 @@ GET /records?projectId=radar-test&userId=testUser&status=ready&limit=10&lastId=1
       "id": 12,
       "projectId": "radar-test",
       "userId": "testUser",
-      "name": "Gibson.mp3",
+      "sourceId": "source",
+      "time": "2019-03-04T00:00:00",
+      "fileName": "Gibson.mp3",
       "converter": "Mp3Audio",
-      "dateTime": "2019-03-04T00:00:00",
       "timeZoneOffset": 0,
-      "dateTimeUploaded": "2019-03-04T01:23:45Z",
-      "dateTimeCommitted": null,
+      "created": "2019-03-04T01:23:45Z",
+      "modified": "2019-03-04T01:23:45Z",
+      "committed": null,
       "status": "READY",
       "statusMessage": "Data has succesfully been uploaded to the backend.",
       "logs": null
@@ -144,7 +151,7 @@ GET /records?projectId=radar-test&userId=testUser&status=ready&limit=10&lastId=1
 ```
 
 **For polling queued data**
-POST /poll
+POST /queue/poll
 
 ```json
 {
@@ -163,12 +170,14 @@ Returns
       "id": 12,
       "projectId": "radar-test",
       "userId": "testUser",
-      "name": "Gibson.mp3",
+      "sourceId": "source",
+      "time": "2019-03-04T00:00:00",
+      "fileName": "Gibson.mp3",
       "converter": "Mp3Audio",
-      "dateTime": "2019-03-04T00:00:00",
       "timeZoneOffset": 0,
-      "dateTimeUploaded": "2019-03-04T01:23:45Z",
-      "dateTimeCommitted": null,
+      "created": "2019-03-04T01:23:45Z",
+      "modified": "2019-03-04T01:23:45Z",
+      "committed": null,
       "status": "QUEUED",
       "statusMessage": "Data has been queued for processing.",
       "revision": 2,
@@ -178,14 +187,15 @@ Returns
 }
 ```
 
-GET /records/{fileId}/contents
+**Get file contents** GET /records/{fileId}/contents
 Content-Type: "application/mp3"
 
 **Start transaction**
-POST /records/{fileId}
+POST /queue/status
 
 ```json
 {
+  "id": 12,
   "revision": 2,
   "status": "PROCESSING",
   "statusMessage": "Data is being processed."
@@ -198,17 +208,9 @@ HTTP 200
 ```json
 {
   "id": 12,
-  "projectId": "radar-test",
-  "userId": "testUser",
-  "name": "Gibson.mp3",
-  "converter": "Mp3Audio",
-  "dateTime": "2019-03-04T00:00:00",
-  "timeZoneOffset": 0,
-  "dateTimeUploaded": "2019-03-04T01:23:45Z",
-  "dateTimeCommitted": null,
+  "revision": 3,
   "status": "PROCESSING",
   "statusMessage": "Data is being processed.",
-  "revision": 3
 }
 ```
 
@@ -216,10 +218,11 @@ or HTTP 409 Conflict if the revision does not match (i.e. another process is pro
 
 
 **Finalize transaction**
-POST /records/{fileId}
+POST /queue/status
 
 ```json
 {
+  "id": 12,
   "revision": 3,
   "status": "FAILED | SUCCEEDED",
   "statusMessage": "Cannot process data: ... | Data was successfully committed.",
@@ -234,17 +237,9 @@ Returns
 ```json
 {
   "id": 12,
-  "projectId": "radar-test",
-  "userId": "testUser",
-  "name": "Gibson.mp3",
-  "converter": "Mp3Audio",
-  "dateTime": "2019-03-04T00:00:00",
-  "timeZoneOffset": 0,
-  "dateTimeUploaded": "2019-03-04T01:23:45Z",
-  "dateTimeCommitted": null,
+  "revision": 4,
   "status": "SUCCEEDED",
   "statusMessage": "Data was successfully committed.",
-  "revision": 4,
   "logs": {
     "url": "/records/12/logs"
   }
