@@ -11,6 +11,8 @@ The frontend reads project settings from the ManagementPortal and uses the Manag
 It will use approximately the following architecture:
 ![Architecture diagram](https://github.com/RADAR-base/radar-upload-source-connector/raw/master/docs/architecture.png)
 
+[Architectural decisions for this project](https://github.com/RADAR-base/radar-upload-source-connector/blob/master/docs/adr/index.md) are separately documented.
+
 ## Data upload backend
 
 The backend should have the following API calls
@@ -37,6 +39,31 @@ GET /sourceTypes
       "requiresTime": false
     }
   ]
+}
+```
+
+**Get converter configuration**
+GET /sourceTypes/{name}
+
+```json
+{
+  "name": "Mp3Audio",
+  "contentTypes": ["application/mp3", "audio/mp3"],
+  "topics": [
+    "high_quality_mp3_audio",
+    "low_quality_mp3_audio"
+  ],
+  "requiresTime": true,
+  "settings": {
+    "projects": {
+      "radar-test": {
+        "bitRate": 44100
+      }
+    },
+    "defaults": {
+      "bitRate": 16000
+    }
+  }
 }
 ```
 
@@ -74,6 +101,7 @@ Location: /records/{id}
   "dateTimeAdded": "2019-03-04T01:23:45Z",
   "dateTimeUploaded": null,
   "status": "READY",
+  "statusMessage": "Data has succesfully been uploaded to the backend.",
   "logs": null,
   "revision": 1,
 }
@@ -108,15 +136,22 @@ GET /records?projectId=radar-test&userId=testUser&status=ready&limit=10&lastId=1
       "dateTimeUploaded": "2019-03-04T01:23:45Z",
       "dateTimeCommitted": null,
       "status": "READY",
-      "logs": "/records/12/logs"
+      "statusMessage": "Data has succesfully been uploaded to the backend.",
+      "logs": null
     }
   ]
 }
 ```
 
+**For polling queued data**
+POST /poll
 
-**For getting queued data**
-GET /records?limit=10&status=ready
+```json
+{
+  "limit": 10,
+  "supportedConverters": ["Mp3Audio", "WrittenText"]
+}
+```
 
 Returns
 
@@ -134,8 +169,10 @@ Returns
       "timeZoneOffset": 0,
       "dateTimeUploaded": "2019-03-04T01:23:45Z",
       "dateTimeCommitted": null,
-      "status": "READY",
-      "revision": 1,
+      "status": "QUEUED",
+      "statusMessage": "Data has been queued for processing.",
+      "revision": 2,
+      "logs": null
     }
   ]
 }
@@ -149,8 +186,9 @@ POST /records/{fileId}
 
 ```json
 {
-  "revision": 1,
-  "status": "PROCESSING"
+  "revision": 2,
+  "status": "PROCESSING",
+  "statusMessage": "Data is being processed."
 }
 ```
 
@@ -169,20 +207,25 @@ HTTP 200
   "dateTimeUploaded": "2019-03-04T01:23:45Z",
   "dateTimeCommitted": null,
   "status": "PROCESSING",
-  "revision": 2
+  "statusMessage": "Data is being processed.",
+  "revision": 3
 }
 ```
 
 or HTTP 409 Conflict if the revision does not match (i.e. another process is processing this file.)
+
 
 **Finalize transaction**
 POST /records/{fileId}
 
 ```json
 {
-  "revision": 2,
+  "revision": 3,
   "status": "FAILED | SUCCEEDED",
-  "logs": "..."
+  "statusMessage": "Cannot process data: ... | Data was successfully committed.",
+  "logs": {
+    "text": "..."
+  }
 }
 ```
 
@@ -200,7 +243,11 @@ Returns
   "dateTimeUploaded": "2019-03-04T01:23:45Z",
   "dateTimeCommitted": null,
   "status": "SUCCEEDED",
-  "revision": 3
+  "statusMessage": "Data was successfully committed.",
+  "revision": 4,
+  "logs": {
+    "url": "/records/12/logs"
+  }
 }
 ```
 
