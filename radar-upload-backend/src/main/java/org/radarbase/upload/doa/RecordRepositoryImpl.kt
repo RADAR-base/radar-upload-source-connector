@@ -11,6 +11,7 @@ import java.time.Instant
 import javax.persistence.EntityManager
 import javax.ws.rs.NotFoundException
 import javax.ws.rs.core.Context
+import kotlin.streams.toList
 
 
 class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepository {
@@ -96,6 +97,18 @@ class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepos
         }
         modifyNow(record.metadata)
         return@transact result
+    }
+
+    override fun poll(limit: Int): List<Record> = em.transact {
+        createQuery("SELECT r FROM Record r WHERE r.metadata.status = :status ORDER BY r.metadata.modifiedDate", Record::class.java)
+                .setParameter("status", "READY")
+                .setMaxResults(limit)
+                .resultStream
+                .peek {
+                    it.metadata.status = RecordStatus.QUEUED
+                    modifyNow(it.metadata)
+                }
+                .toList()
     }
 
     override fun readContent(id: Long): RecordContent? = em.transact {

@@ -22,4 +22,5 @@ interface RecordRepository {
     fun updateContent(record: Record, fileName: String, contentType: String, stream: InputStream, length: Long): RecordContent
     fun readMetadata(id: Long): RecordMetadata?
     fun query(limit: Int, lastId: Long, projectId: String, userId: String?, status: String?): List<Record>
+    fun poll(limit: Int): List<Record>
 }

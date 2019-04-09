@@ -13,14 +13,20 @@ import org.radarcns.auth.authorization.Permission
 import org.radarcns.auth.authorization.Permission.PROJECT_READ
 import org.radarcns.auth.authorization.Permission.SUBJECT_READ
 import java.io.InputStream
+import javax.annotation.Resource
+import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.*
 import javax.ws.rs.core.Context
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
+import javax.ws.rs.core.UriInfo
+
+
 
 @Path("/records")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Resource
 @Authenticated
 class RecordResource {
 
@@ -33,11 +39,14 @@ class RecordResource {
     @Context
     lateinit var recordMapper: RecordMapper
 
+    @Context
+    lateinit var uri: UriInfo
+
     @GET
     fun query(
             @QueryParam("projectId") projectId: String?,
             @QueryParam("userId") userId: String?,
-            @QueryParam("limit") limit: Int?,
+            @DefaultValue("10") @QueryParam("limit") limit: Int,
             @QueryParam("lastId") lastId: Long?,
             @QueryParam("status") status: String?): RecordContainerDTO {
         if (projectId == null) {
@@ -50,7 +59,7 @@ class RecordResource {
             auth.checkProjectPermission(PROJECT_READ, projectId)
         }
 
-        val imposedLimit = Math.min(limit ?: 10, 100)
+        val imposedLimit = Math.min(Math.max(limit, 1), 100)
         val records = recordRepository.query(imposedLimit, lastId ?: -1L, projectId, userId, status)
 
         return recordMapper.fromRecords(records, imposedLimit)
@@ -58,7 +67,7 @@ class RecordResource {
 
     @POST
     @NeedsPermission(Permission.Entity.MEASUREMENT, Permission.Operation.CREATE)
-    fun add(record: RecordDTO): RecordDTO {
+    fun add(record: RecordDTO, @Context response: HttpServletResponse): RecordDTO {
 
         // TODO: logic to do authorization checking
 
@@ -70,6 +79,9 @@ class RecordResource {
 
         val doaRecord = recordMapper.toRecord(record)
         val result = recordRepository.create(doaRecord)
+
+        response.status = Response.Status.CREATED.statusCode
+        response.setHeader("Location", "${uri.baseUri}/records/${record.id}")
         return recordMapper.fromRecord(result)
     }
 
@@ -82,7 +94,8 @@ class RecordResource {
             @HeaderParam("Content-Type") contentType: String,
             @HeaderParam("Content-Length") contentLength: Long,
             @PathParam("fileName") fileName: String,
-            @PathParam("recordId") recordId: Long): ContentsDTO {
+            @PathParam("recordId") recordId: Long,
+            @Context response: HttpServletResponse): ContentsDTO {
 
         // TODO: logic to do authorization checking
 
@@ -94,10 +107,22 @@ class RecordResource {
         }
 
         val content = recordRepository.updateContent(record, fileName, contentType, input, contentLength)
-        return recordMapper.fromContent(content)
+
+        val contentDto = recordMapper.fromContent(content)
+        response.status = Response.Status.CREATED.statusCode
+        response.setHeader("Location", contentDto.url)
+        return contentDto
     }
 
-    // TODO: POLL path
+    @GET
+    @Path("poll")
+    fun poll(@DefaultValue("10") @QueryParam("limit") limit: Int): RecordContainerDTO {
+        // TODO: only allow with client credentials
+
+        val imposedLimit = Math.min(Math.max(limit, 1), 100)
+
+        return recordMapper.fromRecords(recordRepository.poll(imposedLimit), imposedLimit)
+    }
 
     // TODO: get metadata path
     // TODO: update metadata path
