@@ -19,7 +19,7 @@ interface RecordRepository {
     fun delete(record: Record)
     fun update(record: Record): Record
     fun update(metadata: RecordMetadata): RecordMetadata
-    fun updateContent(record: Record, fileName: String, contentType: String, stream: InputStream, length: Long)
+    fun updateContent(record: Record, fileName: String, contentType: String, stream: InputStream, length: Long): RecordContent
     fun readMetadata(id: Long): RecordMetadata?
     fun query(limit: Int, lastId: Long, projectId: String, userId: String?, status: String?): List<Record>
 }

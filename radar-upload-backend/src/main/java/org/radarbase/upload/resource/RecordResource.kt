@@ -4,15 +4,19 @@ import org.radarbase.upload.auth.Auth
 import org.radarbase.upload.auth.Authenticated
 import org.radarbase.upload.auth.NeedsPermission
 import org.radarbase.upload.doa.RecordRepository
+import org.radarbase.upload.doa.entity.RecordStatus
+import org.radarbase.upload.dto.ContentsDTO
 import org.radarbase.upload.dto.RecordContainerDTO
 import org.radarbase.upload.dto.RecordDTO
 import org.radarbase.upload.dto.RecordMapper
 import org.radarcns.auth.authorization.Permission
 import org.radarcns.auth.authorization.Permission.PROJECT_READ
 import org.radarcns.auth.authorization.Permission.SUBJECT_READ
+import java.io.InputStream
 import javax.ws.rs.*
 import javax.ws.rs.core.Context
 import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
 
 @Path("/records")
 @Produces(MediaType.APPLICATION_JSON)
@@ -55,25 +59,47 @@ class RecordResource {
     @POST
     @NeedsPermission(Permission.Entity.MEASUREMENT, Permission.Operation.CREATE)
     fun add(record: RecordDTO): RecordDTO {
-        if (record.id != null) {
-
-        }
 
         // TODO: logic to do authorization checking
-        // TODO: logic to do data checking
 
-        // TODO: logic to add record to DB
+        // TODO: more logic to do data checking
 
-        // TODO: logic to return DB object
+        if (record.id != null) {
+            throw BadRequestException("Record ID cannot be set explicitly")
+        }
 
-        return record
+        val doaRecord = recordMapper.toRecord(record)
+        val result = recordRepository.create(doaRecord)
+        return recordMapper.fromRecord(result)
     }
 
+    @PUT
+    @Consumes("*/*")
+    @NeedsPermission(Permission.Entity.MEASUREMENT, Permission.Operation.CREATE)
+    @Path("{recordId}/contents/{fileName}")
+    fun putContents(
+            input: InputStream,
+            @HeaderParam("Content-Type") contentType: String,
+            @HeaderParam("Content-Length") contentLength: Long,
+            @PathParam("fileName") fileName: String,
+            @PathParam("recordId") recordId: Long): ContentsDTO {
 
-    // TODO: PUT path
+        // TODO: logic to do authorization checking
+
+        val record = recordRepository.read(recordId)
+                ?: throw NotFoundException("Record with ID $recordId does not exist")
+
+        if (record.metadata.status != RecordStatus.INCOMPLETE) {
+            throw WebApplicationException("Cannot add files to saved record.", Response.Status.CONFLICT)
+        }
+
+        val content = recordRepository.updateContent(record, fileName, contentType, input, contentLength)
+        return recordMapper.fromContent(content)
+    }
 
     // TODO: POLL path
 
+    // TODO: get metadata path
     // TODO: update metadata path
 
     // TODO: read file contents path
