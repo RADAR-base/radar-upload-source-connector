@@ -57,11 +57,11 @@ internal class RecordRepositoryImplTest {
             time = LocalDateTime.parse("2019-01-01T00:00:00")
             timeZoneOffset = 3600
 
-            content = RecordContent().apply {
+            contents = mutableSetOf(RecordContent().apply {
                 fileName = "Gibson.mp3"
                 contentType = "audio/mp3"
                 content = BlobProxy.generateProxy("test".toByteArray())
-            }
+            })
         }
         val beforeTime = Instant.now()
         val result = repository.create(record)
@@ -69,8 +69,8 @@ internal class RecordRepositoryImplTest {
 
         assertThat(result.id, notNullValue())
         assertThat(result.id ?: 0L, greaterThan(0L))
-        assertThat(result.content, notNullValue())
-        result.content?.let {
+        assertThat(result.contents, notNullValue())
+        result.contents?.first()?.let {
             assertThat(it.content, notNullValue())
             assertThat(it.content.binaryStream?.readAllBytes()?.toString(UTF_8), equalTo("test"))
         }
@@ -99,26 +99,49 @@ internal class RecordRepositoryImplTest {
             time = LocalDateTime.parse("2019-01-01T00:00:00")
             timeZoneOffset = 3600
 
-            content = RecordContent().apply {
+            contents = mutableSetOf(RecordContent().apply {
                 fileName = "Gibson.mp3"
                 contentType = "audio/mp3"
                 content = BlobProxy.generateProxy("test".toByteArray())
-            }
+            })
         }
 
         val result = repository.create(record)
+
+        assertThat(result.contents, hasSize(1))
 
         val newContent = "test2".toByteArray()
         repository.updateContent(result, "Gibson2.mp4", "audio/mp4",
                 ByteArrayInputStream(newContent), newContent.size.toLong())
 
-        assertThat(result.content, notNullValue())
-        result.content?.let {
+        assertThat(result.contents, hasSize(2))
+
+        assertThat(result.contents, notNullValue())
+        result.contents?.find { it.fileName == "Gibson2.mp4" }?.let {
             assertThat(it.content, notNullValue())
             assertThat(it.content.binaryStream?.readAllBytes()?.toString(UTF_8), equalTo("test2"))
             assertThat(it.fileName, equalTo("Gibson2.mp4"))
             assertThat(it.contentType, equalTo("audio/mp4"))
         }
+
+        result.contents?.find { it.fileName == "Gibson.mp3" }?.let {
+            assertThat(it.content, notNullValue())
+            assertThat(it.content.binaryStream?.readAllBytes()?.toString(UTF_8), equalTo("test"))
+            assertThat(it.fileName, equalTo("Gibson.mp3"))
+            assertThat(it.contentType, equalTo("audio/mp3"))
+        } ?: assert(false)
+
+        repository.updateContent(result, "Gibson.mp3", "audio/mp4",
+                ByteArrayInputStream(newContent), newContent.size.toLong())
+
+        assertThat(result.contents, hasSize(2))
+
+        result.contents?.find { it.fileName == "Gibson.mp3" }?.let {
+            assertThat(it.content, notNullValue())
+            assertThat(it.content.binaryStream?.readAllBytes()?.toString(UTF_8), equalTo("test2"))
+            assertThat(it.fileName, equalTo("Gibson.mp3"))
+            assertThat(it.contentType, equalTo("audio/mp4"))
+        } ?: assert(false)
     }
 
     @Test
@@ -137,13 +160,14 @@ internal class RecordRepositoryImplTest {
         repository.updateContent(result, "Gibson2.mp4", "audio/mp4",
                 ByteArrayInputStream(newContent), newContent.size.toLong())
 
-        assertThat(result.content, notNullValue())
-        result.content?.let {
+        assertThat(result.contents, notNullValue())
+        assertThat(result.contents, hasSize(1))
+        result.contents?.find { it.fileName == "Gibson2.mp4" }?.let {
             assertThat(it.content, notNullValue())
             assertThat(it.content.binaryStream?.readAllBytes()?.toString(UTF_8), equalTo("test2"))
             assertThat(it.fileName, equalTo("Gibson2.mp4"))
             assertThat(it.contentType, equalTo("audio/mp4"))
-        }
+        } ?: assert(false)
     }
 
     @Test

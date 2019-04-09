@@ -1,16 +1,13 @@
 package org.radarbase.upload.doa.entity
 
+import org.radarbase.upload.doa.AbstractJpaPersistable
 import java.sql.Blob
 import java.time.Instant
 import javax.persistence.*
 
 @Entity
 @Table(name = "record_content")
-class RecordContent {
-    @Id
-    @Column(name = "record_id")
-    var id: Long? = null
-
+class RecordContent : AbstractJpaPersistable<Long>() {
     @Column(name = "file_name")
     lateinit var fileName: String
 
@@ -23,9 +20,8 @@ class RecordContent {
     @Column
     var size: Long = 0
 
-    @OneToOne(fetch = FetchType.LAZY, cascade = [CascadeType.REFRESH, CascadeType.MERGE, CascadeType.PERSIST])
+    @ManyToOne(fetch = FetchType.LAZY, cascade = [CascadeType.REFRESH, CascadeType.MERGE, CascadeType.PERSIST])
     @JoinColumn(name = "record_id")
-    @MapsId
     lateinit var record: Record
 
     @Basic(fetch = FetchType.LAZY)

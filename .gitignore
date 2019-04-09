@@ -1,3 +1,4 @@
+out/
 *.graffle
 node_modules/
 build/
