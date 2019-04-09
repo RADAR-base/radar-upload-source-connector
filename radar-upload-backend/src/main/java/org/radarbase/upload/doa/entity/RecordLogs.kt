@@ -21,4 +21,15 @@ class RecordLogs {
 
     var size: Long = 0
     lateinit var logs: Clob
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as RecordLogs
+
+        return id == other.id
+    }
+
+    override fun hashCode(): Int = id?.hashCode() ?: 0
 }

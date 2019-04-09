@@ -16,7 +16,7 @@ import javax.ws.rs.core.Context
 class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepository {
     override fun updateLogs(id: Long, reader: Reader, length: Long): Unit = em.transact {
         val logs = find(RecordLogs::class.java, id)
-        if (logs == null) {
+        val metadata = if (logs == null) {
             val metadata = find(RecordMetadata::class.java, id)  ?: throw NotFoundException("RecordMetadata with ID $id does not exist")
             metadata.logs = RecordLogs().apply {
                 this.id = id
@@ -26,14 +26,17 @@ class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepos
                 this.logs = Hibernate.getLobCreator(em.session).createClob(reader, length)
             }
             persist(metadata.logs!!)
-            merge(metadata)
+            metadata
         } else {
             logs.apply {
                 this.modifiedDate = Instant.now()
                 this.logs = Hibernate.getLobCreator(em.session).createClob(reader, length)
             }
             merge(logs)
+            logs.metadata
         }
+
+        modifyNow(metadata)
     }
 
     override fun query(limit: Int, lastId: Long, projectId: String, userId: String?, status: String?): List<Record> {
@@ -66,31 +69,30 @@ class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepos
     }
 
     override fun updateContent(record: Record, fileName: String, contentType: String, stream: InputStream, length: Long): Unit = em.transact {
-        val existingContent = record.content
+        val existingContent = record.contents?.find { it.fileName == fileName }
 
         if (existingContent == null) {
             val newContent = RecordContent().apply {
                 this.record = record
-                id = record.id
                 this.fileName = fileName
                 this.createdDate = Instant.now()
                 this.contentType = contentType
                 this.size = length
                 this.content = Hibernate.getLobCreator(em.unwrap(Session::class.java)).createBlob(stream, length)
             }
-            record.content = newContent
+            record.contents = (record.contents ?: mutableSetOf()).apply { add(newContent) }
 
             persist(newContent)
             merge(record)
         } else {
             existingContent.apply {
-                this.fileName = fileName
                 this.createdDate = Instant.now()
                 this.contentType = contentType
                 this.content = Hibernate.getLobCreator(em.unwrap(Session::class.java)).createBlob(stream, length)
             }
             merge(existingContent)
         }
+        modifyNow(record.metadata)
     }
 
     override fun readContent(id: Long): RecordContent? = em.transact {
@@ -98,15 +100,15 @@ class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepos
     }
 
     override fun create(record: Record): Record = em.transact {
-        val tmpContent = record.content?.also { record.content = null }
+        val tmpContent = record.contents?.also { record.contents = null }
 
         persist(record)
 
-        tmpContent?.let {
+        record.contents = tmpContent?.mapTo(HashSet()) {
             it.record = record
             it.createdDate = Instant.now()
             persist(it)
-            record.content = it
+            it
         }
 
         val metadata = RecordMetadata().apply {
@@ -121,16 +123,25 @@ class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepos
         persist(metadata)
 
         record.apply {
-            this.content = content
+            this.contents = contents
             this.metadata = metadata
         }
     }
 
     override fun read(id: Long): Record? = em.transact { find(Record::class.java, id) }
 
-    override fun update(record: Record): Record = em.transact { merge<Record>(record) }
+    override fun update(record: Record): Record = em.transact {
+        modifyNow(record.metadata)
+        merge<Record>(record)
+    }
 
-    override fun update(metadata: RecordMetadata): RecordMetadata = em.transact { merge<RecordMetadata>(metadata) }
+    private fun modifyNow(metadata: RecordMetadata): RecordMetadata {
+        metadata.revision += 1
+        metadata.modifiedDate = Instant.now()
+        return em.merge<RecordMetadata>(metadata)
+    }
+
+    override fun update(metadata: RecordMetadata): RecordMetadata = em.transact { modifyNow(metadata) }
 
     override fun delete(record: Record) = em.transact { remove(record) }
 

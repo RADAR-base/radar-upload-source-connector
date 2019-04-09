@@ -49,6 +49,9 @@
         </createTable>
 
         <createTable tableName="record_content">
+            <column name="id" type="bigint" autoIncrement="${autoIncrement}">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
             <column name="record_id" type="bigint">
                 <constraints foreignKeyName="fk_content_record" referencedColumnNames="id" referencedTableName="record" nullable="false" />
             </column>

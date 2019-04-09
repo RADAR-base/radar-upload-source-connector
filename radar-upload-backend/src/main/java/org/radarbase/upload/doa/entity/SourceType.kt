@@ -43,5 +43,5 @@ class SourceType {
         return name == other.name
     }
 
-    override fun hashCode(): Int = name?.hashCode() ?: 0
+    override fun hashCode(): Int = name.hashCode()
 }

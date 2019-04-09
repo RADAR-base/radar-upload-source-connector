@@ -28,6 +28,6 @@ class Record : AbstractJpaPersistable<Long>() {
     @ManyToOne
     lateinit var sourceType: SourceType
 
-    @OneToOne(fetch = FetchType.EAGER, mappedBy = "record", cascade = [CascadeType.ALL])
-    var content: RecordContent? = null
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "record", cascade = [CascadeType.ALL])
+    var contents: MutableSet<RecordContent>? = null
 }

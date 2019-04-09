@@ -18,7 +18,7 @@ class RecordMapperImpl: RecordMapper {
                     sourceId = record.sourceId,
                     time = record.time,
                     timeZoneOffset = record.timeZoneOffset,
-                    content = record.content?.let {
+                    contents = record.contents?.mapTo(HashSet()) {
                         ContentsDTO(
                                 url = "/records/${record.id}/contents/${it.fileName}",
                                 contentType = it.contentType,
