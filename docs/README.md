@@ -101,8 +101,7 @@ Returns
   "metadata": {
     "createdDate": "2019-03-04T01:23:45Z",
     "modifiedDate": "2019-03-04T01:23:45Z",
-    "status": "READY",
-    "message": "Data has succesfully been uploaded to the backend.",
+    "status": "INCOMPLETE",
     "revision": 1
   }
 }
@@ -141,9 +140,13 @@ See <https://www.nginx.com/resources/wiki/modules/upload_progress/> for result v
         "sourceId": "source",
         "time": "2019-03-04T00:00:00",
         "timeZoneOffset": 0,
+        "contents": [{
+          "url": "/records/12/contents/Gibson.mp3"
+        }]
       },
       "converter": "Mp3Audio",
       "metadata": {
+        "revision": 2,
         "createdDate": "2019-03-04T01:23:45Z",
         "modifiedDate": "2019-03-04T01:23:45Z",
         "committedDate": null,
@@ -179,7 +182,10 @@ Returns
         "userId": "testUser",
         "sourceId": "source",
         "time": "2019-03-04T00:00:00",
-        "timeZoneOffset": 0
+        "timeZoneOffset": 0,
+        "contents": [{
+          "url": "/records/12/contents/Gibson.mp3"
+        }]
       },
       "converter": "Mp3Audio",
       "metadata": {
@@ -188,7 +194,7 @@ Returns
         "committedDate": null,
         "status": "QUEUED",
         "message": "Data has been queued for processing.",
-        "revision": 2,
+        "revision": 3,
         "logs": null
       }
     }
@@ -205,7 +211,7 @@ Content-Type: application/mp3
 
 ```json
 {
-  "revision": 2,
+  "revision": 3,
   "status": "PROCESSING",
   "statusMessage": "Data is being processed."
 }
@@ -217,7 +223,7 @@ HTTP 200
 ```json
 {
   "id": 12,
-  "revision": 3,
+  "revision": 4,
   "status": "PROCESSING",
   "statusMessage": "Data is being processed.",
 }
@@ -232,7 +238,7 @@ or HTTP 409 Conflict if the revision does not match (i.e. another process is pro
 ```json
 {
   "id": 12,
-  "revision": 3,
+  "revision": 4,
   "status": "FAILED | SUCCEEDED",
   "message": "Cannot process data: ... | Data was successfully committed.",
   "logs": {
@@ -245,7 +251,7 @@ Returns
 
 ```json
 {
-  "revision": 4,
+  "revision": 5,
   "status": "SUCCEEDED",
   "message": "Data was successfully committed.",
   "logs": {
