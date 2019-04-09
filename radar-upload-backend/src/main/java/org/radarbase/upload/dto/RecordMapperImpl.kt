@@ -3,8 +3,13 @@ package org.radarbase.upload.dto
 import org.radarbase.upload.doa.entity.Record
 import org.radarbase.upload.doa.entity.RecordContent
 import org.radarbase.upload.doa.entity.RecordMetadata
+import javax.ws.rs.core.Context
+import javax.ws.rs.core.UriInfo
 
 class RecordMapperImpl: RecordMapper {
+    @Context
+    lateinit var uri: UriInfo
+
     override fun toRecord(record: RecordDTO): Record {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
@@ -27,7 +32,7 @@ class RecordMapperImpl: RecordMapper {
             records = records.map(::fromRecord))
 
     override fun fromContent(content: RecordContent) = ContentsDTO(
-            url = "/records/${content.record.id}/contents/${content.fileName}",
+            url = "${uri.baseUri}/records/${content.record.id}/contents/${content.fileName}",
             contentType = content.contentType,
             createdDate = content.createdDate,
             size = content.size)
@@ -40,7 +45,7 @@ class RecordMapperImpl: RecordMapper {
             modifiedDate = metadata.modifiedDate,
             committedDate = metadata.committedDate,
             logs = metadata.logs?.let {
-                LogsDto(url = "/records/${metadata.id}/logs")
+                LogsDto(url = "${uri.baseUri}/records/${metadata.id}/logs")
             }
     )
 }
