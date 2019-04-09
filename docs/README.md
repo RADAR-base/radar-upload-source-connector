@@ -111,10 +111,32 @@ Returns
 `PUT /records/{id}/contents/{fileName}` <br>
 X-Progress-ID: \<random-UUID\>
 
+returns `HTTP 200` or `HTTP 201` if existing and the state is incomplete, with body
+
+```json
+{
+  "fileName": "Gibson.mp3",
+  "createdDate": "2019-03-04-T01:23:45Z",
+  "contentType": "audio/mp3",
+  "size": 10,
+  "url": "/records/{id}/contents/{fileName}"
+}
+```
+
 **Get progress for a record** GET /progress<br>
 X-Progress-ID: \<random-UUID\>
 
 See <https://www.nginx.com/resources/wiki/modules/upload_progress/> for result values.
+
+
+**Mark record ready for processing** `POST /records/{id}/metadata`
+
+```json
+{
+  "status": "READY",
+  "revision": 1
+}
+```
 
 **Get the logs**
 `GET /records/{id}/logs`
@@ -141,10 +163,14 @@ See <https://www.nginx.com/resources/wiki/modules/upload_progress/> for result v
         "time": "2019-03-04T00:00:00",
         "timeZoneOffset": 0,
         "contents": [{
-          "url": "/records/12/contents/Gibson.mp3"
+          "fileName": "Gibson.mp3",
+          "createdDate": "2019-03-04-T01:23:45Z",
+          "contentType": "audio/mp3",
+          "size": 10,
+          "url": "/records/{id}/contents/{fileName}"
         }]
       },
-      "converter": "Mp3Audio",
+      "sourceType": "Mp3Audio",
       "metadata": {
         "revision": 2,
         "createdDate": "2019-03-04T01:23:45Z",
@@ -184,18 +210,20 @@ Returns
         "time": "2019-03-04T00:00:00",
         "timeZoneOffset": 0,
         "contents": [{
-          "url": "/records/12/contents/Gibson.mp3"
+          "fileName": "Gibson.mp3",
+          "createdDate": "2019-03-04-T01:23:45Z",
+          "contentType": "audio/mp3",
+          "size": 10,
+          "url": "/records/{id}/contents/{fileName}"
         }]
       },
-      "converter": "Mp3Audio",
+      "sourceType": "Mp3Audio",
       "metadata": {
         "createdDate": "2019-03-04T01:23:45Z",
         "modifiedDate": "2019-03-04T01:23:45Z",
-        "committedDate": null,
         "status": "QUEUED",
         "message": "Data has been queued for processing.",
         "revision": 3,
-        "logs": null
       }
     }
   ]
