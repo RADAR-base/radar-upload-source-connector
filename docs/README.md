@@ -213,7 +213,7 @@ Content-Type: application/mp3
 {
   "revision": 3,
   "status": "PROCESSING",
-  "statusMessage": "Data is being processed."
+  "message": "Data is being processed."
 }
 ```
 
@@ -225,7 +225,7 @@ HTTP 200
   "id": 12,
   "revision": 4,
   "status": "PROCESSING",
-  "statusMessage": "Data is being processed.",
+  "message": "Data is being processed.",
 }
 ```
 
