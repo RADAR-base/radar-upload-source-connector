@@ -9,6 +9,8 @@ import org.radarbase.upload.doa.RecordRepository
 import org.radarbase.upload.doa.RecordRepositoryImpl
 import org.radarbase.upload.doa.SourceTypeRepository
 import org.radarbase.upload.doa.SourceTypeRepositoryImpl
+import org.radarbase.upload.dto.RecordMapper
+import org.radarbase.upload.dto.RecordMapperImpl
 import javax.inject.Singleton
 import javax.persistence.EntityManager
 
@@ -47,6 +49,9 @@ abstract class UploadResources {
             bind(DoaEntityManagerFactory::class.java)
                     .to(EntityManager::class.java)
                     .`in`(Singleton::class.java)
+
+            bind(RecordMapperImpl::class.java)
+                    .to(RecordMapper::class.java)
 
             bind(RecordRepositoryImpl::class.java)
                     .to(RecordRepository::class.java)
