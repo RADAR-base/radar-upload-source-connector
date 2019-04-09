@@ -70,6 +70,7 @@
                 <constraints unique="true" nullable="false"/>
             </column>
             <column name="time_required" type="boolean"/>
+            <column name="source_id_required" type="boolean"/>
         </createTable>
 
         <createTable tableName="source_type_topics">

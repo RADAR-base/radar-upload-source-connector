@@ -4,6 +4,7 @@ import org.radarbase.upload.auth.Auth
 import org.radarbase.upload.auth.Authenticated
 import org.radarbase.upload.auth.NeedsPermission
 import org.radarbase.upload.doa.RecordRepository
+import org.radarbase.upload.doa.SourceTypeRepository
 import org.radarbase.upload.doa.entity.RecordStatus
 import org.radarbase.upload.dto.ContentsDTO
 import org.radarbase.upload.dto.RecordContainerDTO
@@ -20,7 +21,6 @@ import javax.ws.rs.core.Context
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.UriInfo
-
 
 
 @Path("/records")
@@ -65,17 +65,16 @@ class RecordResource {
         return recordMapper.fromRecords(records, imposedLimit)
     }
 
+    @Context
+    lateinit var sourceTypeRepository: SourceTypeRepository
+
     @POST
     @NeedsPermission(Permission.Entity.MEASUREMENT, Permission.Operation.CREATE)
-    fun add(record: RecordDTO, @Context response: HttpServletResponse): RecordDTO {
+    fun create(record: RecordDTO, @Context response: HttpServletResponse): RecordDTO {
 
         // TODO: logic to do authorization checking
 
-        // TODO: more logic to do data checking
-
-        if (record.id != null) {
-            throw BadRequestException("Record ID cannot be set explicitly")
-        }
+        validateNewRecord(record)
 
         val doaRecord = recordMapper.toRecord(record)
         val result = recordRepository.create(doaRecord)
@@ -83,6 +82,39 @@ class RecordResource {
         response.status = Response.Status.CREATED.statusCode
         response.setHeader("Location", "${uri.baseUri}/records/${record.id}")
         return recordMapper.fromRecord(result)
+    }
+
+    private fun validateNewRecord(record: RecordDTO) {
+        if (record.id != null) {
+            throw BadRequestException("Record ID cannot be set explicitly")
+        }
+        val sourceTypeName = record.sourceType ?: throw BadRequestException("Record needs a source type")
+        val data = record.data ?: throw BadRequestException("Record needs data")
+
+        if (data.projectId == null) {
+            throw BadRequestException("Record needs a project ID")
+        }
+        if (data.userId == null) {
+            throw BadRequestException("Record needs a user ID")
+        }
+        data.contents?.forEach {
+            if (it.text == null) {
+                throw BadRequestException("Contents need explicit text value set in UTF-8 encoding.")
+            }
+            if (it.url != null) {
+                throw BadRequestException("Cannot process URL for content file name ${it.fileName}")
+            }
+        }
+        record.metadata = null
+
+        val sourceType = sourceTypeRepository.read(sourceTypeName) ?: throw BadRequestException("Source type $sourceTypeName does not exist.")
+
+        if (sourceType.timeRequired && (data.time == null || data.timeZoneOffset == null)) {
+            throw BadRequestException("Time and time zone offset values are required for this source type.")
+        }
+        if (sourceType.sourceIdRequired && data.sourceId == null) {
+            throw BadRequestException("Source ID is required for source type $sourceTypeName.")
+        }
     }
 
     @PUT
