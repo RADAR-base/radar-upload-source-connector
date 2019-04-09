@@ -1,2 +1,5 @@
 *.graffle
 node_modules/
+build/
+.idea/
+.gradle/
