@@ -68,10 +68,10 @@ class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepos
         find(RecordLogs::class.java, id)
     }
 
-    override fun updateContent(record: Record, fileName: String, contentType: String, stream: InputStream, length: Long): Unit = em.transact {
+    override fun updateContent(record: Record, fileName: String, contentType: String, stream: InputStream, length: Long): RecordContent = em.transact {
         val existingContent = record.contents?.find { it.fileName == fileName }
 
-        if (existingContent == null) {
+        val result = if (existingContent == null) {
             val newContent = RecordContent().apply {
                 this.record = record
                 this.fileName = fileName
@@ -84,6 +84,7 @@ class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepos
 
             persist(newContent)
             merge(record)
+            newContent
         } else {
             existingContent.apply {
                 this.createdDate = Instant.now()
@@ -91,8 +92,10 @@ class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepos
                 this.content = Hibernate.getLobCreator(em.unwrap(Session::class.java)).createBlob(stream, length)
             }
             merge(existingContent)
+            existingContent
         }
         modifyNow(record.metadata)
+        return@transact result
     }
 
     override fun readContent(id: Long): RecordContent? = em.transact {
