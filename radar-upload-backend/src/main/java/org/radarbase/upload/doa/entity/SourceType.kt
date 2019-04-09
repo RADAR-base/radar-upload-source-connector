@@ -27,6 +27,8 @@ class SourceType {
 
     @Column(name = "time_required")
     var timeRequired = false
+    @Column(name = "source_id_required")
+    var sourceIdRequired = false
 
     @ElementCollection(fetch=FetchType.LAZY)
     @MapKeyColumn(name="key")

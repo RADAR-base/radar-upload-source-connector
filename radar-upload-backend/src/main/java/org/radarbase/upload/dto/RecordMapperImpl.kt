@@ -35,7 +35,8 @@ class RecordMapperImpl: RecordMapper {
             url = "${uri.baseUri}/records/${content.record.id}/contents/${content.fileName}",
             contentType = content.contentType,
             createdDate = content.createdDate,
-            size = content.size)
+            size = content.size,
+            fileName = content.fileName)
 
     override fun fromMetadata(metadata: RecordMetadata) = RecordMetadataDTO(
             revision = metadata.revision,
