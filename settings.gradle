@@ -1,0 +1,6 @@
+rootProject.name = "radar-upload-source-connector"
+include(":radar-upload-backend")
+
+//pluginManagement {
+//    classpath("org.jetbrains.kotlin:kotlin-noarg:${kotlinVersion}")
+//}
