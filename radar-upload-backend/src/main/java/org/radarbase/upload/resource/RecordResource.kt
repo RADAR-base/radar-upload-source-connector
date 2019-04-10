@@ -11,8 +11,7 @@ import org.radarbase.upload.dto.RecordContainerDTO
 import org.radarbase.upload.dto.RecordDTO
 import org.radarbase.upload.dto.RecordMapper
 import org.radarcns.auth.authorization.Permission
-import org.radarcns.auth.authorization.Permission.PROJECT_READ
-import org.radarcns.auth.authorization.Permission.SUBJECT_READ
+import org.radarcns.auth.authorization.Permission.*
 import java.io.InputStream
 import javax.annotation.Resource
 import javax.servlet.http.HttpServletResponse
@@ -91,21 +90,18 @@ class RecordResource {
         val sourceTypeName = record.sourceType ?: throw BadRequestException("Record needs a source type")
         val data = record.data ?: throw BadRequestException("Record needs data")
 
-        if (data.projectId == null) {
-            throw BadRequestException("Record needs a project ID")
-        }
-        if (data.userId == null) {
-            throw BadRequestException("Record needs a user ID")
-        }
+        data.projectId ?: throw BadRequestException("Record needs a project ID")
+        data.userId ?: throw BadRequestException("Record needs a user ID")
+
         data.contents?.forEach {
-            if (it.text == null) {
-                throw BadRequestException("Contents need explicit text value set in UTF-8 encoding.")
-            }
+            it.text ?: throw BadRequestException("Contents need explicit text value set in UTF-8 encoding.")
             if (it.url != null) {
                 throw BadRequestException("Cannot process URL for content file name ${it.fileName}")
             }
         }
-        record.metadata = null
+        if (record.metadata != null) {
+            throw BadRequestException("Record metadata cannot be set explicitly")
+        }
 
         val sourceType = sourceTypeRepository.read(sourceTypeName) ?: throw BadRequestException("Source type $sourceTypeName does not exist.")
 
@@ -129,10 +125,10 @@ class RecordResource {
             @PathParam("recordId") recordId: Long,
             @Context response: HttpServletResponse): ContentsDTO {
 
-        // TODO: logic to do authorization checking
-
         val record = recordRepository.read(recordId)
                 ?: throw NotFoundException("Record with ID $recordId does not exist")
+
+        auth.checkUserPermission(MEASUREMENT_CREATE, record.projectId, record.userId)
 
         if (record.metadata.status != RecordStatus.INCOMPLETE) {
             throw WebApplicationException("Cannot add files to saved record.", Response.Status.CONFLICT)
@@ -155,6 +151,7 @@ class RecordResource {
 
         return recordMapper.fromRecords(recordRepository.poll(imposedLimit), imposedLimit)
     }
+
 
     // TODO: get metadata path
     // TODO: update metadata path
