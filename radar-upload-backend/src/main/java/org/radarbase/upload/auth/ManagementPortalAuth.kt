@@ -54,8 +54,8 @@ class ManagementPortalAuth(private val token: RadarToken) : Auth {
     override fun hasPermission(permission: Permission) = token.hasPermission(permission)
 
     override fun authorizedProjects(permission: Permission): AccessRestriction {
-        if (token.authorities.contains(SYS_ADMIN) && permission.isAuthorityAllowed(SYS_ADMIN)
-                || ("client_credentials" == token.grantType && (permission.scopeName() in token.scopes))) {
+        if (((token.authorities.contains(SYS_ADMIN) && permission.isAuthorityAllowed(SYS_ADMIN))
+                || isClientCredentials) && permission.scopeName() in token.scopes) {
             return AllAccess
         }
 
@@ -63,4 +63,7 @@ class ManagementPortalAuth(private val token: RadarToken) : Auth {
             project.value.any { permission.isAuthorityAllowed(it) }
         }.keys)
     }
+
+    override val isClientCredentials
+        get() = "client_credentials" == token.grantType
 }

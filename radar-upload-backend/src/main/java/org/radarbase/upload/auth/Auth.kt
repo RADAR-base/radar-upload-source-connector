@@ -12,6 +12,7 @@ interface Auth {
     fun hasRole(projectId: String, role: String): Boolean
     fun hasPermission(permission: Permission): Boolean
     fun authorizedProjects(permission: Permission): AccessRestriction
+    val isClientCredentials: Boolean
 }
 
 sealed class AccessRestriction
