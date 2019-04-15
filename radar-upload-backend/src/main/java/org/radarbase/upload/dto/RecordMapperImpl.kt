@@ -1,9 +1,6 @@
 package org.radarbase.upload.dto
 
-import org.radarbase.upload.doa.entity.Record
-import org.radarbase.upload.doa.entity.RecordContent
-import org.radarbase.upload.doa.entity.RecordMetadata
-import org.radarbase.upload.doa.entity.RecordStatus
+import org.radarbase.upload.doa.entity.*
 import javax.ws.rs.core.Context
 import javax.ws.rs.core.UriInfo
 
@@ -47,7 +44,7 @@ class RecordMapperImpl: RecordMapper {
             modifiedDate = metadata.modifiedDate,
             committedDate = metadata.committedDate,
             logs = metadata.logs?.let {
-                LogsDto(url = "${uri.baseUri}/records/${metadata.id}/logs")
+                LogsDto(url = "${uri.baseUri}/records/${metadata.record.id}/logs")
             }
     )
 
@@ -63,4 +60,11 @@ class RecordMapperImpl: RecordMapper {
                     it.logs = origin.logs
                 }
             }
+
+    override fun fromMetadataToLogs(metadata: RecordMetadata) : LogsDto {
+        // read the first 5000 char from Clob
+        return LogsDto(
+                contents = metadata.logs?.logs?.getSubString(0, 5000),
+                url ="${uri.baseUri}/records/${metadata.record.id}/logs")
+    }
 }

@@ -40,6 +40,9 @@ class RecordResource {
     @Context
     lateinit var uri: UriInfo
 
+    @Context
+    lateinit var sourceTypeRepository: SourceTypeRepository
+
     @GET
     fun query(
             @QueryParam("projectId") projectId: String?,
@@ -61,9 +64,6 @@ class RecordResource {
 
         return recordMapper.fromRecords(records, imposedLimit)
     }
-
-    @Context
-    lateinit var sourceTypeRepository: SourceTypeRepository
 
     @POST
     @NeedsPermission(Permission.Entity.MEASUREMENT, Permission.Operation.CREATE)
@@ -195,8 +195,15 @@ class RecordResource {
 
     }
 
+    @GET
+    @Path("{recordId}/logs/")
+    fun getRecordLogs(@PathParam("recordId") recordId: Long): LogsDto {
 
+        val record = recordRepository.read(recordId)
+                ?: throw NotFoundException("Record with ID $recordId does not exist")
+
+        return recordMapper.fromMetadataToLogs(record.metadata)
+    }
     // TODO: read file contents path
 
-    // TODO: read log contents path
 }
