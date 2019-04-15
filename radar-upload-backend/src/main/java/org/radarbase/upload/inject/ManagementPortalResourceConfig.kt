@@ -6,7 +6,7 @@ import org.radarbase.upload.auth.AuthValidator
 import javax.inject.Singleton
 
 /** This binder needs to register all non-Jersey classes, otherwise initialization fails. */
-class ManagementPortalResources : UploadResources() {
+class ManagementPortalResourceConfig : UploadResourceConfig() {
     override fun registerAuthentication(resources: ResourceConfig) {
         // none needed
     }

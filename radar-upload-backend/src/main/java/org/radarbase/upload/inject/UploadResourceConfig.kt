@@ -14,7 +14,7 @@ import org.radarbase.upload.dto.RecordMapperImpl
 import javax.inject.Singleton
 import javax.persistence.EntityManager
 
-abstract class UploadResources {
+abstract class UploadResourceConfig {
     fun resources(config: Config): ResourceConfig {
         val resources = ResourceConfig().apply {
             packages(
