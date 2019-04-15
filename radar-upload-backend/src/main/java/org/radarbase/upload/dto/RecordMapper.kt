@@ -10,5 +10,6 @@ interface RecordMapper {
     fun fromMetadata(metadata: RecordMetadata): RecordMetadataDTO
 
     fun toRecord(record: RecordDTO): Record
+    fun toMetadata(metadata: RecordMetadataDTO, origin: RecordMetadata): RecordMetadata
     fun fromContent(content: RecordContent): ContentsDTO
 }

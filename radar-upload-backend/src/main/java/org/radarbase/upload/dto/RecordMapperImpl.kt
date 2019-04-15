@@ -3,6 +3,7 @@ package org.radarbase.upload.dto
 import org.radarbase.upload.doa.entity.Record
 import org.radarbase.upload.doa.entity.RecordContent
 import org.radarbase.upload.doa.entity.RecordMetadata
+import org.radarbase.upload.doa.entity.RecordStatus
 import javax.ws.rs.core.Context
 import javax.ws.rs.core.UriInfo
 
@@ -49,4 +50,17 @@ class RecordMapperImpl: RecordMapper {
                 LogsDto(url = "${uri.baseUri}/records/${metadata.id}/logs")
             }
     )
+
+    override fun toMetadata(metadata: RecordMetadataDTO, origin: RecordMetadata) = RecordMetadata()
+            .also {
+                it.revision = metadata.revision
+                it.message = metadata.message
+                it.status = RecordStatus.valueOf(metadata.status)
+                if(origin != null) {
+                    it.createdDate = origin.createdDate
+                    it.committedDate = origin.committedDate
+                    it.modifiedDate = origin.modifiedDate
+                    it.logs = origin.logs
+                }
+            }
 }
