@@ -5,11 +5,10 @@ import org.radarbase.upload.auth.Authenticated
 import org.radarbase.upload.auth.NeedsPermission
 import org.radarbase.upload.doa.RecordRepository
 import org.radarbase.upload.doa.SourceTypeRepository
+import org.radarbase.upload.doa.entity.RecordMetadata
 import org.radarbase.upload.doa.entity.RecordStatus
-import org.radarbase.upload.dto.ContentsDTO
-import org.radarbase.upload.dto.RecordContainerDTO
-import org.radarbase.upload.dto.RecordDTO
-import org.radarbase.upload.dto.RecordMapper
+import org.radarbase.upload.dto.*
+import org.radarbase.upload.exception.ConflictException
 import org.radarcns.auth.authorization.Permission
 import org.radarcns.auth.authorization.Permission.*
 import java.io.InputStream
@@ -48,9 +47,8 @@ class RecordResource {
             @DefaultValue("10") @QueryParam("limit") limit: Int,
             @QueryParam("lastId") lastId: Long?,
             @QueryParam("status") status: String?): RecordContainerDTO {
-        if (projectId == null) {
-            throw BadRequestException("Required project ID not provided.")
-        }
+
+        projectId ?: throw BadRequestException("Required project ID not provided.")
 
         if (userId != null) {
             auth.checkUserPermission(SUBJECT_READ, projectId, userId)
@@ -152,9 +150,51 @@ class RecordResource {
         return recordMapper.fromRecords(recordRepository.poll(imposedLimit), imposedLimit)
     }
 
+    @GET
+    @Path("{recordId}/metadata")
+    fun getRecordMetaData(@PathParam("recordId") recordId: Long): RecordMetadataDTO {
 
-    // TODO: get metadata path
-    // TODO: update metadata path
+        val record = recordRepository.read(recordId)
+                ?: throw NotFoundException("Record with ID $recordId does not exist")
+
+        return recordMapper.fromMetadata(record.metadata)
+    }
+
+    @POST
+    @Path("{recordId}/metadata")
+    fun updateRecordMetaData(metaData: RecordMetadataDTO, @PathParam("recordId") recordId: Long): RecordMetadataDTO {
+
+        val record = recordRepository.read(recordId)
+                ?: throw NotFoundException("Record with ID $recordId does not exist")
+
+        record.metadata.canBeUpdatedTo(metaData)
+
+        val updatedRecord = recordRepository.update(recordMapper.toMetadata(metaData, record.metadata))
+
+        return recordMapper.fromMetadata(updatedRecord)
+    }
+
+    private fun RecordMetadata.canBeUpdatedTo(metaDataToUpdate: RecordMetadataDTO) {
+
+        if (this.revision != metaDataToUpdate.revision)
+            throw BadRequestException("Requested meta data revision ${metaDataToUpdate.revision} " +
+                    "should match the latest revision stored ${this.revision}")
+
+        if (metaDataToUpdate.status == RecordStatus.PROCESSING.toString()
+                && this.status != RecordStatus.QUEUED) {
+            throw ConflictException("Record cannot be updated: Conflict in record meta-data status. " +
+                    "Found ${this.status}, expected ${RecordStatus.QUEUED}")
+        }
+
+        if (metaDataToUpdate.status == RecordStatus.SUCCEEDED.toString()
+                || metaDataToUpdate.status == RecordStatus.FAILED.toString()
+                && this.status != RecordStatus.PROCESSING) {
+            throw ConflictException("Record cannot be updated: Conflict in record meta-data status. " +
+                    "Found ${this.status}, expected ${RecordStatus.QUEUED}")
+        }
+
+    }
+
 
     // TODO: read file contents path
 

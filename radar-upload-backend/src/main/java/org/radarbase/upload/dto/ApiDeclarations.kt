@@ -27,8 +27,8 @@ data class RecordMetadataDTO(
         var revision: Int,
         var status: String,
         var message: String?,
-        var createdDate: Instant,
-        var modifiedDate: Instant,
+        var createdDate: Instant?,
+        var modifiedDate: Instant?,
         var committedDate: Instant?,
         var logs: LogsDto? = null)
 
