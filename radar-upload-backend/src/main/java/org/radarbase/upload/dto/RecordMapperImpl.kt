@@ -43,28 +43,17 @@ class RecordMapperImpl: RecordMapper {
             createdDate = metadata.createdDate,
             modifiedDate = metadata.modifiedDate,
             committedDate = metadata.committedDate,
+            // use record.id, since metadata and record have one-to-one
             logs = metadata.logs?.let {
-                LogsDto(url = "${uri.baseUri}/records/${metadata.record.id}/logs")
+                LogsDto(url = "${uri.baseUri}/records/${metadata.id}/logs")
             }
     )
 
-    override fun toMetadata(metadata: RecordMetadataDTO, origin: RecordMetadata) = RecordMetadata()
-            .also {
-                it.revision = metadata.revision
-                it.message = metadata.message
-                it.status = RecordStatus.valueOf(metadata.status)
-                if(origin != null) {
-                    it.createdDate = origin.createdDate
-                    it.committedDate = origin.committedDate
-                    it.modifiedDate = origin.modifiedDate
-                    it.logs = origin.logs
-                }
-            }
 
     override fun fromMetadataToLogs(metadata: RecordMetadata) : LogsDto {
         // read the first 5000 char from Clob
         return LogsDto(
                 contents = metadata.logs?.logs?.getSubString(0, 5000),
-                url ="${uri.baseUri}/records/${metadata.record.id}/logs")
+                url ="${uri.baseUri}/records/${metadata.id}/logs")
     }
 }

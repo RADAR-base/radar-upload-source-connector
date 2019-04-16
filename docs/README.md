@@ -18,7 +18,7 @@ It will use approximately the following architecture:
 The backend should have the following API calls
 
 **Get converter types**
-`GET /sourceTypes`
+`GET /source-types`
 
 ```json
 {
@@ -43,7 +43,7 @@ The backend should have the following API calls
 ```
 
 **Get converter configuration**
-`GET /sourceTypes/{name}`
+`GET /source-types/{name}`
 
 ```json
 {
@@ -79,7 +79,7 @@ The backend should have the following API calls
     "time": "2019-03-04T00:00:00",
     "timeZoneOffset": 0
   },
-  "sourceType": "Mp3Audio", 
+  "sourceType": "Mp3Audio" 
 }
 ```
 Returns
@@ -223,7 +223,7 @@ Returns
         "modifiedDate": "2019-03-04T01:23:45Z",
         "status": "QUEUED",
         "message": "Data has been queued for processing.",
-        "revision": 3,
+        "revision": 3
       }
     }
   ]
@@ -253,7 +253,7 @@ HTTP 200
   "id": 12,
   "revision": 4,
   "status": "PROCESSING",
-  "message": "Data is being processed.",
+  "message": "Data is being processed."
 }
 ```
 

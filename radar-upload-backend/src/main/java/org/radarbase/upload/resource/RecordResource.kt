@@ -163,37 +163,13 @@ class RecordResource {
     @POST
     @Path("{recordId}/metadata")
     fun updateRecordMetaData(metaData: RecordMetadataDTO, @PathParam("recordId") recordId: Long): RecordMetadataDTO {
+        val updatedRecord = recordRepository.updateMetadata(recordId, metaData)
 
-        val record = recordRepository.read(recordId)
-                ?: throw NotFoundException("Record with ID $recordId does not exist")
-
-        record.metadata.canBeUpdatedTo(metaData)
-
-        val updatedRecord = recordRepository.update(recordMapper.toMetadata(metaData, record.metadata))
 
         return recordMapper.fromMetadata(updatedRecord)
     }
 
-    private fun RecordMetadata.canBeUpdatedTo(metaDataToUpdate: RecordMetadataDTO) {
 
-        if (this.revision != metaDataToUpdate.revision)
-            throw BadRequestException("Requested meta data revision ${metaDataToUpdate.revision} " +
-                    "should match the latest revision stored ${this.revision}")
-
-        if (metaDataToUpdate.status == RecordStatus.PROCESSING.toString()
-                && this.status != RecordStatus.QUEUED) {
-            throw ConflictException("Record cannot be updated: Conflict in record meta-data status. " +
-                    "Found ${this.status}, expected ${RecordStatus.QUEUED}")
-        }
-
-        if (metaDataToUpdate.status == RecordStatus.SUCCEEDED.toString()
-                || metaDataToUpdate.status == RecordStatus.FAILED.toString()
-                && this.status != RecordStatus.PROCESSING) {
-            throw ConflictException("Record cannot be updated: Conflict in record meta-data status. " +
-                    "Found ${this.status}, expected ${RecordStatus.QUEUED}")
-        }
-
-    }
 
     @GET
     @Path("{recordId}/logs/")
