@@ -54,3 +54,7 @@ data class SourceTypeDTO(
 
 data class SourceTypeContainerDTO(
         var sourceTypes: List<SourceTypeDTO>)
+
+data class PollDTO(
+        var limit: Int = 10,
+        var supportedConverters: List<String>)
