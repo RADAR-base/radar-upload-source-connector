@@ -17,7 +17,9 @@ import javax.ws.rs.*
 import javax.ws.rs.core.Context
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
+import javax.ws.rs.core.StreamingOutput
 import javax.ws.rs.core.UriInfo
+import javax.ws.rs.WebApplicationException
 
 
 @Path("/records")
@@ -137,6 +139,36 @@ class RecordResource {
         response.status = Response.Status.CREATED.statusCode
         response.setHeader("Location", contentDto.url)
         return contentDto
+    }
+
+    @GET
+    @Path("{recordId}/contents/{fileName}")
+    fun getContents(
+            @PathParam("fileName") fileName: String,
+            @PathParam("recordId") recordId: Long,
+            @Context response: HttpServletResponse): StreamingOutput {
+
+        val (contentType, file) = recordRepository.readContentFile(recordId, fileName)
+        response.status = Response.Status.OK.statusCode
+        response.setHeader("Content-type", contentType)
+        response.setHeader("Content-Disposition", "attachment, filename=$fileName")
+        val inputStream = file.binaryStream
+        return StreamingOutput{
+
+            val buffer = ByteArray(1024)
+            var length: Int
+            reader@ while (true)  {
+                length = inputStream.read(buffer)
+                if(length != -1) {
+                    it.write(buffer, 0, length)
+                } else {
+                    break@reader
+                }
+            }
+            it.flush()
+            inputStream.close()
+        }
+
     }
 
     @POST
