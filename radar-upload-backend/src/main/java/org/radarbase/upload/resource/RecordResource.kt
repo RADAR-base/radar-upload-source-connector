@@ -5,13 +5,12 @@ import org.radarbase.upload.auth.Authenticated
 import org.radarbase.upload.auth.NeedsPermission
 import org.radarbase.upload.doa.RecordRepository
 import org.radarbase.upload.doa.SourceTypeRepository
-import org.radarbase.upload.doa.entity.RecordMetadata
 import org.radarbase.upload.doa.entity.RecordStatus
 import org.radarbase.upload.dto.*
-import org.radarbase.upload.exception.ConflictException
 import org.radarcns.auth.authorization.Permission
 import org.radarcns.auth.authorization.Permission.*
 import java.io.InputStream
+import java.io.Reader
 import javax.annotation.Resource
 import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.*
@@ -173,12 +172,13 @@ class RecordResource {
 
     @GET
     @Path("{recordId}/logs/")
-    fun getRecordLogs(@PathParam("recordId") recordId: Long): LogsDto {
+    fun getRecordLogs(@PathParam("recordId") recordId: Long): Reader {
 
         val record = recordRepository.read(recordId)
                 ?: throw NotFoundException("Record with ID $recordId does not exist")
 
-        return recordMapper.fromMetadataToLogs(record.metadata)
+        return record.metadata?.logs?.logs?.characterStream
+                ?: throw NotFoundException("Cannot find logs for record with record id $recordId")
     }
     // TODO: read file contents path
 
