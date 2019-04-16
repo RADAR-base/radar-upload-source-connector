@@ -3,18 +3,22 @@ package org.radarbase.upload.doa
 import org.hibernate.Hibernate
 import org.hibernate.Session
 import org.radarbase.upload.doa.entity.*
+import org.radarbase.upload.dto.RecordMetadataDTO
+import org.radarbase.upload.exception.ConflictException
 import org.radarbase.upload.inject.session
 import org.radarbase.upload.inject.transact
 import java.io.InputStream
 import java.io.Reader
 import java.time.Instant
 import javax.persistence.EntityManager
+import javax.ws.rs.BadRequestException
 import javax.ws.rs.NotFoundException
 import javax.ws.rs.core.Context
 import kotlin.streams.toList
 
 
 class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepository {
+
     override fun updateLogs(id: Long, reader: Reader, length: Long): Unit = em.transact {
         val logs = find(RecordLogs::class.java, id)
         val metadata = if (logs == null) {
@@ -157,7 +161,34 @@ class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepos
         return em.merge<RecordMetadata>(metadata)
     }
 
-    override fun update(metadata: RecordMetadata): RecordMetadata = em.transact { modifyNow(metadata) }
+    override fun updateMetadata(id: Long, metadata: RecordMetadataDTO): RecordMetadata = em.transact {
+        val existingMetadata = find(RecordMetadata::class.java, id)
+                ?: throw NotFoundException("RecordMetadata with ID $id does not exist")
+
+        if (existingMetadata.revision != metadata.revision)
+            throw BadRequestException("Requested meta data revision ${metadata.revision} " +
+                    "should match the latest existing revision ${existingMetadata.revision}")
+
+        if (metadata.status == RecordStatus.PROCESSING.toString()
+                && existingMetadata.status != RecordStatus.QUEUED) {
+            throw ConflictException("Record cannot be updated: Conflict in record meta-data status. " +
+                    "Found ${existingMetadata.status}, expected ${RecordStatus.QUEUED}")
+        }
+
+        if (metadata.status == RecordStatus.SUCCEEDED.toString()
+                || metadata.status == RecordStatus.FAILED.toString()
+                && existingMetadata.status != RecordStatus.PROCESSING) {
+            throw ConflictException("Record cannot be updated: Conflict in record meta-data status. " +
+                    "Found ${existingMetadata.status}, expected ${RecordStatus.QUEUED}")
+        }
+
+        existingMetadata.apply {
+            status = RecordStatus.valueOf(metadata.status)
+            message = metadata.message
+        }
+
+        modifyNow(existingMetadata)
+    }
 
     override fun delete(record: Record) = em.transact { remove(record) }
 
