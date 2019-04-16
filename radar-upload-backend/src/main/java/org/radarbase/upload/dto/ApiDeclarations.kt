@@ -1,11 +1,12 @@
 package org.radarbase.upload.dto
 
+import java.io.Reader
 import java.time.Instant
 import java.time.LocalDateTime
 
 data class LogsDto(
         var url: String? = null,
-        var contents: String? = null)
+        var contents: Reader? = null)
 
 data class ContentsDTO(
         var url: String? = null,
