@@ -42,3 +42,15 @@ data class RecordDTO(
 data class RecordContainerDTO(
         var limit: Int? = null,
         var records: List<RecordDTO>)
+
+data class SourceTypeDTO(
+        var name: String?,
+        var topics: Set<String>?,
+        var contentTypes: Set<String>?,
+        var timeRequired: Boolean?,
+        var sourceIdRequired: Boolean?,
+        var configuration: Map<String, String>?
+        )
+
+data class SourceTypeContainerDTO(
+        var sourceTypes: List<SourceTypeDTO>)
