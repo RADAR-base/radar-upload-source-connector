@@ -9,8 +9,8 @@ class GrizzlyServer(private val config: Config) {
     private lateinit var httpServer: HttpServer
 
     fun start() {
-        val gatewayResources = config.resourceConfig.getConstructor().newInstance()
-        val resourceConfig = (gatewayResources as UploadResourceConfig).resources(config)
+        val uploadResources = config.resourceConfig.getConstructor().newInstance()
+        val resourceConfig = (uploadResources as UploadResourceConfig).resources(config)
 
         httpServer = GrizzlyHttpServerFactory.createHttpServer(config.baseUri, resourceConfig)
         httpServer.start()
