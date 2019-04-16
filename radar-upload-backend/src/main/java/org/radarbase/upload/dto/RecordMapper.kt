@@ -11,7 +11,4 @@ interface RecordMapper {
     fun fromContent(content: RecordContent): ContentsDTO
 
     fun toRecord(record: RecordDTO): Record
-
-    fun fromMetadataToLogs(metadata: RecordMetadata): LogsDto
-
 }

@@ -48,12 +48,4 @@ class RecordMapperImpl: RecordMapper {
                 LogsDto(url = "${uri.baseUri}/records/${metadata.id}/logs")
             }
     )
-
-
-    override fun fromMetadataToLogs(metadata: RecordMetadata) : LogsDto {
-        // read the first 5000 char from Clob
-        return LogsDto(
-                contents = metadata.logs?.logs?.characterStream,
-                url ="${uri.baseUri}/records/${metadata.id}/logs")
-    }
 }

@@ -9,6 +9,7 @@ import org.radarbase.upload.inject.session
 import org.radarbase.upload.inject.transact
 import java.io.InputStream
 import java.io.Reader
+import java.sql.Blob
 import java.time.Instant
 import javax.persistence.EntityManager
 import javax.ws.rs.BadRequestException
@@ -101,6 +102,17 @@ class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepos
         }
         modifyNow(record.metadata)
         return@transact result
+    }
+
+    override fun readContentFile(id: Long, fileName: String): Pair<String, Blob> = em.transact{
+        val record = find(Record::class.java, id) ?: throw NotFoundException("Record not found for record id $id")
+
+        val existingContent = record.contents?.find {it.fileName == fileName}
+
+        existingContent ?: throw NotFoundException("Cannot find file with filename $fileName")
+
+        Pair(existingContent.contentType, existingContent.content)
+
     }
 
     override fun poll(limit: Int): List<Record> = em.transact {

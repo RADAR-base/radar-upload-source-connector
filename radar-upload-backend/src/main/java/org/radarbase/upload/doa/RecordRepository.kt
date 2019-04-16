@@ -7,6 +7,7 @@ import org.radarbase.upload.doa.entity.RecordMetadata
 import org.radarbase.upload.dto.RecordMetadataDTO
 import java.io.InputStream
 import java.io.Reader
+import java.sql.Blob
 
 interface RecordRepository {
     fun create(record: Record): Record
@@ -14,6 +15,7 @@ interface RecordRepository {
     fun readLogs(id: Long): RecordLogs?
     fun updateLogs(id: Long, reader: Reader, length: Long)
     fun readContent(id: Long): RecordContent?
+    fun readContentFile(id: Long, fileName: String) : Pair<String, Blob>
     fun delete(record: Record)
     fun update(record: Record): Record
     fun updateMetadata(id: Long, metadata: RecordMetadataDTO): RecordMetadata
