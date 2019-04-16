@@ -139,14 +139,16 @@ class RecordResource {
         return contentDto
     }
 
-    @GET
+    @POST
     @Path("poll")
-    fun poll(@DefaultValue("10") @QueryParam("limit") limit: Int): RecordContainerDTO {
-        // TODO: only allow with client credentials
+    fun poll(pollDTO: PollDTO): RecordContainerDTO {
 
-        val imposedLimit = Math.min(Math.max(limit, 1), 100)
-
-        return recordMapper.fromRecords(recordRepository.poll(imposedLimit), imposedLimit)
+        if (auth.isClientCredentials) {
+            val imposedLimit = Math.min(Math.max(pollDTO.limit, 1), 100)
+            return recordMapper.fromRecords(recordRepository.poll(imposedLimit), imposedLimit)
+        } else {
+            throw NotAuthorizedException("Client is not authorized to poll records")
+        }
     }
 
     @GET
@@ -180,6 +182,7 @@ class RecordResource {
         return record.metadata?.logs?.logs?.characterStream
                 ?: throw NotFoundException("Cannot find logs for record with record id $recordId")
     }
+
     // TODO: read file contents path
 
 }
