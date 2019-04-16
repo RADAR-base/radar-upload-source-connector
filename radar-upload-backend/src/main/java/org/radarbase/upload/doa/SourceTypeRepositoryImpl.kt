@@ -3,30 +3,35 @@ package org.radarbase.upload.doa
 import org.radarbase.upload.doa.entity.SourceType
 import org.radarbase.upload.inject.transact
 import org.slf4j.LoggerFactory
-import java.io.Closeable
 import javax.persistence.EntityManager
-import javax.persistence.Persistence
 import javax.ws.rs.core.Context
 
 
 class SourceTypeRepositoryImpl(@Context private var em: EntityManager) : SourceTypeRepository {
+
     override fun create(record: SourceType) = em.transact { persist(record) }
 
-    override fun read(name: String): SourceType? = em.transact {
-        val query = createQuery("SELECT s FROM SourceType s WHERE s.name = :name", SourceType::class.java)
-        logger.info("QUERY PARAMETERS: {}", query.parameters)
-        query.setParameter("name", name)
-                .resultList
-                .firstOrNull()
+    override fun read(limit: Int, name: String?, detailed: Boolean): List<SourceType>  {
+        var queryString = "SELECT s FROM SourceType s"
+        if (detailed) {
+            queryString += " JOIN FETCH s.configuration"
+        }
+        name?.let {
+            queryString += " WHERE  s.name = :name"
+        }
+
+        return em.transact {
+            val query = createQuery(queryString, SourceType::class.java)
+                    .setMaxResults(limit)
+            name?.let {
+                query.setParameter("name", it)
+            }
+            logger.info("QUERY PARAMETERS: {}", query.parameters)
+            query.resultList
+        }
     }
 
-    override fun readDetailed(name: String): SourceType? = em.transact {
-        createQuery(
-                """SELECT s FROM SourceType s JOIN FETCH s.configuration WHERE s.name = :name""")
-                .setParameter("name", name)
-                .resultList
-                .firstOrNull() as SourceType
-    }
+    override fun read(name: String): SourceType? = read(1, name, true).firstOrNull()
 
     override fun update(record: SourceType): SourceType = em.transact { merge<SourceType>(record) }
 
