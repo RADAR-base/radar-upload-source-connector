@@ -156,9 +156,8 @@ class RecordResource {
         response.setHeader("Last-Modified", recordContent.createdDate.toString())
         val inputStream = recordContent.content.binaryStream
         return StreamingOutput{
-            it.use {
-                inputStream.use { inStream -> inStream.copyTo(it) }
-            }
+            inputStream.use { inStream -> inStream.copyTo(it) }
+            it.flush()
         }
     }
 
@@ -206,15 +205,16 @@ class RecordResource {
                 ?: throw NotFoundException("Cannot find logs for record with record id $recordId")
 
         response.status = Response.Status.OK.statusCode
-        response.setHeader("Content-type", "application/x-octet-stream")
+        response.setHeader("Content-type", "text/plain")
         response.setHeader("Last-Modified", record.metadata.modifiedDate.toString())
 
         return StreamingOutput {
-            it.writer().use {
-                charStream.use {
-                    reader -> reader.copyTo(it)
-                }
+            val writer = it.writer()
+            charStream.use {
+                reader -> reader.copyTo(writer)
             }
+            writer.flush()
+
         }
 
     }
