@@ -6,10 +6,7 @@ import org.radarbase.upload.auth.NeedsPermission
 import org.radarbase.upload.doa.RecordRepository
 import org.radarbase.upload.doa.SourceTypeRepository
 import org.radarbase.upload.doa.entity.RecordStatus
-import org.radarbase.upload.dto.ContentsDTO
-import org.radarbase.upload.dto.RecordContainerDTO
-import org.radarbase.upload.dto.RecordDTO
-import org.radarbase.upload.dto.RecordMapper
+import org.radarbase.upload.dto.*
 import org.radarcns.auth.authorization.Permission
 import org.radarcns.auth.authorization.Permission.*
 import java.io.InputStream
@@ -19,7 +16,9 @@ import javax.ws.rs.*
 import javax.ws.rs.core.Context
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
+import javax.ws.rs.core.StreamingOutput
 import javax.ws.rs.core.UriInfo
+import javax.ws.rs.WebApplicationException
 
 
 @Path("/records")
@@ -41,6 +40,9 @@ class RecordResource {
     @Context
     lateinit var uri: UriInfo
 
+    @Context
+    lateinit var sourceTypeRepository: SourceTypeRepository
+
     @GET
     fun query(
             @QueryParam("projectId") projectId: String?,
@@ -48,9 +50,8 @@ class RecordResource {
             @DefaultValue("10") @QueryParam("limit") limit: Int,
             @QueryParam("lastId") lastId: Long?,
             @QueryParam("status") status: String?): RecordContainerDTO {
-        if (projectId == null) {
-            throw BadRequestException("Required project ID not provided.")
-        }
+
+        projectId ?: throw BadRequestException("Required project ID not provided.")
 
         if (userId != null) {
             auth.checkUserPermission(SUBJECT_READ, projectId, userId)
@@ -63,9 +64,6 @@ class RecordResource {
 
         return recordMapper.fromRecords(records, imposedLimit)
     }
-
-    @Context
-    lateinit var sourceTypeRepository: SourceTypeRepository
 
     @POST
     @NeedsPermission(Permission.Entity.MEASUREMENT, Permission.Operation.CREATE)
@@ -143,20 +141,82 @@ class RecordResource {
     }
 
     @GET
-    @Path("poll")
-    fun poll(@DefaultValue("10") @QueryParam("limit") limit: Int): RecordContainerDTO {
-        // TODO: only allow with client credentials
+    @Path("{recordId}/contents/{fileName}")
+    fun getContents(
+            @PathParam("fileName") fileName: String,
+            @PathParam("recordId") recordId: Long,
+            @Context response: HttpServletResponse): StreamingOutput {
 
-        val imposedLimit = Math.min(Math.max(limit, 1), 100)
+        val recordContent = recordRepository.readContent(recordId, fileName)
+                ?: throw NotFoundException("Cannot find content with record-id $recordId and file-name $fileName")
 
-        return recordMapper.fromRecords(recordRepository.poll(imposedLimit), imposedLimit)
+        response.status = Response.Status.OK.statusCode
+        response.setHeader("Content-type", recordContent.contentType)
+        response.setHeader("Content-Length", recordContent.content.length().toString())
+        response.setHeader("Last-Modified", recordContent.createdDate.toString())
+        val inputStream = recordContent.content.binaryStream
+        return StreamingOutput{
+            inputStream.use { inStream -> inStream.copyTo(it) }
+            it.flush()
+        }
     }
 
+    @POST
+    @Path("poll")
+    fun poll(pollDTO: PollDTO): RecordContainerDTO {
 
-    // TODO: get metadata path
-    // TODO: update metadata path
+        if (auth.isClientCredentials) {
+            val imposedLimit = Math.min(Math.max(pollDTO.limit, 1), 100)
+            return recordMapper.fromRecords(recordRepository.poll(imposedLimit), imposedLimit)
+        } else {
+            throw NotAuthorizedException("Client is not authorized to poll records")
+        }
+    }
 
-    // TODO: read file contents path
+    @GET
+    @Path("{recordId}/metadata")
+    fun getRecordMetaData(@PathParam("recordId") recordId: Long): RecordMetadataDTO {
 
-    // TODO: read log contents path
+        val record = recordRepository.read(recordId)
+                ?: throw NotFoundException("Record with ID $recordId does not exist")
+
+        return recordMapper.fromMetadata(record.metadata)
+    }
+
+    @POST
+    @Path("{recordId}/metadata")
+    fun updateRecordMetaData(metaData: RecordMetadataDTO, @PathParam("recordId") recordId: Long): RecordMetadataDTO {
+        val updatedRecord = recordRepository.updateMetadata(recordId, metaData)
+
+
+        return recordMapper.fromMetadata(updatedRecord)
+    }
+
+    @GET
+    @Path("{recordId}/logs/")
+    fun getRecordLogs(
+            @PathParam("recordId") recordId: Long,
+            @Context response: HttpServletResponse): StreamingOutput {
+
+        val record = recordRepository.read(recordId)
+                ?: throw NotFoundException("Record with ID $recordId does not exist")
+
+        val charStream = record.metadata.logs?.logs?.characterStream
+                ?: throw NotFoundException("Cannot find logs for record with record id $recordId")
+
+        response.status = Response.Status.OK.statusCode
+        response.setHeader("Content-type", "text/plain")
+        response.setHeader("Last-Modified", record.metadata.modifiedDate.toString())
+
+        return StreamingOutput {
+            val writer = it.writer()
+            charStream.use {
+                reader -> reader.copyTo(writer)
+            }
+            writer.flush()
+
+        }
+
+    }
+
 }

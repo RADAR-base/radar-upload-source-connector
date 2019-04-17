@@ -3,10 +3,10 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     java
     application
-    kotlin("jvm") version "1.3.21"
-    id("org.jetbrains.kotlin.plugin.noarg") version "1.3.21"
-    id("org.jetbrains.kotlin.plugin.jpa") version "1.3.21"
-    id("org.jetbrains.kotlin.plugin.allopen") version "1.3.21"
+    kotlin("jvm") version "1.3.30"
+    id("org.jetbrains.kotlin.plugin.noarg") version "1.3.30"
+    id("org.jetbrains.kotlin.plugin.jpa") version "1.3.30"
+    id("org.jetbrains.kotlin.plugin.allopen") version "1.3.30"
 }
 
 application {

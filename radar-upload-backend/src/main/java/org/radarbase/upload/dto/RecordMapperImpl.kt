@@ -1,8 +1,6 @@
 package org.radarbase.upload.dto
 
-import org.radarbase.upload.doa.entity.Record
-import org.radarbase.upload.doa.entity.RecordContent
-import org.radarbase.upload.doa.entity.RecordMetadata
+import org.radarbase.upload.doa.entity.*
 import javax.ws.rs.core.Context
 import javax.ws.rs.core.UriInfo
 
@@ -45,6 +43,7 @@ class RecordMapperImpl: RecordMapper {
             createdDate = metadata.createdDate,
             modifiedDate = metadata.modifiedDate,
             committedDate = metadata.committedDate,
+            // use record.id, since metadata and record have one-to-one
             logs = metadata.logs?.let {
                 LogsDto(url = "${uri.baseUri}/records/${metadata.id}/logs")
             }
