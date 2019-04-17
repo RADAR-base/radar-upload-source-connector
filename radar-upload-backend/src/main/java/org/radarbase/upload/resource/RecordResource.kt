@@ -148,27 +148,19 @@ class RecordResource {
             @PathParam("recordId") recordId: Long,
             @Context response: HttpServletResponse): StreamingOutput {
 
-        val (contentType, file) = recordRepository.readContentFile(recordId, fileName)
+        val recordContent = recordRepository.readContent(recordId, fileName)
+                ?: throw NotFoundException("Cannot find content with record-id $recordId and file-name $fileName")
+
         response.status = Response.Status.OK.statusCode
-        response.setHeader("Content-type", contentType)
-        response.setHeader("Content-Disposition", "attachment, filename=$fileName")
-        val inputStream = file.binaryStream
+        response.setHeader("Content-type", recordContent.contentType)
+        response.setHeader("Content-Length", recordContent.content.length().toString())
+        response.setHeader("Last-Modified", recordContent.createdDate.toString())
+        val inputStream = recordContent.content.binaryStream
         return StreamingOutput{
-
-            val buffer = ByteArray(1024)
-            var length: Int
-            reader@ while (true)  {
-                length = inputStream.read(buffer)
-                if(length != -1) {
-                    it.write(buffer, 0, length)
-                } else {
-                    break@reader
-                }
+            it.use {
+                inputStream.use { inStream -> inStream.copyTo(it) }
             }
-            it.flush()
-            inputStream.close()
         }
-
     }
 
     @POST
@@ -202,19 +194,30 @@ class RecordResource {
         return recordMapper.fromMetadata(updatedRecord)
     }
 
-
-
     @GET
     @Path("{recordId}/logs/")
-    fun getRecordLogs(@PathParam("recordId") recordId: Long): Reader {
+    fun getRecordLogs(
+            @PathParam("recordId") recordId: Long,
+            @Context response: HttpServletResponse): StreamingOutput {
 
         val record = recordRepository.read(recordId)
                 ?: throw NotFoundException("Record with ID $recordId does not exist")
 
-        return record.metadata?.logs?.logs?.characterStream
+        val charStream = record.metadata.logs?.logs?.characterStream
                 ?: throw NotFoundException("Cannot find logs for record with record id $recordId")
-    }
 
-    // TODO: read file contents path
+        response.status = Response.Status.OK.statusCode
+        response.setHeader("Content-type", "application/x-octet-stream")
+        response.setHeader("Last-Modified", record.metadata.modifiedDate.toString())
+
+        return StreamingOutput {
+            it.writer().use {
+                charStream.use {
+                    reader -> reader.copyTo(it)
+                }
+            }
+        }
+
+    }
 
 }

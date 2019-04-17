@@ -37,7 +37,7 @@ internal class SourceTypeRepositoryImplTest {
     }
 
     @Test
-    fun readList() {
+    fun readAll() {
         val sourceType = SourceType().apply {
             name = "Mp3Audio"
             topics = setOf("topic1", "topic2")
@@ -60,7 +60,7 @@ internal class SourceTypeRepositoryImplTest {
         repository.create(sourceType)
         repository.create(anotherSourceType)
         entityManager.clear()
-        val result = repository.read(10, null)
+        val result = repository.readAll()
         assertThat(result, notNullValue())
         assertThat(result.size, equalTo(2))
 
@@ -69,26 +69,6 @@ internal class SourceTypeRepositoryImplTest {
 
     @Test
     fun read() {
-        val sourceType = SourceType().apply {
-            name = "Mp3Audio"
-            topics = setOf("topic1", "topic2")
-            contentTypes = setOf("application/mp3", "audio/mp3")
-            configuration = mapOf(
-                    Pair("a", "c"),
-                    Pair("b", "d")
-            )
-        }
-        repository.create(sourceType)
-        entityManager.clear()
-        val result = repository.read(1,"Mp3Audio").firstOrNull()
-        assertThat(result, notNullValue())
-        assertThat(result?.name, equalTo("Mp3Audio"))
-        assertThat(result?.topics, equalTo(setOf("topic1", "topic2")))
-        assertThat(entityManager.entityManagerFactory.persistenceUnitUtil.isLoaded(result?.configuration), `is`(false))
-    }
-
-    @Test
-    fun readDetailed() {
         val sourceType = SourceType().apply {
             name = "Mp3Audio"
             topics = setOf("topic1", "topic2")
