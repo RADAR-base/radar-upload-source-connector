@@ -9,7 +9,6 @@ import org.radarbase.upload.inject.session
 import org.radarbase.upload.inject.transact
 import java.io.InputStream
 import java.io.Reader
-import java.sql.Blob
 import java.time.Instant
 import javax.persistence.EntityManager
 import javax.ws.rs.BadRequestException
@@ -104,17 +103,6 @@ class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepos
         return@transact result
     }
 
-    override fun readContentFile(id: Long, fileName: String): Pair<String, Blob> = em.transact{
-        val record = find(Record::class.java, id) ?: throw NotFoundException("Record not found for record id $id")
-
-        val existingContent = record.contents?.find {it.fileName == fileName}
-
-        existingContent ?: throw NotFoundException("Cannot find file with filename $fileName")
-
-        Pair(existingContent.contentType, existingContent.content)
-
-    }
-
     override fun poll(limit: Int): List<Record> = em.transact {
         createQuery("SELECT r FROM Record r WHERE r.metadata.status = :status ORDER BY r.metadata.modifiedDate", Record::class.java)
                 .setParameter("status", "READY")
@@ -127,8 +115,10 @@ class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepos
                 .toList()
     }
 
-    override fun readContent(id: Long): RecordContent? = em.transact {
-        find(RecordContent::class.java, id)
+    override fun readContent(id: Long, fileName: String): RecordContent? = em.transact {
+        val queryString = "SELECT rc from RecordContent rc WHERE rc.record.id = :id AND rc.fileName = :fileName"
+
+        createQuery(queryString, RecordContent::class.java).resultList.firstOrNull()
     }
 
     override fun create(record: Record): Record = em.transact {

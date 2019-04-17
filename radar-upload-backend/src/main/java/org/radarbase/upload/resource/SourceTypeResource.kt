@@ -26,14 +26,12 @@ class SourceTypeResource {
     @Context
     lateinit var sourceTypeMapper: SourceTypeMapper
 
-
     @GET
-    fun query(@QueryParam("name") name: String?,
-              @DefaultValue("10") @QueryParam("limit") limit: Int)
-            : SourceTypeContainerDTO {
+    fun query(@DefaultValue("20") @QueryParam("limit") limit: Int,
+              @QueryParam("lastId") lastId: Long?): SourceTypeContainerDTO {
 
         val imposedLimit = Math.min(Math.max(limit, 1), 100)
-        val records = sourceTypeRepository.read(imposedLimit, name)
+        val records = sourceTypeRepository.readAll(imposedLimit, lastId)
 
         return sourceTypeMapper.fromSourceTypes(records)
     }
@@ -43,7 +41,7 @@ class SourceTypeResource {
     fun getSourceType(
             @PathParam("name") name: String): SourceTypeDTO {
 
-        val record = sourceTypeRepository.read(1, name, true).firstOrNull()
+        val record = sourceTypeRepository.read( name)
                 ?: throw NotFoundException("Source type with name $name not found")
 
         return sourceTypeMapper.fromSourceType(record)
