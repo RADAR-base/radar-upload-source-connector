@@ -7,7 +7,6 @@ import org.radarbase.upload.doa.entity.RecordMetadata
 import org.radarbase.upload.dto.RecordMetadataDTO
 import java.io.InputStream
 import java.io.Reader
-import java.sql.Blob
 
 interface RecordRepository {
     fun create(record: Record): Record

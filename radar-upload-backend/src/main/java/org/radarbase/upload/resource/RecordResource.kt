@@ -10,7 +10,6 @@ import org.radarbase.upload.dto.*
 import org.radarcns.auth.authorization.Permission
 import org.radarcns.auth.authorization.Permission.*
 import java.io.InputStream
-import java.io.Reader
 import javax.annotation.Resource
 import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.*
