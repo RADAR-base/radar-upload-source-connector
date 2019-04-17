@@ -8,7 +8,7 @@ interface RecordMapper {
     fun fromRecord(record: Record): RecordDTO
     fun fromRecords(records: List<Record>, limit: Int): RecordContainerDTO
     fun fromMetadata(metadata: RecordMetadata): RecordMetadataDTO
+    fun fromContent(content: RecordContent): ContentsDTO
 
     fun toRecord(record: RecordDTO): Record
-    fun fromContent(content: RecordContent): ContentsDTO
 }

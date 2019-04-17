@@ -11,10 +11,12 @@ import org.radarbase.upload.doa.SourceTypeRepository
 import org.radarbase.upload.doa.SourceTypeRepositoryImpl
 import org.radarbase.upload.dto.RecordMapper
 import org.radarbase.upload.dto.RecordMapperImpl
+import org.radarbase.upload.dto.SourceTypeMapper
+import org.radarbase.upload.dto.SourceTypeMapperImpl
 import javax.inject.Singleton
 import javax.persistence.EntityManager
 
-abstract class UploadResources {
+abstract class UploadResourceConfig {
     fun resources(config: Config): ResourceConfig {
         val resources = ResourceConfig().apply {
             packages(
@@ -53,10 +55,15 @@ abstract class UploadResources {
             bind(RecordMapperImpl::class.java)
                     .to(RecordMapper::class.java)
 
+            bind(SourceTypeMapper::class.java)
+                    .to(SourceTypeMapperImpl::class.java)
+
             bind(RecordRepositoryImpl::class.java)
                     .to(RecordRepository::class.java)
+
             bind(SourceTypeRepositoryImpl::class.java)
                     .to(SourceTypeRepository::class.java)
+
             registerAuthenticationUtilities(this)
         }
     }
