@@ -6,7 +6,7 @@ import org.radarbase.upload.auth.NeedsPermission
 import org.radarbase.upload.doa.RecordRepository
 import org.radarbase.upload.doa.SourceTypeRepository
 import org.radarbase.upload.doa.entity.RecordStatus
-import org.radarbase.upload.dto.*
+import org.radarbase.upload.api.*
 import org.radarcns.auth.authorization.Permission
 import org.radarcns.auth.authorization.Permission.*
 import java.io.InputStream
@@ -193,7 +193,7 @@ class RecordResource {
     }
 
     @GET
-    @Path("{recordId}/logs/")
+    @Path("{recordId}/logs")
     fun getRecordLogs(
             @PathParam("recordId") recordId: Long,
             @Context response: HttpServletResponse): StreamingOutput {

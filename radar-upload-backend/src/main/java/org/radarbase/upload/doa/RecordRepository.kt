@@ -4,7 +4,7 @@ import org.radarbase.upload.doa.entity.Record
 import org.radarbase.upload.doa.entity.RecordContent
 import org.radarbase.upload.doa.entity.RecordLogs
 import org.radarbase.upload.doa.entity.RecordMetadata
-import org.radarbase.upload.dto.RecordMetadataDTO
+import org.radarbase.upload.api.RecordMetadataDTO
 import java.io.InputStream
 import java.io.Reader
 

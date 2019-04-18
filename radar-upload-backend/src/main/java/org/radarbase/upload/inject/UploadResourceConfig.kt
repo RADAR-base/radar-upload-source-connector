@@ -9,10 +9,10 @@ import org.radarbase.upload.doa.RecordRepository
 import org.radarbase.upload.doa.RecordRepositoryImpl
 import org.radarbase.upload.doa.SourceTypeRepository
 import org.radarbase.upload.doa.SourceTypeRepositoryImpl
-import org.radarbase.upload.dto.RecordMapper
-import org.radarbase.upload.dto.RecordMapperImpl
-import org.radarbase.upload.dto.SourceTypeMapper
-import org.radarbase.upload.dto.SourceTypeMapperImpl
+import org.radarbase.upload.api.RecordMapper
+import org.radarbase.upload.api.RecordMapperImpl
+import org.radarbase.upload.api.SourceTypeMapper
+import org.radarbase.upload.api.SourceTypeMapperImpl
 import javax.inject.Singleton
 import javax.persistence.EntityManager
 

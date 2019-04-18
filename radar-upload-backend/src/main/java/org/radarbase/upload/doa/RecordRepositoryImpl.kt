@@ -3,7 +3,7 @@ package org.radarbase.upload.doa
 import org.hibernate.Hibernate
 import org.hibernate.Session
 import org.radarbase.upload.doa.entity.*
-import org.radarbase.upload.dto.RecordMetadataDTO
+import org.radarbase.upload.api.RecordMetadataDTO
 import org.radarbase.upload.exception.ConflictException
 import org.radarbase.upload.inject.session
 import org.radarbase.upload.inject.transact
