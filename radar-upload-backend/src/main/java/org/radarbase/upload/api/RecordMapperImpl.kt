@@ -1,4 +1,4 @@
-package org.radarbase.upload.dto
+package org.radarbase.upload.api
 
 import org.radarbase.upload.doa.entity.*
 import javax.ws.rs.core.Context
