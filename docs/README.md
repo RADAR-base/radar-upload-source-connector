@@ -141,6 +141,9 @@ See <https://www.nginx.com/resources/wiki/modules/upload_progress/> for result v
 **Get the logs**
 `GET /records/{id}/logs`
 ```
+Content-Type: text/plain
+Content-Length: 23011
+
 ...
 ```
 
@@ -270,7 +273,8 @@ or HTTP 409 Conflict if the revision does not match (i.e. another process is pro
   "status": "FAILED | SUCCEEDED",
   "message": "Cannot process data: ... | Data was successfully committed.",
   "logs": {
-    "text": "..."
+    "contentType": "application/json",
+    "contents": "..."
   }
 }
 ```
