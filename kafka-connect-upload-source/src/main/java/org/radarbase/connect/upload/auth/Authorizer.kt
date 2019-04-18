@@ -1,4 +1,4 @@
-package org.radarbase.connect.upload
+package org.radarbase.connect.upload.auth
 
 import okhttp3.OkHttpClient
 

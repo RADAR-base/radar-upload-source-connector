@@ -1,4 +1,4 @@
-package org.radarbase.upload.api
+package org.radarbase.connect.upload.api
 
 import java.time.Instant
 import java.time.LocalDateTime

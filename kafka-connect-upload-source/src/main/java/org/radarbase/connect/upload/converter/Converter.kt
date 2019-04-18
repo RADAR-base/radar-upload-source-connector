@@ -1,7 +1,8 @@
-package org.radarbase.connect.upload
+package org.radarbase.connect.upload.converter
 
 import org.apache.kafka.connect.source.SourceRecord
-import org.radarbase.upload.api.RecordDTO
+import org.radarbase.connect.upload.api.UploadBackendClient
+import org.radarbase.connect.upload.api.RecordDTO
 import java.io.Closeable
 
 interface Converter: Closeable {
