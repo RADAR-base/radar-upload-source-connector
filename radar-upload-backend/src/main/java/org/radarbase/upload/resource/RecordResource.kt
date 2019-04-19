@@ -91,6 +91,8 @@ class RecordResource {
         data.projectId ?: throw BadRequestException("Record needs a project ID")
         data.userId ?: throw BadRequestException("Record needs a user ID")
 
+        auth.checkUserPermission(MEASUREMENT_CREATE, data.projectId, data.userId)
+
         data.contents?.forEach {
             it.text ?: throw BadRequestException("Contents need explicit text value set in UTF-8 encoding.")
             if (it.url != null) {

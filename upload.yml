@@ -5,3 +5,14 @@ jdbcDriver: "org.postgresql.Driver"
 jdbcUrl: "jdbc:postgresql://localhost:5432/uploadconnector"
 jdbcUser: "radarcns"
 jdbcPassword: "radarcns"
+sourceTypes:
+  - name: "MyCSV"
+    topics:
+      - "test_topic"
+    contentTypes:
+      - "application/text"
+    timeRequired: false
+    sourceIdRequired: false
+    configuration:
+      "setting1": "value1"
+      "setting2": "value2"

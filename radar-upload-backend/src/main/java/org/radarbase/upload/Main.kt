@@ -28,7 +28,7 @@ fun loadConfig(args: Array<String>): Config {
             val mapper = ObjectMapper(YAMLFactory()).registerModule(KotlinModule())
             mapper.readValue<Config>(it)
         } catch (ex: IOException) {
-            logger.error("Usage: radar-upload [config.yml]")
+            logger.error("Usage: radar-upload [upload.yml]")
             logger.error("Failed to read config file $configFile: ${ex.message}")
             exitProcess(1)
         }
