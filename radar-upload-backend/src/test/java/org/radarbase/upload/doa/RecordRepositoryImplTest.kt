@@ -209,7 +209,7 @@ internal class RecordRepositoryImplTest {
         readLogs()
         repository.delete(record)
         assertThat(repository.read(id), nullValue())
-        assertThat(repository.readContent(id), nullValue())
+        assertThat(repository.readContent(id, "Gibson.mp3"), nullValue())
         assertThat(repository.readLogs(id), nullValue())
         assertThat(repository.readMetadata(id), nullValue())
     }
