@@ -8,6 +8,7 @@ plugins {
 project.extra.apply {
     set("kafkaVersion", "2.2.0-cp2")
     set("okhttpVersion", "3.14.1")
+    set("jacksonVersion", "2.8.9")
 }
 
 repositories {
@@ -18,6 +19,9 @@ repositories {
 
 dependencies {
     api("com.squareup.okhttp3:okhttp:${project.extra["okhttpVersion"]}")
+    implementation("com.fasterxml.jackson.dataformat:jackson-datatype-jsr310:${project.extra["jacksonVersion"]}")
+    implementation("com.fasterxml.jackson.core:jackson-databind:${project.extra["jacksonVersion"]}")
+
 
     // Included in connector runtime
     compileOnly("org.apache.kafka:connect-api:${project.extra["kafkaVersion"]}")

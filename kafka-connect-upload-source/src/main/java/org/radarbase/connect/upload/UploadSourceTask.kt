@@ -6,13 +6,16 @@ import org.radarbase.connect.upload.converter.Converter
 import org.radarbase.connect.upload.api.PollDTO
 import org.radarbase.connect.upload.api.RecordMetadataDTO
 import org.radarbase.connect.upload.api.UploadBackendClient
+import org.radarbase.connect.upload.util.VersionUtil
 
 class UploadSourceTask: SourceTask() {
     private lateinit var uploadClient: UploadBackendClient
     private lateinit var converters: List<Converter>
 
     override fun start(props: Map<String, String>?) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+
+        val connectConfig = UploadSourceConnectorConfig(props!!)
+        uploadClient = UploadBackendClient(connectConfig.getAuthorizer(), connectConfig.getHttpClient())
         // TODO init uploadClient
         // TODO init converters
     }
@@ -22,9 +25,7 @@ class UploadSourceTask: SourceTask() {
         converters.forEach(Converter::close)
     }
 
-    override fun version(): String {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
+    override fun version(): String = VersionUtil.getVersion()
 
     override fun poll(): List<SourceRecord> {
         val records = uploadClient.pollRecords(PollDTO(1, converters.map { it.name })).records

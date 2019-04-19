@@ -23,11 +23,13 @@ abstract class UploadResourceConfig {
                     "org.radarbase.upload.auth",
                     "org.radarbase.upload.exception",
                     "org.radarbase.upload.filter",
+                    "org.radarbase.upload.listener",
                     "org.radarbase.upload.resource")
             register(binder(config))
             property("jersey.config.server.wadl.disableWadl", true)
         }
         registerAuthentication(resources)
+
         return resources
     }
 
@@ -63,6 +65,9 @@ abstract class UploadResourceConfig {
 
             bind(SourceTypeRepositoryImpl::class.java)
                     .to(SourceTypeRepository::class.java)
+
+            bind(SourceTypeLoaderImpl::class.java)
+                    .to(SourceTypeLoaderImpl::class.java)
 
             registerAuthenticationUtilities(this)
         }
