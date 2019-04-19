@@ -44,7 +44,7 @@ data class RecordContainerDTO(
         var records: List<RecordDTO>)
 
 data class SourceTypeDTO(
-        var name: String?,
+        var name: String,
         var topics: Set<String>?,
         var contentTypes: Set<String>?,
         var timeRequired: Boolean?,
