@@ -21,9 +21,6 @@ class SourceTypeResource {
     lateinit var sourceTypeRepository: SourceTypeRepository
 
     @Context
-    lateinit var auth: Auth
-
-    @Context
     lateinit var sourceTypeMapper: SourceTypeMapper
 
     @GET

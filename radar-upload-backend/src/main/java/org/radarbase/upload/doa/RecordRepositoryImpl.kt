@@ -118,7 +118,10 @@ class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepos
     override fun readContent(id: Long, fileName: String): RecordContent? = em.transact {
         val queryString = "SELECT rc from RecordContent rc WHERE rc.record.id = :id AND rc.fileName = :fileName"
 
-        createQuery(queryString, RecordContent::class.java).resultList.firstOrNull()
+        createQuery(queryString, RecordContent::class.java)
+                .setParameter("fileName", fileName)
+                .setParameter("id", id)
+                .resultList.firstOrNull()
     }
 
     override fun create(record: Record): Record = em.transact {

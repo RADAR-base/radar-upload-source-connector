@@ -39,8 +39,9 @@ services:
     image: radarbase/radarbase-postgres:latest
     networks:
       - management
+      - default
     ports:
-      - "5432:5432"
+      - "5434:5432"
     environment:
       - POSTGRES_USER=radarcns
       - POSTGRES_PASSWORD=radarcns

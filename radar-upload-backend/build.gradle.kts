@@ -31,15 +31,19 @@ repositories {
 }
 
 dependencies {
+    compile(kotlin("stdlib-jdk8"))
+
     implementation("org.glassfish.grizzly:grizzly-http-server:${project.extra["grizzlyVersion"]}")
 
     implementation("org.glassfish.jersey.containers:jersey-container-grizzly2-http:${project.extra["jerseyVersion"]}")
     implementation("org.glassfish.jersey.containers:jersey-container-grizzly2-servlet:${project.extra["jerseyVersion"]}")
     implementation("org.glassfish.jersey.inject:jersey-hk2:${project.extra["jerseyVersion"]}")
+    runtimeOnly("org.glassfish.jersey.media:jersey-media-json-jackson:${project.extra["jerseyVersion"]}")
 
     implementation("org.radarcns:radar-auth:${project.extra["radarMpVersion"]}")
 
     implementation("org.slf4j:slf4j-api:${project.extra["slf4jVersion"]}")
+
     implementation("com.fasterxml.jackson.core:jackson-databind:${project.extra["jacksonVersion"]}")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${project.extra["jacksonVersion"]}")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:${project.extra["jacksonVersion"]}")
@@ -48,8 +52,9 @@ dependencies {
     implementation("org.liquibase:liquibase-core:3.5.3")
 
     runtimeOnly("com.h2database:h2:1.4.199")
+    runtimeOnly("org.postgresql:postgresql:42.2.5")
     runtimeOnly("ch.qos.logback:logback-classic:${project.extra["logbackVersion"]}")
-    compile(kotlin("stdlib-jdk8"))
+
 
 //    testImplementation("com.h2database:h2:1.4.199")
     testImplementation("org.junit.jupiter:junit-jupiter:5.4.2")

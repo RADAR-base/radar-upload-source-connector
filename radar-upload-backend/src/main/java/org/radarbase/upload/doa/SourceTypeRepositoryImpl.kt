@@ -7,7 +7,12 @@ import javax.persistence.EntityManager
 import javax.ws.rs.core.Context
 
 
-class SourceTypeRepositoryImpl(@Context private var em: EntityManager) : SourceTypeRepository {
+class SourceTypeRepositoryImpl(
+        @Context private var em: EntityManager): SourceTypeRepository {
+
+    init {
+        logger.info("Init source-type repository")
+    }
 
     override fun create(record: SourceType) = em.transact { persist(record) }
 
@@ -19,7 +24,7 @@ class SourceTypeRepositoryImpl(@Context private var em: EntityManager) : SourceT
         if (detailed) {
             queryString += " JOIN FETCH s.configuration"
         }
-        queryString += "ORDER BY s.id"
+        queryString += " ORDER BY s.id"
 
         return em.transact {
             createQuery(queryString, SourceType::class.java).run {
