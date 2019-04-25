@@ -1,5 +1,7 @@
 package org.radarbase.upload.inject
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.KotlinModule
 import org.glassfish.jersey.internal.inject.AbstractBinder
 import org.glassfish.jersey.process.internal.RequestScoped
 import org.glassfish.jersey.server.ResourceConfig
@@ -12,6 +14,7 @@ import org.radarbase.upload.api.SourceTypeMapperImpl
 import org.radarbase.upload.doa.*
 import javax.inject.Singleton
 import javax.persistence.EntityManager
+import javax.ws.rs.ext.ContextResolver
 
 abstract class UploadResourceConfig {
     fun resources(config: Config): ResourceConfig {
@@ -22,6 +25,7 @@ abstract class UploadResourceConfig {
                     "org.radarbase.upload.filter",
                     "org.radarbase.upload.resource")
             register(binder(config))
+            register(ContextResolver<ObjectMapper> { ObjectMapper().registerModule(KotlinModule()) })
             property("jersey.config.server.wadl.disableWadl", true)
         }
         registerAuthentication(resources)

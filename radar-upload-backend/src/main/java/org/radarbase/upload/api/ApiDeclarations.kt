@@ -57,5 +57,5 @@ data class SourceTypeContainerDTO(
         var sourceTypes: List<SourceTypeDTO>)
 
 data class PollDTO(
-        @JsonProperty("limit") var limit: Int = 10,
-        @JsonProperty("supportedConverters") var supportedConverters: List<String>)
+        var limit: Int = 10,
+        var supportedConverters: List<String>)
