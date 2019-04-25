@@ -39,6 +39,7 @@ dependencies {
     implementation("org.glassfish.jersey.containers:jersey-container-grizzly2-servlet:${project.extra["jerseyVersion"]}")
     implementation("org.glassfish.jersey.inject:jersey-hk2:${project.extra["jerseyVersion"]}")
     runtimeOnly("org.glassfish.jersey.media:jersey-media-json-jackson:${project.extra["jerseyVersion"]}")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:${project.extra["jacksonVersion"]}")
 
     implementation("org.radarcns:radar-auth:${project.extra["radarMpVersion"]}")
 
