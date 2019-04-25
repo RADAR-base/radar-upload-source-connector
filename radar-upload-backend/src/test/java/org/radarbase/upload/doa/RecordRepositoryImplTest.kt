@@ -32,8 +32,7 @@ internal class RecordRepositoryImplTest {
     @BeforeEach
     fun setUp() {
         doaFactory = DoaEntityManagerFactory(
-                Config(jdbcUrl = "jdbc:h2:file:${tempDir.resolve("db.h2")};DB_CLOSE_DELAY=-1;MVCC=true"),
-                mapOf(Pair("hibernate.show_sql", "true"))
+                Config(jdbcUrl = "jdbc:h2:file:${tempDir.resolve("db.h2")};DB_CLOSE_DELAY=-1;MVCC=true")
         )
         entityManager = doaFactory.get()
         repository = RecordRepositoryImpl(entityManager)
