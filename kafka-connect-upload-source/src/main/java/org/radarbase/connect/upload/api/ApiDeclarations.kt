@@ -58,3 +58,11 @@ data class SourceTypeContainerDTO(
 data class PollDTO(
         var limit: Int = 10,
         var supportedConverters: List<String>)
+
+
+data class OauthToken(
+        var accessToken: String,
+        var expiresIn: Long,
+        var issuedAt: Long,
+        var scope: String,
+        var sub: String)

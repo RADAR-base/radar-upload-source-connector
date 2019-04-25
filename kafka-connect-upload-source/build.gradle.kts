@@ -8,7 +8,7 @@ plugins {
 project.extra.apply {
     set("kafkaVersion", "2.2.0-cp2")
     set("okhttpVersion", "3.14.1")
-    set("jacksonVersion", "2.8.9")
+    set("jacksonVersion", "2.9.8")
 }
 
 repositories {
@@ -19,13 +19,19 @@ repositories {
 
 dependencies {
     api("com.squareup.okhttp3:okhttp:${project.extra["okhttpVersion"]}")
-    implementation("com.fasterxml.jackson.dataformat:jackson-datatype-jsr310:${project.extra["jacksonVersion"]}")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${project.extra["jacksonVersion"]}")
     implementation("com.fasterxml.jackson.core:jackson-databind:${project.extra["jacksonVersion"]}")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:${project.extra["jacksonVersion"]}")
 
 
     // Included in connector runtime
     compileOnly("org.apache.kafka:connect-api:${project.extra["kafkaVersion"]}")
     implementation(kotlin("stdlib-jdk8"))
+
+
+    testImplementation("org.junit.jupiter:junit-jupiter:5.4.2")
+    testImplementation("org.hamcrest:hamcrest-all:1.3")
+    testImplementation("org.apache.kafka:connect-api:${project.extra["kafkaVersion"]}")
 }
 
 // config JVM target to 1.8 for kotlin compilation tasks

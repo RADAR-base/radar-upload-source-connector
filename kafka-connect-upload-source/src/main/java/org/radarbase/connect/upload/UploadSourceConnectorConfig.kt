@@ -2,6 +2,7 @@ package org.radarbase.connect.upload
 
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.KotlinModule
 import okhttp3.OkHttpClient
 import org.apache.kafka.common.config.AbstractConfig
 import org.apache.kafka.common.config.ConfigDef
@@ -12,7 +13,6 @@ import java.util.concurrent.TimeUnit
 class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, String>):
         AbstractConfig(config, parsedConfig) {
 
-
     constructor(parsedConfig: Map<String, String>) : this(conf(), parsedConfig) {}
 
     fun getHttpClient(): OkHttpClient =
@@ -20,7 +20,7 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
                 .connectTimeout(10, TimeUnit.SECONDS)
                 .writeTimeout(10, TimeUnit.SECONDS)
                 .readTimeout(30, TimeUnit.SECONDS)
-                .build();
+                .build()
 
 
     fun getAuthorizer(): Authorizer {
@@ -28,12 +28,12 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
                 getHttpClient(),
                 getString(UPLOAD_SOURCE_CLIENT_CONFIG),
                 getString(UPLOAD_SOURCE_MP_SECRET_CONFIG),
-                getString(UPLOAD_SOURCE_CLIENT_SCOPE_CONFIG).split(","),
-                getString(UPLOAD_SOURCE_CLIENT_TOKEN_URL_CONFIG)
+                getString(UPLOAD_SOURCE_CLIENT_TOKEN_URL_CONFIG),
+                getString(UPLOAD_SOURCE_CLIENT_SCOPE_CONFIG)?.split(",")?.toSet()
         )
-
-
     }
+
+    fun getBaseUrl(): String = getString(UPLOAD_SOURCE_SERVER_BASE_URL_CONFIG)
 
     companion object {
 
@@ -68,6 +68,7 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
 
         var mapper: ObjectMapper = ObjectMapper()
                 .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                .registerModule(KotlinModule())
 
 
         fun conf(): ConfigDef {
