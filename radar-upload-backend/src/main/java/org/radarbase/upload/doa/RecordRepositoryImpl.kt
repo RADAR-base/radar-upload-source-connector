@@ -105,7 +105,7 @@ class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepos
 
     override fun poll(limit: Int): List<Record> = em.transact {
         createQuery("SELECT r FROM Record r WHERE r.metadata.status = :status ORDER BY r.metadata.modifiedDate", Record::class.java)
-                .setParameter("status", "READY")
+                .setParameter("status", RecordStatus.valueOf("READY"))
                 .setMaxResults(limit)
                 .resultStream
                 .peek {

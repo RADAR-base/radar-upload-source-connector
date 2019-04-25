@@ -62,9 +62,6 @@ abstract class UploadResourceConfig {
             bind(SourceTypeRepositoryImpl::class.java)
                     .to(SourceTypeRepository::class.java)
 
-//            bind(YamlSourceTypeRepositoryImpl::class.java)
-//                    .to(ExternalSourceTypeRepository::class.java)
-
             registerAuthenticationUtilities(this)
         }
     }

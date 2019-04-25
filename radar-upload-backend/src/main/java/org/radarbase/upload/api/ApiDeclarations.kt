@@ -1,5 +1,6 @@
 package org.radarbase.upload.api
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import java.time.Instant
 import java.time.LocalDateTime
 
@@ -56,5 +57,5 @@ data class SourceTypeContainerDTO(
         var sourceTypes: List<SourceTypeDTO>)
 
 data class PollDTO(
-        var limit: Int = 10,
-        var supportedConverters: List<String>)
+        @JsonProperty("limit") var limit: Int = 10,
+        @JsonProperty("supportedConverters") var supportedConverters: List<String>)

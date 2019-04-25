@@ -31,8 +31,8 @@ class RecordResource {
     @Context
     lateinit var recordRepository: RecordRepository
 
-    @Context
-    lateinit var auth: Auth
+//    @Context
+//    lateinit var auth: Auth
 
     @Context
     lateinit var recordMapper: RecordMapper
@@ -49,7 +49,8 @@ class RecordResource {
             @QueryParam("userId") userId: String?,
             @DefaultValue("10") @QueryParam("limit") limit: Int,
             @QueryParam("lastId") lastId: Long?,
-            @QueryParam("status") status: String?): RecordContainerDTO {
+            @QueryParam("status") status: String?,
+            @Context auth: Auth): RecordContainerDTO {
 
         projectId ?: throw BadRequestException("Required project ID not provided.")
 
@@ -66,12 +67,12 @@ class RecordResource {
     }
 
     @POST
-    @NeedsPermission(Permission.Entity.MEASUREMENT, Permission.Operation.CREATE)
-    fun create(record: RecordDTO, @Context response: HttpServletResponse): RecordDTO {
+    @NeedsPermission(Entity.MEASUREMENT, Operation.CREATE)
+    fun create(record: RecordDTO, @Context response: HttpServletResponse, @Context auth: Auth): RecordDTO {
 
         // TODO: logic to do authorization checking
 
-        validateNewRecord(record)
+        validateNewRecord(record, auth)
 
         val doaRecord = recordMapper.toRecord(record)
         val result = recordRepository.create(doaRecord)
@@ -81,7 +82,7 @@ class RecordResource {
         return recordMapper.fromRecord(result)
     }
 
-    private fun validateNewRecord(record: RecordDTO) {
+    private fun validateNewRecord(record: RecordDTO, auth: Auth) {
         if (record.id != null) {
             throw BadRequestException("Record ID cannot be set explicitly")
         }
@@ -115,7 +116,7 @@ class RecordResource {
 
     @PUT
     @Consumes("*/*")
-    @NeedsPermission(Permission.Entity.MEASUREMENT, Permission.Operation.CREATE)
+    @NeedsPermission(Entity.MEASUREMENT, Operation.CREATE)
     @Path("{recordId}/contents/{fileName}")
     fun putContents(
             input: InputStream,
@@ -123,7 +124,8 @@ class RecordResource {
             @HeaderParam("Content-Length") contentLength: Long,
             @PathParam("fileName") fileName: String,
             @PathParam("recordId") recordId: Long,
-            @Context response: HttpServletResponse): ContentsDTO {
+            @Context response: HttpServletResponse,
+            @Context auth: Auth): ContentsDTO {
 
         val record = recordRepository.read(recordId)
                 ?: throw NotFoundException("Record with ID $recordId does not exist")
@@ -165,7 +167,7 @@ class RecordResource {
 
     @POST
     @Path("poll")
-    fun poll(pollDTO: PollDTO): RecordContainerDTO {
+    fun poll(pollDTO: PollDTO, @Context auth: Auth): RecordContainerDTO {
 
         if (auth.isClientCredentials) {
             val imposedLimit = Math.min(Math.max(pollDTO.limit, 1), 100)
@@ -222,10 +224,9 @@ class RecordResource {
     @POST
     @Path("{recordId}/logs")
     fun addRecordLogs(
-            record: RecordDTO,
+            recordMetaData: RecordMetadataDTO,
             @PathParam("recordId") recordId: Long,
             @Context response: HttpServletResponse): StreamingOutput {
-        // TODO: Implement post features here
         val record = recordRepository.read(recordId)
                 ?: throw NotFoundException("Record with ID $recordId does not exist")
 
