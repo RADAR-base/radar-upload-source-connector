@@ -1,5 +1,7 @@
 package org.radarbase.upload.doa
 
+import org.radarbase.upload.Config
+import org.radarbase.upload.api.SourceTypeMapper
 import org.radarbase.upload.doa.entity.SourceType
 import org.radarbase.upload.inject.transact
 import org.slf4j.LoggerFactory
@@ -8,10 +10,15 @@ import javax.ws.rs.core.Context
 
 
 class SourceTypeRepositoryImpl(
-        @Context private var em: EntityManager): SourceTypeRepository {
+        @Context private var em: EntityManager,
+        @Context private var config: Config,
+        @Context private val sourceTypeMapper: SourceTypeMapper): SourceTypeRepository {
 
     init {
-        logger.info("Init source-type repository")
+        config.sourceTypes?.forEach {
+            logger.info("Creating source-type with name ${it.name}")
+            create(sourceTypeMapper.toSourceType(it))
+        }
     }
 
     override fun create(record: SourceType) = em.transact { persist(record) }
