@@ -1,8 +1,5 @@
 package org.radarbase.upload.resource
 
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody
 import org.radarbase.upload.auth.Auth
 import org.radarbase.upload.auth.Authenticated
 import org.radarbase.upload.auth.NeedsPermission
@@ -10,18 +7,12 @@ import org.radarbase.upload.doa.RecordRepository
 import org.radarbase.upload.doa.SourceTypeRepository
 import org.radarbase.upload.doa.entity.RecordStatus
 import org.radarbase.upload.dto.*
-import org.radarcns.auth.authorization.Permission
 import org.radarcns.auth.authorization.Permission.*
 import java.io.InputStream
 import javax.annotation.Resource
 import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.*
-import javax.ws.rs.core.Context
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.core.StreamingOutput
-import javax.ws.rs.core.UriInfo
-import javax.ws.rs.WebApplicationException
+import javax.ws.rs.core.*
 
 
 @Path("/records")
@@ -45,9 +36,6 @@ class RecordResource {
 
     @Context
     lateinit var sourceTypeRepository: SourceTypeRepository
-
-    @Context
-    lateinit var httpClient: OkHttpClient
 
     @GET
     fun query(
