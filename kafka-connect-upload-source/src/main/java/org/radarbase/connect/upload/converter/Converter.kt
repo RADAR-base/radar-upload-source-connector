@@ -5,11 +5,15 @@ import org.radarbase.connect.upload.api.UploadBackendClient
 import org.radarbase.connect.upload.api.RecordDTO
 import java.io.Closeable
 
+/**
+ * Converter for each source-type
+ */
 interface Converter: Closeable {
-    val name: String
+    val sourceType: String
 
     fun initialize(settings: Map<String, String>, client: UploadBackendClient) {}
 
+    // convert and add logs return result
     fun convert(record: RecordDTO): ConversionResult
 }
 
