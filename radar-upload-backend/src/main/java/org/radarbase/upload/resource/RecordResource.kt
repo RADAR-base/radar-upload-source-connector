@@ -1,5 +1,8 @@
 package org.radarbase.upload.resource
 
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody
 import org.radarbase.upload.auth.Auth
 import org.radarbase.upload.auth.Authenticated
 import org.radarbase.upload.auth.NeedsPermission
@@ -43,6 +46,9 @@ class RecordResource {
     @Context
     lateinit var sourceTypeRepository: SourceTypeRepository
 
+    @Context
+    lateinit var httpClient: OkHttpClient
+
     @GET
     fun query(
             @QueryParam("projectId") projectId: String?,
@@ -66,7 +72,7 @@ class RecordResource {
     }
 
     @POST
-    @NeedsPermission(Permission.Entity.MEASUREMENT, Permission.Operation.CREATE)
+    @NeedsPermission(Entity.MEASUREMENT, Operation.CREATE)
     fun create(record: RecordDTO, @Context response: HttpServletResponse): RecordDTO {
 
         // TODO: logic to do authorization checking
@@ -113,7 +119,7 @@ class RecordResource {
 
     @PUT
     @Consumes("*/*")
-    @NeedsPermission(Permission.Entity.MEASUREMENT, Permission.Operation.CREATE)
+    @NeedsPermission(Entity.MEASUREMENT, Operation.CREATE)
     @Path("{recordId}/contents/{fileName}")
     fun putContents(
             input: InputStream,
@@ -155,7 +161,7 @@ class RecordResource {
         response.setHeader("Content-Length", recordContent.content.length().toString())
         response.setHeader("Last-Modified", recordContent.createdDate.toString())
         val inputStream = recordContent.content.binaryStream
-        return StreamingOutput{
+        return StreamingOutput {
             inputStream.use { inStream -> inStream.copyTo(it) }
             it.flush()
         }
@@ -185,11 +191,14 @@ class RecordResource {
 
     @POST
     @Path("{recordId}/metadata")
-    fun updateRecordMetaData(metaData: RecordMetadataDTO, @PathParam("recordId") recordId: Long): RecordMetadataDTO {
+    fun updateRecordMetaData(metaData: RecordMetadataDTO, @PathParam("recordId") recordId: Long, @Context callbackManager: CallbackManager): RecordMetadataDTO {
         val updatedRecord = recordRepository.updateMetadata(recordId, metaData)
 
+        val updatedMetadata = recordMapper.fromMetadata(updatedRecord)
 
-        return recordMapper.fromMetadata(updatedRecord)
+        callbackManager.callback(updatedMetadata)
+
+        return updatedMetadata
     }
 
     @GET
@@ -214,9 +223,6 @@ class RecordResource {
                 reader -> reader.copyTo(writer)
             }
             writer.flush()
-
         }
-
     }
-
 }

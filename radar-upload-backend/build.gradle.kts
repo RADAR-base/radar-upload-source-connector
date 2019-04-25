@@ -14,6 +14,7 @@ application {
 }
 
 project.extra.apply {
+    set("okhttpVersion", "3.14.1")
     set("radarMpVersion", "0.5.4")
     set("radarCommonsVersion", "0.11.3")
     set("radarSchemasVersion", "0.4.3")
@@ -46,6 +47,8 @@ dependencies {
 
     implementation("org.hibernate:hibernate-core:${project.extra["hibernateVersion"]}")
     implementation("org.liquibase:liquibase-core:3.5.3")
+
+    implementation("com.squareup.okhttp3:okhttp:${project.extra["okhttpVersion"]}")
 
     runtimeOnly("com.h2database:h2:1.4.199")
     runtimeOnly("ch.qos.logback:logback-classic:${project.extra["logbackVersion"]}")
