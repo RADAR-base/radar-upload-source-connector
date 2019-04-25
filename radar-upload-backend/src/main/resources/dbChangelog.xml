@@ -37,6 +37,7 @@
             <column name="created_date" type="timestamp"/>
             <column name="modified_date" type="timestamp"/>
             <column name="committed_date" type="timestamp"/>
+            <column name="callback_url" type="varchar(255)"/>
         </createTable>
 
         <createTable tableName="record_logs">
