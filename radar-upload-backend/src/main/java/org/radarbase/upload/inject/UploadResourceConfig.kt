@@ -1,5 +1,6 @@
 package org.radarbase.upload.inject
 
+import okhttp3.OkHttpClient
 import org.glassfish.jersey.internal.inject.AbstractBinder
 import org.glassfish.jersey.process.internal.RequestScoped
 import org.glassfish.jersey.server.ResourceConfig
@@ -9,14 +10,13 @@ import org.radarbase.upload.doa.RecordRepository
 import org.radarbase.upload.doa.RecordRepositoryImpl
 import org.radarbase.upload.doa.SourceTypeRepository
 import org.radarbase.upload.doa.SourceTypeRepositoryImpl
-import org.radarbase.upload.dto.RecordMapper
-import org.radarbase.upload.dto.RecordMapperImpl
-import org.radarbase.upload.dto.SourceTypeMapper
-import org.radarbase.upload.dto.SourceTypeMapperImpl
+import org.radarbase.upload.dto.*
 import javax.inject.Singleton
 import javax.persistence.EntityManager
 
 abstract class UploadResourceConfig {
+    private val client = OkHttpClient()
+
     fun resources(config: Config): ResourceConfig {
         val resources = ResourceConfig().apply {
             packages(
@@ -40,6 +40,13 @@ abstract class UploadResourceConfig {
             // Bind instances. These cannot use any injects themselves
             bind(config)
                     .to(Config::class.java)
+
+            bind(client)
+                    .to(OkHttpClient::class.java)
+
+            bind(QueuedCallbackManager::class.java)
+                    .to(CallbackManager::class.java)
+                    .`in`(Singleton::class.java)
 
             // Bind factories.
             bindFactory(AuthFactory::class.java)
