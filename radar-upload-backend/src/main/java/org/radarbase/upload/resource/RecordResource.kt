@@ -190,7 +190,6 @@ class RecordResource {
     fun updateRecordMetaData(metaData: RecordMetadataDTO, @PathParam("recordId") recordId: Long): RecordMetadataDTO {
         val updatedRecord = recordRepository.updateMetadata(recordId, metaData)
 
-
         return recordMapper.fromMetadata(updatedRecord)
     }
 
@@ -200,6 +199,33 @@ class RecordResource {
             @PathParam("recordId") recordId: Long,
             @Context response: HttpServletResponse): StreamingOutput {
 
+        val record = recordRepository.read(recordId)
+                ?: throw NotFoundException("Record with ID $recordId does not exist")
+
+        val charStream = record.metadata.logs?.logs?.characterStream
+                ?: throw NotFoundException("Cannot find logs for record with record id $recordId")
+
+        response.status = Response.Status.OK.statusCode
+        response.setHeader("Content-type", "text/plain")
+        response.setHeader("Last-Modified", record.metadata.modifiedDate.toString())
+
+        return StreamingOutput {
+            val writer = it.writer()
+            charStream.use {
+                reader -> reader.copyTo(writer)
+            }
+            writer.flush()
+
+        }
+    }
+
+    @POST
+    @Path("{recordId}/logs")
+    fun addRecordLogs(
+            record: RecordDTO,
+            @PathParam("recordId") recordId: Long,
+            @Context response: HttpServletResponse): StreamingOutput {
+        // TODO: Implement post features here
         val record = recordRepository.read(recordId)
                 ?: throw NotFoundException("Record with ID $recordId does not exist")
 

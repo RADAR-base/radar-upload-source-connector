@@ -5,14 +5,11 @@ import org.glassfish.jersey.process.internal.RequestScoped
 import org.glassfish.jersey.server.ResourceConfig
 import org.radarbase.upload.Config
 import org.radarbase.upload.auth.Auth
-import org.radarbase.upload.doa.RecordRepository
-import org.radarbase.upload.doa.RecordRepositoryImpl
-import org.radarbase.upload.doa.SourceTypeRepository
-import org.radarbase.upload.doa.SourceTypeRepositoryImpl
 import org.radarbase.upload.api.RecordMapper
 import org.radarbase.upload.api.RecordMapperImpl
 import org.radarbase.upload.api.SourceTypeMapper
 import org.radarbase.upload.api.SourceTypeMapperImpl
+import org.radarbase.upload.doa.*
 import javax.inject.Singleton
 import javax.persistence.EntityManager
 
@@ -23,7 +20,6 @@ abstract class UploadResourceConfig {
                     "org.radarbase.upload.auth",
                     "org.radarbase.upload.exception",
                     "org.radarbase.upload.filter",
-                    "org.radarbase.upload.listener",
                     "org.radarbase.upload.resource")
             register(binder(config))
             property("jersey.config.server.wadl.disableWadl", true)
@@ -50,15 +46,15 @@ abstract class UploadResourceConfig {
                     .to(Auth::class.java)
                     .`in`(RequestScoped::class.java)
 
-            bind(DoaEntityManagerFactory::class.java)
+            bindFactory(DoaEntityManagerFactory::class.java)
                     .to(EntityManager::class.java)
                     .`in`(Singleton::class.java)
 
             bind(RecordMapperImpl::class.java)
                     .to(RecordMapper::class.java)
 
-            bind(SourceTypeMapper::class.java)
-                    .to(SourceTypeMapperImpl::class.java)
+            bind(SourceTypeMapperImpl::class.java)
+                    .to(SourceTypeMapper::class.java)
 
             bind(RecordRepositoryImpl::class.java)
                     .to(RecordRepository::class.java)
@@ -66,8 +62,8 @@ abstract class UploadResourceConfig {
             bind(SourceTypeRepositoryImpl::class.java)
                     .to(SourceTypeRepository::class.java)
 
-            bind(SourceTypeLoaderImpl::class.java)
-                    .to(SourceTypeLoaderImpl::class.java)
+//            bind(YamlSourceTypeRepositoryImpl::class.java)
+//                    .to(ExternalSourceTypeRepository::class.java)
 
             registerAuthenticationUtilities(this)
         }

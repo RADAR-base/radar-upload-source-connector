@@ -2,7 +2,7 @@
 baseUri: "http://0.0.0.0:8080/radar-upload/"
 managementPortalUrl: "http://localhost:8090/managementportal"
 jdbcDriver: "org.postgresql.Driver"
-jdbcUrl: "jdbc:postgresql://localhost:5432/uploadconnector"
+jdbcUrl: "jdbc:postgresql://localhost:5434/uploadconnector"
 jdbcUser: "radarcns"
 jdbcPassword: "radarcns"
 sourceTypes:
