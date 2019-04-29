@@ -33,6 +33,8 @@ class RecordMetadata {
     @OneToOne(fetch = FetchType.LAZY, mappedBy = "metadata", cascade = [CascadeType.ALL])
     var logs: RecordLogs? = null
 
+    @Column(name = "callback_url")
+    var callbackUrl: String? = null
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

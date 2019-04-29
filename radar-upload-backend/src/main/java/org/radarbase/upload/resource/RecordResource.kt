@@ -1,23 +1,19 @@
 package org.radarbase.upload.resource
 
+import org.radarbase.upload.api.*
 import org.radarbase.upload.auth.Auth
 import org.radarbase.upload.auth.Authenticated
 import org.radarbase.upload.auth.NeedsPermission
 import org.radarbase.upload.doa.RecordRepository
 import org.radarbase.upload.doa.SourceTypeRepository
 import org.radarbase.upload.doa.entity.RecordStatus
-import org.radarbase.upload.api.*
+import org.radarbase.upload.dto.*
 import org.radarcns.auth.authorization.Permission.*
 import java.io.InputStream
 import javax.annotation.Resource
 import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.*
-import javax.ws.rs.core.Context
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.core.StreamingOutput
-import javax.ws.rs.core.UriInfo
-import javax.ws.rs.WebApplicationException
+import javax.ws.rs.core.*
 
 
 @Path("/records")
@@ -158,7 +154,7 @@ class RecordResource {
         response.setHeader("Content-Length", recordContent.content.length().toString())
         response.setHeader("Last-Modified", recordContent.createdDate.toString())
         val inputStream = recordContent.content.binaryStream
-        return StreamingOutput{
+        return StreamingOutput {
             inputStream.use { inStream -> inStream.copyTo(it) }
             it.flush()
         }
@@ -188,10 +184,14 @@ class RecordResource {
 
     @POST
     @Path("{recordId}/metadata")
-    fun updateRecordMetaData(metaData: RecordMetadataDTO, @PathParam("recordId") recordId: Long): RecordMetadataDTO {
+    fun updateRecordMetaData(metaData: RecordMetadataDTO, @PathParam("recordId") recordId: Long, @Context callbackManager: CallbackManager): RecordMetadataDTO {
         val updatedRecord = recordRepository.updateMetadata(recordId, metaData)
 
-        return recordMapper.fromMetadata(updatedRecord)
+        val updatedMetadata = recordMapper.fromMetadata(updatedRecord)
+
+        callbackManager.callback(updatedMetadata)
+
+        return updatedMetadata
     }
 
     @GET
@@ -242,9 +242,6 @@ class RecordResource {
                 reader -> reader.copyTo(writer)
             }
             writer.flush()
-
         }
-
     }
-
 }
