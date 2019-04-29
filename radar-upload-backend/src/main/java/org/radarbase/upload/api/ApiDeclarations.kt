@@ -25,14 +25,15 @@ data class RecordDataDTO(
         var contents: Set<ContentsDTO>? = null)
 
 data class RecordMetadataDTO(
+        var id: Long?,
         var revision: Int,
         var status: String,
         var message: String?,
         var createdDate: Instant?,
         var modifiedDate: Instant?,
         var committedDate: Instant?,
-        var logs: LogsDto? = null)
-
+        var logs: LogsDto? = null,
+        var callbackUrl: String? = null)
 
 data class RecordDTO(
         var id: Long?,

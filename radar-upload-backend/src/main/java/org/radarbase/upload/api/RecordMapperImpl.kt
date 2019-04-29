@@ -1,6 +1,9 @@
 package org.radarbase.upload.api
 
+import org.radarbase.upload.doa.SourceTypeRepository
 import org.radarbase.upload.doa.entity.*
+import java.time.Instant
+import javax.ws.rs.BadRequestException
 import javax.ws.rs.core.Context
 import javax.ws.rs.core.UriInfo
 
@@ -8,13 +11,29 @@ class RecordMapperImpl: RecordMapper {
     @Context
     lateinit var uri: UriInfo
 
-    override fun toRecord(record: RecordDTO): Record {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    @Context
+    lateinit var sourceTypeRepository: SourceTypeRepository
+
+    override fun toRecord(record: RecordDTO): Record = Record().apply {
+        val data = record.data ?: throw BadRequestException("No data field included")
+        metadata = toMetadata(record.metadata ?: throw BadRequestException("No metadata field included"))
+        projectId = data.projectId ?: throw BadRequestException("Missing project ID")
+        userId = data.userId ?: throw BadRequestException("Missing user ID")
+        sourceId = data.sourceId ?: throw BadRequestException("Missing source ID")
+        sourceType = sourceTypeRepository.read(record.sourceType ?: throw BadRequestException("Missing source type")) ?: throw BadRequestException("Source type not found")
+    }
+
+    fun toMetadata(metadata: RecordMetadataDTO) = RecordMetadata().apply {
+        createdDate = Instant.now()
+        modifiedDate = Instant.now()
+        revision = 1
+
+        callbackUrl = metadata.callbackUrl
     }
 
     override fun fromRecord(record: Record) = RecordDTO(
             id = record.id!!,
-            metadata = fromMetadata(record.metadata),
+            metadata = fromMetadata(record.metadata).apply { id = null },
             sourceType = record.sourceType.name,
             data = RecordDataDTO(
                     projectId = record.projectId,
@@ -37,6 +56,7 @@ class RecordMapperImpl: RecordMapper {
             fileName = content.fileName)
 
     override fun fromMetadata(metadata: RecordMetadata) = RecordMetadataDTO(
+            id = metadata.id,
             revision = metadata.revision,
             status = metadata.status.name,
             message = metadata.message,
