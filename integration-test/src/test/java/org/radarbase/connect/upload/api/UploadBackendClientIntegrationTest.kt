@@ -1,0 +1,180 @@
+package org.radarbase.connect.upload.api
+
+import com.fasterxml.jackson.core.JsonFactory
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.KotlinModule
+import okhttp3.*
+import org.hamcrest.CoreMatchers
+import org.hamcrest.MatcherAssert
+import org.junit.jupiter.api.*
+import org.radarbase.connect.upload.auth.ClientCredentialsAuthorizer
+import org.radarbase.upload.Config
+import org.radarbase.upload.GrizzlyServer
+import org.radarbase.upload.api.SourceTypeDTO
+import java.net.URI
+import java.time.LocalDateTime
+import javax.ws.rs.core.Response
+
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class UploadBackendClientIntegrationTest {
+
+    private lateinit var clientCredentialsAuthorizer: ClientCredentialsAuthorizer
+
+    private lateinit var httpClient: OkHttpClient
+
+    private lateinit var uploadBackendClient: UploadBackendClient
+
+    private lateinit var server: GrizzlyServer
+
+    private lateinit var config: Config
+
+    @BeforeAll
+    fun setUp() {
+
+        httpClient = OkHttpClient()
+        clientCredentialsAuthorizer = ClientCredentialsAuthorizer(
+                httpClient,
+                "radar_upload_connect",
+                "upload_secret",
+                "http://localhost:8090/managementportal/oauth/token",
+                emptySet()
+        )
+        uploadBackendClient = UploadBackendClient(
+                clientCredentialsAuthorizer,
+                httpClient,
+                baseUri
+        )
+
+        config = Config()
+        config.managementPortalUrl = "http://localhost:8090/managementportal"
+        config.baseUri = URI.create(baseUri)
+        config.jdbcDriver = "org.postgresql.Driver"
+        config.jdbcUrl =  "jdbc:postgresql://localhost:5434/uploadconnector"
+        config.jdbcUser = "radarcns"
+        config.jdbcPassword = "radarcns"
+
+        val sourceType = SourceTypeDTO(
+                name = mySourceTypeName,
+                topics = mutableSetOf("test_topic"),
+                contentTypes= mutableSetOf("application/text"),
+                timeRequired = false,
+                sourceIdRequired = false,
+                configuration = mutableMapOf("setting1" to "value1", "setting2" to "value2")
+        )
+        config.sourceTypes = listOf(sourceType)
+
+        server = GrizzlyServer(config)
+        server.start()
+
+    }
+
+    @AfterAll
+    fun cleanUp() {
+        server.shutdown()
+    }
+
+    @Test
+    fun requestAllConnectors() {
+        val connectors = uploadBackendClient.requestAllConnectors()
+        Assertions.assertNotNull(connectors)
+        Assertions.assertTrue(!connectors.sourceTypes.isEmpty())
+        Assertions.assertNotNull(connectors.sourceTypes.find { it.name == mySourceTypeName })
+    }
+
+    @Test
+    fun requestConnectorConfigurations() {
+        val connectors = uploadBackendClient.requestConnectorConfig(mySourceTypeName)
+        Assertions.assertNotNull(connectors)
+        Assertions.assertEquals(mySourceTypeName, connectors.name)
+    }
+
+    @Test
+    fun requestToCreateRecord() {
+        val clientUserToken = call(httpClient, Response.Status.OK, "access_token") {
+            it.url("${config.managementPortalUrl}/oauth/token")
+                    .addHeader("Authorization", Credentials.basic(REST_UPLOAD_CLIENT, REST_UPLOAD_SECRET))
+                    .post(FormBody.Builder()
+                            .add("username", ADMIN_USER)
+                            .add("password", ADMIN_PASSWORD)
+                            .add("grant_type", "password")
+                            .build())
+        }
+
+        val record = RecordDTO(
+                id = null,
+                data = RecordDataDTO(
+                        projectId = PROJECT,
+                        userId = USER,
+                        sourceId = SOURCE,
+                        time = LocalDateTime.now()
+
+                ),
+                sourceType = mySourceTypeName,
+                metadata = null
+        )
+
+        val result = call(httpClient, Response.Status.CREATED) {
+            it.url(baseUri.plus("records/"))
+                    .post(RequestBody.create(APPLICATION_JSON, record.toJsonString()))
+                    .addHeader("Authorization", BEARER + clientUserToken)
+        }
+
+    }
+    @Test
+    fun pollRecords() {
+        val pollConfig = PollDTO(
+                limit = 10,
+                supportedConverters = emptyList()
+        )
+        val connectors = uploadBackendClient.pollRecords(pollConfig)
+        Assertions.assertNotNull(connectors)
+    }
+
+    companion object {
+        const val MP_CLIENT = "ManagementPortalapp"
+        const val MP_SECRET = "testMe"
+        const val REST_UPLOAD_CLIENT = "radar_upload_backend"
+        const val REST_UPLOAD_SECRET = "secret"
+        const val USER = "sub-1"
+        const val PROJECT = "radar"
+        const val SOURCE = "03d28e5c-e005-46d4-a9b3-279c27fbbc83"
+        const val ADMIN_USER = "admin"
+        const val ADMIN_PASSWORD = "admin"
+        private val factory = JsonFactory()
+        private val mapper = ObjectMapper(factory)
+                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                .registerModule(KotlinModule())
+        private val baseUri = "http://0.0.0.0:8080/radar-upload/"
+        private val mySourceTypeName = "MyTestCSV"
+        private const val BEARER = "Bearer "
+        private val APPLICATION_JSON = MediaType.parse("application/json; charset=utf-8")
+
+
+        fun call(httpClient: OkHttpClient, expectedStatus: Int, requestSupplier: (Request.Builder) -> Request.Builder): JsonNode? {
+            val request = requestSupplier(Request.Builder()).build()
+            println(request.url())
+            return httpClient.newCall(request).execute().use { response ->
+                val body = response.body()?.let {
+                    val tree = mapper.readTree(it.byteStream())
+                    println(tree)
+                    tree
+                }
+                MatcherAssert.assertThat(response.code(), CoreMatchers.`is`(expectedStatus))
+                body
+            }
+        }
+
+        private fun Any.toJsonString(): String = mapper.writeValueAsString(this)
+
+        fun call(httpClient: OkHttpClient, expectedStatus: Response.Status, requestSupplier: (Request.Builder) -> Request.Builder): JsonNode? {
+            return call(httpClient, expectedStatus.statusCode, requestSupplier)
+        }
+
+        fun call(httpClient: OkHttpClient, expectedStatus: Response.Status, stringProperty: String, requestSupplier: (Request.Builder) -> Request.Builder): String {
+            return call(httpClient, expectedStatus, requestSupplier)?.get(stringProperty)?.asText()
+                    ?: throw AssertionError("String property $stringProperty not found")
+        }
+    }
+}
