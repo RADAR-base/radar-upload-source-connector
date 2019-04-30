@@ -16,19 +16,19 @@ class RecordMapperImpl: RecordMapper {
 
     override fun toRecord(record: RecordDTO): Record = Record().apply {
         val data = record.data ?: throw BadRequestException("No data field included")
-        metadata = toMetadata(record.metadata ?: throw BadRequestException("No metadata field included"))
+        metadata = toMetadata(record.metadata)
         projectId = data.projectId ?: throw BadRequestException("Missing project ID")
         userId = data.userId ?: throw BadRequestException("Missing user ID")
         sourceId = data.sourceId ?: throw BadRequestException("Missing source ID")
         sourceType = sourceTypeRepository.read(record.sourceType ?: throw BadRequestException("Missing source type")) ?: throw BadRequestException("Source type not found")
     }
 
-    fun toMetadata(metadata: RecordMetadataDTO) = RecordMetadata().apply {
+    fun toMetadata(metadata: RecordMetadataDTO?) = RecordMetadata().apply {
         createdDate = Instant.now()
         modifiedDate = Instant.now()
         revision = 1
 
-        callbackUrl = metadata.callbackUrl
+        callbackUrl = metadata?.callbackUrl
     }
 
     override fun fromRecord(record: Record) = RecordDTO(

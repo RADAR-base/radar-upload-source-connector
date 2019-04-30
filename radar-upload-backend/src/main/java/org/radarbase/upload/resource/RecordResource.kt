@@ -11,7 +11,6 @@ import org.radarbase.upload.dto.*
 import org.radarcns.auth.authorization.Permission.*
 import java.io.InputStream
 import javax.annotation.Resource
-import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.*
 import javax.ws.rs.core.*
 
@@ -63,7 +62,7 @@ class RecordResource {
 
     @POST
     @NeedsPermission(Entity.MEASUREMENT, Operation.CREATE)
-    fun create(record: RecordDTO, @Context response: HttpServletResponse, @Context auth: Auth): RecordDTO {
+    fun create(record: RecordDTO, @Context response: org.glassfish.grizzly.http.server.Response, @Context auth: Auth): RecordDTO {
 
         // TODO: logic to do authorization checking
 
@@ -119,7 +118,7 @@ class RecordResource {
             @HeaderParam("Content-Length") contentLength: Long,
             @PathParam("fileName") fileName: String,
             @PathParam("recordId") recordId: Long,
-            @Context response: HttpServletResponse,
+            @Context response: org.glassfish.grizzly.http.server.Response,
             @Context auth: Auth): ContentsDTO {
 
         val record = recordRepository.read(recordId)
@@ -144,7 +143,7 @@ class RecordResource {
     fun getContents(
             @PathParam("fileName") fileName: String,
             @PathParam("recordId") recordId: Long,
-            @Context response: HttpServletResponse): StreamingOutput {
+            @Context response: org.glassfish.grizzly.http.server.Response): StreamingOutput {
 
         val recordContent = recordRepository.readContent(recordId, fileName)
                 ?: throw NotFoundException("Cannot find content with record-id $recordId and file-name $fileName")
@@ -198,7 +197,7 @@ class RecordResource {
     @Path("{recordId}/logs")
     fun getRecordLogs(
             @PathParam("recordId") recordId: Long,
-            @Context response: HttpServletResponse): StreamingOutput {
+            @Context response: org.glassfish.grizzly.http.server.Response): StreamingOutput {
 
         val record = recordRepository.read(recordId)
                 ?: throw NotFoundException("Record with ID $recordId does not exist")
@@ -225,7 +224,7 @@ class RecordResource {
     fun addRecordLogs(
             recordMetaData: RecordMetadataDTO,
             @PathParam("recordId") recordId: Long,
-            @Context response: HttpServletResponse): StreamingOutput {
+            @Context response: org.glassfish.grizzly.http.server.Response): StreamingOutput {
         val record = recordRepository.read(recordId)
                 ?: throw NotFoundException("Record with ID $recordId does not exist")
 

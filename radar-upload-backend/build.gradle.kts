@@ -40,16 +40,16 @@ dependencies {
     implementation("org.glassfish.jersey.containers:jersey-container-grizzly2-servlet:${project.extra["jerseyVersion"]}")
     implementation("org.glassfish.jersey.inject:jersey-hk2:${project.extra["jerseyVersion"]}")
     runtimeOnly("org.glassfish.jersey.media:jersey-media-json-jackson:${project.extra["jerseyVersion"]}")
+
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:${project.extra["jacksonVersion"]}")
+    implementation("com.fasterxml.jackson.core:jackson-databind:${project.extra["jacksonVersion"]}")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${project.extra["jacksonVersion"]}")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:${project.extra["jacksonVersion"]}")
 
     implementation("org.radarcns:radar-auth:${project.extra["radarMpVersion"]}")
 
     implementation("org.slf4j:slf4j-api:${project.extra["slf4jVersion"]}")
-
-    implementation("com.fasterxml.jackson.core:jackson-databind:${project.extra["jacksonVersion"]}")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${project.extra["jacksonVersion"]}")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:${project.extra["jacksonVersion"]}")
-
+    
     implementation("org.hibernate:hibernate-core:${project.extra["hibernateVersion"]}")
     implementation("org.liquibase:liquibase-core:3.5.3")
 
