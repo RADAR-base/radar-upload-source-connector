@@ -1,5 +1,6 @@
 package org.radarbase.connect.upload.api
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import java.time.Instant
 import java.time.LocalDateTime
 
@@ -61,8 +62,8 @@ data class PollDTO(
 
 
 data class OauthToken(
-        var accessToken: String,
-        var expiresIn: Long,
-        var issuedAt: Long,
-        var scope: String,
-        var sub: String)
+        @JsonProperty("access_token") var accessToken: String,
+        @JsonProperty("expires_in") var expiresIn: Long,
+        @JsonProperty("iat") var issuedAt: Long,
+        @JsonProperty("scope") var scope: String,
+        @JsonProperty("sub") var sub: String)

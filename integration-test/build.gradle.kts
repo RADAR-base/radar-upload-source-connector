@@ -6,12 +6,9 @@ plugins {
 }
 
 project.extra.apply {
-    set("kafkaVersion", "2.2.0-cp2")
     set("okhttpVersion", "3.14.1")
+    set("kafkaVersion", "2.2.0-cp2")
     set("jacksonVersion", "2.9.8")
-    set("openCsvVersion", "4.6")
-    set("confluentVersion", "5.0.0")
-    set("radarSchemaVersion", "0.5.0")
 }
 
 repositories {
@@ -21,22 +18,15 @@ repositories {
 }
 
 dependencies {
-    api("com.squareup.okhttp3:okhttp:${project.extra["okhttpVersion"]}")
-    api("io.confluent:kafka-connect-avro-converter:${project.extra["confluentVersion"]}")
-    api("org.radarcns:radar-schemas-commons:${project.extra["radarSchemaVersion"]}")
 
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${project.extra["jacksonVersion"]}")
-    implementation("com.fasterxml.jackson.core:jackson-databind:${project.extra["jacksonVersion"]}")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:${project.extra["jacksonVersion"]}")
-    implementation( "com.opencsv:opencsv:${project.extra["openCsvVersion"]}")
-
-
-
-    // Included in connector runtime
-    compileOnly("org.apache.kafka:connect-api:${project.extra["kafkaVersion"]}")
     implementation(kotlin("stdlib-jdk8"))
+    testImplementation("com.fasterxml.jackson.core:jackson-databind:${project.extra["jacksonVersion"]}")
+    testImplementation("com.squareup.okhttp3:okhttp:${project.extra["okhttpVersion"]}")
+    testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin:${project.extra["jacksonVersion"]}")
 
 
+    testImplementation(project(":radar-upload-backend"))
+    testImplementation(project(":kafka-connect-upload-source"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.4.2")
     testImplementation("org.hamcrest:hamcrest-all:1.3")
     testImplementation("org.apache.kafka:connect-api:${project.extra["kafkaVersion"]}")

@@ -1,6 +1,5 @@
 package org.radarbase.connect.upload
 
-import okhttp3.OkHttpClient
 import org.apache.kafka.connect.source.SourceRecord
 import org.apache.kafka.connect.source.SourceTask
 import org.radarbase.connect.upload.converter.Converter
@@ -8,6 +7,7 @@ import org.radarbase.connect.upload.api.PollDTO
 import org.radarbase.connect.upload.api.RecordMetadataDTO
 import org.radarbase.connect.upload.api.UploadBackendClient
 import org.radarbase.connect.upload.util.VersionUtil
+import org.slf4j.LoggerFactory
 
 class UploadSourceTask: SourceTask() {
     private lateinit var uploadClient: UploadBackendClient
@@ -22,21 +22,19 @@ class UploadSourceTask: SourceTask() {
                 connectConfig.getBaseUrl())
 
         // TODO init converters
-//        converters = listOf(CsvConverter())
+        // read from a config, initialise class
+//        converters = listOf(AltoidaCSVConverter())
 
+        // do we want multiple http clients?
         for (converter in converters) {
             val config = uploadClient.requestConnectorConfig(converter.sourceType)
-//            converter.initialize(config, client)
-
+            converter.initialize(config, uploadClient, props)
         }
 
-        uploadClient.requestAllConnectors().sourceTypes.forEach {
-           // initialize converter?
-        }
-        // converters should be loaded from backend client?
     }
 
     override fun stop() {
+        logger.debug("Stopping source task")
         uploadClient.close()
         converters.forEach(Converter::close)
     }
@@ -77,6 +75,10 @@ class UploadSourceTask: SourceTask() {
         val revision = offset["revision"] as? Number ?: return
 
         uploadClient.updateStatus(recordId.toLong(), RecordMetadataDTO(revision = revision.toInt(), status = "SUCCESS"))
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(UploadSourceTask::class.java)
     }
 
 }
