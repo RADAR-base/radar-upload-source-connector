@@ -2,6 +2,7 @@ package org.radarbase.upload.dto
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import okhttp3.*
+import org.radarbase.upload.api.RecordMetadataDTO
 import org.radarbase.upload.logger
 import java.io.IOException
 import java.util.concurrent.ScheduledExecutorService
