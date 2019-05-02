@@ -10,14 +10,14 @@ import java.io.Closeable
 class UploadBackendClient(
         private val auth: Authorizer,
         private var httpClient: OkHttpClient,
-        private var uploadBackendBaseUrl: String): Closeable {
+        private var uploadBackendBaseUrl: String) : Closeable {
 
     init {
-        httpClient = httpClient.newBuilder().authenticator {
-            route, response -> response.request()
-                .newBuilder()
-                .header("Authorization", "Bearer ${auth.accessToken()}")
-                .build()
+        httpClient = httpClient.newBuilder().authenticator { route, response ->
+            response.request()
+                    .newBuilder()
+                    .header("Authorization", "Bearer ${auth.accessToken()}")
+                    .build()
         }.build()
 
         if (!this.uploadBackendBaseUrl.endsWith("/")) {
@@ -27,11 +27,11 @@ class UploadBackendClient(
 
     fun pollRecords(configuration: PollDTO): RecordContainerDTO {
         val request = Request.Builder()
-               .url(uploadBackendBaseUrl.plus("records/poll"))
-               .post(RequestBody.create(APPLICATION_JSON, configuration.toJsonString()))
-               .build()
+                .url(uploadBackendBaseUrl.plus("records/poll"))
+                .post(RequestBody.create(APPLICATION_JSON, configuration.toJsonString()))
+                .build()
         val response = httpClient.executeRequest(request)
-        return  UploadSourceConnectorConfig.mapper.readValue(response.body()?.string(), RecordContainerDTO::class.java)
+        return UploadSourceConnectorConfig.mapper.readValue(response.body()?.string(), RecordContainerDTO::class.java)
     }
 
     fun requestConnectorConfig(name: String): SourceTypeDTO {
@@ -40,7 +40,7 @@ class UploadBackendClient(
                 .get()
                 .build()
         val response = httpClient.executeRequest(request)
-        return  UploadSourceConnectorConfig.mapper.readValue(response.body()?.string(), SourceTypeDTO::class.java)
+        return UploadSourceConnectorConfig.mapper.readValue(response.body()?.string(), SourceTypeDTO::class.java)
     }
 
     fun requestAllConnectors(): SourceTypeContainerDTO {
@@ -67,7 +67,7 @@ class UploadBackendClient(
                 .post(RequestBody.create(APPLICATION_JSON, newStatus.toJsonString()))
                 .build()
         val response = httpClient.executeRequest(request)
-        return  UploadSourceConnectorConfig.mapper.readValue(response.body()?.string(), RecordMetadataDTO::class.java)
+        return UploadSourceConnectorConfig.mapper.readValue(response.body()?.string(), RecordMetadataDTO::class.java)
     }
 
     fun addLogs(recordId: Long, status: RecordMetadataDTO): LogsDto {
@@ -76,7 +76,7 @@ class UploadBackendClient(
                 .post(RequestBody.create(APPLICATION_JSON, status.toJsonString()))
                 .build()
         val response = httpClient.executeRequest(request)
-        return  UploadSourceConnectorConfig.mapper.readValue(response.body()?.charStream(), LogsDto::class.java)
+        return UploadSourceConnectorConfig.mapper.readValue(response.body()?.charStream(), LogsDto::class.java)
     }
 
     override fun close() {
@@ -87,7 +87,7 @@ class UploadBackendClient(
         if (response.isSuccessful) {
             return response
         } else {
-            when(response.code()) {
+            when (response.code()) {
                 401 -> throw NotAuthorizedException("access token is not provided or is invalid : ${response.message()}")
                 403 -> throw NotAuthorizedException("access token is not authorized to perform this request")
             }

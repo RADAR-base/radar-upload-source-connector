@@ -11,7 +11,7 @@ import javax.ws.rs.core.Context
 
 class QueuedCallbackManager(
         @Context val httpClient: OkHttpClient,
-        @Context val scheduler: ScheduledExecutorService): CallbackManager {
+        @Context val scheduler: ScheduledExecutorService) : CallbackManager {
 
     override fun callback(metadata: RecordMetadataDTO, retries: Int) {
         metadata.callbackUrl?.let { url ->

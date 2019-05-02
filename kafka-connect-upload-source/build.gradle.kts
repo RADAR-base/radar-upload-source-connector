@@ -28,8 +28,7 @@ dependencies {
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${project.extra["jacksonVersion"]}")
     implementation("com.fasterxml.jackson.core:jackson-databind:${project.extra["jacksonVersion"]}")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:${project.extra["jacksonVersion"]}")
-    implementation( "com.opencsv:opencsv:${project.extra["openCsvVersion"]}")
-
+    implementation("com.opencsv:opencsv:${project.extra["openCsvVersion"]}")
 
 
     // Included in connector runtime

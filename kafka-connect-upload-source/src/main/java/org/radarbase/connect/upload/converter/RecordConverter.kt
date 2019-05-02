@@ -11,10 +11,9 @@ import org.radarbase.connect.upload.converter.Converter.Companion.REVISION_KEY
 import org.radarcns.kafka.ObservationKey
 import org.slf4j.LoggerFactory
 import java.io.IOException
-import java.lang.IllegalStateException
 import java.time.Instant
 
-abstract class RecordConverter(override val sourceType: String, val avroData: AvroData = AvroData(20)): Converter {
+abstract class RecordConverter(override val sourceType: String, val avroData: AvroData = AvroData(20)) : Converter {
 
     private lateinit var connectorConfig: SourceTypeDTO
     private lateinit var client: UploadBackendClient
@@ -43,20 +42,20 @@ abstract class RecordConverter(override val sourceType: String, val avroData: Av
 
         val contents = record.data!!.contents!!
 
-        val sourceRecords = contents.asSequence().map contentMap@ {
+        val sourceRecords = contents.asSequence().map contentMap@{
 
             val fileStream = client.retrieveFile(record, it.fileName)
                     ?: throw IOException("Cannot retrieve file ${it.fileName} from record with id ${record.id}")
             val timeReceived = Instant.now().epochSecond
 
             return@contentMap processData(it, fileStream, record, timeReceived.toDouble(), topic)
-                    .map topicDataMap@ {
+                    .map topicDataMap@{
                         val valRecord = avroData.toConnectData(it.value.schema, it.value)
                         val offset = mutableMapOf(
                                 END_OF_RECORD_KEY to it.endOfFileOffSet,
                                 RECORD_ID_KEY to record.id,
                                 REVISION_KEY to record.metadata?.revision
-                                )
+                        )
                         // find the last record and set END_OF_RECORD_KEY to true, otherwise false
                         return@topicDataMap SourceRecord(getPartition(), offset, it.topic, key.schema(), key.value(), valRecord.schema(), valRecord.value())
                     }.toList()

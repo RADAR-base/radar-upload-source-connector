@@ -1,13 +1,15 @@
 package org.radarbase.upload.api
 
 import org.radarbase.upload.doa.SourceTypeRepository
-import org.radarbase.upload.doa.entity.*
+import org.radarbase.upload.doa.entity.Record
+import org.radarbase.upload.doa.entity.RecordContent
+import org.radarbase.upload.doa.entity.RecordMetadata
 import java.time.Instant
 import javax.ws.rs.BadRequestException
 import javax.ws.rs.core.Context
 import javax.ws.rs.core.UriInfo
 
-class RecordMapperImpl: RecordMapper {
+class RecordMapperImpl : RecordMapper {
     @Context
     lateinit var uri: UriInfo
 
@@ -20,7 +22,9 @@ class RecordMapperImpl: RecordMapper {
         projectId = data.projectId ?: throw BadRequestException("Missing project ID")
         userId = data.userId ?: throw BadRequestException("Missing user ID")
         sourceId = data.sourceId ?: throw BadRequestException("Missing source ID")
-        sourceType = sourceTypeRepository.read(record.sourceType ?: throw BadRequestException("Missing source type")) ?: throw BadRequestException("Source type not found")
+        sourceType = sourceTypeRepository.read(record.sourceType
+                ?: throw BadRequestException("Missing source type"))
+                ?: throw BadRequestException("Source type not found")
     }
 
     fun toMetadata(metadata: RecordMetadataDTO?) = RecordMetadata().apply {

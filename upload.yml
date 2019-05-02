@@ -1,4 +1,3 @@
-
 baseUri: "http://0.0.0.0:8080/radar-upload/"
 managementPortalUrl: "http://localhost:8090/managementportal"
 jdbcDriver: "org.postgresql.Driver"

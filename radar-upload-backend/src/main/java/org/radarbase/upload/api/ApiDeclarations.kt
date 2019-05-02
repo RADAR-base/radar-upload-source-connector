@@ -1,6 +1,5 @@
 package org.radarbase.upload.api
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import java.time.Instant
 import java.time.LocalDateTime
 
@@ -52,7 +51,7 @@ data class SourceTypeDTO(
         var timeRequired: Boolean?,
         var sourceIdRequired: Boolean?,
         var configuration: Map<String, String>?
-        )
+)
 
 data class SourceTypeContainerDTO(
         var sourceTypes: List<SourceTypeDTO>)

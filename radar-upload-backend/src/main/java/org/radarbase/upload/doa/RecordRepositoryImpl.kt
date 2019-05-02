@@ -2,8 +2,8 @@ package org.radarbase.upload.doa
 
 import org.hibernate.Hibernate
 import org.hibernate.Session
-import org.radarbase.upload.doa.entity.*
 import org.radarbase.upload.api.RecordMetadataDTO
+import org.radarbase.upload.doa.entity.*
 import org.radarbase.upload.exception.ConflictException
 import org.radarbase.upload.inject.session
 import org.radarbase.upload.inject.transact
@@ -22,7 +22,8 @@ class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepos
     override fun updateLogs(id: Long, reader: Reader, length: Long): Unit = em.transact {
         val logs = find(RecordLogs::class.java, id)
         val metadata = if (logs == null) {
-            val metadata = find(RecordMetadata::class.java, id)  ?: throw NotFoundException("RecordMetadata with ID $id does not exist")
+            val metadata = find(RecordMetadata::class.java, id)
+                    ?: throw NotFoundException("RecordMetadata with ID $id does not exist")
             metadata.logs = RecordLogs().apply {
                 this.id = id
                 this.metadata = metadata

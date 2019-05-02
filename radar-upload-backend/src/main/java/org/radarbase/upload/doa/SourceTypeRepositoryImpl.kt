@@ -13,7 +13,7 @@ import javax.ws.rs.core.Context
 class SourceTypeRepositoryImpl(
         @Context private var em: EntityManager,
         @Context private var config: Config,
-        @Context private val sourceTypeMapper: SourceTypeMapper): SourceTypeRepository {
+        @Context private val sourceTypeMapper: SourceTypeMapper) : SourceTypeRepository {
 
     init {
         if (!isInitialized) {
@@ -56,7 +56,7 @@ class SourceTypeRepositoryImpl(
 
     override fun create(record: SourceType) = em.transact { persist(record) }
 
-    override fun readAll(limit: Int?, lastId: Long?, detailed: Boolean): List<SourceType>  {
+    override fun readAll(limit: Int?, lastId: Long?, detailed: Boolean): List<SourceType> {
         var queryString = "SELECT s FROM SourceType s"
         lastId?.let {
             queryString += " WHERE s.id > :lastId "

@@ -49,7 +49,7 @@ dependencies {
     implementation("org.radarcns:radar-auth:${project.extra["radarMpVersion"]}")
 
     implementation("org.slf4j:slf4j-api:${project.extra["slf4jVersion"]}")
-    
+
     implementation("org.hibernate:hibernate-core:${project.extra["hibernateVersion"]}")
     implementation("org.liquibase:liquibase-core:3.5.3")
 

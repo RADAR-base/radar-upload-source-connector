@@ -8,7 +8,7 @@ import org.radarbase.connect.upload.api.RecordDTO
 import org.slf4j.LoggerFactory
 import java.io.IOException
 
-abstract class CsvRecordConverter(sourceType: String): RecordConverter(sourceType) {
+abstract class CsvRecordConverter(sourceType: String) : RecordConverter(sourceType) {
 
     override fun processData(contents: ContentsDTO, responseBody: ResponseBody, record: RecordDTO, timeReceived: Double, topic: String): List<TopicData> {
         logger.debug("Retrieved file content from record id ${record.id} and filename ${contents.fileName}")

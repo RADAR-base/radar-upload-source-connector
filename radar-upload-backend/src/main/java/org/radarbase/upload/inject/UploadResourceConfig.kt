@@ -1,8 +1,8 @@
 package org.radarbase.upload.inject
 
-import okhttp3.OkHttpClient
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import okhttp3.OkHttpClient
 import org.glassfish.jersey.internal.inject.AbstractBinder
 import org.glassfish.jersey.process.internal.RequestScoped
 import org.glassfish.jersey.server.ResourceConfig
@@ -16,7 +16,8 @@ import org.radarbase.upload.doa.RecordRepository
 import org.radarbase.upload.doa.RecordRepositoryImpl
 import org.radarbase.upload.doa.SourceTypeRepository
 import org.radarbase.upload.doa.SourceTypeRepositoryImpl
-import org.radarbase.upload.dto.*
+import org.radarbase.upload.dto.CallbackManager
+import org.radarbase.upload.dto.QueuedCallbackManager
 import javax.inject.Singleton
 import javax.persistence.EntityManager
 import javax.ws.rs.ext.ContextResolver
