@@ -1,13 +1,19 @@
 package org.radarbase.connect.upload
 
+import org.apache.kafka.connect.errors.ConnectException
 import org.apache.kafka.connect.source.SourceRecord
 import org.apache.kafka.connect.source.SourceTask
 import org.radarbase.connect.upload.converter.Converter
 import org.radarbase.connect.upload.api.PollDTO
 import org.radarbase.connect.upload.api.RecordMetadataDTO
 import org.radarbase.connect.upload.api.UploadBackendClient
+import org.radarbase.connect.upload.converter.Converter.Companion.END_OF_RECORD_KEY
+import org.radarbase.connect.upload.converter.Converter.Companion.RECORD_ID_KEY
+import org.radarbase.connect.upload.converter.Converter.Companion.REVISION_KEY
+import org.radarbase.connect.upload.converter.altoida.AltoidaCsvExportConverter
 import org.radarbase.connect.upload.util.VersionUtil
 import org.slf4j.LoggerFactory
+import java.lang.Exception
 
 class UploadSourceTask: SourceTask() {
     private lateinit var uploadClient: UploadBackendClient
@@ -21,11 +27,26 @@ class UploadSourceTask: SourceTask() {
                 connectConfig.getHttpClient(),
                 connectConfig.getBaseUrl())
 
-        // TODO init converters
-        // read from a config, initialise class
-//        converters = listOf(AltoidaCSVConverter())
+        // init default converters
+        converters = mutableListOf(AltoidaCsvExportConverter())
 
-        // do we want multiple http clients?
+        // init additional converters if configured
+        val additionalConverters = connectConfig.getConverterClasses().map {
+            try {
+                val converterClass = Class.forName(it)
+                converterClass.getDeclaredConstructor().newInstance() as Converter
+            } catch (exe: Exception) {
+                when (exe) {
+                    is ClassNotFoundException -> throw ConnectException("Converter class ${it} not found in class path", exe)
+                    is IllegalAccessException -> throw ConnectException("Converter class ${it} could not be instantiated", exe)
+                    is InstantiationException -> throw ConnectException("Converter class ${it} could not be instantiated", exe)
+                    else -> throw ConnectException("Cannot successfully initialize converter ${it}", exe)
+                }
+            }
+        }.toList()
+
+        converters.plus(additionalConverters)
+
         for (converter in converters) {
             val config = uploadClient.requestConnectorConfig(converter.sourceType)
             converter.initialize(config, uploadClient, props)
@@ -71,10 +92,15 @@ class UploadSourceTask: SourceTask() {
 
         val offset = record.sourceOffset()
 
-        val recordId = offset["recordId"] as? Number ?: return
-        val revision = offset["revision"] as? Number ?: return
+        val recordId = offset[RECORD_ID_KEY] as? Number ?: return
+        val revision = offset[REVISION_KEY] as? Number ?: return
+        val endOfRecord = offset[END_OF_RECORD_KEY] as? Boolean ?: return
 
-        uploadClient.updateStatus(recordId.toLong(), RecordMetadataDTO(revision = revision.toInt(), status = "SUCCESS"))
+        if (endOfRecord) {
+            logger.info("Committing last record of Record ${recordId}, with Revision ${revision.toInt()}")
+            uploadClient.updateStatus(recordId.toLong(), RecordMetadataDTO(revision = revision.toInt(), status = "SUCCESS"))
+        }
+
     }
 
     companion object {

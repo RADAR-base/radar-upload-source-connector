@@ -35,6 +35,8 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
 
     fun getBaseUrl(): String = getString(UPLOAD_SOURCE_SERVER_BASE_URL_CONFIG)
 
+    fun getConverterClasses(): List<String> = getList(UPLOAD_SOURCE_CONVERTERS_CONFIG)
+
     companion object {
 
         const val UPLOAD_SOURCE_CLIENT_CONFIG = "upload.source.client.id"
@@ -65,6 +67,11 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
         private const val SOURCE_POLL_INTERVAL_DOC = "How often to poll the source URL."
         private const val SOURCE_POLL_INTERVAL_DISPLAY = "Polling interval"
         private const val SOURCE_POLL_INTERVAL_DEFAULT = 60000L
+
+        const val UPLOAD_SOURCE_CONVERTERS_CONFIG = "upload.source.record.converter.classes"
+        private const val UPLOAD_SOURCE_CONVERTERS_DOC = "List record converter classes that are in class-path"
+        private const val UPLOAD_SOURCE_CONVERTERS_DISPLAY = "List of record converter class"
+
 
         var mapper: ObjectMapper = ObjectMapper()
                 .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
@@ -134,6 +141,16 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
                             ++orderInGroup,
                             ConfigDef.Width.SHORT,
                             UPLOAD_SOURCE_CLIENT_TOKEN_URL_DISPLAY)
+
+                    .define(UPLOAD_SOURCE_CONVERTERS_CONFIG,
+                            ConfigDef.Type.LIST,
+                            emptyList<String>(),
+                            ConfigDef.Importance.HIGH,
+                            UPLOAD_SOURCE_CONVERTERS_DOC,
+                            groupName,
+                            ++orderInGroup,
+                            ConfigDef.Width.LONG,
+                            UPLOAD_SOURCE_CONVERTERS_DISPLAY)
         }
     }
 
