@@ -22,7 +22,9 @@ interface Converter: Closeable {
     fun getPartition(): MutableMap<String, Any>
 
     companion object {
-        val TIMESTAMP_OFFSET_KEY = "timestamp"
+        val END_OF_RECORD_KEY = "endOfRecord"
+        val RECORD_ID_KEY = "recordId"
+        val REVISION_KEY = "versionId"
     }
 }
 
@@ -30,6 +32,6 @@ data class ConversionResult(val record: RecordDTO, val result: List<SourceRecord
 
 
 data class TopicData(
-        val sourceOffSet: Instant,
+        var endOfFileOffSet: Boolean,
         val topic: String,
         val value: IndexedRecord)
