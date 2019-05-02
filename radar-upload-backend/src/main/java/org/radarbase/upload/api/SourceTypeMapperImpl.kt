@@ -2,7 +2,7 @@ package org.radarbase.upload.api
 
 import org.radarbase.upload.doa.entity.SourceType
 
-class SourceTypeMapperImpl: SourceTypeMapper {
+class SourceTypeMapperImpl : SourceTypeMapper {
 
     override fun fromSourceType(sourceType: SourceType) = SourceTypeDTO(
             name = sourceType.name,
@@ -14,7 +14,7 @@ class SourceTypeMapperImpl: SourceTypeMapper {
     )
 
     override fun fromSourceTypes(sourceTypes: List<SourceType>) = SourceTypeContainerDTO(
-            sourceTypes = sourceTypes.map (::fromSourceType)
+            sourceTypes = sourceTypes.map(::fromSourceType)
     )
 
     override fun toSourceType(sourceType: SourceTypeDTO): SourceType {

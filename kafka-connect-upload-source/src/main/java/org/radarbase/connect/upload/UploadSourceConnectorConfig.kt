@@ -11,17 +11,17 @@ import org.radarbase.connect.upload.auth.ClientCredentialsAuthorizer
 import org.radarbase.connect.upload.converter.AccelerometerCsvRecordConverter
 import java.util.concurrent.TimeUnit
 
-class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, String>):
+class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, String>) :
         AbstractConfig(config, parsedConfig) {
 
     constructor(parsedConfig: Map<String, String>) : this(conf(), parsedConfig) {}
 
     fun getHttpClient(): OkHttpClient =
-        OkHttpClient.Builder()
-                .connectTimeout(10, TimeUnit.SECONDS)
-                .writeTimeout(10, TimeUnit.SECONDS)
-                .readTimeout(30, TimeUnit.SECONDS)
-                .build()
+            OkHttpClient.Builder()
+                    .connectTimeout(10, TimeUnit.SECONDS)
+                    .writeTimeout(10, TimeUnit.SECONDS)
+                    .readTimeout(30, TimeUnit.SECONDS)
+                    .build()
 
 
     fun getAuthorizer(): Authorizer {

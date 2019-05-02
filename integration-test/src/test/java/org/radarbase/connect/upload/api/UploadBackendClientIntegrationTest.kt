@@ -51,14 +51,14 @@ class UploadBackendClientIntegrationTest {
         config.managementPortalUrl = "http://localhost:8090/managementportal"
         config.baseUri = URI.create(baseUri)
         config.jdbcDriver = "org.postgresql.Driver"
-        config.jdbcUrl =  "jdbc:postgresql://localhost:5434/uploadconnector"
+        config.jdbcUrl = "jdbc:postgresql://localhost:5434/uploadconnector"
         config.jdbcUser = "radarcns"
         config.jdbcPassword = "radarcns"
 
         val sourceType = SourceTypeDTO(
                 name = mySourceTypeName,
                 topics = mutableSetOf("test_topic"),
-                contentTypes= mutableSetOf("application/text"),
+                contentTypes = mutableSetOf("application/text"),
                 timeRequired = false,
                 sourceIdRequired = false,
                 configuration = mutableMapOf("setting1" to "value1", "setting2" to "value2")
@@ -122,6 +122,7 @@ class UploadBackendClientIntegrationTest {
         }
 
     }
+
     @Test
     fun pollRecords() {
         val pollConfig = PollDTO(

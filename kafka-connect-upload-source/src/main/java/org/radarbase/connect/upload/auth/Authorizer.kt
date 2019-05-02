@@ -1,6 +1,9 @@
 package org.radarbase.connect.upload.auth
 
-import okhttp3.*
+import okhttp3.Credentials
+import okhttp3.FormBody
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import org.radarbase.connect.upload.UploadSourceConnectorConfig
 import org.radarbase.connect.upload.api.OauthToken
 import org.radarbase.connect.upload.exception.NotAuthorizedException
@@ -16,7 +19,7 @@ class ClientCredentialsAuthorizer(
         private val clientId: String,
         private val clientSecret: String,
         private val tokenUrl: String,
-        private val scopes: Set<String>?): Authorizer {
+        private val scopes: Set<String>?) : Authorizer {
 
     lateinit var token: OauthToken
 

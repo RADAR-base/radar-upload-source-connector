@@ -8,7 +8,7 @@ class AccelerometerCsvRecordConverter(override val sourceType: String = "phone-a
     : CsvRecordConverter(sourceType) {
 
     override fun validateHeaderSchema(csvHeader: List<String>) =
-        listOf("TIMESTAMP", "X", "Y", "Z").equals(csvHeader)
+            listOf("TIMESTAMP", "X", "Y", "Z") == (csvHeader)
 
 
     override fun convertLineToRecord(lineValues: Map<String, String>, timeReceived: Double, topic: String): TopicData {
@@ -19,7 +19,7 @@ class AccelerometerCsvRecordConverter(override val sourceType: String = "phone-a
                 lineValues["X"]?.toFloat(),
                 lineValues["Y"]?.toFloat(),
                 lineValues["Z"]?.toFloat()
-                )
+        )
 
         return TopicData(false, topic, acceleration)
     }

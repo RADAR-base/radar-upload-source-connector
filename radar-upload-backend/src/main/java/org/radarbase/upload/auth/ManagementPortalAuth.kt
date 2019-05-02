@@ -1,6 +1,6 @@
 package org.radarbase.upload.auth
 
-import org.radarcns.auth.authorization.AuthoritiesConstants.*
+import org.radarcns.auth.authorization.AuthoritiesConstants.SYS_ADMIN
 import org.radarcns.auth.authorization.Permission
 import org.radarcns.auth.authorization.Permission.MEASUREMENT_CREATE
 import org.radarcns.auth.token.RadarToken
@@ -55,7 +55,7 @@ class ManagementPortalAuth(private val token: RadarToken) : Auth {
 
     override fun authorizedProjects(permission: Permission): AccessRestriction {
         if (((token.authorities.contains(SYS_ADMIN) && permission.isAuthorityAllowed(SYS_ADMIN))
-                || isClientCredentials) && permission.scopeName() in token.scopes) {
+                        || isClientCredentials) && permission.scopeName() in token.scopes) {
             return AllAccess
         }
 

@@ -7,7 +7,7 @@ import org.radarbase.upload.auth.NeedsPermission
 import org.radarbase.upload.doa.RecordRepository
 import org.radarbase.upload.doa.SourceTypeRepository
 import org.radarbase.upload.doa.entity.RecordStatus
-import org.radarbase.upload.dto.*
+import org.radarbase.upload.dto.CallbackManager
 import org.radarcns.auth.authorization.Permission.*
 import java.io.InputStream
 import javax.annotation.Resource
@@ -80,7 +80,8 @@ class RecordResource {
         if (record.id != null) {
             throw BadRequestException("Record ID cannot be set explicitly")
         }
-        val sourceTypeName = record.sourceType ?: throw BadRequestException("Record needs a source type")
+        val sourceTypeName = record.sourceType
+                ?: throw BadRequestException("Record needs a source type")
         val data = record.data ?: throw BadRequestException("Record needs data")
 
         data.projectId ?: throw BadRequestException("Record needs a project ID")
@@ -89,7 +90,8 @@ class RecordResource {
         auth.checkUserPermission(MEASUREMENT_CREATE, data.projectId, data.userId)
 
         data.contents?.forEach {
-            it.text ?: throw BadRequestException("Contents need explicit text value set in UTF-8 encoding.")
+            it.text
+                    ?: throw BadRequestException("Contents need explicit text value set in UTF-8 encoding.")
             if (it.url != null) {
                 throw BadRequestException("Cannot process URL for content file name ${it.fileName}")
             }
@@ -98,7 +100,8 @@ class RecordResource {
             throw BadRequestException("Record metadata cannot be set explicitly")
         }
 
-        val sourceType = sourceTypeRepository.read(sourceTypeName) ?: throw BadRequestException("Source type $sourceTypeName does not exist.")
+        val sourceType = sourceTypeRepository.read(sourceTypeName)
+                ?: throw BadRequestException("Source type $sourceTypeName does not exist.")
 
         if (sourceType.timeRequired && (data.time == null || data.timeZoneOffset == null)) {
             throw BadRequestException("Time and time zone offset values are required for this source type.")
@@ -211,8 +214,8 @@ class RecordResource {
 
         return StreamingOutput {
             val writer = it.writer()
-            charStream.use {
-                reader -> reader.copyTo(writer)
+            charStream.use { reader ->
+                reader.copyTo(writer)
             }
             writer.flush()
 
@@ -237,8 +240,8 @@ class RecordResource {
 
         return StreamingOutput {
             val writer = it.writer()
-            charStream.use {
-                reader -> reader.copyTo(writer)
+            charStream.use { reader ->
+                reader.copyTo(writer)
             }
             writer.flush()
         }

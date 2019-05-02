@@ -3,18 +3,17 @@ package org.radarbase.connect.upload
 import org.apache.kafka.connect.errors.ConnectException
 import org.apache.kafka.connect.source.SourceRecord
 import org.apache.kafka.connect.source.SourceTask
-import org.radarbase.connect.upload.converter.Converter
 import org.radarbase.connect.upload.api.PollDTO
 import org.radarbase.connect.upload.api.RecordMetadataDTO
 import org.radarbase.connect.upload.api.UploadBackendClient
+import org.radarbase.connect.upload.converter.Converter
 import org.radarbase.connect.upload.converter.Converter.Companion.END_OF_RECORD_KEY
 import org.radarbase.connect.upload.converter.Converter.Companion.RECORD_ID_KEY
 import org.radarbase.connect.upload.converter.Converter.Companion.REVISION_KEY
 import org.radarbase.connect.upload.util.VersionUtil
 import org.slf4j.LoggerFactory
-import java.lang.Exception
 
-class UploadSourceTask: SourceTask() {
+class UploadSourceTask : SourceTask() {
     private lateinit var uploadClient: UploadBackendClient
     private lateinit var converters: List<Converter>
 

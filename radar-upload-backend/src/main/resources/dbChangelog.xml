@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <databaseChangeLog
-        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
     <property name="autoIncrement" value="true" dbms="mysql,h2,postgresql,oracle,mssql"/>
@@ -14,7 +14,7 @@
         <comment>Create Record table</comment>
         <createTable tableName="record">
             <column name="id" type="bigint" autoIncrement="${autoIncrement}">
-                <constraints primaryKey="true" nullable="false" />
+                <constraints primaryKey="true" nullable="false"/>
             </column>
             <column name="project_id" type="varchar(255)"/>
             <column name="user_id" type="varchar(255)"/>
@@ -27,7 +27,9 @@
 
         <createTable tableName="record_metadata">
             <column name="record_id" type="bigint">
-                <constraints unique="true" foreignKeyName="fk_record_metadata_record" referencedColumnNames="id" referencedTableName="record" nullable="false" />
+                <constraints unique="true" foreignKeyName="fk_record_metadata_record"
+                             referencedColumnNames="id" referencedTableName="record"
+                             nullable="false"/>
             </column>
             <column name="revision" type="int">
                 <constraints nullable="false"/>
@@ -42,7 +44,9 @@
 
         <createTable tableName="record_logs">
             <column name="record_id" type="bigint">
-                <constraints foreignKeyName="fk_logs_record_metadata" referencedColumnNames="record_id" referencedTableName="record_metadata" nullable="false" />
+                <constraints foreignKeyName="fk_logs_record_metadata"
+                             referencedColumnNames="record_id" referencedTableName="record_metadata"
+                             nullable="false"/>
             </column>
             <column name="modified_date" type="timestamp"/>
             <column name="size" type="int"/>
@@ -51,10 +55,11 @@
 
         <createTable tableName="record_content">
             <column name="id" type="bigint" autoIncrement="${autoIncrement}">
-                <constraints primaryKey="true" nullable="false" />
+                <constraints primaryKey="true" nullable="false"/>
             </column>
             <column name="record_id" type="bigint">
-                <constraints foreignKeyName="fk_content_record" referencedColumnNames="id" referencedTableName="record" nullable="false" />
+                <constraints foreignKeyName="fk_content_record" referencedColumnNames="id"
+                             referencedTableName="record" nullable="false"/>
             </column>
             <column name="size" type="bigint"/>
             <column name="created_date" type="timestamp"/>
@@ -65,7 +70,7 @@
 
         <createTable tableName="source_type">
             <column name="id" type="bigint" autoIncrement="${autoIncrement}">
-                <constraints primaryKey="true" nullable="false" />
+                <constraints primaryKey="true" nullable="false"/>
             </column>
             <column name="name" type="varchar(255)">
                 <constraints unique="true" nullable="false"/>
@@ -76,19 +81,24 @@
 
         <createTable tableName="source_type_topics">
             <column name="source_type_id" type="bigint">
-                <constraints foreignKeyName="fk_topics_source_type" referencedColumnNames="id" referencedTableName="source_type" nullable="false" />
+                <constraints foreignKeyName="fk_topics_source_type" referencedColumnNames="id"
+                             referencedTableName="source_type" nullable="false"/>
             </column>
             <column name="topic" type="varchar(255)"/>
         </createTable>
         <createTable tableName="source_type_content_types">
             <column name="source_type_id" type="bigint">
-                <constraints foreignKeyName="fk_content_types_source_type" referencedColumnNames="id" referencedTableName="source_type" nullable="false" />
+                <constraints foreignKeyName="fk_content_types_source_type"
+                             referencedColumnNames="id" referencedTableName="source_type"
+                             nullable="false"/>
             </column>
             <column name="content_type" type="varchar(255)"/>
         </createTable>
         <createTable tableName="source_type_configuration">
             <column name="source_type_id" type="bigint">
-                <constraints foreignKeyName="fk_configuration_source_type" referencedColumnNames="id" referencedTableName="source_type" nullable="false" />
+                <constraints foreignKeyName="fk_configuration_source_type"
+                             referencedColumnNames="id" referencedTableName="source_type"
+                             nullable="false"/>
             </column>
             <column name="key" type="varchar(255)"/>
             <column name="value" type="varchar(255)"/>

@@ -51,7 +51,7 @@ data class SourceTypeDTO(
         var timeRequired: Boolean?,
         var sourceIdRequired: Boolean?,
         var configuration: Map<String, String>?
-        )
+)
 
 data class SourceTypeContainerDTO(
         var sourceTypes: List<SourceTypeDTO>)

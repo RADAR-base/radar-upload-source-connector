@@ -12,5 +12,5 @@ class AuthFactory : Supplier<Auth> {
     private lateinit var context: ContainerRequestContext
 
     override fun get() = (context.securityContext as? RadarSecurityContext)?.auth
-                ?: throw IllegalStateException("Created null wrapper")
+            ?: throw IllegalStateException("Created null wrapper")
 }

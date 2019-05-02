@@ -18,4 +18,4 @@ interface Auth {
 sealed class AccessRestriction
 
 object AllAccess : AccessRestriction()
-data class RestrictedAccess(var access: Set<String>): AccessRestriction()
+data class RestrictedAccess(var access: Set<String>) : AccessRestriction()
