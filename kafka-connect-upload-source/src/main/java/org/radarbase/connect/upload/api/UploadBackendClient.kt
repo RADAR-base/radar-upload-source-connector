@@ -6,12 +6,11 @@ import org.radarbase.connect.upload.auth.Authorizer
 import org.radarbase.connect.upload.exception.BadGatewayException
 import org.radarbase.connect.upload.exception.NotAuthorizedException
 import java.io.Closeable
-import java.io.InputStream
 
 class UploadBackendClient(
         private val auth: Authorizer,
         private var httpClient: OkHttpClient,
-        private val uploadBackendBaseUrl: String): Closeable {
+        private var uploadBackendBaseUrl: String): Closeable {
 
     init {
         httpClient = httpClient.newBuilder().authenticator {
@@ -20,11 +19,15 @@ class UploadBackendClient(
                 .header("Authorization", "Bearer ${auth.accessToken()}")
                 .build()
         }.build()
+
+        if (!this.uploadBackendBaseUrl.endsWith("/")) {
+            this.uploadBackendBaseUrl += "/"
+        }
     }
 
     fun pollRecords(configuration: PollDTO): RecordContainerDTO {
         val request = Request.Builder()
-               .url(getUploadBackendUrl().plus("records/poll"))
+               .url(uploadBackendBaseUrl.plus("records/poll"))
                .post(RequestBody.create(APPLICATION_JSON, configuration.toJsonString()))
                .build()
         val response = httpClient.executeRequest(request)
@@ -33,7 +36,7 @@ class UploadBackendClient(
 
     fun requestConnectorConfig(name: String): SourceTypeDTO {
         val request = Request.Builder()
-                .url(getUploadBackendUrl().plus("source-types/").plus(name))
+                .url(uploadBackendBaseUrl.plus("source-types/").plus(name))
                 .get()
                 .build()
         val response = httpClient.executeRequest(request)
@@ -42,25 +45,25 @@ class UploadBackendClient(
 
     fun requestAllConnectors(): SourceTypeContainerDTO {
         val request = Request.Builder()
-                .url(getUploadBackendUrl().plus("source-types"))
+                .url(uploadBackendBaseUrl.plus("source-types"))
                 .get()
                 .build()
         val response = httpClient.executeRequest(request)
         return UploadSourceConnectorConfig.mapper.readValue(response.body()?.string(), SourceTypeContainerDTO::class.java)
     }
 
-    fun retrieveFile(record: RecordDTO, fileName: String): InputStream? {
+    fun retrieveFile(record: RecordDTO, fileName: String): ResponseBody? {
         val request = Request.Builder()
-                .url(getUploadBackendUrl().plus("records/${record.id}/contents/${fileName}"))
+                .url(uploadBackendBaseUrl.plus("records/${record.id}/contents/${fileName}"))
                 .get()
                 .build()
         val response = httpClient.executeRequest(request)
-        return response.body()?.byteStream()
+        return response.body()
     }
 
     fun updateStatus(recordId: Long, newStatus: RecordMetadataDTO): RecordMetadataDTO {
         val request = Request.Builder()
-                .url(getUploadBackendUrl().plus("records/$recordId/metadata"))
+                .url(uploadBackendBaseUrl.plus("records/$recordId/metadata"))
                 .post(RequestBody.create(APPLICATION_JSON, newStatus.toJsonString()))
                 .build()
         val response = httpClient.executeRequest(request)
@@ -69,7 +72,7 @@ class UploadBackendClient(
 
     fun addLogs(recordId: Long, status: RecordMetadataDTO): LogsDto {
         val request = Request.Builder()
-                .url(getUploadBackendUrl().plus("records/$recordId/logs"))
+                .url(uploadBackendBaseUrl.plus("records/$recordId/logs"))
                 .post(RequestBody.create(APPLICATION_JSON, status.toJsonString()))
                 .build()
         val response = httpClient.executeRequest(request)
@@ -91,14 +94,6 @@ class UploadBackendClient(
             throw BadGatewayException("Failed to make request to ${request.url()}: Error code ${response.code()}:  ${response.body()?.string()}")
         }
 
-    }
-
-    private fun getUploadBackendUrl(): String {
-        if (this.uploadBackendBaseUrl.endsWith("/")) {
-            return this.uploadBackendBaseUrl
-        } else {
-            return this.uploadBackendBaseUrl.plus("/")
-        }
     }
 
     private fun Any.toJsonString(): String = UploadSourceConnectorConfig.mapper.writeValueAsString(this)
