@@ -19,11 +19,16 @@ abstract class RecordConverter(override val sourceType: String, val avroData: Av
     private lateinit var connectorConfig: SourceTypeDTO
     private lateinit var client: UploadBackendClient
     private lateinit var settings: Map<String, String>
-
+    private lateinit var topic: String
     override fun initialize(connectorConfig: SourceTypeDTO, client: UploadBackendClient, settings: Map<String, String>) {
         this.connectorConfig = connectorConfig
         this.client = client
         this.settings = settings
+
+        if (this.connectorConfig.topics?.size == 1) {
+            this.topic = this.connectorConfig.topics?.first()!!
+        }
+        // TODO how to we want to handle multple topics per source-type?
     }
 
     override fun close() {
@@ -44,7 +49,7 @@ abstract class RecordConverter(override val sourceType: String, val avroData: Av
                     ?: throw IOException("Cannot retrieve file ${it.fileName} from record with id ${record.id}")
             val timeReceived = Instant.now().epochSecond
 
-            return@contentMap processData(it, fileStream, record, timeReceived.toDouble())
+            return@contentMap processData(it, fileStream, record, timeReceived.toDouble(), topic)
                     .map topicDataMap@ {
                         val valRecord = avroData.toConnectData(it.value.schema, it.value)
                         val offset = mutableMapOf(
@@ -63,7 +68,7 @@ abstract class RecordConverter(override val sourceType: String, val avroData: Av
     abstract fun commitLogs(record: RecordDTO, client: UploadBackendClient)
 
     /** process file content with the record data. The implementing method should close response-body. */
-    abstract fun processData(contents: ContentsDTO, responseBody: ResponseBody, record: RecordDTO, timeReceived: Double)
+    abstract fun processData(contents: ContentsDTO, responseBody: ResponseBody, record: RecordDTO, timeReceived: Double, topic: String)
             : List<TopicData>
 
     override fun getPartition(): MutableMap<String, Any> = mutableMapOf("source-type" to sourceType)
