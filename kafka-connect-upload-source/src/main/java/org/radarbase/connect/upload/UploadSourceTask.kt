@@ -10,7 +10,6 @@ import org.radarbase.connect.upload.api.UploadBackendClient
 import org.radarbase.connect.upload.converter.Converter.Companion.END_OF_RECORD_KEY
 import org.radarbase.connect.upload.converter.Converter.Companion.RECORD_ID_KEY
 import org.radarbase.connect.upload.converter.Converter.Companion.REVISION_KEY
-import org.radarbase.connect.upload.converter.altoida.AltoidaCsvExportConverter
 import org.radarbase.connect.upload.util.VersionUtil
 import org.slf4j.LoggerFactory
 import java.lang.Exception
@@ -27,11 +26,8 @@ class UploadSourceTask: SourceTask() {
                 connectConfig.getHttpClient(),
                 connectConfig.getBaseUrl())
 
-        // init default converters
-        converters = mutableListOf(AltoidaCsvExportConverter())
-
-        // init additional converters if configured
-        val additionalConverters = connectConfig.getConverterClasses().map {
+        // init converters if configured
+        val converters = connectConfig.getConverterClasses().map {
             try {
                 val converterClass = Class.forName(it)
                 converterClass.getDeclaredConstructor().newInstance() as Converter
@@ -44,8 +40,6 @@ class UploadSourceTask: SourceTask() {
                 }
             }
         }.toList()
-
-        converters.plus(additionalConverters)
 
         for (converter in converters) {
             val config = uploadClient.requestConnectorConfig(converter.sourceType)

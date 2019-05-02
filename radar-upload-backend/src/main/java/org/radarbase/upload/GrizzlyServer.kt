@@ -14,7 +14,6 @@ class GrizzlyServer(private val config: Config) {
 
         httpServer = GrizzlyHttpServerFactory.createHttpServer(config.baseUri, resourceConfig)
         httpServer.start()
-        httpServer.listeners
     }
 
     fun shutdown() {

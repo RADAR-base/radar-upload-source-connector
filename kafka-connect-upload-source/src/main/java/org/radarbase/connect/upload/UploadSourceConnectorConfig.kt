@@ -8,6 +8,7 @@ import org.apache.kafka.common.config.AbstractConfig
 import org.apache.kafka.common.config.ConfigDef
 import org.radarbase.connect.upload.auth.Authorizer
 import org.radarbase.connect.upload.auth.ClientCredentialsAuthorizer
+import org.radarbase.connect.upload.converter.AccelerometerCsvRecordConverter
 import java.util.concurrent.TimeUnit
 
 class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, String>):
@@ -71,6 +72,7 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
         const val UPLOAD_SOURCE_CONVERTERS_CONFIG = "upload.source.record.converter.classes"
         private const val UPLOAD_SOURCE_CONVERTERS_DOC = "List record converter classes that are in class-path"
         private const val UPLOAD_SOURCE_CONVERTERS_DISPLAY = "List of record converter class"
+        private val UPLOAD_SOURCE_CONVERTERS_DEFAULT = listOf(AccelerometerCsvRecordConverter())
 
 
         var mapper: ObjectMapper = ObjectMapper()
@@ -144,7 +146,7 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
 
                     .define(UPLOAD_SOURCE_CONVERTERS_CONFIG,
                             ConfigDef.Type.LIST,
-                            emptyList<String>(),
+                            UPLOAD_SOURCE_CONVERTERS_DEFAULT,
                             ConfigDef.Importance.HIGH,
                             UPLOAD_SOURCE_CONVERTERS_DOC,
                             groupName,
