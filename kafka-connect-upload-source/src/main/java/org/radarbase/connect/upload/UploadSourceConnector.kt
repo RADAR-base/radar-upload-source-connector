@@ -11,10 +11,11 @@ import kotlin.collections.HashMap
 class UploadSourceConnector : SourceConnector() {
     private lateinit var connectorConfig: UploadSourceConnectorConfig
 
-    override fun taskConfigs(maxTasks: Int): List<Map<String, String>> = Collections.nCopies(maxTasks, HashMap(connectorConfig.originalsStrings()))
+    override fun taskConfigs(maxTasks: Int): List<Map<String, String>> =
+            Collections.nCopies(maxTasks, HashMap(connectorConfig.originalsStrings()))
 
     override fun start(props: Map<String, String>?) {
-        connectorConfig = UploadSourceConnectorConfig(props!!) // is it ok to assume this will not be null?
+        connectorConfig = UploadSourceConnectorConfig(props!!)
     }
 
     override fun stop() {
