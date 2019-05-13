@@ -128,8 +128,6 @@ class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepos
     override fun create(record: Record): Record = em.transact {
         val tmpContent = record.contents?.also { record.contents = null }
 
-        persist(record)
-
         record.contents = tmpContent?.mapTo(HashSet()) {
             it.record = record
             it.createdDate = Instant.now()
@@ -145,8 +143,9 @@ class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepos
             modifiedDate = Instant.now()
             revision = 1
         }
+        record.metadata = metadata
 
-        persist(metadata)
+        persist(record)
 
         record.apply {
             this.contents = contents

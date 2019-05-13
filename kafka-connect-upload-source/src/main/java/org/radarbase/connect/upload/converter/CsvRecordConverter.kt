@@ -10,7 +10,7 @@ import java.io.IOException
 
 abstract class CsvRecordConverter(sourceType: String) : RecordConverter(sourceType) {
 
-    override fun processData(contents: ContentsDTO, responseBody: ResponseBody, record: RecordDTO, timeReceived: Double, topic: String): List<TopicData> {
+    override fun processData(contents: ContentsDTO, responseBody: ResponseBody, record: RecordDTO, timeReceived: Double): List<TopicData> {
         logger.debug("Retrieved file content from record id ${record.id} and filename ${contents.fileName}")
         val inputStream = responseBody.byteStream()
         val reader = CSVReaderBuilder(inputStream.bufferedReader())
@@ -20,11 +20,11 @@ abstract class CsvRecordConverter(sourceType: String) : RecordConverter(sourceTy
         try {
             val header = reader.readNext()
             // do we want to validate headers?
-            validateHeaderSchema(header.asList())
+//            validateHeaderSchema(header.asList())
 
             var line = reader.readNext()
             while (line != null) {
-                convertedTopicData.add(convertLineToRecord(header.zip(line).toMap(), timeReceived, topic))
+                convertedTopicData.add(convertLineToRecord(header.zip(line).toMap(), timeReceived))
                 line = reader.readNext()
             }
             convertedTopicData.last().endOfFileOffSet = true
@@ -40,7 +40,7 @@ abstract class CsvRecordConverter(sourceType: String) : RecordConverter(sourceTy
 
     abstract fun validateHeaderSchema(csvHeader: List<String>): Boolean
 
-    abstract fun convertLineToRecord(lineValues: Map<String, String>, timeReceived: Double, topic: String): TopicData
+    abstract fun convertLineToRecord(lineValues: Map<String, String>, timeReceived: Double): TopicData
 
     companion object {
         private val logger = LoggerFactory.getLogger(CsvRecordConverter::class.java)

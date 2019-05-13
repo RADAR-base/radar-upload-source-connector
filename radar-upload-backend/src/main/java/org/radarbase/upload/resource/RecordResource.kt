@@ -1,5 +1,6 @@
 package org.radarbase.upload.resource
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.radarbase.upload.api.*
 import org.radarbase.upload.auth.Auth
 import org.radarbase.upload.auth.Authenticated
@@ -9,7 +10,9 @@ import org.radarbase.upload.doa.SourceTypeRepository
 import org.radarbase.upload.doa.entity.RecordStatus
 import org.radarbase.upload.dto.CallbackManager
 import org.radarcns.auth.authorization.Permission.*
+import org.slf4j.LoggerFactory
 import java.io.InputStream
+import java.net.URI
 import javax.annotation.Resource
 import javax.ws.rs.*
 import javax.ws.rs.core.*
@@ -25,8 +28,8 @@ class RecordResource {
     @Context
     lateinit var recordRepository: RecordRepository
 
-//    @Context
-//    lateinit var auth: Auth
+    @Context
+    lateinit var mapper: ObjectMapper
 
     @Context
     lateinit var recordMapper: RecordMapper
@@ -62,7 +65,7 @@ class RecordResource {
 
     @POST
     @NeedsPermission(Entity.MEASUREMENT, Operation.CREATE)
-    fun create(record: RecordDTO, @Context response: org.glassfish.grizzly.http.server.Response, @Context auth: Auth): RecordDTO {
+    fun create(record: RecordDTO, @Context auth: Auth): Response {
 
         // TODO: logic to do authorization checking
 
@@ -71,9 +74,10 @@ class RecordResource {
         val doaRecord = recordMapper.toRecord(record)
         val result = recordRepository.create(doaRecord)
 
-        response.status = Response.Status.CREATED.statusCode
-        response.setHeader("Location", "${uri.baseUri}/records/${record.id}")
-        return recordMapper.fromRecord(result)
+        logger.info("Record created ${result}")
+        return Response.created(URI("${uri.baseUri}records/${result.id}"))
+                .entity(recordMapper.fromRecord(result))
+                .build()
     }
 
     private fun validateNewRecord(record: RecordDTO, auth: Auth) {
@@ -121,8 +125,7 @@ class RecordResource {
             @HeaderParam("Content-Length") contentLength: Long,
             @PathParam("fileName") fileName: String,
             @PathParam("recordId") recordId: Long,
-            @Context response: org.glassfish.grizzly.http.server.Response,
-            @Context auth: Auth): ContentsDTO {
+            @Context auth: Auth): Response {
 
         val record = recordRepository.read(recordId)
                 ?: throw NotFoundException("Record with ID $recordId does not exist")
@@ -136,30 +139,34 @@ class RecordResource {
         val content = recordRepository.updateContent(record, fileName, contentType, input, contentLength)
 
         val contentDto = recordMapper.fromContent(content)
-        response.status = Response.Status.CREATED.statusCode
-        response.setHeader("Location", contentDto.url)
-        return contentDto
+
+        return Response.created(URI(contentDto.url))
+                .entity(contentDto)
+                .build()
     }
 
     @GET
     @Path("{recordId}/contents/{fileName}")
     fun getContents(
             @PathParam("fileName") fileName: String,
-            @PathParam("recordId") recordId: Long,
-            @Context response: org.glassfish.grizzly.http.server.Response): StreamingOutput {
+            @PathParam("recordId") recordId: Long): Response {
 
         val recordContent = recordRepository.readContent(recordId, fileName)
                 ?: throw NotFoundException("Cannot find content with record-id $recordId and file-name $fileName")
 
-        response.status = Response.Status.OK.statusCode
-        response.setHeader("Content-type", recordContent.contentType)
-        response.setHeader("Content-Length", recordContent.content.length().toString())
-        response.setHeader("Last-Modified", recordContent.createdDate.toString())
         val inputStream = recordContent.content.binaryStream
-        return StreamingOutput {
+        val streamingOutput = StreamingOutput {
             inputStream.use { inStream -> inStream.copyTo(it) }
             it.flush()
         }
+
+        return Response
+                .ok(streamingOutput)
+                .header("Content-type", recordContent.contentType)
+                .header("Content-Length", recordContent.content.length().toString())
+                .header("Last-Modified", recordContent.createdDate.toString())
+                .build()
+
     }
 
     @POST
@@ -245,5 +252,9 @@ class RecordResource {
             }
             writer.flush()
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(RecordResource::class.java)
     }
 }
