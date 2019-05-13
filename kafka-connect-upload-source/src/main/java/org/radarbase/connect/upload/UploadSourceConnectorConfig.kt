@@ -2,6 +2,8 @@ package org.radarbase.connect.upload
 
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import okhttp3.OkHttpClient
 import org.apache.kafka.common.config.AbstractConfig
@@ -76,8 +78,11 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
 
 
         var mapper: ObjectMapper = ObjectMapper()
-                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
                 .registerModule(KotlinModule())
+                .registerModule(JavaTimeModule())
+                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+
 
 
         fun conf(): ConfigDef {

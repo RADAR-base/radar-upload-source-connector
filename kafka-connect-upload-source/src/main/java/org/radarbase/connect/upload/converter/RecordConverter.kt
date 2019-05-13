@@ -48,7 +48,7 @@ abstract class RecordConverter(override val sourceType: String, val avroData: Av
                     ?: throw IOException("Cannot retrieve file ${it.fileName} from record with id ${record.id}")
             val timeReceived = Instant.now().epochSecond
 
-            return@contentMap processData(it, fileStream, record, timeReceived.toDouble(), topic)
+            return@contentMap processData(it, fileStream, record, timeReceived.toDouble())
                     .map topicDataMap@{
                         val valRecord = avroData.toConnectData(it.value.schema, it.value)
                         val offset = mutableMapOf(
@@ -67,7 +67,7 @@ abstract class RecordConverter(override val sourceType: String, val avroData: Av
     abstract fun commitLogs(record: RecordDTO, client: UploadBackendClient)
 
     /** process file content with the record data. The implementing method should close response-body. */
-    abstract fun processData(contents: ContentsDTO, responseBody: ResponseBody, record: RecordDTO, timeReceived: Double, topic: String)
+    abstract fun processData(contents: ContentsDTO, responseBody: ResponseBody, record: RecordDTO, timeReceived: Double)
             : List<TopicData>
 
     override fun getPartition(): MutableMap<String, Any> = mutableMapOf("source-type" to sourceType)

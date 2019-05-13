@@ -5,11 +5,11 @@ jdbcUrl: "jdbc:postgresql://localhost:5434/uploadconnector"
 jdbcUser: "radarcns"
 jdbcPassword: "radarcns"
 sourceTypes:
-  - name: "MyCSV"
+  - name: "phone-acceleration"
     topics:
-      - "test_topic"
+      - "android_phone_acceleration"
     contentTypes:
-      - "application/text"
+      - "text/csv"
     timeRequired: false
     sourceIdRequired: false
     configuration:

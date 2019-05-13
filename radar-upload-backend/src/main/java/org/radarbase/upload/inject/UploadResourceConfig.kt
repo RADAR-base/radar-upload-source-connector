@@ -1,6 +1,8 @@
 package org.radarbase.upload.inject
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import okhttp3.OkHttpClient
 import org.glassfish.jersey.internal.inject.AbstractBinder
@@ -18,12 +20,22 @@ import org.radarbase.upload.doa.SourceTypeRepository
 import org.radarbase.upload.doa.SourceTypeRepositoryImpl
 import org.radarbase.upload.dto.CallbackManager
 import org.radarbase.upload.dto.QueuedCallbackManager
+import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 import javax.persistence.EntityManager
 import javax.ws.rs.ext.ContextResolver
 
 abstract class UploadResourceConfig {
-    private val client = OkHttpClient()
+    private val client = OkHttpClient().newBuilder()
+            .connectTimeout(10, TimeUnit.SECONDS)
+            .writeTimeout(10, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .build()
+
+    private val OBJECT_MAPPER = ObjectMapper()
+            .registerModule(JavaTimeModule())
+            .registerModule(KotlinModule())
+            .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
 
     fun resources(config: Config): ResourceConfig {
         val resources = ResourceConfig().apply {
@@ -33,7 +45,7 @@ abstract class UploadResourceConfig {
                     "org.radarbase.upload.filter",
                     "org.radarbase.upload.resource")
             register(binder(config))
-            register(ContextResolver<ObjectMapper> { ObjectMapper().registerModule(KotlinModule()) })
+            register(ContextResolver<ObjectMapper> {OBJECT_MAPPER})
             property("jersey.config.server.wadl.disableWadl", true)
         }
         registerAuthentication(resources)
@@ -52,6 +64,9 @@ abstract class UploadResourceConfig {
 
             bind(client)
                     .to(OkHttpClient::class.java)
+
+            bind(OBJECT_MAPPER)
+                    .to(ObjectMapper::class.java)
 
             bind(QueuedCallbackManager::class.java)
                     .to(CallbackManager::class.java)

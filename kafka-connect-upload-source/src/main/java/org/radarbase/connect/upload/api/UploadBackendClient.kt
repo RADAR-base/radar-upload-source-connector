@@ -1,10 +1,15 @@
 package org.radarbase.connect.upload.api
 
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.KotlinModule
 import okhttp3.*
-import org.radarbase.connect.upload.UploadSourceConnectorConfig
 import org.radarbase.connect.upload.auth.Authorizer
 import org.radarbase.connect.upload.exception.BadGatewayException
 import org.radarbase.connect.upload.exception.NotAuthorizedException
+import org.slf4j.LoggerFactory
 import java.io.Closeable
 
 class UploadBackendClient(
@@ -31,7 +36,7 @@ class UploadBackendClient(
                 .post(RequestBody.create(APPLICATION_JSON, configuration.toJsonString()))
                 .build()
         val response = httpClient.executeRequest(request)
-        return UploadSourceConnectorConfig.mapper.readValue(response.body()?.string(), RecordContainerDTO::class.java)
+        return mapper.readValue(response.body()?.string(), RecordContainerDTO::class.java)
     }
 
     fun requestConnectorConfig(name: String): SourceTypeDTO {
@@ -40,7 +45,7 @@ class UploadBackendClient(
                 .get()
                 .build()
         val response = httpClient.executeRequest(request)
-        return UploadSourceConnectorConfig.mapper.readValue(response.body()?.string(), SourceTypeDTO::class.java)
+        return mapper.readValue(response.body()?.string(), SourceTypeDTO::class.java)
     }
 
     fun requestAllConnectors(): SourceTypeContainerDTO {
@@ -49,7 +54,7 @@ class UploadBackendClient(
                 .get()
                 .build()
         val response = httpClient.executeRequest(request)
-        return UploadSourceConnectorConfig.mapper.readValue(response.body()?.string(), SourceTypeContainerDTO::class.java)
+        return mapper.readValue(response.body()?.string(), SourceTypeContainerDTO::class.java)
     }
 
     fun retrieveFile(record: RecordDTO, fileName: String): ResponseBody? {
@@ -67,7 +72,7 @@ class UploadBackendClient(
                 .post(RequestBody.create(APPLICATION_JSON, newStatus.toJsonString()))
                 .build()
         val response = httpClient.executeRequest(request)
-        return UploadSourceConnectorConfig.mapper.readValue(response.body()?.string(), RecordMetadataDTO::class.java)
+        return mapper.readValue(response.body()?.string(), RecordMetadataDTO::class.java)
     }
 
     fun addLogs(recordId: Long, status: RecordMetadataDTO): LogsDto {
@@ -76,7 +81,7 @@ class UploadBackendClient(
                 .post(RequestBody.create(APPLICATION_JSON, status.toJsonString()))
                 .build()
         val response = httpClient.executeRequest(request)
-        return UploadSourceConnectorConfig.mapper.readValue(response.body()?.charStream(), LogsDto::class.java)
+        return mapper.readValue(response.body()?.charStream(), LogsDto::class.java)
     }
 
     override fun close() {
@@ -85,8 +90,10 @@ class UploadBackendClient(
     private fun OkHttpClient.executeRequest(request: Request): Response {
         val response = this.newCall(request).execute()
         if (response.isSuccessful) {
+            logger.info("Request to ${request.url()} is SUCCESSFUL")
             return response
         } else {
+            logger.info("Request to ${request.url()} has FAILED with response-code ${response.code()}")
             when (response.code()) {
                 401 -> throw NotAuthorizedException("access token is not provided or is invalid : ${response.message()}")
                 403 -> throw NotAuthorizedException("access token is not authorized to perform this request")
@@ -96,10 +103,16 @@ class UploadBackendClient(
 
     }
 
-    private fun Any.toJsonString(): String = UploadSourceConnectorConfig.mapper.writeValueAsString(this)
+    private fun Any.toJsonString(): String = mapper.writeValueAsString(this)
 
     companion object {
-        val APPLICATION_JSON = MediaType.parse("application/json; charset=utf-8")
+        private val logger = LoggerFactory.getLogger(UploadBackendClient::class.java)
+        private val APPLICATION_JSON = MediaType.parse("application/json; charset=utf-8")
+        private var mapper: ObjectMapper = ObjectMapper()
+                .registerModule(KotlinModule())
+                .registerModule(JavaTimeModule())
+                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
     }
 
 }
