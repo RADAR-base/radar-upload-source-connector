@@ -23,7 +23,8 @@ dependencies {
     testImplementation("com.fasterxml.jackson.core:jackson-databind:${project.extra["jacksonVersion"]}")
     testImplementation("com.squareup.okhttp3:okhttp:${project.extra["okhttpVersion"]}")
     testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin:${project.extra["jacksonVersion"]}")
-
+    testImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${project.extra["jacksonVersion"]}")
+    testImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:${project.extra["jacksonVersion"]}")
 
     testImplementation(project(":radar-upload-backend"))
     testImplementation(project(":kafka-connect-upload-source"))
