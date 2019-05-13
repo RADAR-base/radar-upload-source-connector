@@ -4,11 +4,15 @@ import com.fasterxml.jackson.core.JsonFactory
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import okhttp3.*
 import org.hamcrest.CoreMatchers
-import org.hamcrest.MatcherAssert
+import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers
 import org.junit.jupiter.api.*
+import org.junit.jupiter.api.Assertions.*
 import org.radarbase.connect.upload.auth.ClientCredentialsAuthorizer
 import org.radarbase.upload.Config
 import org.radarbase.upload.GrizzlyServer
@@ -78,16 +82,16 @@ class UploadBackendClientIntegrationTest {
     @Test
     fun requestAllConnectors() {
         val connectors = uploadBackendClient.requestAllConnectors()
-        Assertions.assertNotNull(connectors)
-        Assertions.assertTrue(!connectors.sourceTypes.isEmpty())
-        Assertions.assertNotNull(connectors.sourceTypes.find { it.name == mySourceTypeName })
+        assertNotNull(connectors)
+        assertTrue(!connectors.sourceTypes.isEmpty())
+        assertNotNull(connectors.sourceTypes.find { it.name == mySourceTypeName })
     }
 
     @Test
     fun requestConnectorConfigurations() {
         val connectors = uploadBackendClient.requestConnectorConfig(mySourceTypeName)
-        Assertions.assertNotNull(connectors)
-        Assertions.assertEquals(mySourceTypeName, connectors.name)
+        assertNotNull(connectors)
+        assertEquals(mySourceTypeName, connectors.name)
     }
 
     @Test
@@ -115,11 +119,22 @@ class UploadBackendClientIntegrationTest {
                 metadata = null
         )
 
-        val result = call(httpClient, Response.Status.CREATED) {
-            it.url(baseUri.plus("records/"))
-                    .post(RequestBody.create(APPLICATION_JSON, record.toJsonString()))
-                    .addHeader("Authorization", BEARER + clientUserToken)
+        val request = Request.Builder()
+                .url(baseUri.plus("records"))
+                .post(RequestBody.create(APPLICATION_JSON, record.toJsonString()))
+                .addHeader("Authorization", BEARER + clientUserToken)
+                .addHeader("Content-type", "application/json")
+                .build()
+
+
+        httpClient.newCall(request).execute().use {
+            assertTrue(it.isSuccessful)
+            val recordCreated =  mapper.readValue(it.body()?.string(), RecordDTO::class.java)
+            assertNotNull(recordCreated)
+            assertNotNull(recordCreated.id)
+            assertThat(recordCreated?.id!!, Matchers.greaterThan(0L))
         }
+
 
     }
 
@@ -130,7 +145,7 @@ class UploadBackendClientIntegrationTest {
                 supportedConverters = emptyList()
         )
         val connectors = uploadBackendClient.pollRecords(pollConfig)
-        Assertions.assertNotNull(connectors)
+        assertNotNull(connectors)
     }
 
     companion object {
@@ -147,11 +162,20 @@ class UploadBackendClientIntegrationTest {
         private val mapper = ObjectMapper(factory)
                 .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
                 .registerModule(KotlinModule())
+                .registerModule(JavaTimeModule())
+                .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
         private val baseUri = "http://0.0.0.0:8080/radar-upload/"
-        private val mySourceTypeName = "MyTestCSV"
+        private val mySourceTypeName = "phone-acceleration"
         private const val BEARER = "Bearer "
         private val APPLICATION_JSON = MediaType.parse("application/json; charset=utf-8")
 
+        fun call(httpClient: OkHttpClient, expectedStatus: Response.Status, request: Request): ResponseBody? {
+            println(request.url())
+            return httpClient.newCall(request).execute().use { response ->
+                assertThat(response.code(), CoreMatchers.`is`(expectedStatus.statusCode))
+                response.body()
+            }
+        }
 
         fun call(httpClient: OkHttpClient, expectedStatus: Int, requestSupplier: (Request.Builder) -> Request.Builder): JsonNode? {
             val request = requestSupplier(Request.Builder()).build()
@@ -162,7 +186,7 @@ class UploadBackendClientIntegrationTest {
                     println(tree)
                     tree
                 }
-                MatcherAssert.assertThat(response.code(), CoreMatchers.`is`(expectedStatus))
+                assertThat(response.code(), CoreMatchers.`is`(expectedStatus))
                 body
             }
         }
