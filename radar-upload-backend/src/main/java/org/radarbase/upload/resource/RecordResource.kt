@@ -67,14 +67,12 @@ class RecordResource {
     @NeedsPermission(Entity.MEASUREMENT, Operation.CREATE)
     fun create(record: RecordDTO, @Context auth: Auth): Response {
 
-        // TODO: logic to do authorization checking
-
         validateNewRecord(record, auth)
 
         val doaRecord = recordMapper.toRecord(record)
         val result = recordRepository.create(doaRecord)
 
-        logger.info("Record created ${result}")
+        logger.info("Record created $result")
         return Response.created(URI("${uri.baseUri}records/${result.id}"))
                 .entity(recordMapper.fromRecord(result))
                 .build()
@@ -193,7 +191,10 @@ class RecordResource {
 
     @POST
     @Path("{recordId}/metadata")
-    fun updateRecordMetaData(metaData: RecordMetadataDTO, @PathParam("recordId") recordId: Long, @Context callbackManager: CallbackManager): RecordMetadataDTO {
+    fun updateRecordMetaData(
+            metaData: RecordMetadataDTO,
+            @PathParam("recordId") recordId: Long,
+            @Context callbackManager: CallbackManager): RecordMetadataDTO {
         val updatedRecord = recordRepository.updateMetadata(recordId, metaData)
 
         val updatedMetadata = recordMapper.fromMetadata(updatedRecord)
@@ -207,7 +208,7 @@ class RecordResource {
     @Path("{recordId}/logs")
     fun getRecordLogs(
             @PathParam("recordId") recordId: Long,
-            @Context response: org.glassfish.grizzly.http.server.Response): StreamingOutput {
+            @Context auth: Auth): Response {
 
         val record = recordRepository.read(recordId)
                 ?: throw NotFoundException("Record with ID $recordId does not exist")
@@ -215,11 +216,7 @@ class RecordResource {
         val charStream = record.metadata.logs?.logs?.characterStream
                 ?: throw NotFoundException("Cannot find logs for record with record id $recordId")
 
-        response.status = Response.Status.OK.statusCode
-        response.setHeader("Content-type", "text/plain")
-        response.setHeader("Last-Modified", record.metadata.modifiedDate.toString())
-
-        return StreamingOutput {
+        val streamingOutput = StreamingOutput {
             val writer = it.writer()
             charStream.use { reader ->
                 reader.copyTo(writer)
@@ -227,6 +224,9 @@ class RecordResource {
             writer.flush()
 
         }
+        return Response.ok(streamingOutput, "text/plain")
+                .header("Last-Modified", record.metadata.modifiedDate)
+                .build()
     }
 
     @POST
@@ -234,24 +234,25 @@ class RecordResource {
     fun addRecordLogs(
             recordMetaData: RecordMetadataDTO,
             @PathParam("recordId") recordId: Long,
-            @Context response: org.glassfish.grizzly.http.server.Response): StreamingOutput {
+            @Context auth: Auth): Response {
+
         val record = recordRepository.read(recordId)
                 ?: throw NotFoundException("Record with ID $recordId does not exist")
 
         val charStream = record.metadata.logs?.logs?.characterStream
                 ?: throw NotFoundException("Cannot find logs for record with record id $recordId")
 
-        response.status = Response.Status.OK.statusCode
-        response.setHeader("Content-type", "text/plain")
-        response.setHeader("Last-Modified", record.metadata.modifiedDate.toString())
-
-        return StreamingOutput {
+        val streamingOutput = StreamingOutput {
             val writer = it.writer()
             charStream.use { reader ->
                 reader.copyTo(writer)
             }
             writer.flush()
         }
+
+        return Response.ok(streamingOutput, "text/plain")
+                .header("Last-Modified", record.metadata.modifiedDate)
+                .build()
     }
 
     companion object {
