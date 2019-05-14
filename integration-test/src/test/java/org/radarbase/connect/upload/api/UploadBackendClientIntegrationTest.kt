@@ -10,13 +10,14 @@ import com.fasterxml.jackson.module.kotlin.KotlinModule
 import okhttp3.*
 import org.hamcrest.CoreMatchers
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers
+import org.hamcrest.Matchers.greaterThan
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
 import org.radarbase.connect.upload.auth.ClientCredentialsAuthorizer
 import org.radarbase.upload.Config
 import org.radarbase.upload.GrizzlyServer
 import org.radarbase.upload.api.SourceTypeDTO
+import org.radarbase.upload.doa.entity.RecordStatus
 import java.io.File
 import java.net.URI
 import java.time.LocalDateTime
@@ -96,7 +97,7 @@ class UploadBackendClientIntegrationTest {
     }
 
     @Test
-    fun requestToCreateRecord() {
+    fun requestToCreateAndPollRecord() {
         val clientUserToken = call(httpClient, Response.Status.OK, "access_token") {
             it.url("${config.managementPortalUrl}/oauth/token")
                     .addHeader("Authorization", Credentials.basic(REST_UPLOAD_CLIENT, REST_UPLOAD_SECRET))
@@ -133,13 +134,16 @@ class UploadBackendClientIntegrationTest {
         val recordCreated =  mapper.readValue(response.body()?.string(), RecordDTO::class.java)
         assertNotNull(recordCreated)
         assertNotNull(recordCreated.id)
-        assertThat(recordCreated?.id!!, Matchers.greaterThan(0L))
+        assertThat(recordCreated?.id!!, greaterThan(0L))
 
+        //Test uploading request content for created record
+        uploadContent(recordCreated.id!!, clientUserToken)
 
+        val records = pollRecords()
+    }
+
+    private fun uploadContent(recordId: Long, clientUserToken: String) {
         //Test uploading request content
-
-        val fileName = "TEST_ACC.csv"
-        val recordId = recordCreated.id
         val file = File(fileName)
 
         val requestToUploadFile = Request.Builder()
@@ -156,19 +160,26 @@ class UploadBackendClientIntegrationTest {
         assertEquals(fileName, content.fileName)
     }
 
-    @Test
-    fun pollRecords() {
+    fun pollRecords(): RecordContainerDTO {
         val pollConfig = PollDTO(
                 limit = 10,
                 supportedConverters = emptyList()
         )
         val records = uploadBackendClient.pollRecords(pollConfig)
         assertNotNull(records)
+        assertThat(records.records.size, greaterThan(0))
+        records.records.map { recordDTO -> assertEquals(RecordStatus.QUEUED.toString(), recordDTO.metadata?.status) }
+        println("Polled ${records.records.size} records")
+        return records
     }
 
+    private fun retrieveFile() {
+
+    }
+
+
     companion object {
-        const val MP_CLIENT = "ManagementPortalapp"
-        const val MP_SECRET = "testMe"
+        const val fileName = "TEST_ACC.csv"
         const val REST_UPLOAD_CLIENT = "radar_upload_backend"
         const val REST_UPLOAD_SECRET = "secret"
         const val USER = "sub-1"

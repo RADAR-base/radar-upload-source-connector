@@ -116,7 +116,8 @@ class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepos
                 .resultStream
                 .peek {
                     it.metadata.status = RecordStatus.QUEUED
-                    modifyNow(it.metadata)
+                    it.metadata.message = "Record is queued for processing"
+                    it.metadata.update()
                 }
                 .toList()
     }
