@@ -86,10 +86,7 @@ class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepos
                 this.size = length
                 this.content = Hibernate.getLobCreator(em.unwrap(Session::class.java)).createBlob(stream, length)
             }
-            record.contents = (record.contents ?: mutableSetOf()).apply { add(newContent) }
-
-            persist(newContent)
-            merge(record)
+            record.contents = mutableSetOf(newContent)
             newContent
         } else {
             existingContent.apply {
@@ -99,8 +96,16 @@ class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepos
             }
             merge(existingContent)
             existingContent
+
         }
-        modifyNow(record.metadata)
+
+        record.metadata = record.metadata.apply {
+            status = RecordStatus.READY
+            message = "Data successfully uploaded, ready for processing."
+            update()
+        }
+
+        merge(record)
         return@transact result
     }
 
@@ -160,9 +165,13 @@ class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepos
         merge<Record>(record)
     }
 
+    private fun RecordMetadata.update() {
+        this.revision += 1
+        this.modifiedDate = Instant.now()
+    }
+
     private fun modifyNow(metadata: RecordMetadata): RecordMetadata {
-        metadata.revision += 1
-        metadata.modifiedDate = Instant.now()
+        metadata.update()
         return em.merge<RecordMetadata>(metadata)
     }
 

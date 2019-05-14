@@ -17,6 +17,7 @@ import org.radarbase.connect.upload.auth.ClientCredentialsAuthorizer
 import org.radarbase.upload.Config
 import org.radarbase.upload.GrizzlyServer
 import org.radarbase.upload.api.SourceTypeDTO
+import java.io.File
 import java.net.URI
 import java.time.LocalDateTime
 import javax.ws.rs.core.Response
@@ -126,16 +127,33 @@ class UploadBackendClientIntegrationTest {
                 .addHeader("Content-type", "application/json")
                 .build()
 
+        val response = httpClient.newCall(request).execute()
+        assertTrue(response.isSuccessful)
 
-        httpClient.newCall(request).execute().use {
-            assertTrue(it.isSuccessful)
-            val recordCreated =  mapper.readValue(it.body()?.string(), RecordDTO::class.java)
-            assertNotNull(recordCreated)
-            assertNotNull(recordCreated.id)
-            assertThat(recordCreated?.id!!, Matchers.greaterThan(0L))
-        }
+        val recordCreated =  mapper.readValue(response.body()?.string(), RecordDTO::class.java)
+        assertNotNull(recordCreated)
+        assertNotNull(recordCreated.id)
+        assertThat(recordCreated?.id!!, Matchers.greaterThan(0L))
 
 
+        //Test uploading request content
+
+        val fileName = "TEST_ACC.csv"
+        val recordId = recordCreated.id
+        val file = File(fileName)
+
+        val requestToUploadFile = Request.Builder()
+                .url(baseUri.plus("records/$recordId/contents/$fileName"))
+                .put(RequestBody.create(TEXT_CSV, file))
+                .addHeader("Authorization", BEARER + clientUserToken)
+                .build()
+
+        val uploadResponse = httpClient.newCall(requestToUploadFile).execute()
+        assertTrue(uploadResponse.isSuccessful)
+
+        val content = mapper.readValue(uploadResponse.body()?.string(), ContentsDTO::class.java)
+        assertNotNull(content)
+        assertEquals(fileName, content.fileName)
     }
 
     @Test
@@ -144,8 +162,8 @@ class UploadBackendClientIntegrationTest {
                 limit = 10,
                 supportedConverters = emptyList()
         )
-        val connectors = uploadBackendClient.pollRecords(pollConfig)
-        assertNotNull(connectors)
+        val records = uploadBackendClient.pollRecords(pollConfig)
+        assertNotNull(records)
     }
 
     companion object {
@@ -168,6 +186,7 @@ class UploadBackendClientIntegrationTest {
         private val mySourceTypeName = "phone-acceleration"
         private const val BEARER = "Bearer "
         private val APPLICATION_JSON = MediaType.parse("application/json; charset=utf-8")
+        private val TEXT_CSV = MediaType.parse("text/csv; charset=utf-8")
 
         fun call(httpClient: OkHttpClient, expectedStatus: Response.Status, request: Request): ResponseBody? {
             println(request.url())
