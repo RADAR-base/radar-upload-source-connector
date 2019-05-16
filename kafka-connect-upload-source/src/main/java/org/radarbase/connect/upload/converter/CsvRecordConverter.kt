@@ -5,6 +5,7 @@ import com.opencsv.CSVReaderBuilder
 import okhttp3.ResponseBody
 import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
+import org.radarbase.connect.upload.exception.InvalidFormatException
 import org.slf4j.LoggerFactory
 import java.io.IOException
 
@@ -18,16 +19,20 @@ abstract class CsvRecordConverter(sourceType: String) : RecordConverter(sourceTy
                 .build()
         val convertedTopicData = mutableListOf<TopicData>()
         try {
-            val header = reader.readNext()
-            // do we want to validate headers?
-//            validateHeaderSchema(header.asList())
-
-            var line = reader.readNext()
-            while (line != null) {
-                convertedTopicData.add(convertLineToRecord(header.zip(line).toMap(), timeReceived))
-                line = reader.readNext()
+            val header = reader.readNext().map { it.trim() }
+            if (validateHeaderSchema(header)) {
+                var line = reader.readNext()
+                while (line != null && line.isNotEmpty()) {
+                    val convertedLine = convertLineToRecord(header, line.asList(), timeReceived)
+                    if (convertedLine != null) {
+                        convertedTopicData.add(convertedLine)
+                    }
+                    line = reader.readNext()
+                }
+                convertedTopicData.last().endOfFileOffSet = true
+            } else {
+                throw InvalidFormatException("Csv header does not match with expected converter format")
             }
-            convertedTopicData.last().endOfFileOffSet = true
         } catch (exe: IOException) {
             logger.warn("Something went wrong while processing contents of file ${contents.fileName}", exe)
         } finally {
@@ -40,7 +45,27 @@ abstract class CsvRecordConverter(sourceType: String) : RecordConverter(sourceTy
 
     abstract fun validateHeaderSchema(csvHeader: List<String>): Boolean
 
-    abstract fun convertLineToRecord(lineValues: Map<String, String>, timeReceived: Double): TopicData
+    private fun convertLineToRecord(header: List<String>, line: List<String>, timeReceived: Double): TopicData? {
+
+        if(line.isEmpty()) {
+            logger.warn("Empty line found ${line.toList()}")
+            return null
+        }
+
+        if (header.size != line.size) {
+            logger.warn("Line size ${line.size} did not match with header size ${header.size}. Skipping this line")
+            return null
+        }
+
+        if (line.any { it.isEmpty()}) {
+            logger.warn("Line with empty values found. Skipping this line")
+            return null
+        } else {
+            return convertLineToRecord(header.zip(line).toMap(), timeReceived)
+        }
+    }
+
+    abstract fun convertLineToRecord(lineValues: Map<String, String>, timeReceived: Double): TopicData?
 
     companion object {
         private val logger = LoggerFactory.getLogger(CsvRecordConverter::class.java)

@@ -3,6 +3,7 @@ package org.radarbase.connect.upload.converter
 import org.radarbase.connect.upload.api.RecordDTO
 import org.radarbase.connect.upload.api.UploadBackendClient
 import org.radarcns.passive.phone.PhoneAcceleration
+import org.slf4j.LoggerFactory
 
 class AccelerometerCsvRecordConverter(override val sourceType: String = "phone-acceleration", val topic: String = "android_phone_acceleration")
     : CsvRecordConverter(sourceType) {
@@ -10,8 +11,7 @@ class AccelerometerCsvRecordConverter(override val sourceType: String = "phone-a
     override fun validateHeaderSchema(csvHeader: List<String>) =
             listOf("TIMESTAMP", "X", "Y", "Z") == (csvHeader)
 
-
-    override fun convertLineToRecord(lineValues: Map<String, String>, timeReceived: Double): TopicData {
+    override fun convertLineToRecord(lineValues: Map<String, String>, timeReceived: Double): TopicData? {
         val time = lineValues["TIMESTAMP"]?.toDouble()
         val acceleration = PhoneAcceleration(
                 time,
@@ -25,7 +25,10 @@ class AccelerometerCsvRecordConverter(override val sourceType: String = "phone-a
     }
 
     override fun commitLogs(record: RecordDTO, client: UploadBackendClient) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        logger.info("To be implemented")
     }
 
+    companion object {
+        private val logger = LoggerFactory.getLogger(AccelerometerCsvRecordConverter::class.java)
+    }
 }
