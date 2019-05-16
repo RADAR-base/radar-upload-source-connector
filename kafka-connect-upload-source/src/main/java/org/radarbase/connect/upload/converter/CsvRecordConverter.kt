@@ -6,13 +6,13 @@ import okhttp3.ResponseBody
 import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
 import org.radarbase.connect.upload.exception.InvalidFormatException
-import org.slf4j.LoggerFactory
+import org.radarbase.connect.upload.converter.LogLevel.*
 import java.io.IOException
 
 abstract class CsvRecordConverter(sourceType: String) : RecordConverter(sourceType) {
 
     override fun processData(contents: ContentsDTO, responseBody: ResponseBody, record: RecordDTO, timeReceived: Double): List<TopicData> {
-        logger.debug("Retrieved file content from record id ${record.id} and filename ${contents.fileName}")
+        log(INFO,"Retrieved file content from record id ${record.id} and filename ${contents.fileName}")
         val inputStream = responseBody.byteStream()
         val reader = CSVReaderBuilder(inputStream.bufferedReader())
                 .withCSVParser(CSVParserBuilder().withSeparator(',').build())
@@ -34,9 +34,9 @@ abstract class CsvRecordConverter(sourceType: String) : RecordConverter(sourceTy
                 throw InvalidFormatException("Csv header does not match with expected converter format")
             }
         } catch (exe: IOException) {
-            logger.warn("Something went wrong while processing contents of file ${contents.fileName}", exe)
+            log(WARN,"Something went wrong while processing contents of file ${contents.fileName}: ${exe.message} ")
         } finally {
-            logger.debug("Closing resources of content ${contents.fileName}")
+            log(INFO,"Closing resources of content ${contents.fileName}")
             inputStream.close()
             responseBody.close()
         }
@@ -48,17 +48,17 @@ abstract class CsvRecordConverter(sourceType: String) : RecordConverter(sourceTy
     private fun convertLineToRecord(header: List<String>, line: List<String>, timeReceived: Double): TopicData? {
 
         if(line.isEmpty()) {
-            logger.warn("Empty line found ${line.toList()}")
+            log(WARN, "Empty line found ${line.toList()}")
             return null
         }
 
         if (header.size != line.size) {
-            logger.warn("Line size ${line.size} did not match with header size ${header.size}. Skipping this line")
+            log(WARN, "Line size ${line.size} did not match with header size ${header.size}. Skipping this line")
             return null
         }
 
         if (line.any { it.isEmpty()}) {
-            logger.warn("Line with empty values found. Skipping this line")
+            log(WARN,"Line with empty values found. Skipping this line")
             return null
         } else {
             return convertLineToRecord(header.zip(line).toMap(), timeReceived)
@@ -66,8 +66,4 @@ abstract class CsvRecordConverter(sourceType: String) : RecordConverter(sourceTy
     }
 
     abstract fun convertLineToRecord(lineValues: Map<String, String>, timeReceived: Double): TopicData?
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(CsvRecordConverter::class.java)
-    }
 }

@@ -8,10 +8,15 @@ import org.radarbase.connect.upload.api.*
 import org.radarbase.connect.upload.converter.Converter.Companion.END_OF_RECORD_KEY
 import org.radarbase.connect.upload.converter.Converter.Companion.RECORD_ID_KEY
 import org.radarbase.connect.upload.converter.Converter.Companion.REVISION_KEY
+import org.radarbase.connect.upload.converter.LogLevel.*
 import org.radarcns.kafka.ObservationKey
 import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.time.Instant
+
+enum class LogLevel {
+    INFO, DEBUG, WARN, ERROR
+}
 
 abstract class RecordConverter(override val sourceType: String, val avroData: AvroData = AvroData(20)) : Converter {
 
@@ -19,6 +24,7 @@ abstract class RecordConverter(override val sourceType: String, val avroData: Av
     private lateinit var client: UploadBackendClient
     private lateinit var settings: Map<String, String>
     private lateinit var topic: String
+    private lateinit var logsRepository: MutableList<Pair<LogLevel, String>>
     override fun initialize(connectorConfig: SourceTypeDTO, client: UploadBackendClient, settings: Map<String, String>) {
         this.connectorConfig = connectorConfig
         this.client = client
@@ -27,15 +33,27 @@ abstract class RecordConverter(override val sourceType: String, val avroData: Av
         if (this.connectorConfig.topics?.size == 1) {
             this.topic = this.connectorConfig.topics?.first()!!
         }
-        // TODO how to we want to handle multple topics per source-type?
+
+        logsRepository = mutableListOf()
     }
 
     override fun close() {
         this.client.close()
     }
 
+    fun log(logLevel: LogLevel, logMessage: String) {
+        logsRepository.add(Pair(logLevel, logMessage))
+
+        when (logLevel) {
+            INFO -> logger.info(logMessage)
+            WARN -> logger.warn(logMessage)
+            DEBUG -> logger.debug(logMessage)
+            ERROR -> logger.error(logMessage)
+        }
+    }
     override fun convert(record: RecordDTO): ConversionResult {
-        logger.info("Converting record : record-id ${record.id}")
+        log(INFO, "Converting record : record-id ${record.id}")
+
         record.validateRecord()
 
         val key = record.computeObservationKey(avroData)
@@ -64,7 +82,13 @@ abstract class RecordConverter(override val sourceType: String, val avroData: Av
         return ConversionResult(record, sourceRecords.flatMap { it.toList() })
     }
 
-    abstract fun commitLogs(record: RecordDTO, client: UploadBackendClient)
+    private fun commitLogs(record: RecordDTO, client: UploadBackendClient) {
+        val logs = LogsDto().apply {
+                contents = logsRepository.toString()
+        }
+        logger.info(logsRepository.toString())
+        client.addLogs(record.id!!, logs)
+    }
 
     /** process file content with the record data. The implementing method should close response-body. */
     abstract fun processData(contents: ContentsDTO, responseBody: ResponseBody, record: RecordDTO, timeReceived: Double)

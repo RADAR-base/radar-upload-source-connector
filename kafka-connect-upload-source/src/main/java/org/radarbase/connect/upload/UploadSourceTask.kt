@@ -71,7 +71,6 @@ class UploadSourceTask : SourceTask() {
             }
 
             val result = converter.convert(record)
-            uploadClient.addLogs(record.id!!, result.record.metadata!!)
             result.result?.let {
                 allResults.addAll(it)
             }
