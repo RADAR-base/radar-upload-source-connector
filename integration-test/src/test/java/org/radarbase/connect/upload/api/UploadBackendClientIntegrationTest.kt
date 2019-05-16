@@ -11,9 +11,13 @@ import okhttp3.*
 import org.hamcrest.CoreMatchers
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.greaterThan
-import org.junit.jupiter.api.*
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import org.radarbase.connect.upload.auth.ClientCredentialsAuthorizer
+import org.radarbase.connect.upload.converter.AccelerometerCsvRecordConverter
 import org.radarbase.upload.Config
 import org.radarbase.upload.GrizzlyServer
 import org.radarbase.upload.api.SourceTypeDTO
@@ -97,7 +101,7 @@ class UploadBackendClientIntegrationTest {
     }
 
     @Test
-    fun requestToCreateAndPollRecord() {
+    fun testRecordCreationToConvertionWorkFlow() {
         val clientUserToken = call(httpClient, Response.Status.OK, "access_token") {
             it.url("${config.managementPortalUrl}/oauth/token")
                     .addHeader("Authorization", Credentials.basic(REST_UPLOAD_CLIENT, REST_UPLOAD_SECRET))
@@ -141,7 +145,14 @@ class UploadBackendClientIntegrationTest {
 
         val records = pollRecords()
 
-        val file = retrieveFile(records.records.first())
+        val sourceType = uploadBackendClient.requestConnectorConfig(mySourceTypeName)
+
+        val converter = AccelerometerCsvRecordConverter()
+        converter.initialize(sourceType, uploadBackendClient, emptyMap())
+        val convertedRecords = converter.convert(records.records.first())
+        assertNotNull(convertedRecords)
+        assertNotNull(convertedRecords.result)
+        assertTrue(convertedRecords.result?.isNotEmpty()!!)
     }
 
     private fun uploadContent(recordId: Long, clientUserToken: String) {
