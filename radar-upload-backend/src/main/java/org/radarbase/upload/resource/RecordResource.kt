@@ -157,7 +157,7 @@ class RecordResource {
         val recordContent = recordRepository.readContent(recordId, fileName)
                 ?: throw NotFoundException("Cannot find content with record-id $recordId and file-name $fileName")
 
-        val inputStream = recordContent.content.binaryStream
+        val inputStream = recordContent.content.inputStream()
         val streamingOutput = StreamingOutput {
             inputStream.use { inStream -> inStream.copyTo(it) }
             it.flush()
@@ -166,7 +166,7 @@ class RecordResource {
         return Response
                 .ok(streamingOutput)
                 .header("Content-type", recordContent.contentType)
-                .header("Content-Length", recordContent.content.length().toString())
+                .header("Content-Length", recordContent.content.size.toString())
                 .header("Last-Modified", recordContent.createdDate.toString())
                 .build()
 

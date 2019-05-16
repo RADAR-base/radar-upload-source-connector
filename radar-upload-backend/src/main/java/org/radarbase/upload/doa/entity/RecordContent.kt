@@ -1,7 +1,6 @@
 package org.radarbase.upload.doa.entity
 
 import org.radarbase.upload.doa.AbstractJpaPersistable
-import java.sql.Blob
 import java.time.Instant
 import javax.persistence.*
 
@@ -25,5 +24,5 @@ class RecordContent : AbstractJpaPersistable<Long>() {
     lateinit var record: Record
 
     @Basic(fetch = FetchType.LAZY)
-    lateinit var content: Blob
+    lateinit var content: ByteArray
 }

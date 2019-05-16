@@ -136,14 +136,16 @@ class UploadBackendClientIntegrationTest {
         assertNotNull(recordCreated.id)
         assertThat(recordCreated?.id!!, greaterThan(0L))
 
-        //Test uploading request content for created record
+        //Test uploading request contentFile for created record
         uploadContent(recordCreated.id!!, clientUserToken)
 
         val records = pollRecords()
+
+        val file = retrieveFile(records.records.first())
     }
 
     private fun uploadContent(recordId: Long, clientUserToken: String) {
-        //Test uploading request content
+        //Test uploading request contentFile
         val file = File(fileName)
 
         val requestToUploadFile = Request.Builder()
@@ -173,8 +175,9 @@ class UploadBackendClientIntegrationTest {
         return records
     }
 
-    private fun retrieveFile() {
-
+    private fun retrieveFile(recordId: RecordDTO) {
+        val file = uploadBackendClient.retrieveFile(recordId, fileName)
+        assertNotNull(file)
     }
 
 

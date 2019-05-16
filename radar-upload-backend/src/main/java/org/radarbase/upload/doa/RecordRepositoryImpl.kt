@@ -84,7 +84,7 @@ class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepos
                 this.createdDate = Instant.now()
                 this.contentType = contentType
                 this.size = length
-                this.content = Hibernate.getLobCreator(em.unwrap(Session::class.java)).createBlob(stream, length)
+                this.content = stream.readAllBytes()
             }
             record.contents = mutableSetOf(newContent)
             newContent
@@ -92,7 +92,7 @@ class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepos
             existingContent.apply {
                 this.createdDate = Instant.now()
                 this.contentType = contentType
-                this.content = Hibernate.getLobCreator(em.unwrap(Session::class.java)).createBlob(stream, length)
+                this.content = stream.readAllBytes()
             }
             merge(existingContent)
             existingContent
