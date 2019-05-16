@@ -75,7 +75,7 @@ abstract class UploadResourceConfig {
             // Bind factories.
             bindFactory(AuthFactory::class.java)
                     .proxy(true)
-                    .proxyForSameScope(false)
+                    .proxyForSameScope(true)
                     .to(Auth::class.java)
                     .`in`(RequestScoped::class.java)
 

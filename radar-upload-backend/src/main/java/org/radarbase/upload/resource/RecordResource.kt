@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory
 import java.io.InputStream
 import java.net.URI
 import javax.annotation.Resource
+import javax.persistence.EntityManager
 import javax.ws.rs.*
 import javax.ws.rs.core.*
 
@@ -38,7 +39,13 @@ class RecordResource {
     lateinit var uri: UriInfo
 
     @Context
+    lateinit var auth: Auth
+
+    @Context
     lateinit var sourceTypeRepository: SourceTypeRepository
+
+    @Context
+    lateinit var em: EntityManager
 
     @GET
     fun query(
@@ -46,8 +53,7 @@ class RecordResource {
             @QueryParam("userId") userId: String?,
             @DefaultValue("10") @QueryParam("limit") limit: Int,
             @QueryParam("lastId") lastId: Long?,
-            @QueryParam("status") status: String?,
-            @Context auth: Auth): RecordContainerDTO {
+            @QueryParam("status") status: String?): RecordContainerDTO {
 
         projectId ?: throw BadRequestException("Required project ID not provided.")
 
@@ -65,7 +71,7 @@ class RecordResource {
 
     @POST
     @NeedsPermission(Entity.MEASUREMENT, Operation.CREATE)
-    fun create(record: RecordDTO, @Context auth: Auth): Response {
+    fun create(record: RecordDTO): Response {
 
         validateNewRecord(record, auth)
 
@@ -122,8 +128,7 @@ class RecordResource {
             @HeaderParam("Content-Type") contentType: String,
             @HeaderParam("Content-Length") contentLength: Long,
             @PathParam("fileName") fileName: String,
-            @PathParam("recordId") recordId: Long,
-            @Context auth: Auth): Response {
+            @PathParam("recordId") recordId: Long): Response {
 
         val record = recordRepository.read(recordId)
                 ?: throw NotFoundException("Record with ID $recordId does not exist")
@@ -169,11 +174,12 @@ class RecordResource {
 
     @POST
     @Path("poll")
-    fun poll(pollDTO: PollDTO, @Context auth: Auth): RecordContainerDTO {
+    fun poll(pollDTO: PollDTO): RecordContainerDTO {
 
         if (auth.isClientCredentials) {
             val imposedLimit = Math.min(Math.max(pollDTO.limit, 1), 100)
-            return recordMapper.fromRecords(recordRepository.poll(imposedLimit), imposedLimit)
+            val records = recordRepository.poll(imposedLimit)
+            return recordMapper.fromRecords(records, imposedLimit)
         } else {
             throw NotAuthorizedException("Client is not authorized to poll records")
         }
@@ -207,8 +213,7 @@ class RecordResource {
     @GET
     @Path("{recordId}/logs")
     fun getRecordLogs(
-            @PathParam("recordId") recordId: Long,
-            @Context auth: Auth): Response {
+            @PathParam("recordId") recordId: Long): Response {
 
         val record = recordRepository.read(recordId)
                 ?: throw NotFoundException("Record with ID $recordId does not exist")
@@ -233,8 +238,7 @@ class RecordResource {
     @Path("{recordId}/logs")
     fun addRecordLogs(
             recordMetaData: RecordMetadataDTO,
-            @PathParam("recordId") recordId: Long,
-            @Context auth: Auth): Response {
+            @PathParam("recordId") recordId: Long): Response {
 
         val record = recordRepository.read(recordId)
                 ?: throw NotFoundException("Record with ID $recordId does not exist")
