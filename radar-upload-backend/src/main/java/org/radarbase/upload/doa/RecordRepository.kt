@@ -13,7 +13,7 @@ interface RecordRepository {
     fun read(id: Long): Record?
     fun readLogs(id: Long): RecordLogs?
     fun updateLogs(id: Long, reader: Reader, length: Long): RecordMetadata
-    fun readContent(id: Long, fileName: String): ByteArray?
+    fun readFileContent(id: Long, fileName: String): ByteArray?
     fun delete(record: Record)
     fun update(record: Record): Record
     fun updateMetadata(id: Long, metadata: RecordMetadataDTO): RecordMetadata
@@ -21,4 +21,5 @@ interface RecordRepository {
     fun readMetadata(id: Long): RecordMetadata?
     fun query(limit: Int, lastId: Long, projectId: String, userId: String?, status: String?): List<Record>
     fun poll(limit: Int): List<Record>
+    fun readRecordContent(recordId: Long, fileName: String): RecordContent?
 }

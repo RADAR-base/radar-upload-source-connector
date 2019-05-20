@@ -123,7 +123,17 @@ class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepos
                 .toList()
     }
 
-    override fun readContent(id: Long, fileName: String): ByteArray? = em.transact {
+
+    override fun readRecordContent(recordId: Long, fileName: String): RecordContent? = em.transact {
+        val queryString = "SELECT rc from RecordContent rc WHERE rc.record.id = :id AND rc.fileName = :fileName"
+
+        createQuery(queryString, RecordContent::class.java)
+                .setParameter("fileName", fileName)
+                .setParameter("id", recordId)
+                .resultList.firstOrNull()
+    }
+
+    override fun readFileContent(id: Long, fileName: String): ByteArray? = em.transact {
         val queryString = "SELECT rc.content from RecordContent rc WHERE rc.record.id = :id AND rc.fileName = :fileName"
 
         createQuery(queryString, Blob::class.java)

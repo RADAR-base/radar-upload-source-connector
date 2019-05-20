@@ -12,6 +12,7 @@ import org.radarbase.upload.dto.CallbackManager
 import org.radarcns.auth.authorization.Permission.*
 import org.slf4j.LoggerFactory
 import java.io.InputStream
+import java.lang.IllegalStateException
 import java.net.URI
 import javax.annotation.Resource
 import javax.persistence.EntityManager
@@ -154,20 +155,22 @@ class RecordResource {
             @PathParam("fileName") fileName: String,
             @PathParam("recordId") recordId: Long): Response {
 
-        val recordContent = recordRepository.readContent(recordId, fileName)
-                ?: throw NotFoundException("Cannot find content with record-id $recordId and file-name $fileName")
+        val recordContent = recordRepository.readRecordContent(recordId, fileName)
+                ?: throw NotFoundException("Cannot find record content with record-id $recordId and fileName $fileName")
 
-        val inputStream = recordContent.content.inputStream()
+        val content = recordRepository.readFileContent(recordId, fileName)
+                ?: throw NotFoundException("Cannot read content of file $fileName from record $recordId")
+
         val streamingOutput = StreamingOutput {
-            inputStream.use { inStream -> inStream.copyTo(it) }
+            content.inputStream().use { inStream -> inStream.copyTo(it) }
             it.flush()
         }
 
         return Response
                 .ok(streamingOutput)
                 .header("Content-type", recordContent.contentType)
-                .header("Content-Length", recordContent.content.size.toString())
-                .header("Last-Modified", recordContent.createdDate.toString())
+                .header("Content-Length", recordContent.size)
+                .header("Last-Modified", recordContent.createdDate)
                 .build()
 
     }
@@ -237,25 +240,16 @@ class RecordResource {
     @POST
     @Path("{recordId}/logs")
     fun addRecordLogs(
-            recordMetaData: RecordMetadataDTO,
+            recordLogs: LogsDto,
             @PathParam("recordId") recordId: Long): Response {
 
-        val record = recordRepository.read(recordId)
+        recordRepository.read(recordId)
                 ?: throw NotFoundException("Record with ID $recordId does not exist")
 
-        val charStream = record.metadata.logs?.logs?.characterStream
-                ?: throw NotFoundException("Cannot find logs for record with record id $recordId")
+        recordLogs.contents ?: throw IllegalStateException("No content provided to update the logs")
+        val uploadedMetaData = recordRepository.updateLogs(recordId, recordLogs.contents!!.reader(), recordLogs.contents!!.length.toLong())
 
-        val streamingOutput = StreamingOutput {
-            val writer = it.writer()
-            charStream.use { reader ->
-                reader.copyTo(writer)
-            }
-            writer.flush()
-        }
-
-        return Response.ok(streamingOutput, "text/plain")
-                .header("Last-Modified", record.metadata.modifiedDate)
+        return Response.ok(uploadedMetaData)
                 .build()
     }
 
