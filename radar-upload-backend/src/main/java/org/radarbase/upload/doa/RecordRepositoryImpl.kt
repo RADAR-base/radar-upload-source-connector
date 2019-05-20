@@ -9,6 +9,7 @@ import org.radarbase.upload.inject.session
 import org.radarbase.upload.inject.transact
 import java.io.InputStream
 import java.io.Reader
+import java.sql.Blob
 import java.time.Instant
 import javax.persistence.EntityManager
 import javax.ws.rs.BadRequestException
@@ -19,7 +20,7 @@ import kotlin.streams.toList
 
 class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepository {
 
-    override fun updateLogs(id: Long, reader: Reader, length: Long): Unit = em.transact {
+    override fun updateLogs(id: Long, reader: Reader, length: Long): RecordMetadata = em.transact {
         val logs = find(RecordLogs::class.java, id)
         val metadata = if (logs == null) {
             val metadata = find(RecordMetadata::class.java, id)
@@ -84,7 +85,7 @@ class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepos
                 this.createdDate = Instant.now()
                 this.contentType = contentType
                 this.size = length
-                this.content = stream.readAllBytes()
+                this.content = Hibernate.getLobCreator(em.unwrap(Session::class.java)).createBlob(stream, length)
             }
             record.contents = mutableSetOf(newContent)
             newContent
@@ -92,7 +93,7 @@ class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepos
             existingContent.apply {
                 this.createdDate = Instant.now()
                 this.contentType = contentType
-                this.content = stream.readAllBytes()
+                this.content = Hibernate.getLobCreator(em.unwrap(Session::class.java)).createBlob(stream, length)
             }
             merge(existingContent)
             existingContent
@@ -122,13 +123,13 @@ class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepos
                 .toList()
     }
 
-    override fun readContent(id: Long, fileName: String): RecordContent? = em.transact {
-        val queryString = "SELECT rc from RecordContent rc WHERE rc.record.id = :id AND rc.fileName = :fileName"
+    override fun readContent(id: Long, fileName: String): ByteArray? = em.transact {
+        val queryString = "SELECT rc.content from RecordContent rc WHERE rc.record.id = :id AND rc.fileName = :fileName"
 
-        createQuery(queryString, RecordContent::class.java)
+        createQuery(queryString, Blob::class.java)
                 .setParameter("fileName", fileName)
                 .setParameter("id", id)
-                .resultList.firstOrNull()
+                .resultList.firstOrNull()?.binaryStream?.readAllBytes()
     }
 
     override fun create(record: Record): Record = em.transact {

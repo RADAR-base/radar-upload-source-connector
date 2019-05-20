@@ -12,8 +12,8 @@ interface RecordRepository {
     fun create(record: Record): Record
     fun read(id: Long): Record?
     fun readLogs(id: Long): RecordLogs?
-    fun updateLogs(id: Long, reader: Reader, length: Long)
-    fun readContent(id: Long, fileName: String): RecordContent?
+    fun updateLogs(id: Long, reader: Reader, length: Long): RecordMetadata
+    fun readContent(id: Long, fileName: String): ByteArray?
     fun delete(record: Record)
     fun update(record: Record): Record
     fun updateMetadata(id: Long, metadata: RecordMetadataDTO): RecordMetadata
