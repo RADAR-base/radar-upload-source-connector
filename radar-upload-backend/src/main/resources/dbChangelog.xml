@@ -65,7 +65,7 @@
             <column name="created_date" type="timestamp"/>
             <column name="file_name" type="varchar(255)"/>
             <column name="content_type" type="varchar(255)"/>
-            <column name="content" type="bytea"/>
+            <column name="content" type="blob"/>
         </createTable>
 
         <createTable tableName="source_type">
