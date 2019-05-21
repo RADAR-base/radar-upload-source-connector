@@ -8,7 +8,7 @@ plugins {
 project.extra.apply {
     set("kafkaVersion", "2.2.0-cp2")
     set("okhttpVersion", "3.14.1")
-    set("jacksonVersion", "2.9.8")
+    set("jacksonVersion", "2.9.9")
     set("openCsvVersion", "4.6")
     set("confluentVersion", "5.0.0")
     set("radarSchemaVersion", "0.5.0")

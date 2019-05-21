@@ -18,7 +18,7 @@ project.extra.apply {
     set("radarMpVersion", "0.5.4")
     set("radarCommonsVersion", "0.11.3")
     set("radarSchemasVersion", "0.4.3")
-    set("jacksonVersion", "2.9.8")
+    set("jacksonVersion", "2.9.9")
     set("slf4jVersion", "1.7.25")
     set("logbackVersion", "1.2.3")
     set("grizzlyVersion", "2.4.4")
