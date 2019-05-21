@@ -75,13 +75,13 @@ class UploadBackendClient(
         return mapper.readValue(response.body()?.string(), RecordMetadataDTO::class.java)
     }
 
-    fun addLogs(recordId: Long, status: RecordMetadataDTO): LogsDto {
+    fun addLogs(recordId: Long, status: LogsDto): RecordMetadataDTO {
         val request = Request.Builder()
                 .url(uploadBackendBaseUrl.plus("records/$recordId/logs"))
                 .post(RequestBody.create(APPLICATION_JSON, status.toJsonString()))
                 .build()
         val response = httpClient.executeRequest(request)
-        return mapper.readValue(response.body()?.charStream(), LogsDto::class.java)
+        return mapper.readValue(response.body()?.charStream(), RecordMetadataDTO::class.java)
     }
 
     override fun close() {

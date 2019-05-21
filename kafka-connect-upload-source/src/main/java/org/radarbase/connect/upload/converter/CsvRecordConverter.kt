@@ -6,7 +6,7 @@ import okhttp3.ResponseBody
 import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
 import org.radarbase.connect.upload.exception.InvalidFormatException
-import org.radarbase.connect.upload.converter.LogLevel.*
+import org.radarbase.connect.upload.api.LogLevel.*
 import java.io.IOException
 
 abstract class CsvRecordConverter(sourceType: String) : RecordConverter(sourceType) {
