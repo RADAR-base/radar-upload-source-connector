@@ -26,7 +26,6 @@ class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepos
                     ?: throw NotFoundException("RecordMetadata with ID $id does not exist")
             refresh(metadataFromDb)
             metadataFromDb.logs = RecordLogs().apply {
-                this.id = id
                 this.metadata = metadataFromDb
                 this.modifiedDate = Instant.now()
                 this.size = logsData.length.toLong()
@@ -100,7 +99,7 @@ class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepos
             }
         }
 
-        record.metadata = record.metadata.apply {
+        record.metadata.apply {
             status = RecordStatus.READY
             message = "Data successfully uploaded, ready for processing."
             update()
@@ -118,11 +117,10 @@ class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepos
                 .peek {
                     it.metadata.status = RecordStatus.QUEUED
                     it.metadata.message = "Record is queued for processing"
-                    it.metadata.update()
+                    modifyNow(it.metadata)
                 }
                 .toList()
     }
-
 
     override fun readRecordContent(recordId: Long, fileName: String): RecordContent? = em.transact {
         val queryString = "SELECT rc from RecordContent rc WHERE rc.record.id = :id AND rc.fileName = :fileName"
@@ -170,7 +168,7 @@ class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepos
     override fun read(id: Long): Record? = em.transact { find(Record::class.java, id) }
 
     override fun update(record: Record): Record = em.transact {
-        modifyNow(record.metadata)
+        record.metadata.update()
         merge<Record>(record)
     }
 
