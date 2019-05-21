@@ -183,7 +183,7 @@ internal class RecordRepositoryImplTest {
 
         val beforeTime = Instant.now()
         repository.create(record)
-        repository.updateLogs(record.id!!, StringReader(log), log.length.toLong())
+        repository.updateLogs(record.id!!, log)
         val afterTime = Instant.now()
 
         val recordLogs = repository.readLogs(record.id!!)
