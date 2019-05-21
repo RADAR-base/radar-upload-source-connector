@@ -79,26 +79,26 @@ class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepos
     override fun updateContent(record: Record, fileName: String, contentType: String, stream: InputStream, length: Long): RecordContent = em.transact {
         val existingContent = record.contents?.find { it.fileName == fileName }
 
-        val result = if (existingContent == null) {
-            val newContent = RecordContent().apply {
-                this.record = record
-                this.fileName = fileName
-                this.createdDate = Instant.now()
-                this.contentType = contentType
-                this.size = length
-                this.content = Hibernate.getLobCreator(em.unwrap(Session::class.java)).createBlob(stream, length)
+        refresh(record)
+        val result = existingContent?.apply {
+            this.createdDate = Instant.now()
+            this.contentType = contentType
+            this.content = Hibernate.getLobCreator(em.unwrap(Session::class.java)).createBlob(stream, length)
+            merge(this)
+        } ?: RecordContent().apply {
+            this.record = record
+            this.fileName = fileName
+            this.createdDate = Instant.now()
+            this.contentType = contentType
+            this.size = length
+            this.content = Hibernate.getLobCreator(em.unwrap(Session::class.java)).createBlob(stream, length)
+            persist(this)
+        }.also {
+            if (record.contents != null) {
+                record.contents?.add(it)
+            } else {
+                record.contents = mutableSetOf(it)
             }
-            record.contents = mutableSetOf(newContent)
-            newContent
-        } else {
-            existingContent.apply {
-                this.createdDate = Instant.now()
-                this.contentType = contentType
-                this.content = Hibernate.getLobCreator(em.unwrap(Session::class.java)).createBlob(stream, length)
-            }
-            merge(existingContent)
-            existingContent
-
         }
 
         record.metadata = record.metadata.apply {
@@ -146,28 +146,25 @@ class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepos
     override fun create(record: Record): Record = em.transact {
         val tmpContent = record.contents?.also { record.contents = null }
 
-        record.contents = tmpContent?.mapTo(HashSet()) {
-            it.record = record
-            it.createdDate = Instant.now()
-            persist(it)
-            it
-        }
-
-        val metadata = RecordMetadata().apply {
-            this.record = record
-            status = if (tmpContent == null) RecordStatus.INCOMPLETE else RecordStatus.READY
-            message = if (tmpContent == null) "No data uploaded yet" else "Data successfully uploaded, ready for processing."
-            createdDate = Instant.now()
-            modifiedDate = Instant.now()
-            revision = 1
-        }
-        record.metadata = metadata
-
         persist(record)
 
         record.apply {
-            this.contents = contents
-            this.metadata = metadata
+            contents = tmpContent?.mapTo(HashSet()) {
+                it.record = record
+                it.createdDate = Instant.now()
+                persist(it)
+                it
+            }
+
+            metadata = RecordMetadata().apply {
+                this.record = record
+                status = if (tmpContent == null) RecordStatus.INCOMPLETE else RecordStatus.READY
+                message = if (tmpContent == null) "No data uploaded yet" else "Data successfully uploaded, ready for processing."
+                createdDate = Instant.now()
+                modifiedDate = Instant.now()
+                revision = 1
+                persist(this)
+            }
         }
     }
 
