@@ -66,7 +66,7 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
         private const val UPLOAD_SOURCE_SERVER_BASE_URL_DISPLAY = "Base URL of the file upload backend"
         private const val UPLOAD_SOURCE_SERVER_BASE_URL_DEFAULT = "http://radar-upload-backend:8080/"
 
-        val SOURCE_POLL_INTERVAL_CONFIG = "upload.source.poll.interval.ms"
+        const val SOURCE_POLL_INTERVAL_CONFIG = "upload.source.poll.interval.ms"
         private const val SOURCE_POLL_INTERVAL_DOC = "How often to poll the source URL."
         private const val SOURCE_POLL_INTERVAL_DISPLAY = "Polling interval"
         private const val SOURCE_POLL_INTERVAL_DEFAULT = 60000L
