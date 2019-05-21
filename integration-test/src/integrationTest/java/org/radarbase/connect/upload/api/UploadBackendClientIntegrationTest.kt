@@ -212,8 +212,8 @@ class UploadBackendClientIntegrationTest {
                 .registerModule(KotlinModule())
                 .registerModule(JavaTimeModule())
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-        private val baseUri = "http://0.0.0.0:8080/radar-upload/"
-        private val mySourceTypeName = "phone-acceleration"
+        private const val baseUri = "http://0.0.0.0:8080/radar-upload/"
+        private const val mySourceTypeName = "phone-acceleration"
         private const val BEARER = "Bearer "
         private val APPLICATION_JSON = MediaType.parse("application/json; charset=utf-8")
         private val TEXT_CSV = MediaType.parse("text/csv; charset=utf-8")
