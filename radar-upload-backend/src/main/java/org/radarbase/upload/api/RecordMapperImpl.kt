@@ -18,7 +18,9 @@ class RecordMapperImpl : RecordMapper {
 
     override fun toRecord(record: RecordDTO): Record = Record().apply {
         val data = record.data ?: throw BadRequestException("No data field included")
-        metadata = toMetadata(record.metadata)
+        if (record.metadata != null) {
+            metadata = toMetadata(record.metadata)
+        }
         projectId = data.projectId ?: throw BadRequestException("Missing project ID")
         userId = data.userId ?: throw BadRequestException("Missing user ID")
         sourceId = data.sourceId ?: throw BadRequestException("Missing source ID")
