@@ -14,7 +14,7 @@ class RecordLogs {
     @Column(name = "modified_date")
     lateinit var modifiedDate: Instant
 
-    @OneToOne(fetch = FetchType.LAZY, cascade = [CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH])
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "record_id")
     @MapsId
     lateinit var metadata: RecordMetadata

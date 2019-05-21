@@ -12,6 +12,7 @@ import org.radarbase.upload.dto.CallbackManager
 import org.radarcns.auth.authorization.Permission.*
 import org.slf4j.LoggerFactory
 import java.io.InputStream
+import java.lang.Exception
 import java.lang.IllegalStateException
 import java.net.URI
 import javax.annotation.Resource
@@ -242,14 +243,11 @@ class RecordResource {
     fun addRecordLogs(
             recordLogs: LogsDto,
             @PathParam("recordId") recordId: Long): Response {
+        recordLogs.contents
+                ?: throw IllegalStateException("No content provided to update the logs")
 
-        recordRepository.read(recordId)
-                ?: throw NotFoundException("Record with ID $recordId does not exist")
-
-        recordLogs.contents ?: throw IllegalStateException("No content provided to update the logs")
-        val uploadedMetaData = recordRepository.updateLogs(recordId, recordLogs.contents!!.reader(), recordLogs.contents!!.length.toLong())
-
-        return Response.ok(uploadedMetaData)
+        val uploadedMetaData = recordRepository.updateLogs(recordId, recordLogs.contents!!)
+        return Response.ok(recordMapper.fromMetadata(uploadedMetaData))
                 .build()
     }
 

@@ -11,7 +11,7 @@ class RecordMetadata {
     var id: Long? = null
 
     @JoinColumn(name = "record_id")
-    @OneToOne(cascade = [CascadeType.ALL])
+    @OneToOne(fetch = FetchType.LAZY)
     @MapsId
     lateinit var record: Record
 
@@ -30,7 +30,7 @@ class RecordMetadata {
     @Column(name = "committed_date")
     var committedDate: Instant? = null
 
-    @OneToOne(fetch = FetchType.LAZY, mappedBy = "metadata", cascade = [CascadeType.ALL])
+    @OneToOne(fetch = FetchType.LAZY, mappedBy = "metadata", cascade = [CascadeType.REMOVE, CascadeType.DETACH, CascadeType.REFRESH])
     var logs: RecordLogs? = null
 
     @Column(name = "callback_url")
