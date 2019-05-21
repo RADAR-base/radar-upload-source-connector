@@ -12,7 +12,7 @@ interface RecordRepository {
     fun create(record: Record): Record
     fun read(id: Long): Record?
     fun readLogs(id: Long): RecordLogs?
-    fun updateLogs(id: Long, reader: Reader, length: Long): RecordMetadata
+    fun updateLogs(id: Long, logsData: String): RecordMetadata
     fun readFileContent(id: Long, fileName: String): ByteArray?
     fun delete(record: Record)
     fun update(record: Record): Record

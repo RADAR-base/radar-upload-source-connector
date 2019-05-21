@@ -8,7 +8,6 @@ import org.radarbase.upload.exception.ConflictException
 import org.radarbase.upload.inject.session
 import org.radarbase.upload.inject.transact
 import java.io.InputStream
-import java.io.Reader
 import java.sql.Blob
 import java.time.Instant
 import javax.persistence.EntityManager
@@ -20,30 +19,32 @@ import kotlin.streams.toList
 
 class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepository {
 
-    override fun updateLogs(id: Long, reader: Reader, length: Long): RecordMetadata = em.transact {
+    override fun updateLogs(id: Long, logsData: String): RecordMetadata = em.transact {
         val logs = find(RecordLogs::class.java, id)
-        val metadata = if (logs == null) {
-            val metadata = find(RecordMetadata::class.java, id)
+        val metadataToSave = if (logs == null) {
+            val metadataFromDb = find(RecordMetadata::class.java, id)
                     ?: throw NotFoundException("RecordMetadata with ID $id does not exist")
-            metadata.logs = RecordLogs().apply {
+            refresh(metadataFromDb)
+            metadataFromDb.logs = RecordLogs().apply {
                 this.id = id
-                this.metadata = metadata
+                this.metadata = metadataFromDb
                 this.modifiedDate = Instant.now()
-                this.size = length
-                this.logs = Hibernate.getLobCreator(em.session).createClob(reader, length)
+                this.size = logsData.length.toLong()
+                this.logs = Hibernate.getLobCreator(em.session).createClob(logsData)
+            }.also {
+                persist(it)
             }
-            persist(metadata.logs!!)
-            metadata
+            metadataFromDb
         } else {
             logs.apply {
                 this.modifiedDate = Instant.now()
-                this.logs = Hibernate.getLobCreator(em.session).createClob(reader, length)
+                this.logs = Hibernate.getLobCreator(em.session).createClob(logsData)
             }
             merge(logs)
             logs.metadata
         }
 
-        modifyNow(metadata)
+        modifyNow(metadataToSave)
     }
 
     override fun query(limit: Int, lastId: Long, projectId: String, userId: String?, status: String?): List<Record> {
