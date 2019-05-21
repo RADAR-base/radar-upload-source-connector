@@ -21,7 +21,7 @@ repositories {
 sourceSets {
     create("integrationTest") {
         withConvention(KotlinSourceSet::class) {
-            kotlin.srcDir("src/integrationTest/kotlin")
+            kotlin.srcDir("src/integrationTest/java")
             resources.srcDir("src/integrationTest/resources")
             compileClasspath += sourceSets["main"].output + configurations["testRuntimeClasspath"]
             runtimeClasspath += output + compileClasspath + sourceSets["test"].runtimeClasspath
