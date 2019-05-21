@@ -90,7 +90,7 @@ class UploadSourceTask : SourceTask() {
 
         if (endOfRecord) {
             logger.info("Committing last record of Record ${recordId}, with Revision ${revision.toInt()}")
-            uploadClient.updateStatus(recordId.toLong(), RecordMetadataDTO(revision = revision.toInt(), status = "SUCCESS"))
+            uploadClient.updateStatus(recordId.toLong(), RecordMetadataDTO(revision = revision.toInt(), status = "SUCCESS", message = "Record has been processed successfully"))
         }
 
     }
