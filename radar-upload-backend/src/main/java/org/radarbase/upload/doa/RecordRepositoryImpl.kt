@@ -79,7 +79,6 @@ class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepos
     override fun updateContent(record: Record, fileName: String, contentType: String, stream: InputStream, length: Long): RecordContent = em.transact {
         val existingContent = record.contents?.find { it.fileName == fileName }
 
-        refresh(record)
         val result = existingContent?.apply {
             this.createdDate = Instant.now()
             this.contentType = contentType
