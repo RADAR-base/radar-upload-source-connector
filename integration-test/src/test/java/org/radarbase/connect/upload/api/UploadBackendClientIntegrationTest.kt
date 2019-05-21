@@ -149,10 +149,15 @@ class UploadBackendClientIntegrationTest {
 
         val converter = AccelerometerCsvRecordConverter()
         converter.initialize(sourceType, uploadBackendClient, emptyMap())
+
+        val recordToProcess = records.records.first()
+        record.metadata = uploadBackendClient.updateStatus(recordToProcess.id!!, recordToProcess.metadata!!.copy(status = "PROCESSING", message = "The record is being processed"))
         val convertedRecords = converter.convert(records.records.first())
         assertNotNull(convertedRecords)
         assertNotNull(convertedRecords.result)
         assertTrue(convertedRecords.result?.isNotEmpty()!!)
+        assertNotNull(convertedRecords.record)
+        assertEquals(convertedRecords.record.id, recordToProcess.id!!)
     }
 
     private fun uploadContent(recordId: Long, clientUserToken: String) {
