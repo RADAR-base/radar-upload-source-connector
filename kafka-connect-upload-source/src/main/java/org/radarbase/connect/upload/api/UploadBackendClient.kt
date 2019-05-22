@@ -18,7 +18,7 @@ class UploadBackendClient(
         private var uploadBackendBaseUrl: String) : Closeable {
 
     init {
-        httpClient = httpClient.newBuilder().authenticator { route, response ->
+        httpClient = httpClient.newBuilder().authenticator { _, response ->
             response.request()
                     .newBuilder()
                     .header("Authorization", "Bearer ${auth.accessToken()}")

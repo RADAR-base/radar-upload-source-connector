@@ -82,7 +82,6 @@ class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepos
             this.createdDate = Instant.now()
             this.contentType = contentType
             this.content = Hibernate.getLobCreator(em.unwrap(Session::class.java)).createBlob(stream, length)
-            merge(this)
         } ?: RecordContent().apply {
             this.record = record
             this.fileName = fileName
@@ -90,7 +89,6 @@ class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepos
             this.contentType = contentType
             this.size = length
             this.content = Hibernate.getLobCreator(em.unwrap(Session::class.java)).createBlob(stream, length)
-            persist(this)
         }.also {
             if (record.contents != null) {
                 record.contents?.add(it)
