@@ -7,7 +7,7 @@ services:
   - docker
 
 env:
-  - DOCKER_COMPOSE_FILE=docker/docker-compose.yml
+  - DOCKER_COMPOSE_FILE=integration-test/src/integrationTest/docker/docker-compose.yml
 
 cache:
   directories:

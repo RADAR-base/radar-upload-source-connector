@@ -83,3 +83,13 @@ allOpen {
     annotation("javax.persistence.MappedSuperclass")
     annotation("javax.persistence.Embeddable")
 }
+
+tasks.register("downloadDependencies") {
+
+    configurations["runtimeClasspath"].files
+    configurations["compileClasspath"].files
+
+    doLast {
+        println("Downloaded all dependencies")
+    }
+}
