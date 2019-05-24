@@ -80,3 +80,19 @@ val compileTestKotlin: KotlinCompile by tasks
 compileTestKotlin.kotlinOptions {
     jvmTarget = "1.8"
 }
+
+
+tasks.register<Copy>("copyDependencies") {
+    from(configurations.runtimeClasspath.get().files)
+    into("${buildDir}/third-party")
+}
+
+tasks.register("downloadDependencies") {
+
+    configurations["runtimeClasspath"].files
+    configurations["compileClasspath"].files
+
+    doLast {
+        println("Downloaded all dependencies")
+    }
+}

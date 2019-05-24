@@ -32,7 +32,7 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
                 getString(UPLOAD_SOURCE_CLIENT_CONFIG),
                 getString(UPLOAD_SOURCE_MP_SECRET_CONFIG),
                 getString(UPLOAD_SOURCE_CLIENT_TOKEN_URL_CONFIG),
-                getString(UPLOAD_SOURCE_CLIENT_SCOPE_CONFIG)?.split(",")?.toSet()
+                getList(UPLOAD_SOURCE_CLIENT_SCOPE_CONFIG).toSet()
         )
     }
 
@@ -52,7 +52,7 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
         private const val UPLOAD_SOURCE_MP_SECRET_DISPLAY = "Upload connector client secret"
 
         const val UPLOAD_SOURCE_CLIENT_SCOPE_CONFIG = "upload.source.client.scopes"
-        private const val UPLOAD_SOURCE_CLIENT_SCOPE_DOC = "Scopes of the upload connector client as comma separated values"
+        private const val UPLOAD_SOURCE_CLIENT_SCOPE_DOC = "List of scopes of the upload connector client"
         private const val UPLOAD_SOURCE_CLIENT_SCOPE_DISPLAY = "Scopes of upload connector"
         private const val UPLOAD_SOURCE_CLIENT_SCOPE_DEFAULT = "MEASUREMENT.CREATE"
 

@@ -34,7 +34,7 @@ services:
       MANAGEMENTPORTAL_OAUTH_SIGNING_KEY_ALIAS: 'radarbase-managementportal-ec'
       JAVA_OPTS: -Xmx256m  # maximum heap size for the JVM running ManagementPortal, increase this as necessary
     volumes:
-      - ./etc/:/mp-includes/
+      - ./mp-config/:/mp-includes/config
 
   radarbase-postgresql:
     image: radarbase/radarbase-postgres:latest
