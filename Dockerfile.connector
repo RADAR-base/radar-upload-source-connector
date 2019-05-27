@@ -9,7 +9,7 @@ COPY ./gradlew  /code/
 RUN ./gradlew --version
 
 COPY ./build.gradle.kts ./settings.gradle /code/
-COPY kafka-connect-upload-source/build.gradle.kts kafka-connect-upload-source/src/main/docker/settings.gradle /code/kafka-connect-upload-source/
+COPY kafka-connect-upload-source/build.gradle.kts  /code/kafka-connect-upload-source/
 
 RUN ./gradlew :kafka-connect-upload-source:downloadDependencies kafka-connect-upload-source:copyDependencies
 

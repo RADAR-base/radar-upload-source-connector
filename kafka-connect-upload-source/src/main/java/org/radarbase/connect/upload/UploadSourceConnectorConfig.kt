@@ -130,7 +130,7 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
                             UPLOAD_SOURCE_SERVER_BASE_URL_DISPLAY)
 
                     .define(UPLOAD_SOURCE_CLIENT_SCOPE_CONFIG,
-                            ConfigDef.Type.STRING,
+                            ConfigDef.Type.LIST,
                             UPLOAD_SOURCE_CLIENT_SCOPE_DEFAULT,
                             ConfigDef.Importance.HIGH,
                             UPLOAD_SOURCE_CLIENT_SCOPE_DOC,

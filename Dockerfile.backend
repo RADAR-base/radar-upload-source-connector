@@ -6,7 +6,7 @@ WORKDIR /code
 ENV GRADLE_OPTS -Dorg.gradle.daemon=false
 COPY gradle/wrapper /code/gradle/wrapper
 COPY ./gradlew ./build.gradle.kts ./settings.gradle /code/
-COPY radar-upload-backend/build.gradle.kts radar-upload-backend/src/main/docker/settings.gradle /code/radar-upload-backend/
+COPY radar-upload-backend/build.gradle.kts  /code/radar-upload-backend/
 RUN ./gradlew :radar-upload-backend:downloadDependencies
 
 COPY radar-upload-backend/src /code/src
