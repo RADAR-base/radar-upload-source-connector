@@ -9,7 +9,7 @@ COPY ./gradlew ./build.gradle.kts ./settings.gradle /code/
 COPY radar-upload-backend/build.gradle.kts  /code/radar-upload-backend/
 RUN ./gradlew :radar-upload-backend:downloadDependencies
 
-COPY radar-upload-backend/src /code/src
+COPY radar-upload-backend/src /code/radar-upload-backend/src
 
 RUN ./gradlew -Dkotlin.compiler.execution.strategy="in-process" -Dorg.gradle.parallel=false -Pkotlin.incremental=false :radar-upload-backend:distTar \
     && cd radar-upload-backend/build/distributions \
