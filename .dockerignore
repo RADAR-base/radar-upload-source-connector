@@ -1,0 +1,7 @@
+/integration-test
+/docs
+/build
+/out
+/.git
+/.gradle
+/.idea

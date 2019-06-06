@@ -2,6 +2,7 @@ package org.radarbase.upload.dto
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import okhttp3.*
+import org.radarbase.upload.api.RecordMetadataDTO
 import org.radarbase.upload.logger
 import java.io.IOException
 import java.util.concurrent.ScheduledExecutorService
@@ -10,7 +11,7 @@ import javax.ws.rs.core.Context
 
 class QueuedCallbackManager(
         @Context val httpClient: OkHttpClient,
-        @Context val scheduler: ScheduledExecutorService): CallbackManager {
+        @Context val scheduler: ScheduledExecutorService) : CallbackManager {
 
     override fun callback(metadata: RecordMetadataDTO, retries: Int) {
         metadata.callbackUrl?.let { url ->

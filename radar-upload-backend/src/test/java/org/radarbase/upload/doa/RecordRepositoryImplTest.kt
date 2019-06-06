@@ -32,8 +32,7 @@ internal class RecordRepositoryImplTest {
     @BeforeEach
     fun setUp() {
         doaFactory = DoaEntityManagerFactory(
-                Config(jdbcUrl = "jdbc:h2:file:${tempDir.resolve("db.h2")};DB_CLOSE_DELAY=-1;MVCC=true"),
-                mapOf(Pair("hibernate.show_sql", "true"))
+                Config(jdbcUrl = "jdbc:h2:file:${tempDir.resolve("db.h2")};DB_CLOSE_DELAY=-1;MVCC=true")
         )
         entityManager = doaFactory.get()
         repository = RecordRepositoryImpl(entityManager)
@@ -184,7 +183,7 @@ internal class RecordRepositoryImplTest {
 
         val beforeTime = Instant.now()
         repository.create(record)
-        repository.updateLogs(record.id!!, StringReader(log), log.length.toLong())
+        repository.updateLogs(record.id!!, log)
         val afterTime = Instant.now()
 
         val recordLogs = repository.readLogs(record.id!!)
@@ -209,7 +208,7 @@ internal class RecordRepositoryImplTest {
         readLogs()
         repository.delete(record)
         assertThat(repository.read(id), nullValue())
-        assertThat(repository.readContent(id), nullValue())
+        assertThat(repository.readRecordContent(id, "Gibson.mp3"), nullValue())
         assertThat(repository.readLogs(id), nullValue())
         assertThat(repository.readMetadata(id), nullValue())
     }

@@ -1,11 +1,10 @@
 package org.radarbase.upload.resource
 
-import org.radarbase.upload.auth.Auth
+import org.radarbase.upload.api.SourceTypeContainerDTO
+import org.radarbase.upload.api.SourceTypeDTO
+import org.radarbase.upload.api.SourceTypeMapper
 import org.radarbase.upload.auth.Authenticated
 import org.radarbase.upload.doa.SourceTypeRepository
-import org.radarbase.upload.dto.SourceTypeContainerDTO
-import org.radarbase.upload.dto.SourceTypeDTO
-import org.radarbase.upload.dto.SourceTypeMapper
 import javax.annotation.Resource
 import javax.ws.rs.*
 import javax.ws.rs.core.Context
@@ -19,9 +18,6 @@ import javax.ws.rs.core.MediaType
 class SourceTypeResource {
     @Context
     lateinit var sourceTypeRepository: SourceTypeRepository
-
-    @Context
-    lateinit var auth: Auth
 
     @Context
     lateinit var sourceTypeMapper: SourceTypeMapper
@@ -41,7 +37,7 @@ class SourceTypeResource {
     fun getSourceType(
             @PathParam("name") name: String): SourceTypeDTO {
 
-        val record = sourceTypeRepository.read( name)
+        val record = sourceTypeRepository.read(name)
                 ?: throw NotFoundException("Source type with name $name not found")
 
         return sourceTypeMapper.fromSourceType(record)

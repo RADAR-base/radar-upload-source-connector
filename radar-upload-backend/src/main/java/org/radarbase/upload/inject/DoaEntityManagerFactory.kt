@@ -13,11 +13,11 @@ import javax.persistence.EntityManager
 import javax.persistence.Persistence
 import javax.ws.rs.core.Context
 
-class DoaEntityManagerFactory(@Context config: Config, jpaConfig: Map<String, String> = emptyMap()) : DisposableSupplier<EntityManager> {
+class DoaEntityManagerFactory(@Context config: Config) : DisposableSupplier<EntityManager> {
     private val configMap: Map<String, String>
 
     init {
-        configMap = HashMap(jpaConfig)
+        configMap = HashMap()
         config.jdbcDriver?.let {
             configMap["javax.persistence.jdbc.driver"] = it
         }

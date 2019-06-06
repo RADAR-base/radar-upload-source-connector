@@ -20,7 +20,7 @@ class RecordContent : AbstractJpaPersistable<Long>() {
     @Column
     var size: Long = 0
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = [CascadeType.REFRESH, CascadeType.MERGE, CascadeType.PERSIST])
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "record_id")
     lateinit var record: Record
 

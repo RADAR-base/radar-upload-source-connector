@@ -53,7 +53,7 @@ class AuthenticationFilter : ContainerRequestFilter {
     companion object {
         private val logger = LoggerFactory.getLogger(AuthenticationFilter::class.java)
 
-        const val BEARER_REALM: String = "Bearer realm=\"Kafka REST Proxy\""
+        const val BEARER_REALM: String = "Bearer realm=\"Upload server\""
         const val BEARER: String = "Bearer "
     }
 }
