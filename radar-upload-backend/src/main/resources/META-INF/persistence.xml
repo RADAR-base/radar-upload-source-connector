@@ -1,5 +1,5 @@
-<persistence xmlns="http://java.sun.com/xml/ns/persistence"
-             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<persistence xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns="http://java.sun.com/xml/ns/persistence"
              xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd"
              version="2.0">
     <persistence-unit name="org.radarbase.upload.doa" transaction-type="RESOURCE_LOCAL">
@@ -10,9 +10,9 @@
         <class>org.radarbase.upload.doa.entity.SourceType</class>
         <properties>
             <property name="javax.persistence.schema-generation.database.action"
-                      value="none" />
+                      value="none"/>
             <property name="javax.persistence.provider"
-                      value="org.hibernate.jpa.HibernatePersistenceProvider" />
+                      value="org.hibernate.jpa.HibernatePersistenceProvider"/>
             <property name="org.hibernate.flushMode" value="COMMIT"/>
         </properties>
     </persistence-unit>

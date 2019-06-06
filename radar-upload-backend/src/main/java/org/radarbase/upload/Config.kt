@@ -1,5 +1,6 @@
 package org.radarbase.upload
 
+import org.radarbase.upload.api.SourceTypeDTO
 import org.radarbase.upload.inject.ManagementPortalResourceConfig
 import java.net.URI
 
@@ -14,4 +15,5 @@ data class Config(
         var jwtECPublicKeys: List<String>? = null,
         var jwtRSAPublicKeys: List<String>? = null,
         var jwtIssuer: String? = null,
-        var jwtResourceName: String = "res_upload")
+        var jwtResourceName: String = "res_upload",
+        var sourceTypes: List<SourceTypeDTO>? = null)

@@ -1,10 +1,6 @@
 package org.radarbase.upload.doa.entity
 
 import org.radarbase.upload.doa.AbstractJpaPersistable
-import java.net.URL
-import java.sql.Blob
-import java.sql.Clob
-import java.time.Instant
 import java.time.LocalDateTime
 import javax.persistence.*
 

@@ -7,6 +7,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.radarbase.upload.Config
+import org.radarbase.upload.api.SourceTypeMapper
+import org.radarbase.upload.api.SourceTypeMapperImpl
 import org.radarbase.upload.doa.entity.SourceType
 import org.radarbase.upload.inject.DoaEntityManagerFactory
 import java.nio.file.Path
@@ -15,7 +17,7 @@ import javax.persistence.EntityManager
 internal class SourceTypeRepositoryImplTest {
     private lateinit var repository: SourceTypeRepository
     private lateinit var doaFactory: DoaEntityManagerFactory
-
+    private lateinit var sourceTypeMapper: SourceTypeMapper
     private lateinit var entityManager: EntityManager
 
     @TempDir
@@ -23,12 +25,11 @@ internal class SourceTypeRepositoryImplTest {
 
     @BeforeEach
     fun setUp() {
-        doaFactory = DoaEntityManagerFactory(
-                Config(jdbcUrl = "jdbc:h2:file:${tempDir.resolve("db.h2")};DB_CLOSE_DELAY=-1;MVCC=true"),
-                mapOf(Pair("hibernate.show_sql", "true"))
-        )
+        val config = Config(jdbcUrl = "jdbc:h2:file:${tempDir.resolve("db.h2")};DB_CLOSE_DELAY=-1;MVCC=true")
+        doaFactory = DoaEntityManagerFactory(config)
         entityManager = doaFactory.get()
-        repository = SourceTypeRepositoryImpl(entityManager)
+        sourceTypeMapper = SourceTypeMapperImpl()
+        repository = SourceTypeRepositoryImpl(entityManager, config, sourceTypeMapper)
     }
 
     @AfterEach

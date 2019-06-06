@@ -1,4 +1,4 @@
-package org.radarbase.upload.dto
+package org.radarbase.upload.api
 
 import java.time.Instant
 import java.time.LocalDateTime
@@ -45,13 +45,13 @@ data class RecordContainerDTO(
         var records: List<RecordDTO>)
 
 data class SourceTypeDTO(
-        var name: String?,
+        var name: String,
         var topics: Set<String>?,
         var contentTypes: Set<String>?,
         var timeRequired: Boolean?,
         var sourceIdRequired: Boolean?,
         var configuration: Map<String, String>?
-        )
+)
 
 data class SourceTypeContainerDTO(
         var sourceTypes: List<SourceTypeDTO>)
