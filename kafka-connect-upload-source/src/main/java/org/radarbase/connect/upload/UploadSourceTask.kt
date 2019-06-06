@@ -91,10 +91,9 @@ class UploadSourceTask : SourceTask() {
         val endOfRecord = offset[END_OF_RECORD_KEY] as? Boolean ?: return
 
         if (endOfRecord) {
-            logger.info("Committing last record of Record ${recordId}, with Revision ${revision.toInt()}")
+            logger.info("Committing last record of Record $recordId, with Revision $revision")
             uploadClient.updateStatus(recordId.toLong(), RecordMetadataDTO(revision = revision.toInt(), status = "SUCCESS", message = "Record has been processed successfully"))
         }
-
     }
 
     companion object {
