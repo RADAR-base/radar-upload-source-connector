@@ -21,9 +21,9 @@ interface Converter : Closeable {
     fun getPartition(): MutableMap<String, Any>
 
     companion object {
-        val END_OF_RECORD_KEY = "endOfRecord"
-        val RECORD_ID_KEY = "recordId"
-        val REVISION_KEY = "versionId"
+        const val END_OF_RECORD_KEY = "endOfRecord"
+        const val RECORD_ID_KEY = "recordId"
+        const val REVISION_KEY = "versionId"
     }
 }
 
