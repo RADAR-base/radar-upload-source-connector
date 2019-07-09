@@ -1,23 +1,24 @@
 package org.radarbase.connect.upload.converter
 
-import Altoida.avroSchemas.PhoneAcceleration
+import RADAR-Schemas.commons.connector.altoida.AltoidaMagnetometer
 
-class AccelerometerConverter(override val sourceType: String = "phone-acceleration", val topic: String = "altoida-phone-acceleration")
+class AltoidaMagnetometerConverter(override val sourceType: String = "magnetometer", val topic: String = "altoida-magnetometer")
     : CsvRecordConverter(sourceType) {
 
     override fun validateHeaderSchema(csvHeader: List<String>) =
-            listOf("TIMESTAMP", "X", "Y", "Z") == (csvHeader)
+            listOf("TIMESTAMP", "X", "Y", "Z", "ACCURACY") == (csvHeader)
 
     override fun convertLineToRecord(lineValues: Map<String, String>, timeReceived: Double): TopicData? {
         val time = lineValues["TIMESTAMP"]?.toDouble()
-        val acceleration = PhoneAcceleration(
+        val magnetometer = AltoidaMagnetometer(
                 time,
                 timeReceived,
                 lineValues["X"]?.toFloat(),
                 lineValues["Y"]?.toFloat(),
-                lineValues["Z"]?.toFloat()
+                lineValues["Z"]?.toFloat(),
+                lineValues["ACCURACY"]?.toString()
         )
 
-        return TopicData(false, topic, acceleration)
+        return TopicData(false, topic, magnetometer)
     }
 }

@@ -1,8 +1,8 @@
 package org.radarbase.connect.upload.converter
 
-import Altoida.avroSchemas.PhoneAttitude
+import RADAR-Schemas.commons.connector.altoida.AltoidaAttitude
 
-class AttitudeConverter(override val sourceType: String = "phone-attitude", val topic: String = "altoida-phone-attitude ")
+class AltoidaAttitudeConverter(override val sourceType: String = "attitude", val topic: String = "altoida-attitude ")
     : CsvRecordConverter(sourceType) {
 
     override fun validateHeaderSchema(csvHeader: List<String>) =
@@ -10,7 +10,7 @@ class AttitudeConverter(override val sourceType: String = "phone-attitude", val 
 
     override fun convertLineToRecord(lineValues: Map<String, String>, timeReceived: Double): TopicData? {
         val time = lineValues["TIMESTAMP"]?.toDouble()
-        val attitude = PhoneAttitude(
+        val attitude = AltoidaAttitude(
                 time,
                 timeReceived,
                 lineValues["PITCH"]?.toFloat(),

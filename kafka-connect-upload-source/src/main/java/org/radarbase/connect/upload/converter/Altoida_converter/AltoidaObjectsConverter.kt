@@ -1,23 +1,24 @@
 package org.radarbase.connect.upload.converter
 
-import Altoida.avroSchemas.PhoneGravity
+import RADAR-Schemas.commons.connector.altoida.AltoidaObjects
 
-class GravityConverter(override val sourceType: String = "phone-gravity", val topic: String = "altoida-phone-gravity")
+class AltoidaObjectsConverter(override val sourceType: String = "objects", val topic: String = "altoida-objects")
     : CsvRecordConverter(sourceType) {
 
     override fun validateHeaderSchema(csvHeader: List<String>) =
-            listOf("TIMESTAMP", "X", "Y", "Z") == (csvHeader)
+            listOf("TIMESTAMP", "OBJECT", "X", "Y", "Z") == (csvHeader)
 
     override fun convertLineToRecord(lineValues: Map<String, String>, timeReceived: Double): TopicData? {
         val time = lineValues["TIMESTAMP"]?.toDouble()
-        val gravity = PhoneGravity(
+        val objects = AltoidaObjects(
                 time,
                 timeReceived,
+                lineValues["OBJECT"]?.toString(),
                 lineValues["X"]?.toFloat(),
                 lineValues["Y"]?.toFloat(),
-                lineValues["Z"]?.toFloat()
+                lineValues["Z"]?.toFloat(),
         )
 
-        return TopicData(false, topic, gravity)
+        return TopicData(false, topic, objects)
     }
 }
