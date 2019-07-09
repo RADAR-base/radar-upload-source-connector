@@ -1,8 +1,8 @@
 package org.radarbase.connect.upload.converter
 
-import Altoida.avroSchemas.PhoneTagLog
+import RADAR-Schemas.commons.connector.altoida.AltoidaLog
 
-class TagConverter(override val sourceType: String = "phone-tag-log", val topic: String = "altoida-phone-tag-log")
+class AltoidaLogConverter(override val sourceType: String = "log", val topic: String = "altoida-log")
     : CsvRecordConverter(sourceType) {
 
     override fun validateHeaderSchema(csvHeader: List<String>) =
@@ -10,7 +10,7 @@ class TagConverter(override val sourceType: String = "phone-tag-log", val topic:
 
     override fun convertLineToRecord(lineValues: Map<String, String>, timeReceived: Double): TopicData? {
         val time = lineValues["TIMESTAMP"]?.toDouble()
-        val tag = PhoneTagLog(
+        val log = AltoidaLog(
                 time,
                 timeReceived,
                 lineValues["TAG"]?.toString(),
@@ -18,6 +18,7 @@ class TagConverter(override val sourceType: String = "phone-tag-log", val topic:
 
         )
 
-        return TopicData(false, topic, tag)
+        return TopicData(false, topic, log)
     }
 }
+

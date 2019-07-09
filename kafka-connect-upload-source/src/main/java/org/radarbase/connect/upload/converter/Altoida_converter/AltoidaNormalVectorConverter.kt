@@ -1,24 +1,23 @@
 package org.radarbase.connect.upload.converter
 
-import Altoida.avroSchemas.PhonePath
+import RADAR-Schemas.commons.connector.altoida.AltoidaNormalVector
 
-class PathConverter(override val sourceType: String = "phone-path", val topic: String = "altoida-phone-path")
+class AltoidaNormalVectorConverter(override val sourceType: String = "normal-vector", val topic: String = "altoida-normal-vector")
     : CsvRecordConverter(sourceType) {
 
     override fun validateHeaderSchema(csvHeader: List<String>) =
-            listOf("TIMESTAMP", "X", "Y", "Z") == (csvHeader)
+            listOf("TIMESTAMP", "X", "Y") == (csvHeader)
 
     override fun convertLineToRecord(lineValues: Map<String, String>, timeReceived: Double): TopicData? {
         val time = lineValues["TIMESTAMP"]?.toDouble()
-        val path = PhonePath(
+        val normalVector = AltoidaNormalVector(
                 time,
                 timeReceived,
                 lineValues["X"]?.toFloat(),
-                lineValues["Y"]?.toFloat(),
-                lineValues["Z"]?.toFloat()
+                lineValues["Y"]?.toFloat()
 
         )
 
-        return TopicData(false, topic, path)
+        return TopicData(false, topic, normalVector)
     }
 }

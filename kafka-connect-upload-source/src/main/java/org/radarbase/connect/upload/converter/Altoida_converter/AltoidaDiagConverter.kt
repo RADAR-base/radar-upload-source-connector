@@ -1,8 +1,8 @@
 package org.radarbase.connect.upload.converter
 
-import Altoida.avroSchemas.PhoneDiag
+import RADAR-Schemas.commons.connector.altoida.AltoidaDiag
 
-class DiagConverter(override val sourceType: String = "phone-diag", val topic: String = "altoida-phone-diag")
+class AltoidaDiagConverter(override val sourceType: String = "diag", val topic: String = "altoida-diag")
     : CsvRecordConverter(sourceType) {
 
     override fun validateHeaderSchema(csvHeader: List<String>) =
@@ -10,15 +10,15 @@ class DiagConverter(override val sourceType: String = "phone-diag", val topic: S
 
     override fun convertLineToRecord(lineValues: Map<String, String>, timeReceived: Double): TopicData? {
         val time = lineValues["TIMESTAMP"]?.toDouble()
-        val diag = PhoneDiag(
+        val diag = AltoidaDiag(
                 time,
                 timeReceived,
                 lineValues["TAG"]?.toString(),
                 lineValues["PAYLOAD"]?.toString(),
-                // lineValues["CONTRAST"]?.toFloat(),
-                // lineValues["MOVEMENT"]?.toFloat(),
-                // lineValues["ANGLE"]?.toFloat(),
-                // lineValues["FEATURES"]?.toFloat()
+                lineValues["CONTRAST"]?.toFloat(),
+                lineValues["MOVEMENT"]?.toFloat(),
+                lineValues["ANGLE"]?.toFloat(),
+                lineValues["FEATURES"]?.toFloat()
 
 
         )
