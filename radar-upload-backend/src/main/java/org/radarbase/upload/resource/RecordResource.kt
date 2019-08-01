@@ -145,7 +145,7 @@ class RecordResource {
 
         val contentDto = recordMapper.fromContent(content)
 
-        return Response.created(URI(contentDto.url))
+        return Response.created(URI(contentDto.url!!))
                 .entity(contentDto)
                 .build()
     }
@@ -179,7 +179,6 @@ class RecordResource {
     @POST
     @Path("poll")
     fun poll(pollDTO: PollDTO): RecordContainerDTO {
-
         if (auth.isClientCredentials) {
             val imposedLimit = Math.min(Math.max(pollDTO.limit, 1), 100)
             val records = recordRepository.poll(imposedLimit)
@@ -192,7 +191,6 @@ class RecordResource {
     @GET
     @Path("{recordId}/metadata")
     fun getRecordMetaData(@PathParam("recordId") recordId: Long): RecordMetadataDTO {
-
         val record = recordRepository.read(recordId)
                 ?: throw NotFoundException("Record with ID $recordId does not exist")
 
@@ -207,11 +205,8 @@ class RecordResource {
             @Context callbackManager: CallbackManager): RecordMetadataDTO {
         val updatedRecord = recordRepository.updateMetadata(recordId, metaData)
 
-        val updatedMetadata = recordMapper.fromMetadata(updatedRecord)
-
-        callbackManager.callback(updatedMetadata)
-
-        return updatedMetadata
+        return recordMapper.fromMetadata(updatedRecord)
+                .also { callbackManager.callback(it) }
     }
 
     @GET
@@ -242,13 +237,12 @@ class RecordResource {
     @Path("{recordId}/logs")
     fun addRecordLogs(
             recordLogs: LogsDto,
-            @PathParam("recordId") recordId: Long): Response {
+            @PathParam("recordId") recordId: Long): RecordMetadataDTO {
         recordLogs.contents
                 ?: throw IllegalStateException("No content provided to update the logs")
 
         val uploadedMetaData = recordRepository.updateLogs(recordId, recordLogs.contents!!)
-        return Response.ok(recordMapper.fromMetadata(uploadedMetaData))
-                .build()
+        return recordMapper.fromMetadata(uploadedMetaData)
     }
 
     companion object {
