@@ -1,4 +1,4 @@
-FROM openjdk:8-alpine as builder
+FROM azul/zulu-openjdk-debian:8 as builder
 
 RUN mkdir /code
 WORKDIR /code
@@ -17,7 +17,7 @@ COPY ./kafka-connect-upload-source/src/ /code/kafka-connect-upload-source/src
 
 RUN ./gradlew jar
 
-FROM confluentinc/cp-kafka-connect-base:5.0.0
+FROM confluentinc/cp-kafka-connect-base:5.3.0
 
 MAINTAINER @nivemaham @blootsvoets
 
