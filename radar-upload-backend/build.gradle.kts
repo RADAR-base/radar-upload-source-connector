@@ -18,7 +18,8 @@ project.extra.apply {
     set("radarMpVersion", "0.5.4")
     set("radarCommonsVersion", "0.11.3")
     set("radarSchemasVersion", "0.4.3")
-    set("jacksonVersion", "2.9.9")
+    set("jacksonVersion", "2.9.9.1")
+    set("jacksonDataVersion", "2.9.9")
     set("slf4jVersion", "1.7.25")
     set("logbackVersion", "1.2.3")
     set("grizzlyVersion", "2.4.4")
@@ -41,11 +42,11 @@ dependencies {
     implementation("org.glassfish.jersey.inject:jersey-hk2:${project.extra["jerseyVersion"]}")
     runtimeOnly("org.glassfish.jersey.media:jersey-media-json-jackson:${project.extra["jerseyVersion"]}")
 
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:${project.extra["jacksonVersion"]}")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:${project.extra["jacksonDataVersion"]}")
     implementation("com.fasterxml.jackson.core:jackson-databind:${project.extra["jacksonVersion"]}")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${project.extra["jacksonVersion"]}")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${project.extra["jacksonVersion"]}")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:${project.extra["jacksonVersion"]}")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${project.extra["jacksonDataVersion"]}")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${project.extra["jacksonDataVersion"]}")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:${project.extra["jacksonDataVersion"]}")
 
     implementation("org.radarcns:radar-auth:${project.extra["radarMpVersion"]}")
 
