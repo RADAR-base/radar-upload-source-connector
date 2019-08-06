@@ -101,5 +101,5 @@ class MPClient(@Context config: Config, @Context private val auth: Auth) {
 
     data class SubjectDto(val login: String, val externalId: String? = null, val status: String = "DEACTIVATED", val attributes: Map<String, String> = mapOf())
 
-    data class ProjectDto(@JsonProperty("projectName") val id: String, @JsonProperty("humanReadableProjectName") val name: String? = null, , val location: String? = null, val organization: String? = null, val description: String? = null)
+    data class ProjectDto(@JsonProperty("projectName") val id: String, @JsonProperty("humanReadableProjectName") val name: String? = null, val location: String? = null, val organization: String? = null, val description: String? = null)
 }
