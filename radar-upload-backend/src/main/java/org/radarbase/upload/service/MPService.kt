@@ -22,14 +22,14 @@ class MPService(@Context private val mpClient: MPClient) {
     private val participants: ConcurrentMap<String, CachedSet<User>> = ConcurrentHashMap()
 
     fun ensureProject(name: String) {
-        if (projects.find { it.name == name } == null) {
+        if (projects.find { it.id == name } == null) {
             throw NotFoundException("project_not_found", "Project $name not found.")
         }
     }
 
     fun userProjects(auth: Auth): List<Project> {
         return projects.get()
-                .filter { auth.hasPermissionOnProject(Permission.PROJECT_READ, it.name) }
+                .filter { auth.hasPermissionOnProject(Permission.PROJECT_READ, it.id) }
     }
 
     fun projectUsers(projectId: String): List<User> {
