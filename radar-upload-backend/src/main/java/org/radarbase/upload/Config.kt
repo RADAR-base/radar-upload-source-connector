@@ -8,6 +8,8 @@ data class Config(
         var baseUri: URI = URI.create("http://0.0.0.0:8080/radar-upload/"),
         var managementPortalUrl: String = "http://managementportal-app:8080/managementportal/",
         var resourceConfig: Class<*> = ManagementPortalResourceConfig::class.java,
+        var clientId: String = "UploadBackend",
+        var clientSecret: String? = null,
         var jdbcDriver: String? = "org.h2.Driver",
         var jdbcUrl: String? = null,
         var jdbcUser: String? = null,

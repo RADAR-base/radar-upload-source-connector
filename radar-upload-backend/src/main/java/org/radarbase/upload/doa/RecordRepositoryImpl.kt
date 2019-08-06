@@ -190,14 +190,14 @@ class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepos
 
         if (metadata.status == RecordStatus.PROCESSING.toString()
                 && existingMetadata.status != RecordStatus.QUEUED) {
-            throw ConflictException("Record cannot be updated: Conflict in record meta-data status. " +
+            throw ConflictException("incompatible_status", "Record cannot be updated: Conflict in record meta-data status. " +
                     "Found ${existingMetadata.status}, expected ${RecordStatus.QUEUED}")
         }
 
         if (metadata.status == RecordStatus.SUCCEEDED.toString()
                 || metadata.status == RecordStatus.FAILED.toString()
                 && existingMetadata.status != RecordStatus.PROCESSING) {
-            throw ConflictException("Record cannot be updated: Conflict in record meta-data status. " +
+            throw ConflictException("incompatible_status", "Record cannot be updated: Conflict in record meta-data status. " +
                     "Found ${existingMetadata.status}, expected ${RecordStatus.QUEUED}")
         }
 
