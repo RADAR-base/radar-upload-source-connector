@@ -1,5 +1,6 @@
 package org.radarbase.upload.auth
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -21,7 +22,7 @@ class MPClient(@Context config: Config, @Context private val auth: Auth) {
     private val baseUrl: HttpUrl = config.managementPortalUrl.toHttpUrlOrNull()
             ?: throw MalformedURLException("Cannot parse base URL ${config.managementPortalUrl} as an URL")
     private val mapper = jacksonObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-    private val projectListReader = mapper.readerFor(object : TypeReference<List<Project>>(){})
+    private val projectListReader = mapper.readerFor(object : TypeReference<List<ProjectDto>>(){})
     private val userListReader = mapper.readerFor(object : TypeReference<List<SubjectDto>>(){})
 
     private var token: String? = null
@@ -64,7 +65,13 @@ class MPClient(@Context config: Config, @Context private val auth: Auth) {
             header("Authorization", "Bearer ${ensureToken()}")
         }.build()
 
-        return projectListReader.readValue(execute(request))
+        return projectListReader.readValue<List<ProjectDto>>(execute(request))
+                .map { Project(
+                        id = it.id,
+                        name = it.name,
+                        location = it.location,
+                        organization = it.organization,
+                        description = it.description) }
     }
 
     private fun execute(request: Request): String {
@@ -85,8 +92,14 @@ class MPClient(@Context config: Config, @Context private val auth: Auth) {
         }.build()
 
         return userListReader.readValue<List<SubjectDto>>(execute(request))
-                .map { User(it.login, projectId, it.externalId, it.status) }
+                .map { User(
+                        id = it.login,
+                        projectId = projectId,
+                        externalId = it.externalId,
+                        status = it.status) }
     }
 
     data class SubjectDto(val login: String, val externalId: String? = null, val status: String = "DEACTIVATED", val attributes: Map<String, String> = mapOf())
+
+    data class ProjectDto(@JsonProperty("projectName") val id: String, @JsonProperty("humanReadableProjectName") val name: String? = null, , val location: String? = null, val organization: String? = null, val description: String? = null)
 }
