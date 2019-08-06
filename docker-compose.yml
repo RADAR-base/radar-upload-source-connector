@@ -216,11 +216,11 @@ services:
       KAFKA_BROKERS: 3
       CONNECT_LOG4J_LOGGERS: "org.reflections=ERROR"
 
-  radar-upload-connect-backend:
+  radar-connect-upload-backend:
     build:
       context: .
       dockerfile: Dockerfile.backend
-    image: radarbase/radar-upload-connect-backend:dev
+    image: radarbase/radar-connect-upload-backend:dev
     depends_on:
       - managementportal-app
       - radarbase-postgresql
