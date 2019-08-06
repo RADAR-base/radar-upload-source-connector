@@ -19,6 +19,8 @@ import javax.annotation.Resource
 import javax.persistence.EntityManager
 import javax.ws.rs.*
 import javax.ws.rs.core.*
+import kotlin.math.max
+import kotlin.math.min
 
 
 @Path("/records")
@@ -65,7 +67,7 @@ class RecordResource {
             auth.checkProjectPermission(PROJECT_READ, projectId)
         }
 
-        val imposedLimit = Math.min(Math.max(limit, 1), 100)
+        val imposedLimit = min(max(limit, 1), 100)
         val records = recordRepository.query(imposedLimit, lastId ?: -1L, projectId, userId, status)
 
         return recordMapper.fromRecords(records, imposedLimit)
