@@ -194,7 +194,7 @@ services:
       - kafka-2
       - kafka-3
       - schema-registry-1
-      - radar-upload-connect-backend
+      - radar-connect-upload-backend
     environment:
       CONNECT_BOOTSTRAP_SERVERS: PLAINTEXT://kafka-1:9092,PLAINTEXT://kafka-2:9092,PLAINTEXT://kafka-3:9092
       CONNECT_REST_PORT: 8083
