@@ -14,12 +14,14 @@ import org.radarbase.upload.api.RecordMapperImpl
 import org.radarbase.upload.api.SourceTypeMapper
 import org.radarbase.upload.api.SourceTypeMapperImpl
 import org.radarbase.upload.auth.Auth
+import org.radarbase.upload.auth.MPClient
 import org.radarbase.upload.doa.RecordRepository
 import org.radarbase.upload.doa.RecordRepositoryImpl
 import org.radarbase.upload.doa.SourceTypeRepository
 import org.radarbase.upload.doa.SourceTypeRepositoryImpl
 import org.radarbase.upload.dto.CallbackManager
 import org.radarbase.upload.dto.QueuedCallbackManager
+import org.radarbase.upload.service.MPService
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 import javax.persistence.EntityManager
@@ -70,6 +72,14 @@ abstract class UploadResourceConfig {
 
             bind(QueuedCallbackManager::class.java)
                     .to(CallbackManager::class.java)
+                    .`in`(Singleton::class.java)
+
+            bind(MPClient::class.java)
+                    .to(MPClient::class.java)
+                    .`in`(Singleton::class.java)
+
+            bind(MPService::class.java)
+                    .to(MPService::class.java)
                     .`in`(Singleton::class.java)
 
             // Bind factories.

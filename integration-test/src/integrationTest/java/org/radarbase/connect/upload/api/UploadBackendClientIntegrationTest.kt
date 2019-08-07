@@ -8,6 +8,9 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.hamcrest.CoreMatchers
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.greaterThan
@@ -127,7 +130,7 @@ class UploadBackendClientIntegrationTest {
 
         val request = Request.Builder()
                 .url(baseUri.plus("records"))
-                .post(RequestBody.create(APPLICATION_JSON, record.toJsonString()))
+                .post(record.toJsonString().toRequestBody(APPLICATION_JSON))
                 .addHeader("Authorization", BEARER + clientUserToken)
                 .addHeader("Content-type", "application/json")
                 .build()
@@ -135,7 +138,7 @@ class UploadBackendClientIntegrationTest {
         val response = httpClient.newCall(request).execute()
         assertTrue(response.isSuccessful)
 
-        val recordCreated =  mapper.readValue(response.body()?.string(), RecordDTO::class.java)
+        val recordCreated =  mapper.readValue(response.body?.string(), RecordDTO::class.java)
         assertNotNull(recordCreated)
         assertNotNull(recordCreated.id)
         assertThat(recordCreated?.id!!, greaterThan(0L))
@@ -166,14 +169,14 @@ class UploadBackendClientIntegrationTest {
 
         val requestToUploadFile = Request.Builder()
                 .url(baseUri.plus("records/$recordId/contents/$fileName"))
-                .put(RequestBody.create(TEXT_CSV, file))
+                .put(file.asRequestBody(TEXT_CSV))
                 .addHeader("Authorization", BEARER + clientUserToken)
                 .build()
 
         val uploadResponse = httpClient.newCall(requestToUploadFile).execute()
         assertTrue(uploadResponse.isSuccessful)
 
-        val content = mapper.readValue(uploadResponse.body()?.string(), ContentsDTO::class.java)
+        val content = mapper.readValue(uploadResponse.body?.string(), ContentsDTO::class.java)
         assertNotNull(content)
         assertEquals(fileName, content.fileName)
     }
@@ -215,27 +218,27 @@ class UploadBackendClientIntegrationTest {
         private const val baseUri = "http://0.0.0.0:8080/radar-upload/"
         private const val mySourceTypeName = "phone-acceleration"
         private const val BEARER = "Bearer "
-        private val APPLICATION_JSON = MediaType.parse("application/json; charset=utf-8")
-        private val TEXT_CSV = MediaType.parse("text/csv; charset=utf-8")
+        private val APPLICATION_JSON = "application/json; charset=utf-8".toMediaType()
+        private val TEXT_CSV = "text/csv; charset=utf-8".toMediaType()
 
         fun call(httpClient: OkHttpClient, expectedStatus: Response.Status, request: Request): ResponseBody? {
-            println(request.url())
+            println(request.url)
             return httpClient.newCall(request).execute().use { response ->
-                assertThat(response.code(), CoreMatchers.`is`(expectedStatus.statusCode))
-                response.body()
+                assertThat(response.code, CoreMatchers.`is`(expectedStatus.statusCode))
+                response.body
             }
         }
 
         fun call(httpClient: OkHttpClient, expectedStatus: Int, requestSupplier: (Request.Builder) -> Request.Builder): JsonNode? {
             val request = requestSupplier(Request.Builder()).build()
-            println(request.url())
+            println(request.url)
             return httpClient.newCall(request).execute().use { response ->
-                val body = response.body()?.let {
+                val body = response.body?.let {
                     val tree = mapper.readTree(it.byteStream())
                     println(tree)
                     tree
                 }
-                assertThat(response.code(), CoreMatchers.`is`(expectedStatus))
+                assertThat(response.code, CoreMatchers.`is`(expectedStatus))
                 body
             }
         }
