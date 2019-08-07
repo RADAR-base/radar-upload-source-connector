@@ -4,9 +4,9 @@ plugins {
     java
     application
     kotlin("jvm")
-    id("org.jetbrains.kotlin.plugin.noarg") version "1.3.31"
-    id("org.jetbrains.kotlin.plugin.jpa") version "1.3.31"
-    id("org.jetbrains.kotlin.plugin.allopen") version "1.3.31"
+    id("org.jetbrains.kotlin.plugin.noarg") version "1.3.41"
+    id("org.jetbrains.kotlin.plugin.jpa") version "1.3.41"
+    id("org.jetbrains.kotlin.plugin.allopen") version "1.3.41"
 }
 
 application {
