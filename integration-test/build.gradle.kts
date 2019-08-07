@@ -15,6 +15,7 @@ project.extra.apply {
 
 repositories {
     jcenter()
+    mavenLocal()
     maven(url = "http://packages.confluent.io/maven/")
     maven(url = "https://dl.bintray.com/radar-cns/org.radarcns")
 }

@@ -1,10 +1,10 @@
 package org.radarbase.upload.resource
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.radarbase.auth.jersey.Auth
+import org.radarbase.auth.jersey.Authenticated
+import org.radarbase.auth.jersey.NeedsPermission
 import org.radarbase.upload.api.*
-import org.radarbase.upload.auth.Auth
-import org.radarbase.upload.auth.Authenticated
-import org.radarbase.upload.auth.NeedsPermission
 import org.radarbase.upload.doa.RecordRepository
 import org.radarbase.upload.doa.SourceTypeRepository
 import org.radarbase.upload.doa.entity.RecordStatus
@@ -12,7 +12,6 @@ import org.radarbase.upload.dto.CallbackManager
 import org.radarcns.auth.authorization.Permission.*
 import org.slf4j.LoggerFactory
 import java.io.InputStream
-import java.lang.Exception
 import java.lang.IllegalStateException
 import java.net.URI
 import javax.annotation.Resource
@@ -62,9 +61,9 @@ class RecordResource {
         projectId ?: throw BadRequestException("Required project ID not provided.")
 
         if (userId != null) {
-            auth.checkUserPermission(SUBJECT_READ, projectId, userId)
+            auth.checkPermissionOnSubject(SUBJECT_READ, projectId, userId)
         } else {
-            auth.checkProjectPermission(PROJECT_READ, projectId)
+            auth.checkPermissionOnProject(PROJECT_READ, projectId)
         }
 
         val imposedLimit = min(max(limit, 1), 100)
@@ -99,7 +98,7 @@ class RecordResource {
         data.projectId ?: throw BadRequestException("Record needs a project ID")
         data.userId ?: throw BadRequestException("Record needs a user ID")
 
-        auth.checkUserPermission(MEASUREMENT_CREATE, data.projectId, data.userId)
+        auth.checkPermissionOnSubject(MEASUREMENT_CREATE, data.projectId, data.userId)
 
         data.contents?.forEach {
             it.text
@@ -137,7 +136,7 @@ class RecordResource {
         val record = recordRepository.read(recordId)
                 ?: throw NotFoundException("Record with ID $recordId does not exist")
 
-        auth.checkUserPermission(MEASUREMENT_CREATE, record.projectId, record.userId)
+        auth.checkPermissionOnSubject(MEASUREMENT_CREATE, record.projectId, record.userId)
 
         if (record.metadata.status != RecordStatus.INCOMPLETE) {
             throw WebApplicationException("Cannot add files to saved record.", Response.Status.CONFLICT)

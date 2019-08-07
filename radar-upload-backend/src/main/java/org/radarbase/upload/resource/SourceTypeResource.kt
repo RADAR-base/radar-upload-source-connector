@@ -1,9 +1,9 @@
 package org.radarbase.upload.resource
 
+import org.radarbase.auth.jersey.Authenticated
 import org.radarbase.upload.api.SourceTypeContainerDTO
 import org.radarbase.upload.api.SourceTypeDTO
 import org.radarbase.upload.api.SourceTypeMapper
-import org.radarbase.upload.auth.Authenticated
 import org.radarbase.upload.doa.SourceTypeRepository
 import javax.annotation.Resource
 import javax.ws.rs.*

@@ -6,22 +6,18 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import okhttp3.OkHttpClient
 import org.glassfish.jersey.internal.inject.AbstractBinder
-import org.glassfish.jersey.process.internal.RequestScoped
 import org.glassfish.jersey.server.ResourceConfig
 import org.radarbase.upload.Config
 import org.radarbase.upload.api.RecordMapper
 import org.radarbase.upload.api.RecordMapperImpl
 import org.radarbase.upload.api.SourceTypeMapper
 import org.radarbase.upload.api.SourceTypeMapperImpl
-import org.radarbase.upload.auth.Auth
-import org.radarbase.upload.auth.MPClient
 import org.radarbase.upload.doa.RecordRepository
 import org.radarbase.upload.doa.RecordRepositoryImpl
 import org.radarbase.upload.doa.SourceTypeRepository
 import org.radarbase.upload.doa.SourceTypeRepositoryImpl
 import org.radarbase.upload.dto.CallbackManager
 import org.radarbase.upload.dto.QueuedCallbackManager
-import org.radarbase.upload.service.MPService
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 import javax.persistence.EntityManager
@@ -46,19 +42,16 @@ abstract class UploadResourceConfig {
                     "org.radarbase.upload.exception",
                     "org.radarbase.upload.filter",
                     "org.radarbase.upload.resource")
-            register(binder(config))
+            register(binder(this, config))
             register(ContextResolver<ObjectMapper> {OBJECT_MAPPER})
             property("jersey.config.server.wadl.disableWadl", true)
         }
-        registerAuthentication(resources)
         return resources
     }
 
-    abstract fun registerAuthentication(resources: ResourceConfig)
+    abstract fun registerAuthentication(resources: ResourceConfig, binder: AbstractBinder, config: Config)
 
-    abstract fun registerAuthenticationUtilities(binder: AbstractBinder)
-
-    private fun binder(config: Config) = object : AbstractBinder() {
+    private fun binder(resourceConfig: ResourceConfig, config: Config) = object : AbstractBinder() {
         override fun configure() {
             // Bind instances. These cannot use any injects themselves
             bind(config)
@@ -74,21 +67,7 @@ abstract class UploadResourceConfig {
                     .to(CallbackManager::class.java)
                     .`in`(Singleton::class.java)
 
-            bind(MPClient::class.java)
-                    .to(MPClient::class.java)
-                    .`in`(Singleton::class.java)
-
-            bind(MPService::class.java)
-                    .to(MPService::class.java)
-                    .`in`(Singleton::class.java)
-
             // Bind factories.
-            bindFactory(AuthFactory::class.java)
-                    .proxy(true)
-                    .proxyForSameScope(true)
-                    .to(Auth::class.java)
-                    .`in`(RequestScoped::class.java)
-
             bindFactory(DoaEntityManagerFactory::class.java)
                     .to(EntityManager::class.java)
                     .`in`(Singleton::class.java)
@@ -105,7 +84,7 @@ abstract class UploadResourceConfig {
             bind(SourceTypeRepositoryImpl::class.java)
                     .to(SourceTypeRepository::class.java)
 
-            registerAuthenticationUtilities(this)
+            registerAuthentication(resourceConfig, this, config)
         }
     }
 }

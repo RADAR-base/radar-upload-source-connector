@@ -1,13 +1,11 @@
 package org.radarbase.upload.resource
 
-import org.radarbase.upload.auth.Auth
-import org.radarbase.upload.auth.Authenticated
-import org.radarbase.upload.auth.NeedsPermission
-import org.radarbase.upload.auth.NeedsPermissionOnProject
+import org.radarbase.auth.jersey.Auth
+import org.radarbase.auth.jersey.Authenticated
+import org.radarbase.auth.jersey.NeedsPermission
 import org.radarbase.upload.dto.ProjectList
-import org.radarbase.upload.dto.User
 import org.radarbase.upload.dto.UserList
-import org.radarbase.upload.service.MPService
+import org.radarbase.upload.service.UploadProjectService
 import org.radarcns.auth.authorization.Permission
 import javax.annotation.Resource
 import javax.ws.rs.*
@@ -20,17 +18,17 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 @Resource
 class ProjectResource(
-        @Context private val mpService: MPService,
+        @Context private val projectService: UploadProjectService,
         @Context private val auth: Auth) {
 
     @GET
     @NeedsPermission(Permission.Entity.PROJECT, Permission.Operation.READ)
-    fun projects() = ProjectList(mpService.userProjects(auth))
+    fun projects() = ProjectList(projectService.userProjects(auth))
 
     @GET
     @Path("{projectId}/users")
-    @NeedsPermissionOnProject(Permission.Entity.PROJECT, Permission.Operation.READ, "projectId")
+    @NeedsPermission(Permission.Entity.PROJECT, Permission.Operation.READ, "projectId")
     fun users(@PathParam("projectId") projectId: String): UserList {
-        return UserList(mpService.projectUsers(projectId))
+        return UserList(projectService.projectUsers(projectId))
     }
 }
