@@ -180,8 +180,8 @@ class RecordResource {
     @POST
     @Path("poll")
     fun poll(pollDTO: PollDTO): RecordContainerDTO {
-        if (auth.isClientCredentials) {
-            val imposedLimit = Math.min(Math.max(pollDTO.limit, 1), 100)
+        if (auth.token.isClientCredentials) {
+            val imposedLimit = min(max(pollDTO.limit, 1), 100)
             val records = recordRepository.poll(imposedLimit)
             return recordMapper.fromRecords(records, imposedLimit)
         } else {

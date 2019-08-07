@@ -29,7 +29,7 @@ class MPProjectService(@Context private val mpClient: MPClient): UploadProjectSe
 
     override fun userProjects(auth: Auth): List<Project> {
         return projects.get()
-                .filter { auth.hasPermissionOnProject(Permission.PROJECT_READ, it.id) }
+                .filter { auth.token.hasPermissionOnProject(Permission.PROJECT_READ, it.id) }
     }
 
     override fun projectUsers(projectId: String): List<User> {
