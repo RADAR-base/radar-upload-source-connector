@@ -1,4 +1,4 @@
-package org.radarbase.upload.auth
+package org.radarbase.upload.service.managementportal
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.core.type.TypeReference
@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import okhttp3.*
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
+import org.radarbase.auth.jersey.Auth
 import org.radarbase.upload.Config
 import org.radarbase.upload.dto.Project
 import org.radarbase.upload.dto.User

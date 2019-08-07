@@ -15,12 +15,12 @@ application {
 
 project.extra.apply {
     set("okhttpVersion", "4.0.1")
-    set("radarMpVersion", "0.5.4")
-    set("radarCommonsVersion", "0.11.3")
-    set("radarSchemasVersion", "0.4.3")
+    set("radarMpVersion", "0.5.7-SNAPSHOT")
+    set("radarCommonsVersion", "0.12.2")
+    set("radarSchemasVersion", "0.5.1")
     set("jacksonVersion", "2.9.9.1")
     set("jacksonDataVersion", "2.9.9")
-    set("slf4jVersion", "1.7.25")
+    set("slf4jVersion", "1.7.27")
     set("logbackVersion", "1.2.3")
     set("grizzlyVersion", "2.4.4")
     set("jerseyVersion", "2.28")
@@ -29,6 +29,7 @@ project.extra.apply {
 
 repositories {
     jcenter()
+    mavenLocal()
     maven(url = "https://dl.bintray.com/radar-cns/org.radarcns")
 }
 
@@ -49,6 +50,7 @@ dependencies {
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:${project.extra["jacksonDataVersion"]}")
 
     implementation("org.radarcns:radar-auth:${project.extra["radarMpVersion"]}")
+    implementation("org.radarbase:radar-auth-jersey:${project.extra["radarMpVersion"]}")
 
     implementation("org.slf4j:slf4j-api:${project.extra["slf4jVersion"]}")
 
