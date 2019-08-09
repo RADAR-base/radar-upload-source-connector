@@ -9,6 +9,7 @@ import org.glassfish.jersey.internal.inject.DisposableSupplier
 import org.hibernate.Session
 import org.hibernate.internal.SessionImpl
 import org.radarbase.upload.Config
+import org.slf4j.LoggerFactory
 import javax.persistence.EntityManager
 import javax.persistence.Persistence
 import javax.ws.rs.core.Context
@@ -36,6 +37,7 @@ class DoaEntityManagerFactory(@Context config: Config) : DisposableSupplier<Enti
     }
 
     override fun get(): EntityManager {
+        logger.info("Initializing EntityManager with config: ${configMap}")
         val emf = Persistence.createEntityManagerFactory("org.radarbase.upload.doa", configMap)
         val em = emf.createEntityManager()
 
@@ -54,6 +56,10 @@ class DoaEntityManagerFactory(@Context config: Config) : DisposableSupplier<Enti
 
     override fun dispose(instance: EntityManager?) {
         instance?.entityManagerFactory?.close()
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(DoaEntityManagerFactory::class.java)
     }
 }
 
