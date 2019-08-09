@@ -47,6 +47,7 @@ class UploadSourceTask : SourceTask() {
             val config = uploadClient.requestConnectorConfig(converter.sourceType)
             converter.initialize(config, uploadClient, props)
         }
+        logger.info("Initialized ${converters.size} converters...")
     }
 
     override fun stop() {
@@ -58,6 +59,7 @@ class UploadSourceTask : SourceTask() {
     override fun version(): String = VersionUtil.getVersion()
 
     override fun poll(): List<SourceRecord> {
+        logger.info("Poll with interval $pollInterval millseconds")
         while (true) {
             val records = uploadClient.pollRecords(PollDTO(1, converters.map { it.sourceType })).records
 
@@ -75,9 +77,8 @@ class UploadSourceTask : SourceTask() {
                 result.result?.takeIf(List<*>::isNotEmpty)?.let {
                     return@poll it
                 }
-
-                Thread.sleep(pollInterval)
             }
+            Thread.sleep(pollInterval)
         }
     }
 
