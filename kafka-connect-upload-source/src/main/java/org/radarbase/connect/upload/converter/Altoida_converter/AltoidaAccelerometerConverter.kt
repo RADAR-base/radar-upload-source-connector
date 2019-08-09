@@ -1,8 +1,8 @@
 package org.radarbase.connect.upload.converter
 
-import RADAR-Schemas.commons.connector.altoida.AltoidaAcceleration
+import org.radarcns.connector.altoida.AltoidaAcceleration
 
-class AltoidaAccelerometerConverter(override val sourceType: String = "acceleration", val topic: String = "altoida-acceleration")
+class AltoidaAccelerometerConverter(override val sourceType: String = "acceleration", val topic: String = "upload_altoida_acceleration")
     : CsvRecordConverter(sourceType) {
 
     override fun validateHeaderSchema(csvHeader: List<String>) =

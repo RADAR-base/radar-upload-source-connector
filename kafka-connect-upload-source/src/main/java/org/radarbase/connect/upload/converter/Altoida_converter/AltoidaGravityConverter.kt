@@ -1,8 +1,8 @@
 package org.radarbase.connect.upload.converter
 
-import RADAR-Schemas.commons.connector.altoida.AltoidaGravity
+import org.radarcns.connector.altoida.AltoidaGravity
 
-class AltoidaGravityConverter(override val sourceType: String = "gravity", val topic: String = "altoida-gravity")
+class AltoidaGravityConverter(override val sourceType: String = "gravity", val topic: String = "upload_altoida_gravity")
     : CsvRecordConverter(sourceType) {
 
     override fun validateHeaderSchema(csvHeader: List<String>) =

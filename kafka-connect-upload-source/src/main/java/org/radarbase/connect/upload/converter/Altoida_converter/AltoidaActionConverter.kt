@@ -1,8 +1,8 @@
 package org.radarbase.connect.upload.converter
 
-import RADAR-Schemas.commons.connector.altoida.AltoidaLog
+import org.radarcns.connector.altoida.AltoidaAction
 
-class AltoidaLogConverter(override val sourceType: String = "log", val topic: String = "altoida-log")
+class AltoidaActionConverter(override val sourceType: String = "log", val topic: String = "upload_altoida_action")
     : CsvRecordConverter(sourceType) {
 
     override fun validateHeaderSchema(csvHeader: List<String>) =
@@ -10,7 +10,7 @@ class AltoidaLogConverter(override val sourceType: String = "log", val topic: St
 
     override fun convertLineToRecord(lineValues: Map<String, String>, timeReceived: Double): TopicData? {
         val time = lineValues["TIMESTAMP"]?.toDouble()
-        val log = AltoidaLog(
+        val log = AltoidaAction(
                 time,
                 timeReceived,
                 lineValues["TAG"]?.toString(),
