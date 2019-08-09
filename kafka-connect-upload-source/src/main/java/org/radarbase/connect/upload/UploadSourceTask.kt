@@ -62,7 +62,7 @@ class UploadSourceTask : SourceTask() {
         logger.info("Poll with interval $pollInterval millseconds")
         while (true) {
             val records = uploadClient.pollRecords(PollDTO(1, converters.map { it.sourceType })).records
-
+            logger.info("Received ${records.size} records")
             for (record in records) {
                 val converter = converters.find { it.sourceType == record.sourceType }
 
