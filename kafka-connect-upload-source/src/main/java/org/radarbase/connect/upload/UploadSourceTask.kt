@@ -1,5 +1,6 @@
 package org.radarbase.connect.upload
 
+import okhttp3.OkHttpClient
 import org.apache.kafka.connect.errors.ConnectException
 import org.apache.kafka.connect.source.SourceRecord
 import org.apache.kafka.connect.source.SourceTask
@@ -13,6 +14,7 @@ import org.radarbase.connect.upload.converter.Converter.Companion.RECORD_ID_KEY
 import org.radarbase.connect.upload.converter.Converter.Companion.REVISION_KEY
 import org.radarbase.connect.upload.util.VersionUtil
 import org.slf4j.LoggerFactory
+import java.util.concurrent.TimeUnit
 
 class UploadSourceTask : SourceTask() {
     private var pollInterval: Long = 60_000L
@@ -22,9 +24,15 @@ class UploadSourceTask : SourceTask() {
     override fun start(props: Map<String, String>?) {
 
         val connectConfig = UploadSourceConnectorConfig(props!!)
+        val httpClient = OkHttpClient.Builder()
+                .connectTimeout(10, TimeUnit.SECONDS)
+                .writeTimeout(10, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .build()
+
         uploadClient = UploadBackendClient(
                 connectConfig.getAuthorizer(),
-                connectConfig.getHttpClient(),
+                httpClient,
                 connectConfig.getBaseUrl())
 
         // init converters if configured
