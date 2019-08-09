@@ -30,6 +30,9 @@ class DoaEntityManagerFactory(@Context config: Config) : DisposableSupplier<Enti
         config.jdbcPassword?.let {
             configMap["javax.persistence.jdbc.password"] = it
         }
+        config.additionalPersistenceConfig?.let {
+            it.map { entry -> configMap[entry.key] = entry.value}
+        }
     }
 
     override fun get(): EntityManager {
