@@ -1,5 +1,16 @@
 <template>
   <v-app id="app">
+    <!-- Notification components -->
+    <v-snackbar
+      v-model="message.open"
+      :color="message.error?'error': 'success'"
+      top
+      :timeout="message.timeout"
+    >
+      {{ message.text }}
+    </v-snackbar>
+
+    <!-- layout -->
     <LeftDrawer
       :drawer="drawer.left"
       @transitionend="val=>drawer.left=val"
@@ -37,6 +48,13 @@ export default {
     drawer: {
       left: true,
     },
+    message: {
+      open: false,
+      error: false,
+      text: '',
+      timeout: 2000,
+    },
+
   }),
 };
 

@@ -8,11 +8,12 @@ import './plugins/filter';
 import './plugins/vue-moment';
 import services from '@/axios/';
 import '@/assets/styles/main.scss';
+import Snackbar from './plugins/snackbar';
 // init api services
 services.init('api/enpoints', store, router);
 
 Vue.config.productionTip = false;
-
+Vue.use(Snackbar);
 new Vue({
   router,
   store,
