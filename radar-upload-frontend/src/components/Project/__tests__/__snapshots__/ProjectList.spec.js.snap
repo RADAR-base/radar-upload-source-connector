@@ -1,0 +1,20 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ProjectList match snapShot 1`] = `
+<v-list-stub shaped="">
+  <v-list-item-group-stub color="primary" value="">
+    <v-list-item-stub>
+      <v-list-item-icon-stub>
+        <v-icon-stub color="info">
+          mdi-folder-text-outline
+        </v-icon-stub>
+      </v-list-item-icon-stub>
+      <v-list-item-content-stub>
+        <v-list-item-title-stub>
+          name1
+        </v-list-item-title-stub>
+      </v-list-item-content-stub>
+    </v-list-item-stub>
+  </v-list-item-group-stub>
+</v-list-stub>
+`;

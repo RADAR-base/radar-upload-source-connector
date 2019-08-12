@@ -1,0 +1,8 @@
+.theme--dark.v-stepper {
+  background: none !important;
+  box-shadow: none;
+
+  .v-stepper__label {
+    cursor: pointer;
+  }
+}

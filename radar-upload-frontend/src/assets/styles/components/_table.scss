@@ -1,0 +1,50 @@
+.v-datatable {
+  border: $table-border;
+
+  thead th {
+    color: $color-white !important;
+    font-weight: $font-weight-bold !important;
+    font-size: inherit !important;
+    letter-spacing: 0.5px;
+    background-color: rgba($color: $color-secondary, $alpha: 0.6);
+
+    &:not(:last-child) {
+      border-right: $table-border;
+    }
+  }
+
+  tbody {
+    td {
+      font-size: inherit !important;
+    }
+
+    tr {
+      background-color: $color-main;
+  
+      &:nth-child(even) {
+        background-color: $color-river-bed;
+      }
+  
+      &:not(:last-child) {
+        border-bottom: $table-border !important;
+      }
+  
+      td:not(:last-child) {
+        border-right: $table-border;
+      }
+  
+      &:hover {
+        background-color: rgba($color: $color-secondary, $alpha: 0.6) !important;
+      }
+    }
+  }
+
+  &__actions {
+    background-color: $color-main !important;
+    border: none !important;
+
+    .v-icon {
+      font-size: rem(16);
+    }
+  }
+}
