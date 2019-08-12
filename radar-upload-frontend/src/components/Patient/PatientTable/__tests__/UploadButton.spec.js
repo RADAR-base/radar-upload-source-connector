@@ -79,7 +79,7 @@ describe('UploadButton', () => {
     expect(uploadButton.attributes().disabled).not.toBe('true');
   });
 
-  it('click upload btn: call POST and "then" PUT request to upload selected file with correct payload, then dispatch action to add new uploading and close menu', async () => {
+  it('click upload btn: call POST and "then" PUT request to upload selected file with correct payload, then mutate to add new uploading and close menu', async () => {
     // mock POST /records
     const postReturnVal = { id: 'id1', createdDate: '2019-10-10' };
     const { projectId, userId } = wrapper.vm.uploadInfo;
@@ -96,7 +96,7 @@ describe('UploadButton', () => {
     await flushPromises();
     expect(fileAPI.postRecords).toBeCalledWith(postRecordPayload);
     expect(fileAPI.putRecords).toBeCalledWith(putRecordPayload);
-    expect($store.dispatch).toBeCalledWith('file/addUploadingFile', { userId, fileName: file.name });
+    expect($store.mutate).toBeCalledWith('file/addUploadingFile', { userId, fileName: file.name });
     expect(wrapper.vm.menu).toBe(false);
   });
 

@@ -11,7 +11,10 @@
 
         <v-spacer />
 
-        <v-toolbar-title><FileFilter /></v-toolbar-title>
+        <v-toolbar-title>
+          <FileFilter />
+          <!-- <PatientFilter /> -->
+        </v-toolbar-title>
 
         <template #extension>
           <v-tabs
@@ -90,12 +93,15 @@
 </template>
 
 <script>
-import FileTable from '@/components/File/FileTable.vue';
-import PatientTable from '@/components/PatientTable/index.vue';
-import FileFilter from '@/components/File/FileFilter.vue';
+import PatientTable from '@/components/Patient/PatientTable';
+import PatientFilter from '@/components/Patient/PatientFilter';
+import FileTable from '@/components/File/FileTable';
+import FileFilter from '@/components/File/FileFilter';
 
 export default {
-  components: { FileTable, PatientTable, FileFilter },
+  components: {
+    FileTable, PatientTable, FileFilter, PatientFilter,
+  },
   data() {
     return {
       tab: null,

@@ -48,4 +48,11 @@ export default {
   putRecords({ id, fileName, file }) {
     return axios.put(`/records/${id}/contents/${fileName}`, { file });
   },
+
+  filterRecords({ projectId, status, userId }) {
+    let endpoint = `/records?projectId=${projectId}`;
+    endpoint = status ? endpoint += `status=${status}` : endpoint;
+    endpoint = userId ? endpoint += `userId=${userId}` : endpoint;
+    return axios.get(endpoint);
+  },
 };
