@@ -1,7 +1,15 @@
 
-export const state = {
+
+export const mutations = {
+  setCurrentProject(state, projectId) {
+    state.currentProject = projectId;
+  },
 };
-export const mutations = {};
+
+export const state = {
+  currentProject: '',
+};
+
 export const actions = {};
 
 

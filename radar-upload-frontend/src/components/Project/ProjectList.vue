@@ -46,7 +46,7 @@ export default {
       }));
     },
     selectProject(id) {
-      this.$store.dispatch('project/selectProject', id);
+      this.$store.mutate('project/setCurrentProject', id);
     },
   },
   created() {

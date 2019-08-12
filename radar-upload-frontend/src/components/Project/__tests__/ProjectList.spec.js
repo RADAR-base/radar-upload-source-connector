@@ -42,10 +42,10 @@ describe('ProjectList', () => {
     expect(wrapper.vm.projects).toEqual(transformedProjects);
   });
 
-  it('dispatch actions with corresponding project id when clicking a project', () => {
+  it('mutate  with corresponding project id when clicking a project', () => {
     const projectItem = wrapper.findAll('v-list-item-stub').at(0);
     projectItem.trigger('click');
-    expect(store.dispatch).toBeCalledWith('project/selectProject', projectId);
+    expect(store.mutate).toBeCalledWith('project/setCurrentProject', projectId);
   });
 
   it('match snapShot', () => {

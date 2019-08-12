@@ -117,7 +117,7 @@ export default {
 
       const putPayload = { file: this.file, fileName: this.file.name, id: postRecordReturned.id };
       const putRecordReturned = await fileAPI.putRecords(putPayload);
-      this.$store.dispatch('file/addUploadingFile', { userId, fileName: this.file.name });
+      this.$store.mutate('file/addUploadingFile', { userId, fileName: this.file.name });
       this.menu = false;
     },
   },
