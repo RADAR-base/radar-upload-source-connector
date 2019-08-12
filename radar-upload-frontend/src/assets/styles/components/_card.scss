@@ -1,0 +1,8 @@
+.v-card {
+  background-color: $color-limed-spruce !important;
+
+  &__title {
+    font-size: $font-size-h3;
+    font-weight: $font-weight-bold;
+  }
+}

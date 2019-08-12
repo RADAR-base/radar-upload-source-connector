@@ -1,0 +1,29 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ProjectFilter match snapShopt 1`] = `
+<v-list-stub shaped="" two-line="" subheader="">
+  <v-subheader-stub>
+    Current files
+  </v-subheader-stub>
+  <v-list-item-group-stub color="primary">
+    <v-list-item-stub>
+      <v-list-item-icon-stub>
+        <v-icon-stub>mdi-music-circle-outline</v-icon-stub>
+      </v-list-item-icon-stub>
+      <v-list-item-content-stub>
+        <v-list-item-title-stub>
+          Audio1
+        </v-list-item-title-stub>
+        <v-list-item-subtitle-stub>
+          filteredDate
+        </v-list-item-subtitle-stub>
+      </v-list-item-content-stub>
+      <v-list-item-action-stub>
+        <v-icon-stub color="success">
+          mdi-check-circle
+        </v-icon-stub>
+      </v-list-item-action-stub>
+    </v-list-item-stub>
+  </v-list-item-group-stub>
+</v-list-stub>
+`;

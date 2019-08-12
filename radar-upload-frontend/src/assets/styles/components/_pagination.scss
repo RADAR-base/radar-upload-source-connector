@@ -1,0 +1,25 @@
+.v-pagination {
+  &__item {
+    box-shadow: none !important;
+    background-color: $color-river-bed !important;
+    border-radius: 0;
+    margin: 0;
+
+    &--active {
+      font-weight: $font-weight-bold;
+      background-color: $color-primary !important;
+    }
+  }
+
+  &__navigation {
+    box-shadow: none !important;
+    background-color: $color-river-bed !important;
+    margin: 0;
+    border-radius: 0;
+    height: 34px;
+
+    .v-icon {
+      font-size: rem(13) !important;
+    }
+  }
+}

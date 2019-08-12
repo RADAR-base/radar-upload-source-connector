@@ -1,0 +1,103 @@
+//-----------------
+// # EMBEDDED FONTS
+//-----------------
+@import url('https://fonts.googleapis.com/css?family=Montserrat:400,700|Source+Sans+Pro:400,700|Fjalla+One');
+
+$font-primary: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+  Roboto, 'Helvetica Neue', Arial, sans-serif;
+$font-secondary: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+  Roboto, 'Helvetica Neue', Arial, sans-serif;
+$font-logo: 'Fjalla One', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+  'Helvetica Neue', Arial, sans-serif;
+//-----------------
+// #BASE COLOR
+//-----------------
+$color-white: #fff;
+$color-black: #212121;
+$color-purple: #3d265a;
+$color-red: #d94141;
+$color-yellow: #ffc107;
+$color-blue: #2196f3;
+$color-green: #4caf50;
+
+$color-light-gray: #8a8a8a;
+$color-light-blue: #00b4ad;
+
+// Define color for BV
+$color-nevada: #5d6c75;
+$color-mirage: #1c252f;
+$color-ebony-clay: #232e3a;
+$color-gray: #8c8c8c;
+$color-shamrock: #45da89;
+$color-sunset-orange: #ff4f4f;
+$color-alto: #d9d9d9;
+$color-limed-spruce: #37474f;
+$color-river-bed: #4b5961;
+$color-river-bed-light: #ddd;
+$color-outer-space: #263238;
+$color-puerto-rico: #37c3bb;
+$color-ronchiapprox: #eed345;
+$color-input-disabled: rgba(255, 255, 255, 0.03);
+$color-focus-grey: #a7bac4;
+$color-cerulean: #039be5;
+$color-guardsman-red: #d50000;
+//-----------------
+// #THEME COLOR
+//-----------------
+$color-main: $color-limed-spruce;
+$color-primary: $color-cerulean;
+$color-secondary: $color-outer-space;
+$color-accent: $color-puerto-rico;
+$color-error: $color-sunset-orange;
+$color-info: $color-puerto-rico;
+$color-success: $color-shamrock;
+$color-warning: $color-ronchiapprox;
+$color-disabled: $color-input-disabled;
+$color-input: $color-white;
+$color-input-onfocus: $color-black;
+$color-input-background: $color-nevada;
+$color-input-placeholder: $color-river-bed-light;
+$color-input-focus: $color-focus-grey;
+//-----------------
+// #FONT SIZE
+//-----------------
+$font-size-h1: rem(61);
+$font-size-h2: rem(36);
+$font-size-h3: rem(28);
+$font-size-h4: rem(24);
+$font-size-h5: rem(17);
+$font-size-h6: rem(15);
+$font-size-medium: rem(14);
+$font-size-p: rem(13);
+$font-size-small: rem(12);
+//-----------------
+// #FONT WEIGHT
+//-----------------
+$font-weight-light: 300;
+$font-weight-normal: 400;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+$font-weight-heavy: 900;
+//-----------------
+// #TABLE BORDER
+//-----------------
+$table-border: thin solid
+  rgba(
+    $color: $color-white,
+    $alpha: 0.3
+  );
+/* stylelint-disable */
+:export {
+  main: $color-main;
+  primary: $color-primary;
+  secondary: $color-secondary;
+  accent: $color-accent;
+  error: $color-error;
+  info: $color-info;
+  success: $color-success;
+  warning: $color-warning;
+  disabled: $color-disabled;
+  white: $color-input;
+}
+/* stylelint-enable */
