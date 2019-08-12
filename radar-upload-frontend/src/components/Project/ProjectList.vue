@@ -29,6 +29,7 @@
 <script>
 import api from '@/axios/project.js';
 
+console.log(api);
 export default {
   data() {
     return {
@@ -49,7 +50,7 @@ export default {
     },
   },
   created() {
-    // this.getProjects();
+    this.getProjects();
   },
 };
 </script>

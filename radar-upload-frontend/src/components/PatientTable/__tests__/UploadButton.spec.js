@@ -1,6 +1,7 @@
 /* eslint-disable no-undef */
 import { shallowMount } from '@vue/test-utils';
 import flushPromises from 'flush-promises';
+import { Store } from 'vuex-mock-store';
 import UploadButton from '../UploadButton.vue';
 import fileAPI from '@/axios/file.js';
 
@@ -27,11 +28,15 @@ const commonInfo = {
 
 describe('UploadButton', () => {
   // call this api when component is created
+  const $store = new Store();
   fileAPI.getSourceTypes = jest.fn().mockReturnValue(fileTypeList);
   const wrapper = shallowMount(UploadButton, {
     propsData: {
       uploadInfo: postRecordBody,
       commonInfo,
+    },
+    mocks: {
+      $store,
     },
     stubs: ['v-btn',
       'v-icon',
@@ -74,27 +79,24 @@ describe('UploadButton', () => {
     expect(uploadButton.attributes().disabled).not.toBe('true');
   });
 
-  it('click upload btn: call POST and "then" PUT request to upload selected file with correct payload, then close menu', async () => {
-    // POST /records
+  it('click upload btn: call POST and "then" PUT request to upload selected file with correct payload, then dispatch action to add new uploading and close menu', async () => {
+    // mock POST /records
     const postReturnVal = { id: 'id1', createdDate: '2019-10-10' };
     const { projectId, userId } = wrapper.vm.uploadInfo;
     const postRecordPayload = { projectId, userId, sourceType: wrapper.vm.fileType };
     fileAPI.postRecords = jest.fn().mockResolvedValue(postReturnVal);
-
-    const uploadButton = wrapper.findAll('v-btn-stub').at(1);
-    uploadButton.trigger('click');
-    await flushPromises();
-    expect(fileAPI.postRecords).toBeCalledWith(postRecordPayload);
-    await flushPromises();
-    // PUT records
+    // mock PUT request
     const { file } = wrapper.vm;
     const putRecordPayload = { id: postReturnVal.id, file, fileName: file.name };
     const putReturnVal = 'return value';
     fileAPI.putRecords = jest.fn().mockResolvedValue(putReturnVal);
-
+    //
+    const uploadButton = wrapper.findAll('v-btn-stub').at(1);
+    uploadButton.trigger('click');
+    await flushPromises();
+    expect(fileAPI.postRecords).toBeCalledWith(postRecordPayload);
     expect(fileAPI.putRecords).toBeCalledWith(putRecordPayload);
-
-
+    expect($store.dispatch).toBeCalledWith('file/addUploadingFile', { userId, fileName: file.name });
     expect(wrapper.vm.menu).toBe(false);
   });
 
