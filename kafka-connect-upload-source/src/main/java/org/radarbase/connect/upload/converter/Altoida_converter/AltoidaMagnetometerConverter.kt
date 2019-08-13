@@ -2,7 +2,7 @@ package org.radarbase.connect.upload.converter
 
 import org.radarcns.connector.altoida.AltoidaMagnetometer
 
-class AltoidaMagnetometerConverter(override val sourceType: String = "magnetometer", val topic: String = "upload_altoida_magnetometer")
+class AltoidaMagnetometerConverter(override val sourceType: String = "magnetometer", val topic: String = "connect_upload_altoida_magnetometer")
     : CsvRecordConverter(sourceType) {
 
     override fun validateHeaderSchema(csvHeader: List<String>) =

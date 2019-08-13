@@ -4,7 +4,7 @@ import org.radarcns.connector.altoida.AltoidaNormalVector
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 
-class AltoidaNormalVectorConverter(override val sourceType: String = "version", val topic: String = "upload_altoida_meta_data")
+class AltoidaNormalVectorConverter(override val sourceType: String = "version", val topic: String = "connect_upload_altoida_meta_data")
     : CsvRecordConverter(sourceType) {
 
     override fun validateHeaderSchema(csvHeader: List<String>) =

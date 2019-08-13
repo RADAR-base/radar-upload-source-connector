@@ -2,7 +2,7 @@ package org.radarbase.connect.upload.converter
 
 import org.radarcns.connector.altoida.AltoidaNormalVector
 
-class AltoidaNormalVectorConverter(override val sourceType: String = "normal-vector", val topic: String = "upload_altoida_normal_vector")
+class AltoidaNormalVectorConverter(override val sourceType: String = "normal-vector", val topic: String = "connect_upload_altoida_normal_vector")
     : CsvRecordConverter(sourceType) {
 
     override fun validateHeaderSchema(csvHeader: List<String>) =

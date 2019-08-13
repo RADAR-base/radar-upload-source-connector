@@ -2,7 +2,7 @@ package org.radarbase.connect.upload.converter
 
 import org.radarcns.connector.altoida.AltoidaPath
 
-class AltoidaPathConverter(override val sourceType: String = "path", val topic: String = "upload_altoida_path")
+class AltoidaPathConverter(override val sourceType: String = "path", val topic: String = "connect_upload_altoida_path")
     : CsvRecordConverter(sourceType) {
 
     override fun validateHeaderSchema(csvHeader: List<String>) =
