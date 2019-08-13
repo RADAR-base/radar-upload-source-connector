@@ -2,6 +2,7 @@
   <v-data-table
     :headers="headers"
     :items="items"
+    :loading="loading"
   >
     <template #item.uploadedAt="{item}">
       <td
@@ -14,9 +15,19 @@
 </template>
 
 <script>
+import fileAPI from '@/axios/file';
+
 export default {
+  props: {
+    isActive: {
+      type: Boolean,
+      default: false,
+    },
+  },
   data() {
     return {
+      currentProject: this.$store.state.project.value,
+      loading: false,
       headers: [
         { text: '#', value: 'sequence' },
         { text: 'File name', value: 'fileName' },
@@ -47,6 +58,26 @@ export default {
         },
       ],
     };
+  },
+  watch: {
+    currentProject: {
+      handler(val) {
+        if (!val) {
+          this.items = [];
+        } else if (this.isActive) {
+          this.getFileList(val);
+        }
+      },
+    },
+  },
+  methods: {
+    async getFileList(projectId) {
+      this.items = [];
+      this.loading = true;
+      const fileList = await fileAPI.filterRecords({ projectId }).catch(() => []);
+      this.loading = false;
+      this.items = fileList;
+    },
   },
 };
 </script>

@@ -16,6 +16,8 @@ describe('ProjectFilter', () => {
   const wrapper = shallowMount(FileList, {
     propsData: {
       patientFiles: files,
+      error: '',
+      loading: false,
     },
     stubs: [
       'v-list',
@@ -28,6 +30,9 @@ describe('ProjectFilter', () => {
       'v-list-item-subtitle',
       'v-list-item-action',
       'v-icon',
+      'v-alert',
+      'v-progress-circular',
+      'v-layout',
     ],
     filters: {
       moment: () => 'filteredDate',
@@ -35,11 +40,20 @@ describe('ProjectFilter', () => {
   });
   it(' get and render props patientFiles correctly', () => {
     expect(wrapper.vm.patientFiles).toEqual(files);
+    expect(wrapper.vm.loading).toEqual(false);
+    expect(wrapper.vm.error).toEqual('');
     expect(wrapper.text()).toContain(files[0].fileName);
     expect(wrapper.text()).toContain('filteredDate');
   });
 
-  it('match snapShopt', () => {
-    expect(wrapper.html()).toMatchSnapshot();
+  it('show error  and loading if any', () => {
+    expect(wrapper.find('v-progress-circular-stub').isVisible()).toBe(false);
+    expect(wrapper.find('v-alert-stub').isVisible()).toBe(false);
+    wrapper.setProps({ error: 'error', loading: true });
+    expect(wrapper.find('v-progress-circular-stub').isVisible()).toBe(true);
+    expect(wrapper.find('v-alert-stub').isVisible()).toBe(true);
   });
+  // it('match snapShopt', () => {
+  //   expect(wrapper.html()).toMatchSnapshot();
+  // });
 });
