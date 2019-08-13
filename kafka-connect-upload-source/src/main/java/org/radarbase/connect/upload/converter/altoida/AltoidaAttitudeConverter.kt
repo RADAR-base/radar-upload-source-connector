@@ -1,5 +1,7 @@
-package org.radarbase.connect.upload.converter
+package org.radarbase.connect.upload.converter.altoida
 
+import org.radarbase.connect.upload.converter.CsvRecordConverter
+import org.radarbase.connect.upload.converter.TopicData
 import org.radarcns.connector.altoida.AltoidaAttitude
 
 class AltoidaAttitudeConverter(override val sourceType: String = "attitude", val topic: String = "connect_upload_altoida_attitude")

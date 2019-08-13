@@ -1,10 +1,12 @@
-package org.radarbase.connect.upload.converter
+package org.radarbase.connect.upload.converter.altoida
 
-import org.radarcns.connector.altoida.AltoidaNormalVector
+import org.radarbase.connect.upload.converter.CsvRecordConverter
+import org.radarbase.connect.upload.converter.TopicData
+import org.radarcns.connector.altoida.AltoidaMetaData
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 
-class AltoidaNormalVectorConverter(override val sourceType: String = "version", val topic: String = "connect_upload_altoida_meta_data")
+class AltoidaMetaDataConverter(override val sourceType: String = "version", val topic: String = "connect_upload_altoida_meta_data")
     : CsvRecordConverter(sourceType) {
 
     override fun validateHeaderSchema(csvHeader: List<String>) =
@@ -13,13 +15,13 @@ class AltoidaNormalVectorConverter(override val sourceType: String = "version", 
     override fun convertLineToRecord(lineValues: Map<String, String>, timeReceived: Double): TopicData? {
         val time = LocalDateTime.now(ZoneOffset.UTC).atZone(ZoneOffset.UTC)?.toInstant()?.toEpochMilli()?.toDouble()
         val version = "2019031801"
-        val normalVector = AltoidaNormalVector(
+        val metaData = AltoidaMetaData(
                 time,
                 timeReceived,
                 version
 
         )
 
-        return TopicData(false, topic, normalVector)
+        return TopicData(false, topic, metaData)
     }
 }

@@ -1,8 +1,10 @@
-package org.radarbase.connect.upload.converter
+package org.radarbase.connect.upload.converter.altoida
 
-import org.radarcns.connector.altoida.AltoidaPath
+import org.radarbase.connect.upload.converter.CsvRecordConverter
+import org.radarbase.connect.upload.converter.TopicData
+import org.radarcns.connector.altoida.AltoidaGravity
 
-class AltoidaPathConverter(override val sourceType: String = "path", val topic: String = "connect_upload_altoida_path")
+class AltoidaGravityConverter(override val sourceType: String = "gravity", val topic: String = "connect_upload_altoida_gravity")
     : CsvRecordConverter(sourceType) {
 
     override fun validateHeaderSchema(csvHeader: List<String>) =
@@ -10,15 +12,14 @@ class AltoidaPathConverter(override val sourceType: String = "path", val topic: 
 
     override fun convertLineToRecord(lineValues: Map<String, String>, timeReceived: Double): TopicData? {
         val time = lineValues["TIMESTAMP"]?.toDouble()
-        val path = AltoidaPath(
+        val gravity = AltoidaGravity(
                 time,
                 timeReceived,
                 lineValues["X"]?.toFloat(),
                 lineValues["Y"]?.toFloat(),
                 lineValues["Z"]?.toFloat()
-
         )
 
-        return TopicData(false, topic, path)
+        return TopicData(false, topic, gravity)
     }
 }
