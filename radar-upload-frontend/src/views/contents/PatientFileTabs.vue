@@ -6,14 +6,13 @@
       >
         <!-- <v-app-bar-nav-icon /> -->
 
-
-        <v-toolbar-title>Project 1 - Patients</v-toolbar-title>
+        <v-toolbar-title>{{ $store.state.project.currentProject }}</v-toolbar-title>
 
         <v-spacer />
 
         <v-toolbar-title>
-          <FileFilter />
-          <!-- <PatientFilter /> -->
+          <PatientFilter v-show="tab==0" />
+          <FileFilter v-show="tab==1" />
         </v-toolbar-title>
 
         <template #extension>
@@ -41,31 +40,6 @@
         </template>
       </v-toolbar>
 
-
-      <!-- <v-card class="mt-4"> -->
-      <!-- <v-tabs
-      v-model="tab"
-      centered
-    > -->
-      <!-- <v-tabs-slider />
-        <v-tab
-          active-class
-          class="ml-0"
-        >
-          <v-icon class="pr-2">
-            mdi-account-box-multiple
-          </v-icon>
-          Patients
-        </v-tab>
-
-        <v-tab>
-          <v-icon class="pr-2">
-            mdi-file-multiple
-          </v-icon>
-          Files
-        </v-tab>
-      </v-tabs> -->
-
       <v-tabs-items v-model="tab">
         <v-tab-item :value="0">
           <v-card
@@ -86,8 +60,6 @@
           </v-card>
         </v-tab-item>
       </v-tabs-items>
-      <!-- </v-card> -->
-      <!-- </v-tabs> -->
     </v-card>
   </div>
 </template>
@@ -99,8 +71,12 @@ import FileTable from '@/components/File/FileTable';
 import FileFilter from '@/components/File/FileFilter';
 
 export default {
+  name: 'PatientFilterTabs',
   components: {
-    FileTable, PatientTable, FileFilter, PatientFilter,
+    FileTable,
+    PatientTable,
+    FileFilter,
+    PatientFilter,
   },
   data() {
     return {

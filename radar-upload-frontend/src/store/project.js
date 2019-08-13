@@ -1,13 +1,17 @@
 
 
 export const mutations = {
-  setCurrentProject(state, projectId) {
-    state.currentProject = projectId;
+  setCurrentProject(state, { value, text }) {
+    state.currentProject.value = value;
+    state.currentProject.text = text;
   },
 };
 
 export const state = {
-  currentProject: '',
+  currentProject: {
+    value: '',
+    text: '',
+  },
 };
 
 export const actions = {};

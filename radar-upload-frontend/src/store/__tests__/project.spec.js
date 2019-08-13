@@ -4,8 +4,10 @@ import { state, mutations, actions } from '../project';
 
 describe('mutation', () => {
   it('setCurrentProject', () => {
-    const id = 1;
-    mutations.setCurrentProject(state, 1);
-    expect(state.currentProject).toBe(id);
+    const value = 1;
+    const text = 'text';
+    mutations.setCurrentProject(state, { value, text });
+    expect(state.currentProject.value).toBe(value);
+    expect(state.currentProject.text).toBe(text);
   });
 });
