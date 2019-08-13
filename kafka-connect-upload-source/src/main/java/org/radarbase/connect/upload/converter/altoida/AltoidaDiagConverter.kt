@@ -1,5 +1,7 @@
-package org.radarbase.connect.upload.converter
+package org.radarbase.connect.upload.converter.altoida
 
+import org.radarbase.connect.upload.converter.CsvRecordConverter
+import org.radarbase.connect.upload.converter.TopicData
 import org.radarcns.connector.altoida.AltoidaDiag
 
 class AltoidaDiagConverter(override val sourceType: String = "diag", val topic: String = "connect_upload_altoida_diag")
