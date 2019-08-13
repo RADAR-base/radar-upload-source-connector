@@ -2,7 +2,7 @@ package org.radarbase.connect.upload.converter
 
 import org.radarcns.connector.altoida.AltoidaDiag
 
-class AltoidaDiagConverter(override val sourceType: String = "diag", val topic: String = "upload_altoida_diag")
+class AltoidaDiagConverter(override val sourceType: String = "diag", val topic: String = "connect_upload_altoida_diag")
     : CsvRecordConverter(sourceType) {
 
     override fun validateHeaderSchema(csvHeader: List<String>) =
