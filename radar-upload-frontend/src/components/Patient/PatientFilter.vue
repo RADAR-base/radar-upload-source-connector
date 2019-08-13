@@ -1,10 +1,9 @@
 <template>
   <v-text-field
-    v-model="autocomplete"
+    v-model="text"
     class="mt-4"
     prepend-inner-icon="mdi-magnify"
     label="Search your patients"
-    :items="items"
     deletable-chips
     chips
   />
@@ -12,7 +11,11 @@
 
 <script>
 export default {
-
+  data() {
+    return {
+      text: '',
+    };
+  },
 };
 </script>
 

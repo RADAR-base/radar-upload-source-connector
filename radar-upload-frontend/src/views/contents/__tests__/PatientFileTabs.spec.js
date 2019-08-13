@@ -1,13 +1,13 @@
 /* eslint-disable no-undef */
 import { shallowMount } from '@vue/test-utils';
-// import flushPromises from 'flush-promises';
+import flushPromises from 'flush-promises';
 import { Store } from 'vuex-mock-store';
 import PatientFileTabs from '../PatientFileTabs.vue';
 
 
 describe('PatientFileTabs', () => {
   // call this api when component is created
-  const CURRENT_PROJECT = 'xxxxx';
+  const CURRENT_PROJECT = { text: 'xxxxx', value: 1 };
   const $store = new Store(
     {
       state: {
@@ -36,6 +36,7 @@ describe('PatientFileTabs', () => {
     ],
   });
 
+
   it('toggle PatientFilter and FileFilter on tabs changes', () => {
     wrapper.setData({ tab: 0 });
     expect(wrapper.find('patientfilter-stub').isVisible()).toBe(true);
@@ -46,6 +47,6 @@ describe('PatientFileTabs', () => {
   });
 
   it('display current selected project', () => {
-    expect(wrapper.text()).toContain(CURRENT_PROJECT);
+    expect(wrapper.text()).toContain(CURRENT_PROJECT.text);
   });
 });

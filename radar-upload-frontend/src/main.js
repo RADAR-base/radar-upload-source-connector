@@ -10,7 +10,7 @@ import services from '@/axios/';
 import '@/assets/styles/main.scss';
 import Snackbar from './plugins/snackbar';
 // init api services
-services.init('api/enpoints', store, router);
+services.init('https://radar-test.thehyve.net/upload/radar-upload/', store, router);
 
 Vue.config.productionTip = false;
 Vue.use(Snackbar);

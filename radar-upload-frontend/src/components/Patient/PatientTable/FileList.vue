@@ -4,6 +4,21 @@
     two-line
     subheader
   >
+    <v-layout justify-center>
+      <v-progress-circular
+        class="mt-2"
+        v-show="loading"
+        indeterminate
+        color="primary"
+      />
+      <v-alert
+        type="error"
+        v-text="error"
+        v-show="error"
+        dense
+        text
+      />
+    </v-layout>
     <v-subheader>
       Current files
     </v-subheader>
@@ -43,6 +58,14 @@ export default {
     patientFiles: {
       type: Array,
       required: true,
+    },
+    error: {
+      type: String,
+      default: '',
+    },
+    loading: {
+      type: Boolean,
+      default: false,
     },
   },
 };
