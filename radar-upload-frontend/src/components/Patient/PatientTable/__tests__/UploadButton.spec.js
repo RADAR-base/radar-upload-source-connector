@@ -96,7 +96,7 @@ describe('UploadButton', () => {
     await flushPromises();
     expect(fileAPI.postRecords).toBeCalledWith(postRecordPayload);
     expect(fileAPI.putRecords).toBeCalledWith(putRecordPayload);
-    expect($store.mutate).toBeCalledWith('file/addUploadingFile', { userId, fileName: file.name });
+    expect($store.commit).toBeCalledWith('file/addUploadingFile', { userId, fileName: file.name });
     expect(wrapper.vm.menu).toBe(false);
   });
 
