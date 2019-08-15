@@ -2,19 +2,13 @@
 /* eslint-disable func-names */
 
 const SnackBar = {
-  install(Vue) {
+  install(Vue, store) {
     Vue.prototype.$success = function (text, timeout = 2000) {
-      this.$data.message.error = false;
-      this.$data.message.open = true;
-      this.$data.message.text = text;
-      this.$data.message.timeout = timeout;
+      store.commit('openSnackbar', { text });
     };
 
     Vue.prototype.$error = function (text, timeout = 2000) {
-      this.$data.message.error = true;
-      this.$data.message.open = true;
-      this.$data.message.text = text;
-      this.$data.message.timeout = timeout;
+      store.commit('openSnackbar', { text, type: 'error' });
     };
   },
 };

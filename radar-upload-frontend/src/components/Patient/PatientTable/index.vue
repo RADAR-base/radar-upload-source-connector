@@ -3,6 +3,7 @@
     :items="items"
     single-expand
     show-expand
+    :headers="headers"
     hide-default-header
     item-key="sequence"
     :loading="loading"
@@ -17,9 +18,14 @@
 
 
     <template #item.uploadButton="{item}">
-      <!-- {{ item }} -->
       <td class="pl-0">
-        <UploadButton />
+        <UploadButton
+          :upload-info="{
+            userId: item.patientId,
+            projectId: currentProject
+          }"
+          @addUploadingFile="addUploadingFile"
+        />
       </td>
     </template>
 
@@ -40,6 +46,7 @@
 </template>
 
 <script>
+import { mapState } from 'vuex';
 import UploadButton from './UploadButton';
 import FileList from './FileList';
 import patientAPI from '@/axios/patient';
@@ -58,80 +65,56 @@ export default {
   },
   data() {
     return {
-      currentProject: this.$store.state.project.currentProject.value,
       loading: false,
       fileLoading: false,
       fileLoadingError: '',
 
       items: [
-        {
-          sequence: 1,
-          patientName: 'Patient 1',
-          updatedAt: Date.now(),
-          patientId: 'xx',
-        },
-        {
-          sequence: 2,
-          patientName: 'Patient 2',
-          updatedAt: Date.now(),
-          patientId: 'xxx',
-        },
+        // {
+        //   sequence: 1,
+        //   patientName: 'Patient 1',
+        //   updatedAt: Date.now(),
+        //   patientId: 'xx',
+        // },
+
       ],
       patientFiles: [
-        {
-          sequence: 1,
-          fileName: 'Audio1',
-          fileType: 'mp3',
-          status: 'Incomplete',
-          uploadedAt: Date.now(),
-        },
-        {
-          sequence: 2,
-          fileName: 'Checklist',
-          fileType: 'text',
-          status: 'Completed',
-          uploadedAt: Date.now(),
-        },
-        {
-          sequence: 1,
-          fileName: 'Audio1',
-          fileType: 'mp3',
-          status: 'Incomplete',
-          uploadedAt: Date.now(),
-        },
-        {
-          sequence: 2,
-          fileName: 'Checklist',
-          fileType: 'text',
-          status: 'Completed',
-          uploadedAt: Date.now(),
-        },
+        // {
+        //   sequence: 1,
+        //   fileName: 'Audio1',
+        //   fileType: 'mp3',
+        //   status: 'Incomplete',
+        //   uploadedAt: Date.now(),
+        // },
       ],
-      // headers: [
-      //   { text: '#', value: 'sequence' },
-      //   { text: 'Patient name', value: 'patientName' },
-      //   { text: 'Updated at', value: 'updatedAt' },
-      //   { text: 'Upload', value: 'uploadButton', sortable: false },
-      // ],
+      headers: [
+        { text: '#', value: 'sequence' },
+        { text: 'Patient name', value: 'patientName' },
+        { text: 'Updated at', value: 'updatedAt' },
+        { text: 'Upload', value: 'uploadButton', sortable: false },
+      ],
     };
+  },
+  computed: {
+    ...mapState('project', {
+      currentProject: state => state.currentProject.value,
+    }),
   },
   watch: {
     currentProject: {
       handler(val) {
-        if (!val) {
-          this.items = [];
-        } else if (this.isActive) {
+        if (val && this.isActive) {
           this.getPatientList(val);
         }
       },
-      immediate: true,
     },
   },
   methods: {
     async getPatientList(projectId) {
+      this.items = [];
       this.loading = true;
       const patientList = await patientAPI.filteredPatients(projectId).catch(() => ([]));
-      this.items = patientList;
+      this.items.push(...patientList);
       this.loading = false;
     },
     async getPatientFiles({ patientId }) {
@@ -152,6 +135,14 @@ export default {
       this.fileLoadingError = '';
       this.items = [];
       this.patientFiles = [];
+    },
+    addUploadingFile({ userId, fileName }) {
+      this.patientFiles.unshift({
+        fileName,
+        fileType: 'mp3',
+        status: 'Incomplete',
+        uploadedAt: Date.now(),
+      });
     },
   },
 };

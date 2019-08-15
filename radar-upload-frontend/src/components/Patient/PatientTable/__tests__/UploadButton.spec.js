@@ -21,10 +21,7 @@ const postRecordBody = {
   },
   // sourceType: 'Mp3Audio',
 };
-const commonInfo = {
-  projectName: 'project name',
-  patientName: 'patient name',
-};
+
 
 describe('UploadButton', () => {
   // call this api when component is created
@@ -32,11 +29,13 @@ describe('UploadButton', () => {
   fileAPI.getSourceTypes = jest.fn().mockReturnValue(fileTypeList);
   const wrapper = shallowMount(UploadButton, {
     propsData: {
-      uploadInfo: postRecordBody,
-      commonInfo,
+      uploadInfo: postRecordBody.data,
+      // commonInfo,
     },
     mocks: {
       $store,
+      $success: jest.fn(),
+      $error: jest.fn(),
     },
     stubs: ['v-btn',
       'v-icon',
@@ -63,8 +62,8 @@ describe('UploadButton', () => {
   });
 
   it('receive correct uploadInfo and common props', () => {
-    expect(wrapper.vm.uploadInfo).toEqual(postRecordBody);
-    expect(wrapper.vm.commonInfo).toEqual(commonInfo);
+    expect(wrapper.vm.uploadInfo).toEqual(postRecordBody.data);
+    // expect(wrapper.vm.commonInfo).toEqual(commonInfo);
     // expect(wrapper.text()).toContain(commonInfo.projectName);
     // expect(wrapper.text()).toContain(commonInfo.patientName);
   });
@@ -96,7 +95,9 @@ describe('UploadButton', () => {
     await flushPromises();
     expect(fileAPI.postRecords).toBeCalledWith(postRecordPayload);
     expect(fileAPI.putRecords).toBeCalledWith(putRecordPayload);
-    expect($store.commit).toBeCalledWith('file/addUploadingFile', { userId, fileName: file.name });
+    // expect($store.commit).toBeCalledWith('file/addUploadingFile', { userId, fileName: file.name });
+    expect(wrapper.emitted().addUploadingFile[0][0]).toEqual({ userId, fileName: file.name });
+    expect(wrapper.vm.$success).toBeCalled();
     expect(wrapper.vm.menu).toBe(false);
   });
 

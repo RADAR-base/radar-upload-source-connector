@@ -5,7 +5,7 @@
     >
       <!-- <v-app-bar-nav-icon /> -->
 
-      <v-toolbar-title>{{ currentProject }}</v-toolbar-title>
+      <v-toolbar-title>{{ $store.state.project.currentProject.text }}</v-toolbar-title>
 
       <v-spacer />
 
@@ -80,8 +80,7 @@ export default {
   },
   data() {
     return {
-      tab: null,
-      currentProject: this.$store.state.project.currentProject.text,
+      tab: 0,
     };
   },
 };
