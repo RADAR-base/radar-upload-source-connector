@@ -36,6 +36,8 @@
               label="Select a file"
               clear-icon
               clearable
+              append-icon="mdi-paperclip"
+              :prepend-icon="false"
               v-model="file"
             />
           </v-list-item>
