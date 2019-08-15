@@ -36,7 +36,7 @@ export default {
       data: {
         projectId,
         userId,
-        sourceType,
+        // sourceType,
         time: new Date().toISOString(),
         timeZoneOffset: new Date().getTimezoneOffset(),
       },
@@ -56,13 +56,13 @@ export default {
     return axios.get(endpoint)
       .then(res => res.records
         .map(el => el.data.contents)
-        .flat(1)
+        .reduce((acc, x) => acc.concat(x), []) // flatten
         .map((each, i) => ({
           sequence: i + 1,
           fileName: each.fileName,
           fileType: each.contentType,
           status: 'Incomplete',
-          uploadedAt: new Date(each.createdDate),
+          uploadedAt: each.createdDate,
         })));
   },
 };
