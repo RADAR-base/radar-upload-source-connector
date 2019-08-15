@@ -23,7 +23,7 @@ export default {
   }
    */
   getSourceTypes() {
-    return axios.get('/sourceTypes').then(res => res.sourceTypes.map(el => ({
+    return axios.get('/source-types').then(res => res.sourceTypes.map(el => ({
       name: el.name,
       contentTypes: el.contentTypes,
     })));
@@ -53,6 +53,16 @@ export default {
     let endpoint = `/records?projectId=${projectId}`;
     endpoint = status ? endpoint += `status=${status}` : endpoint;
     endpoint = userId ? endpoint += `userId=${userId}` : endpoint;
-    return axios.get(endpoint);
+    return axios.get(endpoint)
+      .then(res => res.records
+        .map(el => el.data.contents)
+        .flat(1)
+        .map((each, i) => ({
+          sequence: i + 1,
+          fileName: each.fileName,
+          fileType: each.contentType,
+          status: 'Incomplete',
+          uploadedAt: new Date(each.createdDate),
+        })));
   },
 };

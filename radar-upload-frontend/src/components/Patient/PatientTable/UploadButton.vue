@@ -81,14 +81,14 @@ export default {
       }),
       required: true,
     },
-    commonInfo: {
-      type: Object,
-      required: true,
-      default: () => ({
-        projectName: 'project name',
-        patientName: 'patient name',
-      }),
-    },
+    // commonInfo: {
+    //   type: Object,
+    //   required: true,
+    //   default: () => ({
+    //     projectName: 'project name',
+    //     patientName: 'patient name',
+    //   }),
+    // },
   },
   data() {
     return {
@@ -111,13 +111,20 @@ export default {
       this.fileTypeList = [];
     },
     async uploadFile() {
-      const { userId, projectId, fileType } = this;
+      const { userId, projectId } = this.uploadInfo;
+      const { fileType } = this;
       const postPayload = { userId, projectId, sourceType: fileType };
-      const postRecordReturned = await fileAPI.postRecords(postPayload);
+      try {
+        const postRecordReturned = await fileAPI.postRecords(postPayload);
+        const putPayload = { file: this.file, fileName: this.file.name, id: postRecordReturned.id };
+        const putRecordReturned = await fileAPI.putRecords(putPayload);
+        // this.$store.commit('file/addUploadingFile', { userId, fileName: this.file.name });
+        this.$emit('addUploadingFile', { userId, fileName: this.file.name });
+        this.$success('File is uploading, please do not close this window');
+      } catch (error) {
+        this.$error('Upload fails, please try again later');
+      }
 
-      const putPayload = { file: this.file, fileName: this.file.name, id: postRecordReturned.id };
-      const putRecordReturned = await fileAPI.putRecords(putPayload);
-      this.$store.commit('file/addUploadingFile', { userId, fileName: this.file.name });
       this.menu = false;
     },
   },

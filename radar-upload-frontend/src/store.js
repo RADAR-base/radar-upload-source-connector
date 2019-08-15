@@ -6,10 +6,19 @@ Vue.use(Vuex);
 const store = new Vuex.Store({
   modules,
   state: {
-
+    message: {
+      open: false,
+      error: false,
+      text: '',
+      timeout: 4000,
+    },
   },
   mutations: {
-
+    openSnackbar(state, { type, text }) {
+      state.message.open = true;
+      state.message.text = text;
+      state.message.error = type === 'error';
+    },
   },
   actions: {
 

@@ -33,6 +33,7 @@
 </template>
 
 <script>
+import { mapState } from 'vuex';
 import LeftDrawer from '@/views/layouts/LeftDrawer';
 import Footer from '@/views/layouts/Footer';
 import AppBar from '@/views/layouts/AppBar';
@@ -48,14 +49,19 @@ export default {
     drawer: {
       left: true,
     },
-    message: {
-      open: false,
-      error: false,
-      text: '',
-      timeout: 2000,
-    },
+    // message: {
+    //   open: false,
+    //   error: false,
+    //   text: '',
+    //   timeout: 2000,
+    // },
 
   }),
+  computed: {
+    ...mapState({
+      message: state => state.message,
+    }),
+  },
 };
 
 </script>

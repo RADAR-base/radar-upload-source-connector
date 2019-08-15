@@ -19,15 +19,16 @@ describe('index', () => {
 
   const wrapper = shallowMount(index, {
     propsData: {
-      currentProject: $store.state.project.currentProject.value,
       isActive: false,
+    },
+    computed: {
+      currentProject() { return this.$store.state.project.currentProject.value; },
     },
     mocks: {
       $store,
     },
     stubs: ['v-data-table'],
   });
-
 
   it('not show the table if no project is selected', () => {
     expect(wrapper.vm.items).toEqual([]);
@@ -45,8 +46,10 @@ describe('index', () => {
     expect(patientAPI.filteredPatients).not.toBeCalledWith('originalProject');
 
     wrapper.setProps({ isActive: true });
-    wrapper.setData({ currentProject: 'changed project' });
-    expect(patientAPI.filteredPatients).toBeCalledWith('changed project');
+    wrapper.vm.$store.state.project.currentProject.value = '12312';
+    await flushPromises();
+
+    expect(patientAPI.filteredPatients).toBeCalledWith('12312');
   });
 
   it('load file list of a patient when open the dropdown', async () => {

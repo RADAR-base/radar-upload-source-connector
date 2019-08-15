@@ -10,10 +10,10 @@ import services from '@/axios/';
 import '@/assets/styles/main.scss';
 import Snackbar from './plugins/snackbar';
 // init api services
-services.init('https://radar-test.thehyve.net/upload/radar-upload/', store, router);
+services.init('http://localhost:3000', store, router);
 
 Vue.config.productionTip = false;
-Vue.use(Snackbar);
+Vue.use(Snackbar, store);
 new Vue({
   router,
   store,

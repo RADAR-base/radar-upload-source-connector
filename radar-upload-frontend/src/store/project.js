@@ -1,4 +1,11 @@
-
+export function initialState() {
+  return {
+    currentProject: {
+      value: '',
+      text: '',
+    },
+  };
+}
 
 export const mutations = {
   setCurrentProject(state, { value, text }) {
@@ -7,12 +14,7 @@ export const mutations = {
   },
 };
 
-export const state = {
-  currentProject: {
-    value: '',
-    text: '',
-  },
-};
+export const state = initialState();
 
 export const actions = {};
 
