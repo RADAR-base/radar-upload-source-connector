@@ -25,6 +25,7 @@ import org.radarbase.upload.service.MPService
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 import javax.persistence.EntityManager
+import javax.persistence.EntityManagerFactory
 import javax.ws.rs.ext.ContextResolver
 
 abstract class UploadResourceConfig {
@@ -89,21 +90,29 @@ abstract class UploadResourceConfig {
                     .to(Auth::class.java)
                     .`in`(RequestScoped::class.java)
 
+            bindFactory(DoaEntityManagerFactoryFactory::class.java)
+                    .to(EntityManagerFactory::class.java)
+                    .`in`(Singleton::class.java)
+
             bindFactory(DoaEntityManagerFactory::class.java)
                     .to(EntityManager::class.java)
-                    .`in`(Singleton::class.java)
+                    .`in`(RequestScoped::class.java)
 
             bind(RecordMapperImpl::class.java)
                     .to(RecordMapper::class.java)
+                    .`in`(Singleton::class.java)
 
             bind(SourceTypeMapperImpl::class.java)
                     .to(SourceTypeMapper::class.java)
+                    .`in`(Singleton::class.java)
 
             bind(RecordRepositoryImpl::class.java)
                     .to(RecordRepository::class.java)
+                    .`in`(Singleton::class.java)
 
             bind(SourceTypeRepositoryImpl::class.java)
                     .to(SourceTypeRepository::class.java)
+                    .`in`(Singleton::class.java)
 
             registerAuthenticationUtilities(this)
         }
