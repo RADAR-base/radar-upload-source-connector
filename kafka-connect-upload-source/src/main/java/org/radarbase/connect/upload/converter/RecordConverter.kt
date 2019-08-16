@@ -36,7 +36,9 @@ abstract class RecordConverter(override val sourceType: String, val avroData: Av
     }
 
     override fun close() {
-        this.client.close()
+        if(this::client.isInitialized) {
+            this.client.close()
+        }
     }
 
     fun log(logLevel: LogLevel, logMessage: String) {
