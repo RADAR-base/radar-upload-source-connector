@@ -7,6 +7,7 @@ import okhttp3.Request
 import org.radarbase.connect.upload.UploadSourceConnectorConfig
 import org.radarbase.connect.upload.api.OauthToken
 import org.radarbase.connect.upload.exception.NotAuthorizedException
+import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.time.Instant
 
@@ -27,6 +28,7 @@ class ClientCredentialsAuthorizer(
 
         if (forceRefresh || !::token.isInitialized || (::token.isInitialized && token.isExpired())) {
             this.token = requestAccessToken()
+            logger.debug("Token is initialized to ${this.token}")
         }
 
         return this.token.accessToken
@@ -47,6 +49,7 @@ class ClientCredentialsAuthorizer(
 
         val response = httpClient.newCall(request).execute()
         if (response.isSuccessful) {
+            logger.info("Request to get access token was SUCCESSFUL")
             try {
                 return UploadSourceConnectorConfig.mapper.readValue(response.body()?.charStream(), OauthToken::class.java)
             } catch (exe: IOException) {
@@ -61,4 +64,8 @@ class ClientCredentialsAuthorizer(
 
     private fun OauthToken.isExpired(): Boolean = Instant.now()
             .isAfter(Instant.ofEpochSecond(this.issuedAt + this.expiresIn))
+
+    companion object {
+        val logger = LoggerFactory.getLogger(ClientCredentialsAuthorizer::class.java)
+    }
 }
