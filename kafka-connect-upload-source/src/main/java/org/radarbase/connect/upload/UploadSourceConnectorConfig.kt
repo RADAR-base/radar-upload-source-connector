@@ -5,42 +5,49 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import okhttp3.Authenticator
 import okhttp3.OkHttpClient
 import org.apache.kafka.common.config.AbstractConfig
 import org.apache.kafka.common.config.ConfigDef
-import org.radarbase.connect.upload.auth.Authorizer
 import org.radarbase.connect.upload.auth.ClientCredentialsAuthorizer
 import org.radarbase.connect.upload.converter.AccelerometerCsvRecordConverter
-import java.util.concurrent.TimeUnit
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, String>) :
         AbstractConfig(config, parsedConfig) {
 
-    constructor(parsedConfig: Map<String, String>) : this(conf(), parsedConfig) {}
+    private lateinit var authorizer: Authenticator
 
-    fun getHttpClient(): OkHttpClient =
-            OkHttpClient.Builder()
-                    .connectTimeout(10, TimeUnit.SECONDS)
-                    .writeTimeout(10, TimeUnit.SECONDS)
-                    .readTimeout(30, TimeUnit.SECONDS)
-                    .build()
-
-
-    fun getAuthorizer(): Authorizer {
-        return ClientCredentialsAuthorizer(
-                getHttpClient(),
-                getString(UPLOAD_SOURCE_CLIENT_CONFIG),
-                getString(UPLOAD_SOURCE_MP_SECRET_CONFIG),
-                getString(UPLOAD_SOURCE_CLIENT_TOKEN_URL_CONFIG),
-                getList(UPLOAD_SOURCE_CLIENT_SCOPE_CONFIG).toSet()
-        )
+    fun getAuthenticator(): Authenticator {
+        if(!::authorizer.isInitialized) {
+            logger.info("Initializing authenticator")
+            authorizer = ClientCredentialsAuthorizer(OkHttpClient(),
+                    getOauthClientId(),
+                    getOauthClientSecret(),
+                    getTokenRequestUrl(),
+                    getOauthClientScopes())
+        }
+        return authorizer
     }
 
-    fun getBaseUrl(): String = getString(UPLOAD_SOURCE_SERVER_BASE_URL_CONFIG)
+    constructor(parsedConfig: Map<String, String>) : this(conf(), parsedConfig) {}
+
+    fun getOauthClientId(): String = getString(UPLOAD_SOURCE_CLIENT_CONFIG)
+
+    fun getOauthClientSecret(): String = getString(UPLOAD_SOURCE_MP_SECRET_CONFIG)
+
+    fun getOauthClientScopes(): Set<String> = getList(UPLOAD_SOURCE_CLIENT_SCOPE_CONFIG).toSet()
+
+    fun getTokenRequestUrl(): String = getString(UPLOAD_SOURCE_CLIENT_TOKEN_URL_CONFIG)
+
+    fun getUploadBackendBaseUrl(): String = getString(UPLOAD_SOURCE_SERVER_BASE_URL_CONFIG)
 
     fun getConverterClasses(): List<String> = getList(UPLOAD_SOURCE_CONVERTERS_CONFIG)
 
     companion object {
+
+        val logger: Logger = LoggerFactory.getLogger(UploadSourceConnectorConfig::class.java)
 
         const val UPLOAD_SOURCE_CLIENT_CONFIG = "upload.source.client.id"
         private const val UPLOAD_SOURCE_CLIENT_DOC = "Client ID for the for the upload connector"

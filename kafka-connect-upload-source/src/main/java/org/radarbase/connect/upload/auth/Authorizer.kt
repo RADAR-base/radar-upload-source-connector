@@ -1,34 +1,51 @@
 package org.radarbase.connect.upload.auth
 
-import okhttp3.Credentials
-import okhttp3.FormBody
-import okhttp3.OkHttpClient
-import okhttp3.Request
+import okhttp3.*
 import org.radarbase.connect.upload.UploadSourceConnectorConfig
 import org.radarbase.connect.upload.api.OauthToken
 import org.radarbase.connect.upload.exception.NotAuthorizedException
 import org.slf4j.LoggerFactory
 import java.io.IOException
+import java.lang.Exception
 import java.time.Instant
-
-interface Authorizer {
-    fun accessToken(forceRefresh: Boolean = false): String
-}
 
 class ClientCredentialsAuthorizer(
         private val httpClient: OkHttpClient,
         private val clientId: String,
         private val clientSecret: String,
         private val tokenUrl: String,
-        private val scopes: Set<String>?) : Authorizer {
+        private val scopes: Set<String>?) : Authenticator {
 
     lateinit var token: OauthToken
 
-    override fun accessToken(forceRefresh: Boolean): String {
+    override fun authenticate(route: Route?, response: Response): Request? {
+        if (response.code() != 401) {
+            logger.debug("Received ${response.code()} at the authenticator. Skipping this request...")
+            return null
+        }
+
+        var accessToken = accessToken()
+        if (response.code() == 401 && accessToken == response.request().header("Authorization")) {
+            logger.debug("Request failed with token existing token. Requesting new token")
+            accessToken = accessToken(true)
+        }
+        logger.debug("Response request ${response.request()} and code ${response.code()}")
+
+        try {
+            return response.request().newBuilder()
+                    .header("Authorization", "Bearer " + accessToken)
+                    .build()
+        } catch (exe: Exception) {
+            logger.info("Could not get a access token " , exe)
+            throw NotAuthorizedException("Could not get a access token: ${exe.message}")
+        }
+    }
+
+    fun accessToken(forceRefresh: Boolean = false): String {
 
         if (forceRefresh || !::token.isInitialized || (::token.isInitialized && token.isExpired())) {
             this.token = requestAccessToken()
-            logger.debug("Token is initialized to ${this.token}")
+            logger.info("Token is initialized to ${this.token}")
         }
 
         return this.token.accessToken

@@ -14,7 +14,6 @@ import org.radarbase.connect.upload.converter.Converter.Companion.RECORD_ID_KEY
 import org.radarbase.connect.upload.converter.Converter.Companion.REVISION_KEY
 import org.radarbase.connect.upload.util.VersionUtil
 import org.slf4j.LoggerFactory
-import java.util.concurrent.TimeUnit
 
 class UploadSourceTask : SourceTask() {
     private var pollInterval: Long = 60_000L
@@ -24,16 +23,12 @@ class UploadSourceTask : SourceTask() {
     override fun start(props: Map<String, String>?) {
 
         val connectConfig = UploadSourceConnectorConfig(props!!)
-        val httpClient = OkHttpClient.Builder()
-                .connectTimeout(10, TimeUnit.SECONDS)
-                .writeTimeout(10, TimeUnit.SECONDS)
-                .readTimeout(30, TimeUnit.SECONDS)
-                .build()
+        val httpClient = OkHttpClient()
 
         uploadClient = UploadBackendClient(
-                connectConfig.getAuthorizer(),
+                connectConfig.getAuthenticator(),
                 httpClient,
-                connectConfig.getBaseUrl())
+                connectConfig.getUploadBackendBaseUrl())
 
         // init converters if configured
         converters = connectConfig.getConverterClasses().map {
