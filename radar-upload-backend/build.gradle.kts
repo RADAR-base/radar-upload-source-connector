@@ -24,7 +24,7 @@ project.extra.apply {
     set("logbackVersion", "1.2.3")
     set("grizzlyVersion", "2.4.4")
     set("jerseyVersion", "2.28")
-    set("hibernateVersion", "5.4.2.Final")
+    set("hibernateVersion", "5.4.4.Final")
 }
 
 repositories {
@@ -53,6 +53,7 @@ dependencies {
     implementation("org.slf4j:slf4j-api:${project.extra["slf4jVersion"]}")
 
     implementation("org.hibernate:hibernate-core:${project.extra["hibernateVersion"]}")
+    implementation("org.hibernate:hibernate-c3p0:${project.extra["hibernateVersion"]}")
     implementation("org.liquibase:liquibase-core:3.5.3")
 
     implementation("com.squareup.okhttp3:okhttp:${project.extra["okhttpVersion"]}")

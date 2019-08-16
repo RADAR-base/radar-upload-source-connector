@@ -11,12 +11,15 @@ import org.radarbase.upload.api.SourceTypeMapper
 import org.radarbase.upload.api.SourceTypeMapperImpl
 import org.radarbase.upload.doa.entity.SourceType
 import org.radarbase.upload.inject.DoaEntityManagerFactory
+import org.radarbase.upload.inject.DoaEntityManagerFactoryFactory
 import java.nio.file.Path
 import javax.persistence.EntityManager
+import javax.persistence.EntityManagerFactory
 
 internal class SourceTypeRepositoryImplTest {
     private lateinit var repository: SourceTypeRepository
-    private lateinit var doaFactory: DoaEntityManagerFactory
+    private lateinit var doaEMFFactory: DoaEntityManagerFactoryFactory
+    private lateinit var doaEMF: EntityManagerFactory
     private lateinit var sourceTypeMapper: SourceTypeMapper
     private lateinit var entityManager: EntityManager
 
@@ -26,15 +29,16 @@ internal class SourceTypeRepositoryImplTest {
     @BeforeEach
     fun setUp() {
         val config = Config(jdbcUrl = "jdbc:h2:file:${tempDir.resolve("db.h2")};DB_CLOSE_DELAY=-1;MVCC=true")
-        doaFactory = DoaEntityManagerFactory(config)
-        entityManager = doaFactory.get()
+        doaEMFFactory = DoaEntityManagerFactoryFactory(config)
+        doaEMF = doaEMFFactory.get()
+        entityManager = doaEMF.createEntityManager()
         sourceTypeMapper = SourceTypeMapperImpl()
-        repository = SourceTypeRepositoryImpl(entityManager, config, sourceTypeMapper)
+        repository = SourceTypeRepositoryImpl(config, sourceTypeMapper)
     }
 
     @AfterEach
     fun tearDown() {
-        doaFactory.dispose(entityManager)
+        doaEMFFactory.dispose(doaEMF)
     }
 
     @Test
