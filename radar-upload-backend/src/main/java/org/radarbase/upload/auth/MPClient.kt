@@ -10,6 +10,7 @@ import org.radarbase.upload.Config
 import org.radarbase.upload.dto.Project
 import org.radarbase.upload.dto.User
 import org.radarbase.upload.exception.BadGatewayException
+import org.slf4j.LoggerFactory
 import java.net.MalformedURLException
 import java.time.Duration
 import java.time.Instant
@@ -60,6 +61,7 @@ class MPClient(@Context config: Config, @Context private val auth: Auth) {
     }
 
     fun readProjects(): List<Project> {
+        logger.debug("Requesting for projects")
         val request = Request.Builder().apply {
             url(baseUrl.resolve("api/projects")!!)
             header("Authorization", "Bearer ${ensureToken()}")
@@ -102,4 +104,8 @@ class MPClient(@Context config: Config, @Context private val auth: Auth) {
     data class SubjectDto(val login: String, val externalId: String? = null, val status: String = "DEACTIVATED", val attributes: Map<String, String> = mapOf())
 
     data class ProjectDto(@JsonProperty("projectName") val id: String, @JsonProperty("humanReadableProjectName") val name: String? = null, val location: String? = null, val organization: String? = null, val description: String? = null)
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(MPClient::class.java)
+    }
 }
