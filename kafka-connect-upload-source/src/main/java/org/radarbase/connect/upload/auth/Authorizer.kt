@@ -28,6 +28,7 @@ class ClientCredentialsAuthorizer(
         if (response.code() == 401
                 && "Bearer $accessToken" == response.request().header("Authorization")) {
             logger.debug("Request failed with token existing token. Requesting new token")
+            Thread.sleep(60000L)
             accessToken = accessToken(true)
         }
         logger.debug("Response request ${response.request()} and code ${response.code()}")
