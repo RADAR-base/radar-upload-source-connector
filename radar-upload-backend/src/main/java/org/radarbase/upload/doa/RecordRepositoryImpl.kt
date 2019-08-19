@@ -17,9 +17,9 @@ import javax.ws.rs.core.Context
 import kotlin.streams.toList
 
 
-class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<EntityManager>) : RecordRepository {
+class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepository {
 
-    override fun updateLogs(id: Long, logsData: String): RecordMetadata = em.get().transact {
+    override fun updateLogs(id: Long, logsData: String): RecordMetadata = em.transact {
         val logs = find(RecordLogs::class.java, id)
         val metadataToSave = if (logs == null) {
             val metadataFromDb = find(RecordMetadata::class.java, id)
@@ -29,7 +29,7 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
                 this.metadata = metadataFromDb
                 this.modifiedDate = Instant.now()
                 this.size = logsData.length.toLong()
-                this.logs = Hibernate.getLobCreator(em.get().session).createClob(logsData)
+                this.logs = Hibernate.getLobCreator(em.session).createClob(logsData)
             }.also {
                 persist(it)
             }
@@ -37,7 +37,7 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
         } else {
             logs.apply {
                 this.modifiedDate = Instant.now()
-                this.logs = Hibernate.getLobCreator(em.get().session).createClob(logsData)
+                this.logs = Hibernate.getLobCreator(em.session).createClob(logsData)
             }
             merge(logs)
             logs.metadata
@@ -56,7 +56,7 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
         }
         queryString += " ORDER BY r.id"
 
-        return em.get().transact {
+        return em.transact {
             val query = createQuery(queryString, Record::class.java)
                     .setParameter("lastId", lastId)
                     .setParameter("projectId", projectId)
@@ -71,24 +71,24 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
         }
     }
 
-    override fun readLogs(id: Long): RecordLogs? = em.get().transact {
+    override fun readLogs(id: Long): RecordLogs? = em.transact {
         find(RecordLogs::class.java, id)
     }
 
-    override fun updateContent(record: Record, fileName: String, contentType: String, stream: InputStream, length: Long): RecordContent = em.get().transact {
+    override fun updateContent(record: Record, fileName: String, contentType: String, stream: InputStream, length: Long): RecordContent = em.transact {
         val existingContent = record.contents?.find { it.fileName == fileName }
 
         val result = existingContent?.apply {
             this.createdDate = Instant.now()
             this.contentType = contentType
-            this.content = Hibernate.getLobCreator(em.get().unwrap(Session::class.java)).createBlob(stream, length)
+            this.content = Hibernate.getLobCreator(em.unwrap(Session::class.java)).createBlob(stream, length)
         } ?: RecordContent().apply {
             this.record = record
             this.fileName = fileName
             this.createdDate = Instant.now()
             this.contentType = contentType
             this.size = length
-            this.content = Hibernate.getLobCreator(em.get().unwrap(Session::class.java)).createBlob(stream, length)
+            this.content = Hibernate.getLobCreator(em.unwrap(Session::class.java)).createBlob(stream, length)
         }.also {
             if (record.contents != null) {
                 record.contents?.add(it)
@@ -107,7 +107,7 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
         return@transact result
     }
 
-    override fun poll(limit: Int): List<Record> = em.get().transact {
+    override fun poll(limit: Int): List<Record> = em.transact {
         createQuery("SELECT r FROM Record r WHERE r.metadata.status = :status ORDER BY r.metadata.modifiedDate", Record::class.java)
                 .setParameter("status", RecordStatus.valueOf("READY"))
                 .setMaxResults(limit)
@@ -120,7 +120,7 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
                 .toList()
     }
 
-    override fun readRecordContent(recordId: Long, fileName: String): RecordContent? = em.get().transact {
+    override fun readRecordContent(recordId: Long, fileName: String): RecordContent? = em.transact {
         val queryString = "SELECT rc from RecordContent rc WHERE rc.record.id = :id AND rc.fileName = :fileName"
 
         createQuery(queryString, RecordContent::class.java)
@@ -129,7 +129,7 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
                 .resultList.firstOrNull()
     }
 
-    override fun readFileContent(id: Long, fileName: String): ByteArray? = em.get().transact {
+    override fun readFileContent(id: Long, fileName: String): ByteArray? = em.transact {
         val queryString = "SELECT rc.content from RecordContent rc WHERE rc.record.id = :id AND rc.fileName = :fileName"
 
         createQuery(queryString, Blob::class.java)
@@ -138,7 +138,7 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
                 .resultList.firstOrNull()?.binaryStream?.readAllBytes()
     }
 
-    override fun create(record: Record): Record = em.get().transact {
+    override fun create(record: Record): Record = em.transact {
         val tmpContent = record.contents?.also { record.contents = null }
 
         persist(record)
@@ -163,9 +163,9 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
         }
     }
 
-    override fun read(id: Long): Record? = em.get().transact { find(Record::class.java, id) }
+    override fun read(id: Long): Record? = em.transact { find(Record::class.java, id) }
 
-    override fun update(record: Record): Record = em.get().transact {
+    override fun update(record: Record): Record = em.transact {
         record.metadata.update()
         merge<Record>(record)
     }
@@ -177,10 +177,10 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
 
     private fun modifyNow(metadata: RecordMetadata): RecordMetadata {
         metadata.update()
-        return em.get().merge<RecordMetadata>(metadata)
+        return em.merge<RecordMetadata>(metadata)
     }
 
-    override fun updateMetadata(id: Long, metadata: RecordMetadataDTO): RecordMetadata = em.get().transact {
+    override fun updateMetadata(id: Long, metadata: RecordMetadataDTO): RecordMetadata = em.transact {
         val existingMetadata = find(RecordMetadata::class.java, id)
                 ?: throw NotFoundException("RecordMetadata with ID $id does not exist")
 
@@ -209,7 +209,7 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
         modifyNow(existingMetadata)
     }
 
-    override fun delete(record: Record) = em.get().transact { remove(record) }
+    override fun delete(record: Record) = em.transact { remove(record) }
 
-    override fun readMetadata(id: Long): RecordMetadata? = em.get().transact { find(RecordMetadata::class.java, id) }
+    override fun readMetadata(id: Long): RecordMetadata? = em.transact { find(RecordMetadata::class.java, id) }
 }
