@@ -35,11 +35,6 @@ abstract class UploadResourceConfig {
             .readTimeout(30, TimeUnit.SECONDS)
             .build()
 
-    private val OBJECT_MAPPER = ObjectMapper()
-            .registerModule(JavaTimeModule())
-            .registerModule(KotlinModule())
-            .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-
     fun resources(config: Config): ResourceConfig {
         val resources = ResourceConfig().apply {
             packages(
@@ -48,7 +43,7 @@ abstract class UploadResourceConfig {
                     "org.radarbase.upload.filter",
                     "org.radarbase.upload.resource")
             register(binder(config))
-            register(ContextResolver<ObjectMapper> {OBJECT_MAPPER})
+            register(ContextResolver<ObjectMapper> { OBJECT_MAPPER })
             property("jersey.config.server.wadl.disableWadl", true)
         }
         registerAuthentication(resources)
@@ -116,5 +111,12 @@ abstract class UploadResourceConfig {
 
             registerAuthenticationUtilities(this)
         }
+    }
+
+    companion object {
+        private val OBJECT_MAPPER = ObjectMapper()
+                .registerModule(JavaTimeModule())
+                .registerModule(KotlinModule())
+                .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
     }
 }

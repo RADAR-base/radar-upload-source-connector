@@ -33,7 +33,7 @@ class ClientCredentialsAuthorizer(
 
         try {
             return response.request().newBuilder()
-                    .header("Authorization", "Bearer " + accessToken)
+                    .header("Authorization", "Bearer $accessToken")
                     .build()
         } catch (exe: Exception) {
             logger.info("Could not get a access token " , exe)
@@ -42,8 +42,7 @@ class ClientCredentialsAuthorizer(
     }
 
     fun accessToken(forceRefresh: Boolean = false): String {
-
-        if (forceRefresh || !::token.isInitialized || (::token.isInitialized && token.isExpired())) {
+        if (forceRefresh || !::token.isInitialized || token.isExpired) {
             this.token = requestAccessToken()
             logger.info("Token is initialized to ${this.token}")
         }
@@ -79,10 +78,11 @@ class ClientCredentialsAuthorizer(
     }
 
 
-    private fun OauthToken.isExpired(): Boolean = Instant.now()
+    private val OauthToken.isExpired: Boolean
+        get() = Instant.now()
             .isAfter(Instant.ofEpochSecond(this.issuedAt + this.expiresIn))
 
     companion object {
-        val logger = LoggerFactory.getLogger(ClientCredentialsAuthorizer::class.java)
+        private val logger = LoggerFactory.getLogger(ClientCredentialsAuthorizer::class.java)
     }
 }

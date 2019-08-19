@@ -23,27 +23,27 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
         if(!::authorizer.isInitialized) {
             logger.info("Initializing authenticator")
             authorizer = ClientCredentialsAuthorizer(OkHttpClient(),
-                    getOauthClientId(),
-                    getOauthClientSecret(),
-                    getTokenRequestUrl(),
-                    getOauthClientScopes())
+                    oauthClientId,
+                    oauthClientSecret,
+                    tokenRequestUrl,
+                    oauthClientScopes)
         }
         return authorizer
     }
 
     constructor(parsedConfig: Map<String, String>) : this(conf(), parsedConfig) {}
 
-    fun getOauthClientId(): String = getString(UPLOAD_SOURCE_CLIENT_CONFIG)
+    val oauthClientId: String = getString(UPLOAD_SOURCE_CLIENT_CONFIG)
 
-    fun getOauthClientSecret(): String = getString(UPLOAD_SOURCE_MP_SECRET_CONFIG)
+    val oauthClientSecret: String = getString(UPLOAD_SOURCE_MP_SECRET_CONFIG)
 
-    fun getOauthClientScopes(): Set<String> = getList(UPLOAD_SOURCE_CLIENT_SCOPE_CONFIG).toSet()
+    val oauthClientScopes: Set<String> = getList(UPLOAD_SOURCE_CLIENT_SCOPE_CONFIG).toSet()
 
-    fun getTokenRequestUrl(): String = getString(UPLOAD_SOURCE_CLIENT_TOKEN_URL_CONFIG)
+    val tokenRequestUrl: String = getString(UPLOAD_SOURCE_CLIENT_TOKEN_URL_CONFIG)
 
-    fun getUploadBackendBaseUrl(): String = getString(UPLOAD_SOURCE_SERVER_BASE_URL_CONFIG)
+    val uploadBackendBaseUrl: String = getString(UPLOAD_SOURCE_SERVER_BASE_URL_CONFIG)
 
-    fun getConverterClasses(): List<String> = getList(UPLOAD_SOURCE_CONVERTERS_CONFIG)
+    val converterClasses: List<String> = getList(UPLOAD_SOURCE_CONVERTERS_CONFIG)
 
     companion object {
 
