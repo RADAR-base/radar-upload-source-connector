@@ -25,7 +25,8 @@ class ClientCredentialsAuthorizer(
         }
 
         var accessToken = accessToken()
-        if (response.code() == 401 && accessToken == response.request().header("Authorization")) {
+        if (response.code() == 401
+                && "Bearer $accessToken" == response.request().header("Authorization")) {
             logger.debug("Request failed with token existing token. Requesting new token")
             accessToken = accessToken(true)
         }
@@ -71,7 +72,6 @@ class ClientCredentialsAuthorizer(
             } catch (exe: IOException) {
                 throw NotAuthorizedException("Could not convert response into a valid access token ${exe.message}")
             }
-
         } else {
             throw NotAuthorizedException("Request to get access token failed with response code ${response.code()} and  ${response.body()?.string()}")
         }
