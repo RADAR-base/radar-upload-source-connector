@@ -42,7 +42,7 @@ class MPClient(@Context config: Config, @Context private val auth: Auth) {
         return if (localToken != null) {
             localToken
         } else {
-            val result = mapper.readTree(execute(Request.Builder().apply {
+            val request = Request.Builder().apply {
                 url(baseUrl.resolve("oauth/token")!!)
                 post(FormBody.Builder().apply {
                     add("grant_type", "client_credentials")
@@ -50,8 +50,9 @@ class MPClient(@Context config: Config, @Context private val auth: Auth) {
                     add("client_secret", clientSecret)
                 }.build())
                 header("Authorization", Credentials.basic(clientId, clientSecret))
-            }.build()))
+            }.build()
 
+            val result = mapper.readTree(execute(request))
             localToken = result["access_token"].asText()
                     ?: throw BadGatewayException("ManagementPortal did not provide an access token")
             expiration = Instant.now() + Duration.ofSeconds(result["expires_in"].asLong()) - Duration.ofMinutes(5)
