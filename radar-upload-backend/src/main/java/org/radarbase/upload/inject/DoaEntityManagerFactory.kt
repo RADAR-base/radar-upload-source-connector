@@ -8,6 +8,7 @@ import liquibase.resource.ClassLoaderResourceAccessor
 import org.glassfish.jersey.internal.inject.DisposableSupplier
 import org.hibernate.Session
 import org.hibernate.internal.SessionImpl
+import org.radarbase.upload.logger
 import org.slf4j.LoggerFactory
 import java.lang.Exception
 import java.util.concurrent.atomic.AtomicBoolean
@@ -15,26 +16,10 @@ import javax.persistence.EntityManager
 import javax.persistence.EntityManagerFactory
 import javax.ws.rs.core.Context
 
-class DoaEntityManagerFactory(@Context emf: EntityManagerFactory) : DisposableSupplier<EntityManager> {
-    private val emfactory: EntityManagerFactory = emf
+class DoaEntityManagerFactory(@Context private val emf: EntityManagerFactory) : DisposableSupplier<EntityManager> {
     override fun get(): EntityManager {
         logger.debug("Creating EntityManager...")
-        val em = emfactory.createEntityManager()
-
-        if(!isLiquibaseInitialized.get()) {
-            logger.info("Initializing Liquibase")
-            val connection = em.unwrap(SessionImpl::class.java).connection()
-            try {
-                val database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(JdbcConnection(connection))
-                val liquibase = Liquibase("dbChangelog.xml", ClassLoaderResourceAccessor(), database)
-                liquibase.update("test")
-            } catch (e: LiquibaseException) {
-                e.printStackTrace()
-            }
-            isLiquibaseInitialized.set(true)
-        }
-
-        return em
+        return emf.createEntityManager()
     }
 
     override fun dispose(instance: EntityManager?) {
@@ -44,7 +29,6 @@ class DoaEntityManagerFactory(@Context emf: EntityManagerFactory) : DisposableSu
 
     companion object {
         private val logger = LoggerFactory.getLogger(DoaEntityManagerFactory::class.java)
-        private var isLiquibaseInitialized: AtomicBoolean = AtomicBoolean(false)
     }
 }
 
@@ -56,7 +40,7 @@ fun <T> EntityManager.transact(transaction: EntityManager.() -> T): T {
         try {
             getTransaction().commit()
         } catch (exe: Exception) {
-
+            logger.warn("Rolling back operation: {}", exe.toString())
             getTransaction().rollback()
         }
     }

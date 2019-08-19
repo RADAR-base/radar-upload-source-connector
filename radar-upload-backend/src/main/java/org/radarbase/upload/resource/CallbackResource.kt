@@ -12,15 +12,12 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Resource
 class CallbackResource {
-
-
     @GET
     fun getCode(@QueryParam("code") code: String?) {
         logger.debug("Code received is $code")
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(CallbackResource::class.java)
+        private val logger = LoggerFactory.getLogger(CallbackResource::class.java)
     }
-
 }

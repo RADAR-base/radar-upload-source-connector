@@ -21,17 +21,16 @@ class UploadSourceTask : SourceTask() {
     private lateinit var converters: List<Converter>
 
     override fun start(props: Map<String, String>?) {
-
         val connectConfig = UploadSourceConnectorConfig(props!!)
         val httpClient = OkHttpClient()
 
         uploadClient = UploadBackendClient(
                 connectConfig.getAuthenticator(),
                 httpClient,
-                connectConfig.getUploadBackendBaseUrl())
+                connectConfig.uploadBackendBaseUrl)
 
         // init converters if configured
-        converters = connectConfig.getConverterClasses().map {
+        converters = connectConfig.converterClasses.map {
             try {
                 val converterClass = Class.forName(it)
                 converterClass.getDeclaredConstructor().newInstance() as Converter
