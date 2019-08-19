@@ -22,7 +22,7 @@ class UploadSourceTask : SourceTask() {
 
     override fun start(props: Map<String, String>?) {
         val connectConfig = UploadSourceConnectorConfig(props!!)
-        val httpClient = OkHttpClient()
+        val httpClient = connectConfig.httpClient
 
         uploadClient = UploadBackendClient(
                 connectConfig.getAuthenticator(),

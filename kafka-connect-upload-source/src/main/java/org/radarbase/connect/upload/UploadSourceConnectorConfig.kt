@@ -13,6 +13,7 @@ import org.radarbase.connect.upload.auth.ClientCredentialsAuthorizer
 import org.radarbase.connect.upload.converter.AccelerometerCsvRecordConverter
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.util.concurrent.TimeUnit
 
 class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, String>) :
         AbstractConfig(config, parsedConfig) {
@@ -44,6 +45,9 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
     val uploadBackendBaseUrl: String = getString(UPLOAD_SOURCE_SERVER_BASE_URL_CONFIG)
 
     val converterClasses: List<String> = getList(UPLOAD_SOURCE_CONVERTERS_CONFIG)
+
+    val httpClient: OkHttpClient
+        get() = globalHttpClient
 
     companion object {
 
@@ -166,6 +170,11 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
                             ConfigDef.Width.LONG,
                             UPLOAD_SOURCE_CONVERTERS_DISPLAY)
         }
-    }
 
+        private val globalHttpClient = OkHttpClient.Builder()
+                .connectTimeout(10, TimeUnit.SECONDS)
+                .writeTimeout(10, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .build()
+    }
 }
