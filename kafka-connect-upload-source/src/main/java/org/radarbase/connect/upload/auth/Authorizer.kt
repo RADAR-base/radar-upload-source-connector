@@ -46,7 +46,7 @@ class ClientCredentialsAuthorizer(
     fun accessToken(forceRefresh: Boolean = false): String {
         if (forceRefresh || !::token.isInitialized || token.isExpired) {
             this.token = requestAccessToken()
-            logger.info("Token is initialized to ${this.token}")
+            logger.info("Token is initialized...")
         }
 
         return this.token.accessToken
