@@ -1,33 +1,42 @@
+/* eslint-disable camelcase */
 /**
  * Manage the how Access Tokens are being stored and retreived from storage.
  */
+import axios from 'axios';
+import config from './index';
 
 const TOKEN = 'token';
-const TOKEN_KEY = 'tokenKey';
+// const TOKEN_KEY = 'tokenKey';
 
 const TokenService = {
-  getToken() {
-    return sessionStorage.getItem(TOKEN) || '';
-  },
+  async get(authCode, clientId = 'radar_upload_frontend') {
+    const headers = {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      auth: {
+        username: clientId,
+      },
+    };
+    // pass data to type x-www-form-urlendcoded
+    const params = new URLSearchParams();
+    params.append('code', authCode);
+    params.append('grant_type', 'authorization_code');
+    params.append('redirect_uri', 'http://localhost:8080/login');
 
-  getTokenKey() {
-    return sessionStorage.getItem(TOKEN_KEY) || '';
+    const { access_token } = await axios.post(
+      'https://radar-test.thehyve.net/managementportal/oauth/token',
+      params,
+      headers,
+    );
+    this.saveToken(access_token);
+    config.setHeader();
   },
 
   saveToken(token) {
-    sessionStorage.setItem(TOKEN, token);
-  },
-
-  saveTokenKey(tokenKey) {
-    sessionStorage.setItem(TOKEN_KEY, tokenKey);
+    localStorage.setItem(TOKEN, token);
   },
 
   removeToken() {
-    sessionStorage.removeItem(TOKEN);
-  },
-
-  removeTokenKey() {
-    sessionStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(TOKEN);
   },
 };
 
