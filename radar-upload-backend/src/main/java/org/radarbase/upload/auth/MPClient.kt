@@ -83,6 +83,7 @@ class MPClient(@Context config: Config, @Context private val auth: Auth) {
                response.body?.string()
                        ?: throw BadGatewayException("ManagementPortal did not provide a result")
             } else {
+                logger.error("Cannot connect to managementportal ", response.code)
                 throw BadGatewayException("Cannot connect to managementportal")
             }
         }
@@ -90,7 +91,7 @@ class MPClient(@Context config: Config, @Context private val auth: Auth) {
 
     fun readParticipants(projectId: String): List<User> {
         val request = Request.Builder().apply {
-            url(baseUrl.resolve("api/projects/$projectId/users")!!)
+            url(baseUrl.resolve("api/projects/$projectId/subjects")!!)
             header("Authorization", "Bearer ${ensureToken()}")
         }.build()
 
