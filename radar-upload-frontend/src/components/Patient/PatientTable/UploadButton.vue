@@ -23,7 +23,11 @@
 
       <v-card>
         <v-list>
-          <!-- <v-subheader>{{ commonInfo.patientName }} - {{ commonInfo.projectName }}</v-subheader> -->
+          <!-- <v-subheader>
+            {{ commonInfo.patientName }}
+            -
+            {{ commonInfo.projectName }}
+          </v-subheader> -->
           <v-list-item>
             <v-select
               label="Select file type"

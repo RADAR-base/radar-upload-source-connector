@@ -3,7 +3,6 @@
  * Manage the how Access Tokens are being stored and retreived from storage.
  */
 import axios from 'axios';
-import config from './index';
 
 const TOKEN = 'token';
 // const TOKEN_KEY = 'tokenKey';
@@ -28,7 +27,6 @@ const TokenService = {
       headers,
     );
     this.saveToken(access_token);
-    config.setHeader();
   },
 
   saveToken(token) {
