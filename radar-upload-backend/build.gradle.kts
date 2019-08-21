@@ -65,7 +65,9 @@ dependencies {
 
 //    testImplementation("com.h2database:h2:1.4.199")
     testImplementation("org.junit.jupiter:junit-jupiter:5.4.2")
+    testImplementation("org.mockito:mockito-core:2.21.0")
     testImplementation("org.hamcrest:hamcrest-all:1.3")
+
 }
 
 // config JVM target to 1.8 for kotlin compilation tasks
