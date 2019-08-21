@@ -35,14 +35,15 @@
 <script>
 import { mapState } from 'vuex';
 import LeftDrawer from '@/views/layouts/LeftDrawer';
-import Footer from '@/views/layouts/Footer';
+// import Footer from '@/views/layouts/Footer';
 import AppBar from '@/views/layouts/AppBar';
 import token from '@/axios/token';
+import axiosConfig from './axios';
 
 export default {
   components: {
     LeftDrawer,
-    Footer,
+    // Footer,
     AppBar,
   },
   name: 'App',
@@ -50,13 +51,6 @@ export default {
     drawer: {
       left: true,
     },
-    // message: {
-    //   open: false,
-    //   error: false,
-    //   text: '',
-    //   timeout: 2000,
-    // },
-
   }),
   computed: {
     ...mapState({
@@ -76,6 +70,8 @@ export default {
       window.close();
     } else if (!currentToken) {
       this.getToken();
+    } else {
+      axiosConfig.setHeader(currentToken);
     }
   },
 };
