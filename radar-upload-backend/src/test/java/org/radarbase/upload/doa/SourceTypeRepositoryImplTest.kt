@@ -47,6 +47,7 @@ internal class SourceTypeRepositoryImplTest {
     @AfterEach
     fun tearDown() {
         doaEMFFactory.dispose(doaEMF)
+        entityManager.close()
     }
 
     @Test
