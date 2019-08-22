@@ -1,37 +1,30 @@
+/* eslint-disable consistent-return */
 import axios from 'axios';
+import { getAuth } from '@/helpers.js';
 
 const ApiService = {
   init(baseURL, store, router) {
+    const currentToken = localStorage.getItem('token');
+    axios.defaults.headers.common.Authorization = `Bearer ${currentToken}`;
     axios.defaults.baseURL = baseURL;
     axios.interceptors.response.use(
-      response =>
-        // Do something with response data
-        // eslint-disable-next-line
-        response.data,
-      (error) => {
-        // Do something with response error
-        // store.commit('removeLoader');
-        // console.log(error.response);
+      response => response.data,
+      // eslint-disable-next-line func-names
+      async (error) => {
         switch (error.response.status) {
           case 401:
-            router.replace('/');
-            break;
+            // store.commit('openSnackbar', { type: 'error', text: 'Please login to continue' });
+            await getAuth();
+            // eslint-disable-next-line no-case-declarations
+            return;
           default:
             break;
         }
         return Promise.reject(error.response);
       },
+
     );
   },
-
-  setHeader(token) {
-    axios.defaults.headers.common.Authorization = `Bearer ${token}`;
-  },
-
-  removeHeader() {
-    axios.defaults.headers.common = {};
-  },
-
   setLanguage(language) {
     axios.defaults.headers.common['Accept-Language'] = language;
   },

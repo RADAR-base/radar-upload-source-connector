@@ -5,7 +5,7 @@
     >
       <!-- <v-app-bar-nav-icon /> -->
 
-      <v-toolbar-title>{{ $store.state.project.currentProject.text }}</v-toolbar-title>
+      <v-toolbar-title>{{ currentProject }}</v-toolbar-title>
 
       <v-spacer />
 
@@ -82,6 +82,12 @@ export default {
     return {
       tab: 0,
     };
+  },
+  computed: {
+    currentProject() {
+      return this.$store.state.project.currentProject.text
+      || this.$store.state.project.currentProject.value;
+    },
   },
 };
 </script>

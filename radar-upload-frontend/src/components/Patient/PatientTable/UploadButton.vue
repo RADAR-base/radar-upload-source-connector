@@ -9,15 +9,16 @@
     >
       <template #activator="{on}">
         <v-btn
-          color="primary lighten-2"
+          color="primary lighten-1"
           class="white--text ml-0"
-          fab
-          x-small
           v-on="on"
+          flat
+          depressed
         >
-          <v-icon dark>
+          <v-icon class="pr-2">
             mdi-cloud-upload-outline
           </v-icon>
+          Click to upload
         </v-btn>
       </template>
 
@@ -30,7 +31,7 @@
           </v-subheader> -->
           <v-list-item>
             <v-select
-              label="Select file type"
+              label="Select source type"
               :items="fileTypeList"
               v-model="fileType"
             />
@@ -41,7 +42,7 @@
               clear-icon
               clearable
               append-icon="mdi-paperclip"
-              :prepend-icon="false"
+              :prepend-icon="''"
               v-model="file"
             />
           </v-list-item>
@@ -87,21 +88,13 @@ export default {
       }),
       required: true,
     },
-    // commonInfo: {
-    //   type: Object,
-    //   required: true,
-    //   default: () => ({
-    //     projectName: 'project name',
-    //     patientName: 'patient name',
-    //   }),
-    // },
   },
   data() {
     return {
       menu: false,
       file: [],
       fileType: '',
-      fileTypeList: ['file 1'],
+      fileTypeList: [],
     };
   },
   methods: {
@@ -120,18 +113,19 @@ export default {
       const { userId, projectId } = this.uploadInfo;
       const { fileType } = this;
       const postPayload = { userId, projectId, sourceType: fileType };
+      const files = [];
+      files.push({ fileName: this.file.name, uploading: true });
       try {
-        const postRecordReturned = await fileAPI.postRecords(postPayload);
-        const putPayload = { file: this.file, fileName: this.file.name, id: postRecordReturned.id };
-        const putRecordReturned = await fileAPI.putRecords(putPayload);
-        // this.$store.commit('file/addUploadingFile', { userId, fileName: this.file.name });
-        this.$emit('addUploadingFile', { userId, fileName: this.file.name });
-        this.$success('File is uploading, please do not close this window');
+        const returnedRecord = await fileAPI.postRecords(postPayload);
+        this.$emit('startUploading', { ...returnedRecord, files, active: true });
+        this.menu = false;
+        const putPayload = { file: this.file, fileName: this.file.name, id: returnedRecord.id };
+        const uploadingFile = await fileAPI.putRecords(putPayload);
+        this.$emit('addUploadingFile', uploadingFile);
       } catch (error) {
+        this.menu = false;
         this.$error('Upload fails, please try again later');
       }
-
-      this.menu = false;
     },
   },
   created() {

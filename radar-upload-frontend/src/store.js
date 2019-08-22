@@ -14,9 +14,10 @@ const store = new Vuex.Store({
     },
   },
   mutations: {
-    openSnackbar(state, { type, text }) {
+    openSnackbar(state, { type, text, timeout }) {
       state.message.open = true;
       state.message.text = text;
+      state.message.timeout = timeout;
       state.message.error = type === 'error';
     },
   },
