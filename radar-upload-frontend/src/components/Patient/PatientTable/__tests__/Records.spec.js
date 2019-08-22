@@ -3,7 +3,7 @@ import { shallowMount } from '@vue/test-utils';
 import Records from '../Records.vue';
 
 // eslint-disable-next-line no-undef
-describe('ProjectFilter', () => {
+describe('Records', () => {
   const patientRecords = [
     {
       active: false,
