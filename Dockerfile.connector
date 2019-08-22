@@ -34,3 +34,5 @@ COPY ./docker/kafka-wait /usr/bin/kafka-wait
 
 # Load modified launcher
 COPY ./docker/launch /etc/confluent/docker/launch
+
+RUN mkdir -p /var/lib/kafka-connect-upload-source/logs

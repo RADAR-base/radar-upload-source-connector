@@ -18,4 +18,5 @@ data class Config(
         var jwtRSAPublicKeys: List<String>? = null,
         var jwtIssuer: String? = null,
         var jwtResourceName: String = "res_upload",
-        var sourceTypes: List<SourceTypeDTO>? = null)
+        var sourceTypes: List<SourceTypeDTO>? = null,
+        var additionalPersistenceConfig: Map<String, String>? = null)
