@@ -194,11 +194,11 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
                     "Found ${existingMetadata.status}, expected ${RecordStatus.QUEUED}")
         }
 
-        if (metadata.status == RecordStatus.SUCCEEDED.toString()
-                || metadata.status == RecordStatus.FAILED.toString()
+        if ((metadata.status == RecordStatus.SUCCEEDED.toString()
+                || metadata.status == RecordStatus.FAILED.toString())
                 && existingMetadata.status != RecordStatus.PROCESSING) {
             throw ConflictException("incompatible_status", "Record cannot be updated: Conflict in record meta-data status. " +
-                    "Found ${existingMetadata.status}, expected ${RecordStatus.QUEUED}")
+                    "Found ${existingMetadata.status}, expected ${RecordStatus.PROCESSING}")
         }
 
         existingMetadata.apply {
