@@ -19,6 +19,7 @@ class RecordMetadata {
 
     @Enumerated(EnumType.STRING)
     lateinit var status: RecordStatus
+
     var message: String? = null
 
     @Column(name = "created_date")

@@ -73,6 +73,7 @@ class UploadSourceTask : SourceTask() {
                     continue
                 } else {
                     record.metadata = uploadClient.updateStatus(record.id!!, record.metadata!!.copy(status = "PROCESSING"))
+                    logger.debug("updated metadata ${record.metadata}")
                 }
 
                 val result = converter.convert(record)
@@ -95,7 +96,7 @@ class UploadSourceTask : SourceTask() {
 
         if (endOfRecord) {
             logger.info("Committing last record of Record $recordId, with Revision $revision")
-            uploadClient.updateStatus(recordId.toLong(), RecordMetadataDTO(revision = revision.toInt(), status = "SUCCESS", message = "Record has been processed successfully"))
+            uploadClient.updateStatus(recordId.toLong(), RecordMetadataDTO(revision = revision.toInt(), status = "SUCCEEDED", message = "Record has been processed successfully"))
         }
     }
 
