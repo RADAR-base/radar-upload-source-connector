@@ -8,16 +8,16 @@
     item-key="sequence"
     :loading="loading"
     loading-text="Downloading patients info, please wait"
-    @item-expanded="getPatientFiles"
+    @item-expanded="getPatientRecords"
   >
     <template #item.updatedAt="{item}">
       <td class="pl-0">
-        {{ item.updatedAt | moment("YYYY/MM/DD") }}
+        {{ item.updatedAt | localTime }}
       </td>
     </template>
 
 
-    <template #item.uploadButton="{item}">
+    <!-- <template #item.uploadButton="{item}">
       <td class="pl-0">
         <UploadButton
           :upload-info="{
@@ -25,9 +25,10 @@
             projectId: currentProject
           }"
           @addUploadingFile="addUploadingFile"
+          @startUploading="startUploading"
         />
       </td>
-    </template>
+    </template> -->
 
 
     <template #expanded-item="{item}">
@@ -36,10 +37,21 @@
         class="py-4"
       >
         <FileList
-          :patient-files="patientFiles"
+          :patient-records="patientRecords"
           :loading="fileLoading"
           :error="fileLoadingError"
-        />
+        >
+          <template #fileListSubHeader>
+            <UploadButton
+              :upload-info="{
+                userId: item.patientId,
+                projectId: currentProject
+              }"
+              @addUploadingFile="addUploadingFile"
+              @startUploading="startUploading"
+            />
+          </template>
+        </FileList>
       </td>
     </template>
   </v-data-table>
@@ -68,30 +80,15 @@ export default {
       loading: false,
       fileLoading: false,
       fileLoadingError: '',
-
       items: [
-        // {
-        //   sequence: 1,
-        //   patientName: 'Patient 1',
-        //   updatedAt: Date.now(),
-        //   patientId: 'xx',
-        // },
-
       ],
-      patientFiles: [
-        // {
-        //   sequence: 1,
-        //   fileName: 'Audio1',
-        //   fileType: 'mp3',
-        //   status: 'Incomplete',
-        //   uploadedAt: Date.now(),
-        // },
+      patientRecords: [
       ],
       headers: [
         { text: '#', value: 'sequence' },
         { text: 'Patient name', value: 'patientName' },
-        { text: 'Updated at', value: 'updatedAt' },
-        { text: 'Upload', value: 'uploadButton', sortable: false },
+        { text: 'Status', value: 'status' },
+        // { text: 'Upload', value: 'uploadButton', sortable: false },
       ],
     };
   },
@@ -102,9 +99,17 @@ export default {
   },
   watch: {
     currentProject: {
+      handler(projectId) {
+        if (projectId && this.isActive) {
+          this.getPatientList(projectId);
+        }
+      },
+    },
+    isActive: {
       handler(val) {
-        if (val && this.isActive) {
-          this.getPatientList(val);
+        if (val && this.currentProject) {
+          this.items = [];
+          this.getPatientList(this.currentProject);
         }
       },
     },
@@ -117,16 +122,16 @@ export default {
       this.items.push(...patientList);
       this.loading = false;
     },
-    async getPatientFiles({ patientId }) {
-      this.patientFiles = [];
+    async getPatientRecords({ item }) {
+      this.patientRecords = [];
       this.fileLoading = true;
-      const files = await fileAPI
-        .filterRecords({ userId: patientId, projectId: this.currentProject })
+      const records = await fileAPI
+        .filterRecords({ userId: item.patientId, projectId: this.currentProject })
         .catch((error) => {
           this.fileLoadingError = error || 'Error when loading file, please try again later';
           return [];
         });
-      this.patientFiles = files;
+      this.patientRecords = records;
       this.fileLoading = false;
     },
     resetData() {
@@ -134,20 +139,14 @@ export default {
       this.fileLoading = false;
       this.fileLoadingError = '';
       this.items = [];
-      this.patientFiles = [];
+      this.patientRecords = [];
     },
-    addUploadingFile({ userId, fileName }) {
-      this.patientFiles.unshift({
-        fileName,
-        fileType: 'mp3',
-        status: 'Incomplete',
-        uploadedAt: Date.now(),
-      });
+    startUploading(record) {
+      this.patientRecords.unshift(record);
+    },
+    addUploadingFile(file) {
+      this.patientRecords[0].files.splice(0, 1, file);
     },
   },
 };
 </script>
-
-<style>
-
-</style>

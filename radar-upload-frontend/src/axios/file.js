@@ -1,4 +1,5 @@
 import axios from 'axios';
+import uuidv1 from 'uuid/v1';
 
 export default {
   /** response
@@ -36,33 +37,59 @@ export default {
       data: {
         projectId,
         userId,
-        // sourceType,
+        sourceId: uuidv1(),
         time: new Date().toISOString(),
         timeZoneOffset: new Date().getTimezoneOffset(),
       },
       sourceType,
     };
     return axios.post('/records', payload)
-      .then(res => ({ id: res.id, createdDate: res.metadata.createdDate }));
+      .then(record => ({
+        ...record.metadata,
+        files: record.data.contents,
+        id: record.id,
+        sourceType: record.sourceType,
+        userId: record.data.userId,
+      }));
   },
   putRecords({ id, fileName, file }) {
     return axios.put(`/records/${id}/contents/${fileName}`, { file });
   },
 
-  filterRecords({ projectId, status, userId }) {
+  async filterRecords({
+    projectId, status, userId, getFileOnly = false,
+  }) {
     let endpoint = `/records?projectId=${projectId}`;
-    endpoint = status ? endpoint += `status=${status}` : endpoint;
-    endpoint = userId ? endpoint += `userId=${userId}` : endpoint;
+    endpoint = status ? endpoint += `&&status=${status}` : endpoint;
+    endpoint = userId ? endpoint += `&&userId=${userId}` : endpoint;
+    if (getFileOnly) {
+      const data = await axios.get(endpoint)
+        .then(res => res.records
+          .map(el => el.data)
+          .map(each => ({ contents: each.contents, userId: each.userId })));
+
+      const files = data
+        .map(each => each.contents)
+        .reduce((preVal, currVal) => [...preVal, ...currVal], [])
+        .map((file, index) => ({
+          fileSize: `${file.size} kb`,
+          patient: data[index].fileName || data[index].userId,
+          fileName: file.fileName,
+          fileType: file.contentType,
+          uploadedAt: file.createdDate,
+        }));
+      return files;
+    }
+
     return axios.get(endpoint)
       .then(res => res.records
-        .map(el => el.data.contents)
-        .reduce((acc, x) => acc.concat(x), []) // flatten
-        .map((each, i) => ({
-          sequence: i + 1,
-          fileName: each.fileName,
-          fileType: each.contentType,
-          status: 'Incomplete',
-          uploadedAt: each.createdDate,
-        })));
+        .map(record => ({
+          ...record.metadata,
+          files: record.data.contents,
+          id: record.id,
+          sourceType: record.sourceType,
+          userId: record.data.userId,
+        }))
+        .reverse());
   },
 };

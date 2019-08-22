@@ -3,12 +3,12 @@
 
 const SnackBar = {
   install(Vue, store) {
-    Vue.prototype.$success = function (text, timeout = 2000) {
-      store.commit('openSnackbar', { text });
+    Vue.prototype.$success = function (text, timeout = 4000) {
+      store.commit('openSnackbar', { text, timeout });
     };
 
-    Vue.prototype.$error = function (text, timeout = 2000) {
-      store.commit('openSnackbar', { text, type: 'error' });
+    Vue.prototype.$error = function (text, timeout = 4000) {
+      store.commit('openSnackbar', { text, type: 'error', timeout });
     };
   },
 };

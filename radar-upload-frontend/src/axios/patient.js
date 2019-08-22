@@ -6,7 +6,7 @@ export default {
       .then(res => res.users.map((el, index) => ({
         sequence: index + 1,
         patientName: el.externalId,
-        updatedAt: 'Date',
+        status: el.status,
         patientId: el.id,
       })));
   },

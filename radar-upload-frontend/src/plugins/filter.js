@@ -22,3 +22,8 @@ Vue.filter('upperCase', (value) => {
   if (!value) return '';
   return value.toString().toUpperCase();
 });
+
+Vue.filter('localTime', (val) => {
+  if (!val) return '';
+  return (new Date(val)).toLocaleString();
+});

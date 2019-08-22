@@ -63,7 +63,7 @@ export default {
       if (projects) {
         this.errorMessage = '';
         this.projects = projects.map(el => ({
-          text: el.name,
+          text: el.name || el.id,
           value: el.id,
         }));
       }
