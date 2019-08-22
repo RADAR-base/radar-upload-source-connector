@@ -27,6 +27,9 @@ describe('Records', () => {
       error: '',
       loading: false,
     },
+    slots: {
+      fileListSubHeader: '<div>fileListSubHeader slot</div>',
+    },
     stubs: [
       'v-list',
       'v-subheader',
@@ -48,7 +51,11 @@ describe('Records', () => {
       localTime: () => 'filteredDate',
     },
   });
-  it(' get and render props patientRecords correctly', () => {
+  it('has fileListSubHeader scope', () => {
+    expect(wrapper.text()).toContain('fileListSubHeader slot');
+  });
+
+  it('get and render props patientRecords correctly', () => {
     expect(wrapper.vm.patientRecords).toEqual(patientRecords);
     expect(wrapper.vm.loading).toEqual(false);
     expect(wrapper.vm.error).toEqual('');
