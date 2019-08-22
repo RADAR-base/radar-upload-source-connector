@@ -12,7 +12,7 @@
           color="primary lighten-1"
           class="white--text ml-0"
           v-on="on"
-          flat
+          text
           depressed
         >
           <v-icon class="pr-2">

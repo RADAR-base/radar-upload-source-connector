@@ -11,7 +11,9 @@ describe('FileTable', () => {
   const $store = new Store({
     state: {
       project: {
-        value: projectID,
+        currentProject: {
+          value: projectID,
+        },
       },
     },
   });
@@ -29,7 +31,7 @@ describe('FileTable', () => {
     stubs: ['v-data-table'],
   });
 
-  it('has isAtive props', () => {
+  it('has isActive props', () => {
     expect(wrapper.vm.isActive).toBe(false);
     expect(wrapper.vm.currentProject).toBe(projectID);
   });
@@ -38,26 +40,30 @@ describe('FileTable', () => {
     const resolvedValue = [{ name: 'name' }];
     fileAPI.filterRecords = jest.fn().mockResolvedValue(resolvedValue);
     wrapper.setProps({ isActive: true });
-    wrapper.setData({ currentProject: 'watchingProject' });
+    wrapper.vm.$store.state.project.currentProject.value = 'watchingProject';
 
     expect(wrapper.vm.loading).toBe(true);
     await flushPromises();
-    expect(fileAPI.filterRecords).toBeCalledWith({ projectId: 'watchingProject' });
-    expect(wrapper.vm.items).toEqual(resolvedValue);
+    expect(fileAPI.filterRecords).toBeCalledWith({ projectId: 'watchingProject', getFileOnly: true });
+    expect(wrapper.vm.fileList).toEqual(resolvedValue);
     expect(wrapper.vm.loading).toBe(false);
   });
 
-  it('return empty array when call api with error or none project is selected', async () => {
-    wrapper.setData({ currentProject: '' });
-    expect(wrapper.vm.items).toEqual([]);
+  it('watch isActive = true', () => {
+    const getFileList = jest.spyOn(wrapper.vm, 'getFileList');
+    wrapper.setProps({ isActive: false });
+    wrapper.setProps({ isActive: true });
+    expect(getFileList).toBeCalledWith(wrapper.vm.currentProject);
+  });
 
+  it('getFileList: CASE ERROR', async () => {
+    const projectId = 'project id';
     fileAPI.filterRecords = jest.fn().mockRejectedValue('rejectedValue');
-    wrapper.setData({ currentProject: 'anotherSelectProject' });
-
+    wrapper.vm.getFileList(projectId);
     expect(wrapper.vm.loading).toBe(true);
+    expect(wrapper.vm.fileList).toEqual([]);
     await flushPromises();
-    expect(fileAPI.filterRecords).toBeCalledWith({ projectId: 'anotherSelectProject' });
-    expect(wrapper.vm.items).toEqual([]);
+    expect(wrapper.vm.fileList).toEqual([]);
     expect(wrapper.vm.loading).toBe(false);
   });
 });

@@ -1,5 +1,5 @@
 <template>
-  <v-card>
+  <v-card v-show="currentProject">
     <v-toolbar
       flat
     >

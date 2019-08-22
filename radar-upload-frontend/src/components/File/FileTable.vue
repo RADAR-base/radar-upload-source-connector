@@ -65,34 +65,29 @@ export default {
     currentProject: {
       handler(projectId) {
         if (projectId && this.isActive) {
-          this.items = [];
           this.getFileList(projectId);
         }
       },
+      immediate: true,
     },
     isActive: {
       handler(val) {
         if (val && this.currentProject) {
-          this.items = [];
           this.getFileList(this.currentProject);
         }
       },
+      immediate: true,
     },
   },
   methods: {
     async getFileList(projectId) {
-      this.items = [];
+      this.fileList = [];
       this.loading = true;
       const fileList = await fileAPI.filterRecords({ projectId, getFileOnly: true })
         .catch(() => []);
       this.loading = false;
       this.fileList = fileList;
     },
-  },
-  created() {
-    if (this.currentProject) {
-      this.getFileList(this.currentProject);
-    }
   },
 };
 </script>
