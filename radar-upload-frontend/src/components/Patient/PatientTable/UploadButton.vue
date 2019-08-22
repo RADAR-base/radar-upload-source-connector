@@ -32,8 +32,8 @@
           <v-list-item>
             <v-select
               label="Select source type"
-              :items="fileTypeList"
-              v-model="fileType"
+              :items="sourceTypeList"
+              v-model="sourceType"
             />
           </v-list-item>
           <v-list-item>
@@ -52,7 +52,7 @@
 
           <v-btn
             text
-            @click.native="cancelUpload"
+            @click.native="menu=false"
           >
             Cancel
           </v-btn>
@@ -61,7 +61,7 @@
             color="primary"
             text
             @click.native="uploadFile"
-            :disabled="!fileType||file.length===0"
+            :disabled="!sourceType||file.length===0"
           >
             Upload
           </v-btn>
@@ -78,14 +78,6 @@ export default {
   props: {
     uploadInfo: {
       type: Object,
-      default: () => ({
-        data: {
-          projectId: 'radar-test',
-          userId: 'testUser',
-          // sourceId: 'source',
-        },
-        // sourceType: 'Mp3Audio',
-      }),
       required: true,
     },
   },
@@ -93,26 +85,34 @@ export default {
     return {
       menu: false,
       file: [],
-      fileType: '',
-      fileTypeList: [],
+      sourceType: '',
+      sourceTypeList: [],
     };
   },
+  watch: {
+    menu: {
+      handler(open) {
+        if (!open) {
+          this.removeData();
+        }
+      },
+    },
+  },
   methods: {
-    async getFileTypeList() {
+    async getsourceTypeList() {
       const res = await fileAPI.getSourceTypes();
-      this.fileTypeList = res.map(el => el.name);
+      this.sourceTypeList = res.map(el => el.name);
       this.contentTypes = res.map(el => el.contentTypes);
     },
-    cancelUpload() {
-      this.menu = false;
+    removeData() {
       this.file = [];
-      this.fileType = '';
-      this.fileTypeList = [];
+      this.sourceType = '';
+      this.sourceTypeList = [];
     },
     async uploadFile() {
       const { userId, projectId } = this.uploadInfo;
-      const { fileType } = this;
-      const postPayload = { userId, projectId, sourceType: fileType };
+      const { sourceType } = this;
+      const postPayload = { userId, projectId, sourceType };
       const files = [];
       files.push({ fileName: this.file.name, uploading: true });
       try {
@@ -129,7 +129,7 @@ export default {
     },
   },
   created() {
-    this.getFileTypeList();
+    this.getsourceTypeList();
   },
 };
 </script>

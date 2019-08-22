@@ -5,7 +5,7 @@ import { Store } from 'vuex-mock-store';
 import UploadButton from '../UploadButton.vue';
 import fileAPI from '@/axios/file.js';
 
-const fileTypeList = [
+const sourceTypeList = [
   {
     name: 'audioMp3',
     contentTypes: ['audio/mp3'],
@@ -14,23 +14,18 @@ const fileTypeList = [
 
 
 const postRecordBody = {
-  data: {
-    projectId: 'radar-test',
-    userId: 'testUser',
-    // sourceId: 'source',
-  },
-  // sourceType: 'Mp3Audio',
+  projectId: 'radar-test',
+  userId: 'testUser',
 };
 
 
 describe('UploadButton', () => {
   // call this api when component is created
   const $store = new Store();
-  fileAPI.getSourceTypes = jest.fn().mockReturnValue(fileTypeList);
+  fileAPI.getSourceTypes = jest.fn().mockReturnValue(sourceTypeList);
   const wrapper = shallowMount(UploadButton, {
     propsData: {
-      uploadInfo: postRecordBody.data,
-      // commonInfo,
+      uploadInfo: postRecordBody,
     },
     mocks: {
       $store,
@@ -55,58 +50,76 @@ describe('UploadButton', () => {
     fileAPI.getSourceTypes.mockClear();
     jest.fn().mockClear();
   });
-
-  it('call api to get fileTypes/resourceTypes and contentTypes when created', async () => {
-    expect(wrapper.vm.fileTypeList).toEqual(fileTypeList.map(el => el.name));
-    expect(wrapper.vm.contentTypes).toEqual(fileTypeList.map(el => el.contentTypes));
+  it('has uploadInfo props', () => {
+    expect(wrapper.vm.uploadInfo).toEqual(postRecordBody);
+  });
+  it('call api to get sourceTypes/resourceTypes and contentTypes when created', async () => {
+    expect(wrapper.vm.sourceTypeList).toEqual(sourceTypeList.map(el => el.name));
+    expect(wrapper.vm.contentTypes).toEqual(sourceTypeList.map(el => el.contentTypes));
   });
 
-  it('receive correct uploadInfo and common props', () => {
-    expect(wrapper.vm.uploadInfo).toEqual(postRecordBody.data);
-    // expect(wrapper.vm.commonInfo).toEqual(commonInfo);
-    // expect(wrapper.text()).toContain(commonInfo.projectName);
-    // expect(wrapper.text()).toContain(commonInfo.patientName);
-  });
-
-  it('upload btn disabled if either file or fileType not selected', () => {
+  it('upload btn disabled if either file or sourceType not selected', () => {
     const file = new File([''], 'filename1');
     const uploadButton = wrapper.findAll('v-btn-stub').at(1);
     expect(uploadButton.attributes().disabled).toBe('true');
-    wrapper.setData({ fileType: '123' });
+    wrapper.setData({ sourceType: '123' });
     expect(uploadButton.attributes().disabled).toBe('true');
     wrapper.setData({ file });
     expect(uploadButton.attributes().disabled).not.toBe('true');
   });
 
-  it('click upload btn: call POST and "then" PUT request to upload selected file with correct payload, then mutate to add new uploading and close menu', async () => {
+  it('upload files success', async () => {
     // mock POST /records
     const postReturnVal = { id: 'id1', createdDate: '2019-10-10' };
     const { projectId, userId } = wrapper.vm.uploadInfo;
-    const postRecordPayload = { projectId, userId, sourceType: wrapper.vm.fileType };
+    const postRecordPayload = { projectId, userId, sourceType: wrapper.vm.sourceType };
     fileAPI.postRecords = jest.fn().mockResolvedValue(postReturnVal);
     // mock PUT request
     const { file } = wrapper.vm;
     const putRecordPayload = { id: postReturnVal.id, file, fileName: file.name };
-    const putReturnVal = 'return value';
+    const putReturnVal = { id: 'id1' };
     fileAPI.putRecords = jest.fn().mockResolvedValue(putReturnVal);
-    //
+    // file uploaded
+    const files = [];
+    files.push({ fileName: file.name, uploading: true });
+
+
     const uploadButton = wrapper.findAll('v-btn-stub').at(1);
     uploadButton.trigger('click');
     await flushPromises();
+
+    // postRecords
     expect(fileAPI.postRecords).toBeCalledWith(postRecordPayload);
-    expect(fileAPI.putRecords).toBeCalledWith(putRecordPayload);
-    // expect($store.commit).toBeCalledWith('file/addUploadingFile', { userId, fileName: file.name });
-    expect(wrapper.emitted().addUploadingFile[0][0]).toEqual({ userId, fileName: file.name });
-    expect(wrapper.vm.$success).toBeCalled();
+    // eslint-disable-next-line max-len
+    expect(wrapper.emitted().startUploading[0][0]).toEqual({ ...postReturnVal, files, active: true });
     expect(wrapper.vm.menu).toBe(false);
+
+    // putRecords
+    expect(fileAPI.putRecords).toBeCalledWith(putRecordPayload);
+    expect(wrapper.emitted().addUploadingFile[0][0]).toEqual(putReturnVal);
   });
 
-  it('click cancel btn: close menu and remove data selected', () => {
+  it('uploadfile error', async () => {
+    wrapper.setData({ menu: true });
+    fileAPI.postRecords.mockRejectedValue();
+    const uploadButton = wrapper.findAll('v-btn-stub').at(1);
+    uploadButton.trigger('click');
+    await flushPromises();
+    expect(wrapper.vm.menu).toBe(false);
+    expect(wrapper.vm.$error).toBeCalled();
+  });
+
+  it('close menu on cancel click', () => {
     const cancelBtn = wrapper.findAll('v-btn-stub').at(0);
     cancelBtn.trigger('click');
     expect(wrapper.vm.menu).toBe(false);
+  });
+
+  it('remove data when menu closes', () => {
+    wrapper.setData({ menu: true });
+    wrapper.setData({ menu: false });
     expect(wrapper.vm.file).toEqual([]);
-    expect(wrapper.vm.fileType).toBe('');
-    expect(wrapper.vm.fileTypeList).toEqual([]);
+    expect(wrapper.vm.sourceType).toBe('');
+    expect(wrapper.vm.sourceTypeList).toEqual([]);
   });
 });
