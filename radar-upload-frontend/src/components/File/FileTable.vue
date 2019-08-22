@@ -3,6 +3,7 @@
     :headers="headers"
     :items="fileList"
     :loading="loading"
+    :search="searchText"
   >
     <template #item.uploadedAt="{item}">
       <td
@@ -11,13 +12,32 @@
         {{ item.uploadedAt | localTime }}
       </td>
     </template>
+
+    <template #top="{items}">
+      <v-layout align-content-start>
+        <v-flex
+          xs12
+          md4
+          offset-md-8
+        >
+          <FileFilter
+            :files="items"
+            @filterFiles="filterFiles"
+          />
+        </v-flex>
+      </v-layout>
+    </template>
   </v-data-table>
 </template>
 
 <script>
 import fileAPI from '@/axios/file';
+import FileFilter from './FileFilter';
 
 export default {
+  components: {
+    FileFilter,
+  },
   props: {
     isActive: {
       type: Boolean,
@@ -27,6 +47,7 @@ export default {
   data() {
     return {
       loading: false,
+      searchText: '',
       headers: [
         { text: 'File name', value: 'fileName' },
         { text: 'File type', value: 'fileType' },
@@ -87,6 +108,9 @@ export default {
         .catch(() => []);
       this.loading = false;
       this.fileList = fileList;
+    },
+    filterFiles(searchText) {
+      this.searchText = searchText;
     },
   },
 };
