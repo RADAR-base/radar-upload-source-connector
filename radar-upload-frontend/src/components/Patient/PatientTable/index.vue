@@ -36,7 +36,7 @@
         :colspan="12"
         class="py-4"
       >
-        <FileList
+        <Records
           :patient-records="patientRecords"
           :loading="fileLoading"
           :error="fileLoadingError"
@@ -51,7 +51,7 @@
               @startUploading="startUploading"
             />
           </template>
-        </FileList>
+        </Records>
       </td>
     </template>
   </v-data-table>
@@ -60,14 +60,14 @@
 <script>
 import { mapState } from 'vuex';
 import UploadButton from './UploadButton';
-import FileList from './FileList';
+import Records from './Records';
 import patientAPI from '@/axios/patient';
 import fileAPI from '@/axios/file';
 
 export default {
   components: {
     UploadButton,
-    FileList,
+    Records,
   },
   props: {
     isActive: {
@@ -101,6 +101,7 @@ export default {
     currentProject: {
       handler(projectId) {
         if (projectId && this.isActive) {
+          this.items = [];
           this.getPatientList(projectId);
         }
       },

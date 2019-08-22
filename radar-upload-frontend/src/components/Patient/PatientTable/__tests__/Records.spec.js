@@ -1,21 +1,29 @@
 /* eslint-disable no-undef */
 import { shallowMount } from '@vue/test-utils';
-import FileList from '../FileList.vue';
+import Records from '../Records.vue';
 
 // eslint-disable-next-line no-undef
 describe('ProjectFilter', () => {
-  const files = [
+  const patientRecords = [
     {
-      sequence: 1,
-      fileName: 'Audio1',
-      fileType: 'mp3',
-      status: 'Incomplete',
-      uploadedAt: 1565186733673,
+      active: false,
+      callbackUrl: null,
+      committedDate: null,
+      createdDate: '2019-08-21T07:51:05.666391Z',
+      files: ['file'],
+      id: 6,
+      logs: null,
+      message: 'Data successfully uploaded, ready for processing.',
+      modifiedDate: '2019-08-21T07:51:05.767623Z',
+      revision: 2,
+      sourceType: 'phone-acceleration',
+      status: 'READY',
+      userId: 'b7897d2b-4e7a-43b9-8a51-735c112b4c2a',
     },
   ];
-  const wrapper = shallowMount(FileList, {
+  const wrapper = shallowMount(Records, {
     propsData: {
-      patientFiles: files,
+      patientRecords,
       error: '',
       loading: false,
     },
@@ -33,17 +41,17 @@ describe('ProjectFilter', () => {
       'v-alert',
       'v-progress-circular',
       'v-layout',
+      'v-list-group',
+      'v-list-item-avatar',
     ],
     filters: {
-      moment: () => 'filteredDate',
+      localTime: () => 'filteredDate',
     },
   });
-  it(' get and render props patientFiles correctly', () => {
-    expect(wrapper.vm.patientFiles).toEqual(files);
+  it(' get and render props patientRecords correctly', () => {
+    expect(wrapper.vm.patientRecords).toEqual(patientRecords);
     expect(wrapper.vm.loading).toEqual(false);
     expect(wrapper.vm.error).toEqual('');
-    expect(wrapper.text()).toContain(files[0].fileName);
-    expect(wrapper.text()).toContain('filteredDate');
   });
 
   it('show error  and loading if any', () => {
