@@ -1,16 +1,14 @@
 <template>
   <div class="file-filter">
-    <v-autocomplete
-      v-model="autocomplete"
-      class="mt-4"
+    <v-text-field
+      v-model="searchText"
+      class="mt-0"
       prepend-inner-icon="mdi-magnify"
-      label="Search your patients"
-      :items="items"
-      deletable-chips
-      chips
+      label="search your file"
+      @input="(val) => $emit('filterFiles',val)"
     >
       <!-- add filter button and chips-->
-      <template #append-outer>
+      <!-- <template #append-outer>
         <v-menu
           v-model="menu"
           :close-on-content-click="false"
@@ -92,8 +90,8 @@
             <span> {{ fileStatus }}</span>
           </v-chip>
         </div>
-      </template>
-    </v-autocomplete>
+      </template> -->
+    </v-text-field>
   </div>
 </template>
 
@@ -101,13 +99,12 @@
 export default {
   data() {
     return {
-      items: ['Audio 10', 'Audio 22', 'Audio 1', 'Audio 2', 'Audio 1', 'Audio 2', 'Audio 1', 'Audio 2', 'Audio 17', 'Audio 25', 'Audio 12', 'Audio 28', 'Audio 13', 'Audio 23', 'Audio 1q', 'Audio 2w'],
-      fileStatus: '',
-      fileStatusList: ['complete', 'incomplete'],
-      fileType: '',
-      fileTypeList: ['mp3', 'text'],
-      menu: false,
-      autocomplete: '',
+      // fileStatus: '',
+      // fileStatusList: ['complete', 'incomplete'],
+      // fileType: '',
+      // fileTypeList: ['mp3', 'text'],
+      // menu: false,
+      searchText: '',
     };
   },
 };

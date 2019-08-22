@@ -10,8 +10,8 @@
       <v-spacer />
 
       <v-toolbar-title>
-        <PatientFilter v-show="tab==0" />
-        <FileFilter v-show="tab==1" />
+        <!-- <PatientFilter v-show="tab==0" /> -->
+        <!-- <FileFilter v-show="tab==1" /> -->
       </v-toolbar-title>
 
       <template #extension>
