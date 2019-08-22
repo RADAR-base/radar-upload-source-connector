@@ -1,6 +1,5 @@
 package org.radarbase.connect.upload
 
-import okhttp3.OkHttpClient
 import org.apache.kafka.connect.errors.ConnectException
 import org.apache.kafka.connect.source.SourceRecord
 import org.apache.kafka.connect.source.SourceTask
@@ -12,6 +11,7 @@ import org.radarbase.connect.upload.converter.Converter
 import org.radarbase.connect.upload.converter.Converter.Companion.END_OF_RECORD_KEY
 import org.radarbase.connect.upload.converter.Converter.Companion.RECORD_ID_KEY
 import org.radarbase.connect.upload.converter.Converter.Companion.REVISION_KEY
+import org.radarbase.connect.upload.exception.BadGatewayException
 import org.radarbase.connect.upload.util.VersionUtil
 import org.slf4j.LoggerFactory
 
@@ -63,17 +63,21 @@ class UploadSourceTask : SourceTask() {
     override fun poll(): List<SourceRecord> {
         logger.info("Poll with interval $pollInterval millseconds")
         while (true) {
-            val records = uploadClient.pollRecords(PollDTO(1, converters.map { it.sourceType })).records
+            val records = uploadClient.pollRecords(PollDTO(5, converters.map { it.sourceType })).records
             logger.info("Received ${records.size} records")
             for (record in records) {
                 val converter = converters.find { it.sourceType == record.sourceType }
-
-                if (converter == null) {
-                    uploadClient.updateStatus(record.id!!, record.metadata!!.copy(status = "FAILED", message = "Source type ${record.sourceType} not found."))
+                try {
+                    if (converter == null) {
+                        uploadClient.updateStatus(record.id!!, record.metadata!!.copy(status = "FAILED", message = "Converter for Source type ${record.sourceType} not found."))
+                        continue
+                    } else {
+                        record.metadata = uploadClient.updateStatus(record.id!!, record.metadata!!.copy(status = "PROCESSING"))
+                        logger.debug("updated metadata ${record.metadata}")
+                    }
+                } catch (exe: BadGatewayException) {
+                    logger.error("Could not update status for record ${record.id}", exe)
                     continue
-                } else {
-                    record.metadata = uploadClient.updateStatus(record.id!!, record.metadata!!.copy(status = "PROCESSING"))
-                    logger.debug("updated metadata ${record.metadata}")
                 }
 
                 val result = converter.convert(record)
