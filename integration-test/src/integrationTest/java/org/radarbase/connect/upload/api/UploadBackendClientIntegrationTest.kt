@@ -107,11 +107,9 @@ class UploadBackendClientIntegrationTest {
     fun testRecordCreationToConvertionWorkFlow() {
         val clientUserToken = call(httpClient, Response.Status.OK, "access_token") {
             it.url("${config.managementPortalUrl}/oauth/token")
-                    .addHeader("Authorization", Credentials.basic(REST_UPLOAD_CLIENT, REST_UPLOAD_SECRET))
+                    .addHeader("Authorization", Credentials.basic("radar_upload_connect", "upload_secret"))
                     .post(FormBody.Builder()
-                            .add("username", ADMIN_USER)
-                            .add("password", ADMIN_PASSWORD)
-                            .add("grant_type", "password")
+                            .add("grant_type", "client_credentials")
                             .build())
         }
 

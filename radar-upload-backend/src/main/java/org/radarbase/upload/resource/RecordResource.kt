@@ -16,14 +16,13 @@ import java.lang.Exception
 import java.lang.IllegalStateException
 import java.net.URI
 import javax.annotation.Resource
-import javax.persistence.EntityManager
 import javax.ws.rs.*
 import javax.ws.rs.core.*
 import kotlin.math.max
 import kotlin.math.min
 
 
-@Path("/records")
+@Path("records")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Resource
@@ -48,8 +47,6 @@ class RecordResource {
     @Context
     lateinit var sourceTypeRepository: SourceTypeRepository
 
-    @Context
-    lateinit var em: EntityManager
 
     @GET
     fun query(
