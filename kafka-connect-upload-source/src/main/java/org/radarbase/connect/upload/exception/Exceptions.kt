@@ -4,4 +4,8 @@ class NotAuthorizedException(message: String) : RuntimeException(message)
 
 class BadGatewayException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
 
+class StaleStateException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
+
+class ConflictException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
+
 class InvalidFormatException(message: String) : RuntimeException(message)
