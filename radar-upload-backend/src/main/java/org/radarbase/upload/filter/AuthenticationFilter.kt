@@ -40,7 +40,7 @@ class AuthenticationFilter : ContainerRequestFilter {
         }
         logger.debug("Verified token : $radarToken for request ${requestContext.uriInfo.path}" )
         if (radarToken == null) {
-            logger.warn("[401] {}: Could not find a valid token in the header",
+            logger.debug("[401] {}: Could not find a valid token in the header",
                     requestContext.uriInfo.path)
             requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED)
                     .header("WWW-Authenticate", BEARER_REALM)

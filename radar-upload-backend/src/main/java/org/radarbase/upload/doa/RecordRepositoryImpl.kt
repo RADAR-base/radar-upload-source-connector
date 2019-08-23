@@ -12,9 +12,12 @@ import java.io.InputStream
 import java.sql.Blob
 import java.time.Instant
 import javax.persistence.EntityManager
+import javax.persistence.LockModeType
+import javax.persistence.PessimisticLockScope
 import javax.ws.rs.BadRequestException
 import javax.ws.rs.NotFoundException
 import javax.ws.rs.core.Context
+import kotlin.collections.HashSet
 import kotlin.streams.toList
 
 
@@ -109,9 +112,11 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
     }
 
     override fun poll(limit: Int): List<Record> = em.get().transact {
+        setProperty("javax.persistence.lock.scope", PessimisticLockScope.EXTENDED)
         createQuery("SELECT r FROM Record r WHERE r.metadata.status = :status ORDER BY r.metadata.modifiedDate", Record::class.java)
                 .setParameter("status", RecordStatus.valueOf("READY"))
                 .setMaxResults(limit)
+                .setLockMode(LockModeType.PESSIMISTIC_WRITE)
                 .resultStream
                 .peek {
                     it.metadata.status = RecordStatus.QUEUED
@@ -184,7 +189,8 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
     }
 
     override fun updateMetadata(id: Long, metadata: RecordMetadataDTO): RecordMetadata = em.get().transact {
-        val existingMetadata = find(RecordMetadata::class.java, id)
+        val existingMetadata = find(RecordMetadata::class.java, id,  LockModeType.PESSIMISTIC_WRITE,
+                mapOf("javax.persistence.lock.scope" to PessimisticLockScope.EXTENDED))
                 ?: throw NotFoundException("RecordMetadata with ID $id does not exist")
 
         if (existingMetadata.revision != metadata.revision)
@@ -197,14 +203,13 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
                     "Found ${existingMetadata.status}, expected ${RecordStatus.QUEUED}")
         }
 
-        logger.info("Trying to update ${existingMetadata.status} to ${metadata.status}")
         if ((metadata.status == RecordStatus.SUCCEEDED.toString()
                 || metadata.status == RecordStatus.FAILED.toString())
                 && existingMetadata.status != RecordStatus.PROCESSING) {
             throw ConflictException("incompatible_status", "Record cannot be updated: Conflict in record meta-data status. " +
                     "Found ${existingMetadata.status}, expected ${RecordStatus.PROCESSING}")
         }
-
+        logger.debug("Updating record $id status from ${existingMetadata.status} to ${metadata.status}")
         existingMetadata.apply {
             status = RecordStatus.valueOf(metadata.status)
             message = metadata.message
