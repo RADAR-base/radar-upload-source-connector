@@ -1,17 +1,10 @@
 package org.radarbase.upload.inject
 
-import liquibase.Liquibase
-import liquibase.database.DatabaseFactory
-import liquibase.database.jvm.JdbcConnection
-import liquibase.exception.LiquibaseException
-import liquibase.resource.ClassLoaderResourceAccessor
 import org.glassfish.jersey.internal.inject.DisposableSupplier
 import org.hibernate.Session
-import org.hibernate.internal.SessionImpl
 import org.radarbase.upload.logger
 import org.slf4j.LoggerFactory
 import java.lang.Exception
-import java.util.concurrent.atomic.AtomicBoolean
 import javax.persistence.EntityManager
 import javax.persistence.EntityManagerFactory
 import javax.ws.rs.core.Context
