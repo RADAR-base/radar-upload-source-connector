@@ -7,6 +7,7 @@ import org.radarbase.upload.doa.entity.*
 import org.radarbase.upload.exception.ConflictException
 import org.radarbase.upload.inject.session
 import org.radarbase.upload.inject.transact
+import org.slf4j.LoggerFactory
 import java.io.InputStream
 import java.sql.Blob
 import java.time.Instant
@@ -115,7 +116,9 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
                 .peek {
                     it.metadata.status = RecordStatus.QUEUED
                     it.metadata.message = "Record is queued for processing"
-                    modifyNow(it.metadata)
+                    it.metadata.revision += 1
+                    it.metadata.modifiedDate = Instant.now()
+                    merge(it.metadata)
                 }
                 .toList()
     }
@@ -194,6 +197,7 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
                     "Found ${existingMetadata.status}, expected ${RecordStatus.QUEUED}")
         }
 
+        logger.info("Trying to update ${existingMetadata.status} to ${metadata.status}")
         if ((metadata.status == RecordStatus.SUCCEEDED.toString()
                 || metadata.status == RecordStatus.FAILED.toString())
                 && existingMetadata.status != RecordStatus.PROCESSING) {
@@ -204,12 +208,16 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
         existingMetadata.apply {
             status = RecordStatus.valueOf(metadata.status)
             message = metadata.message
-        }
+        }.update()
 
-        modifyNow(existingMetadata)
+        merge<RecordMetadata>(existingMetadata)
     }
 
     override fun delete(record: Record) = em.get().transact { remove(record) }
 
     override fun readMetadata(id: Long): RecordMetadata? = em.get().transact { find(RecordMetadata::class.java, id) }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(RecordRepositoryImpl::class.java)
+    }
 }

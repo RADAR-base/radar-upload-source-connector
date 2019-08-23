@@ -40,8 +40,10 @@ fun <T> EntityManager.transact(transaction: EntityManager.() -> T): T {
         try {
             getTransaction().commit()
         } catch (exe: Exception) {
-            logger.warn("Rolling back operation: {}", exe.toString())
-            getTransaction().rollback()
+            logger.error("Rolling back operation: {}", exe)
+            if(getTransaction() != null && getTransaction().isActive) {
+                getTransaction().rollback()
+            }
         }
     }
 }
