@@ -21,7 +21,7 @@ export default {
     },
     selectProject(project) {
       this.$store.commit('project/setCurrentProject', project);
-      if (this.$route.path.includes('projects')) {
+      if (this.$router.path.includes('projects')) {
         this.$router.push('/');
       }
     },

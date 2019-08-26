@@ -15,6 +15,10 @@ describe('projectMixin', () => {
     mixins: [projectMixin],
     mocks: {
       $store,
+      $router: {
+        path: '',
+        push: jest.fn(),
+      },
     },
   });
 
@@ -46,8 +50,13 @@ describe('projectMixin', () => {
 
   it('selectProject', async () => {
     const selectProject = jest.spyOn(wrapper.vm, 'selectProject');
+
     selectProject('project');
-    await flushPromise();
     expect($store.commit).toBeCalledWith('project/setCurrentProject', 'project');
+    expect(wrapper.vm.$router.push).not.toBeCalled();
+
+    wrapper.vm.$router.path = 'projects';
+    selectProject('project');
+    expect(wrapper.vm.$router.push).toBeCalledWith('/');
   });
 });
