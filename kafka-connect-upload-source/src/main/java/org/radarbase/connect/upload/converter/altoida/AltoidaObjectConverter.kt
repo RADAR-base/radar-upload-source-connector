@@ -2,24 +2,25 @@ package org.radarbase.connect.upload.converter.altoida
 
 import org.radarbase.connect.upload.converter.CsvRecordConverter
 import org.radarbase.connect.upload.converter.TopicData
-import org.radarcns.connector.altoida.UploadAltoidaGravity
+import org.radarcns.connector.upload.altoida.AltoidaObject
 
-class GravityCsvRecordConverter(override val sourceType: String = "gravity", val topic: String = "connect_upload_altoida_gravity")
+class AltoidaObjectConverter(override val sourceType: String = "altoida_object", val topic: String = "connect_upload_altoida_object")
     : CsvRecordConverter(sourceType) {
 
     override fun validateHeaderSchema(csvHeader: List<String>) =
-            listOf("TIMESTAMP", "X", "Y", "Z") == (csvHeader)
+            listOf("TIMESTAMP", "OBJ", "X", "Y", "Z") == (csvHeader)
 
     override fun convertLineToRecord(lineValues: Map<String, String>, timeReceived: Double): TopicData? {
         val time = lineValues["TIMESTAMP"]?.toDouble()
-        val gravity = UploadAltoidaGravity(
+        val objects = AltoidaObject(
                 time,
                 timeReceived,
+                lineValues["OBJ"],
                 lineValues["X"]?.toFloat(),
                 lineValues["Y"]?.toFloat(),
                 lineValues["Z"]?.toFloat()
-        )
+                )
 
-        return TopicData(false, topic, gravity)
+        return TopicData(false, topic, objects)
     }
 }
