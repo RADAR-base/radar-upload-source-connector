@@ -2,9 +2,9 @@ package org.radarbase.connect.upload.converter.altoida
 
 import org.radarbase.connect.upload.converter.CsvRecordConverter
 import org.radarbase.connect.upload.converter.TopicData
-import org.radarcns.connector.altoida.AltoidaRotation
+import org.radarcns.connector.altoida.UploadAltoidaAcceleration
 
-class AltoidaRotationConverter(override val sourceType: String = "rotation", val topic: String = "connect_upload_altoida_rotation")
+class AccelerometerCsvRecordConverter(override val sourceType: String = "acceleration", val topic: String = "connect_upload_altoida_acceleration")
     : CsvRecordConverter(sourceType) {
 
     override fun validateHeaderSchema(csvHeader: List<String>) =
@@ -12,7 +12,7 @@ class AltoidaRotationConverter(override val sourceType: String = "rotation", val
 
     override fun convertLineToRecord(lineValues: Map<String, String>, timeReceived: Double): TopicData? {
         val time = lineValues["TIMESTAMP"]?.toDouble()
-        val rotation = AltoidaRotation(
+        val acceleration = UploadAltoidaAcceleration(
                 time,
                 timeReceived,
                 lineValues["X"]?.toFloat(),
@@ -20,6 +20,6 @@ class AltoidaRotationConverter(override val sourceType: String = "rotation", val
                 lineValues["Z"]?.toFloat()
         )
 
-        return TopicData(false, topic, rotation)
+        return TopicData(false, topic, acceleration)
     }
 }

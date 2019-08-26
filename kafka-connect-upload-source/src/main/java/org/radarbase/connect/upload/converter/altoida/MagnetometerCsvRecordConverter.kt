@@ -2,24 +2,25 @@ package org.radarbase.connect.upload.converter.altoida
 
 import org.radarbase.connect.upload.converter.CsvRecordConverter
 import org.radarbase.connect.upload.converter.TopicData
-import org.radarcns.connector.altoida.AltoidaNormalVector
+import org.radarcns.connector.altoida.UploadAltoidaMagnetometer
 
-class AltoidaNormalVectorConverter(override val sourceType: String = "normal-vector", val topic: String = "connect_upload_altoida_normal_vector")
+class MagnetometerCsvRecordConverter(override val sourceType: String = "magnetometer", val topic: String = "connect_upload_altoida_magnetometer")
     : CsvRecordConverter(sourceType) {
 
     override fun validateHeaderSchema(csvHeader: List<String>) =
-            listOf("TIMESTAMP", "X", "Y") == (csvHeader)
+            listOf("TIMESTAMP", "X", "Y", "Z", "ACCURACY") == (csvHeader)
 
     override fun convertLineToRecord(lineValues: Map<String, String>, timeReceived: Double): TopicData? {
         val time = lineValues["TIMESTAMP"]?.toDouble()
-        val normalVector = AltoidaNormalVector(
+        val magnetometer = UploadAltoidaMagnetometer(
                 time,
                 timeReceived,
                 lineValues["X"]?.toFloat(),
-                lineValues["Y"]?.toFloat()
-
+                lineValues["Y"]?.toFloat(),
+                lineValues["Z"]?.toFloat(),
+                lineValues["ACCURACY"]?.toString()
         )
 
-        return TopicData(false, topic, normalVector)
+        return TopicData(false, topic, magnetometer)
     }
 }
