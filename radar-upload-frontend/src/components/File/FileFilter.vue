@@ -5,7 +5,7 @@
       class="mt-0"
       prepend-inner-icon="mdi-magnify"
       label="search your file"
-      @input.native="handleSearch(val)"
+      @input="handleSearch"
     >
       <!-- add filter button and chips-->
       <!-- <template #append-outer>

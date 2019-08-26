@@ -4,7 +4,7 @@
     class="mt-4"
     prepend-inner-icon="mdi-magnify"
     label="Search the patients"
-    @input="handleSearch(val)"
+    @input="handleSearch"
   />
 </template>
 
@@ -17,7 +17,7 @@ export default {
   },
   methods: {
     handleSearch(val) {
-      this.$store.commit('patient', val);
+      this.$store.commit('patient/handleSearch', val);
     },
   },
 };
