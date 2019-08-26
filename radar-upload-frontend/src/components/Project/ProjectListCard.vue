@@ -1,5 +1,21 @@
 <template>
   <v-container>
+    <v-layout justify-center>
+      <v-progress-circular
+        class="mt-2"
+        v-show="loading"
+        indeterminate
+        color="primary"
+      />
+      <v-alert
+        type="error"
+        v-text="errorMessage"
+        v-show="errorMessage"
+        dense
+        text
+      />
+    </v-layout>
+
     <v-row>
       <v-col
         cols="12"
