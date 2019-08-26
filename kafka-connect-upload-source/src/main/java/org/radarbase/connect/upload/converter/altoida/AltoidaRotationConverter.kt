@@ -2,25 +2,24 @@ package org.radarbase.connect.upload.converter.altoida
 
 import org.radarbase.connect.upload.converter.CsvRecordConverter
 import org.radarbase.connect.upload.converter.TopicData
-import org.radarcns.connector.altoida.UploadAltoidaObject
+import org.radarcns.connector.upload.altoida.AltoidaRotation
 
-class ObjectsCsvRecordConverter(override val sourceType: String = "objects", val topic: String = "connect_upload_altoida_object")
+class AltoidaRotationConverter(override val sourceType: String = "altoida_rotation", val topic: String = "connect_upload_altoida_rotation")
     : CsvRecordConverter(sourceType) {
 
     override fun validateHeaderSchema(csvHeader: List<String>) =
-            listOf("TIMESTAMP", "OBJECT", "X", "Y", "Z") == (csvHeader)
+            listOf("TIMESTAMP", "X", "Y", "Z") == (csvHeader)
 
     override fun convertLineToRecord(lineValues: Map<String, String>, timeReceived: Double): TopicData? {
         val time = lineValues["TIMESTAMP"]?.toDouble()
-        val objects = UploadAltoidaObject(
+        val rotation = AltoidaRotation(
                 time,
                 timeReceived,
-                lineValues["OBJECT"]?.toString(),
                 lineValues["X"]?.toFloat(),
                 lineValues["Y"]?.toFloat(),
-                lineValues["Z"]?.toFloat(),
-                )
+                lineValues["Z"]?.toFloat()
+        )
 
-        return TopicData(false, topic, objects)
+        return TopicData(false, topic, rotation)
     }
 }
