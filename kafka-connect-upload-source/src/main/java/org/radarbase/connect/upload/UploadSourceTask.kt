@@ -1,17 +1,15 @@
 package org.radarbase.connect.upload
 
-import okhttp3.OkHttpClient
 import org.apache.kafka.connect.errors.ConnectException
 import org.apache.kafka.connect.source.SourceRecord
 import org.apache.kafka.connect.source.SourceTask
 import org.radarbase.connect.upload.UploadSourceConnectorConfig.Companion.SOURCE_POLL_INTERVAL_CONFIG
-import org.radarbase.connect.upload.api.PollDTO
-import org.radarbase.connect.upload.api.RecordMetadataDTO
-import org.radarbase.connect.upload.api.UploadBackendClient
+import org.radarbase.connect.upload.api.*
 import org.radarbase.connect.upload.converter.Converter
 import org.radarbase.connect.upload.converter.Converter.Companion.END_OF_RECORD_KEY
 import org.radarbase.connect.upload.converter.Converter.Companion.RECORD_ID_KEY
 import org.radarbase.connect.upload.converter.Converter.Companion.REVISION_KEY
+import org.radarbase.connect.upload.exception.ConflictException
 import org.radarbase.connect.upload.util.VersionUtil
 import org.slf4j.LoggerFactory
 
@@ -49,6 +47,7 @@ class UploadSourceTask : SourceTask() {
             val config = uploadClient.requestConnectorConfig(converter.sourceType)
             converter.initialize(config, uploadClient, props)
         }
+        logger.info("Poll with interval $pollInterval milliseconds")
         logger.info("Initialized ${converters.size} converters...")
     }
 
@@ -61,26 +60,44 @@ class UploadSourceTask : SourceTask() {
     override fun version(): String = VersionUtil.getVersion()
 
     override fun poll(): List<SourceRecord> {
-        logger.info("Poll with interval $pollInterval millseconds")
+        logger.info("Polling new records...")
         while (true) {
-            val records = uploadClient.pollRecords(PollDTO(1, converters.map { it.sourceType })).records
-            logger.info("Received ${records.size} records")
-            for (record in records) {
-                val converter = converters.find { it.sourceType == record.sourceType }
+            var records: List<RecordDTO>? = null
+            try {
+                records = uploadClient.pollRecords(PollDTO(1, converters.map { it.sourceType })).records
+                logger.info("Received ${records.size} records")
+            } catch (exe: Exception) {
+                logger.info("Could not successfully poll records. Waiting for next polling...")
+            }
+            if(records != null) {
+                records@ for (record in records) {
+                    val converter = converters.find { it.sourceType == record.sourceType }
+                    try {
+                        if (converter == null) {
+                            uploadClient.updateStatus(record.id!!, record.metadata!!.copy(status = "FAILED", message = "Converter for Source type ${record.sourceType} not found."))
+                            logger.debug("Could not find converter $converter for record ${record.id}")
+                            continue
+                        } else {
+                            record.metadata = uploadClient.updateStatus(record.id!!, record.metadata!!.copy(status = "PROCESSING"))
+                            logger.debug("updated metadata ${record.metadata}")
+                        }
+                    } catch (exe: Exception) {
+                        when(exe) {
+                            is ConflictException -> {
+                                logger.warn("Conflicting request was made. Skipping this record")
+                                continue@records
+                            }
+                            else -> throw exe
+                        }
+                    }
 
-                if (converter == null) {
-                    uploadClient.updateStatus(record.id!!, record.metadata!!.copy(status = "FAILED", message = "Source type ${record.sourceType} not found."))
-                    continue
-                } else {
-                    record.metadata = uploadClient.updateStatus(record.id!!, record.metadata!!.copy(status = "PROCESSING"))
-                    logger.debug("updated metadata ${record.metadata}")
-                }
-
-                val result = converter.convert(record)
-                result.result?.takeIf(List<*>::isNotEmpty)?.let {
-                    return@poll it
+                    val result = converter.convert(record)
+                    result.result?.takeIf(List<*>::isNotEmpty)?.let {
+                        return@poll it
+                    }
                 }
             }
+
             Thread.sleep(pollInterval)
         }
     }

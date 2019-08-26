@@ -1,17 +1,11 @@
 package org.radarbase.upload.inject
 
-import liquibase.Liquibase
-import liquibase.database.DatabaseFactory
-import liquibase.database.jvm.JdbcConnection
-import liquibase.exception.LiquibaseException
-import liquibase.resource.ClassLoaderResourceAccessor
 import org.glassfish.jersey.internal.inject.DisposableSupplier
 import org.hibernate.Session
-import org.hibernate.internal.SessionImpl
+import org.radarbase.upload.exception.InternalServerException
 import org.radarbase.upload.logger
 import org.slf4j.LoggerFactory
 import java.lang.Exception
-import java.util.concurrent.atomic.AtomicBoolean
 import javax.persistence.EntityManager
 import javax.persistence.EntityManagerFactory
 import javax.ws.rs.core.Context
@@ -32,16 +26,20 @@ class DoaEntityManagerFactory(@Context private val emf: EntityManagerFactory) : 
     }
 }
 
-fun <T> EntityManager.transact(transaction: EntityManager.() -> T): T {
-    getTransaction().begin()
+fun <T> EntityManager.transact(transactionOperation: EntityManager.() -> T): T {
+    val currentTransaction = transaction ?: throw InternalServerException("transaction_not_found", "Cannot find a transaction from EntityManager")
+
+    currentTransaction.begin()
     try {
-        return transaction()
+        return transactionOperation()
     } finally {
         try {
-            getTransaction().commit()
+            currentTransaction.commit()
         } catch (exe: Exception) {
-            logger.warn("Rolling back operation: {}", exe.toString())
-            getTransaction().rollback()
+            logger.error("Rolling back operation: {}", exe)
+            if (currentTransaction.isActive) {
+                currentTransaction.rollback()
+            }
         }
     }
 }

@@ -7,6 +7,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import okhttp3.*
 import org.radarbase.connect.upload.exception.BadGatewayException
+import org.radarbase.connect.upload.exception.ConflictException
 import org.radarbase.connect.upload.exception.NotAuthorizedException
 import org.slf4j.LoggerFactory
 import java.io.Closeable
@@ -94,6 +95,7 @@ class UploadBackendClient(
             when (response.code()) {
                 401 -> throw NotAuthorizedException("access token is not provided or is invalid : ${response.message()}")
                 403 -> throw NotAuthorizedException("access token is not authorized to perform this request")
+                409 -> throw ConflictException("Conflicting request exception: ${response.message()}")
             }
             throw BadGatewayException("Failed to make request to ${request.url()}: Error code ${response.code()}:  ${response.body()?.string()}")
         }
