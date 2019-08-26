@@ -15,6 +15,7 @@ import org.radarbase.connect.upload.util.VersionUtil
 import org.slf4j.LoggerFactory
 
 class UploadSourceTask : SourceTask() {
+    private var pollRecordSize = 1
     private var pollInterval: Long = 60_000L
     private lateinit var uploadClient: UploadBackendClient
     private lateinit var converters: List<Converter>
@@ -43,11 +44,13 @@ class UploadSourceTask : SourceTask() {
         }
 
         pollInterval = connectConfig.getLong(SOURCE_POLL_INTERVAL_CONFIG)
+        pollRecordSize = connectConfig.pollRecordSize
 
         for (converter in converters) {
             val config = uploadClient.requestConnectorConfig(converter.sourceType)
             converter.initialize(config, uploadClient, props)
         }
+        logger.info("Poll with interval $pollInterval millseconds with record-size of $pollRecordSize")
         logger.info("Initialized ${converters.size} converters...")
     }
 
@@ -60,7 +63,7 @@ class UploadSourceTask : SourceTask() {
     override fun version(): String = VersionUtil.getVersion()
 
     override fun poll(): List<SourceRecord> {
-        logger.info("Poll with interval $pollInterval millseconds")
+        logger.info("Polling new records...")
         while (true) {
             var records: List<RecordDTO>? = null
             try {
@@ -83,12 +86,8 @@ class UploadSourceTask : SourceTask() {
                         }
                     } catch (exe: Exception) {
                         when(exe) {
-                            is ConflictException -> {
+                            is ConflictException, is StaleStateException -> {
                                 logger.warn("Conflicting request was made. Skipping this record")
-                                continue@records
-                            }
-                            is StaleStateException -> {
-                                logger.warn("Stale request state found. Skipping this record")
                                 continue@records
                             }
                             else -> throw exe
