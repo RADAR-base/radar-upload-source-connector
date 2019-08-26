@@ -2,9 +2,9 @@ package org.radarbase.connect.upload.converter.altoida
 
 import org.radarbase.connect.upload.converter.CsvRecordConverter
 import org.radarbase.connect.upload.converter.TopicData
-import org.radarcns.connector.altoida.UploadAltoidaDiag
+import org.radarcns.connector.altoida.UploadAltoidaDiagnostics
 
-class DiagCsvRecordConverter(override val sourceType: String = "diag", val topic: String = "connect_upload_altoida_diag")
+class DiagnosticsCsvRecordConverter(override val sourceType: String = "diag", val topic: String = "connect_upload_altoida_diagnostics")
     : CsvRecordConverter(sourceType) {
 
     override fun validateHeaderSchema(csvHeader: List<String>) =
@@ -12,7 +12,7 @@ class DiagCsvRecordConverter(override val sourceType: String = "diag", val topic
 
     override fun convertLineToRecord(lineValues: Map<String, String>, timeReceived: Double): TopicData? {
         val time = lineValues["TIMESTAMP"]?.toDouble()
-        val diag = UploadAltoidaDiag(
+        val diagnostics = UploadAltoidaDiagnostics(
                 time,
                 timeReceived,
                 lineValues["TAG"]?.toString(),
@@ -25,6 +25,6 @@ class DiagCsvRecordConverter(override val sourceType: String = "diag", val topic
 
         )
 
-        return TopicData(false, topic, diag)
+        return TopicData(false, topic, diagnostics)
     }
 }
