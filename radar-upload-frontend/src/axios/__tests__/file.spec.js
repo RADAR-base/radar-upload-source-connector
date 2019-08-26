@@ -1,9 +1,12 @@
 /* eslint-disable no-undef */
 import axios from 'axios';
-import flushPromises from 'flush-promises';
 import fileAPI from '../file';
+import { downLoadFile } from '@/helpers';
 
 jest.mock('axios');
+jest.mock('@/helpers', () => ({
+  downLoadFile: jest.fn(),
+}));
 
 function expected(expectedValue, service) {
   return fileAPI[service]()
@@ -181,5 +184,16 @@ describe.only('axios/file', () => {
         expect(data).toEqual(expectedVal2);
         // expect(axios.get).toBeCalledWith(endpoint);
       });
+  });
+
+  it('download', async () => {
+    const recordId = 'id';
+    const fileName = 'name';
+    const file = {};
+    axios.get.mockResolvedValue(file);
+    await fileAPI.download({ recordId, fileName });
+
+    expect(axios.get).toBeCalledWith(`/records/${recordId}/contents/${fileName}`);
+    expect(downLoadFile).toBeCalledWith(fileName, file);
   });
 });

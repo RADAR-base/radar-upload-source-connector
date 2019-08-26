@@ -1,7 +1,8 @@
 /* eslint-disable no-undef */
 import { shallowMount } from '@vue/test-utils';
+import flushPromises from 'flush-promises';
 import Records from '../Records.vue';
-
+import fileAPI from '@/axios/file';
 // eslint-disable-next-line no-undef
 describe('Records', () => {
   const patientRecords = [
@@ -67,6 +68,16 @@ describe('Records', () => {
     wrapper.setProps({ error: 'error', loading: true });
     expect(wrapper.find('v-progress-circular-stub').isVisible()).toBe(true);
     expect(wrapper.find('v-alert-stub').isVisible()).toBe(true);
+  });
+
+  it('downloadFile', async () => {
+    fileAPI.download = jest.fn().mockResolvedValue();
+    const downloadFile = jest.spyOn(wrapper.vm, 'downloadFile');
+    const fileName = 'name';
+    const recordId = 'id';
+    downloadFile(recordId, fileName);
+    await flushPromises();
+    expect(fileAPI.download).toBeCalledWith({ recordId, fileName });
   });
   // it('match snapShopt', () => {
   //   expect(wrapper.html()).toMatchSnapshot();
