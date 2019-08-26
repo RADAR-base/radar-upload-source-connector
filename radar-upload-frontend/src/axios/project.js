@@ -6,6 +6,7 @@ export default {
       .then(res => res.projects.map(el => ({
         text: el.name || el.id,
         value: el.id,
+        ...el,
       })));
   },
 };
