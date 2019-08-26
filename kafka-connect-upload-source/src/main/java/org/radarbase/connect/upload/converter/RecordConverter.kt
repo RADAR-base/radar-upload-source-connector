@@ -82,7 +82,8 @@ abstract class RecordConverter(override val sourceType: String, val avroData: Av
 
         val sourceRecords = contents.asSequence().map contentMap@{
 
-            val fileStream = client.retrieveFile(record, it.fileName)
+
+            val fileStream = client.retrieveFile(record, it.fileName) // make sure zip files are unpacked first!!
                     ?: throw IOException("Cannot retrieve file ${it.fileName} from record with id ${record.id}")
             val timeReceived = Instant.now().epochSecond
 
