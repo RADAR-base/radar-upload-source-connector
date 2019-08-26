@@ -1,6 +1,6 @@
 <template>
   <v-text-field
-    v-model="text"
+    v-model="searchText"
     class="mt-4"
     prepend-inner-icon="mdi-magnify"
     label="Search the patients"

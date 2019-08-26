@@ -20,6 +20,6 @@ describe('PatientFilter', () => {
     const handleSearch = jest.spyOn(wrapper.vm, 'handleSearch');
     const searchText = 'search ';
     handleSearch(searchText);
-    expect($store.commit).toBeCalledWith('patient', searchText);
+    expect($store.commit).toBeCalledWith('patient/handleSearch', searchText);
   });
 });

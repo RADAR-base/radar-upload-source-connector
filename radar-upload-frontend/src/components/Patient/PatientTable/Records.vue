@@ -78,7 +78,10 @@
             color="primary"
           />
         </v-list-item-avatar>
-        <v-list-item-content>
+        <v-list-item-content
+          @click="downloadFile(record.id, file.fileName)"
+          style="cursor: pointer;"
+        >
           <v-list-item-title v-text="file.fileName" />
           <v-list-item-subtitle>Size: {{ file.size }} Kb</v-list-item-subtitle>
           <v-list-item-subtitle>{{ file.createdDate | localTime }}</v-list-item-subtitle>
@@ -89,6 +92,8 @@
 </template>
 
 <script>
+import fileAPI from '@/axios/file';
+
 export default {
   props: {
     patientRecords: {
@@ -111,6 +116,11 @@ export default {
   computed: {
     records() {
       return this.patientRecords.map(record => ({ active: false, ...record }));
+    },
+  },
+  methods: {
+    async downloadFile(recordId, fileName) {
+      await fileAPI.download({ recordId, fileName });
     },
   },
 };

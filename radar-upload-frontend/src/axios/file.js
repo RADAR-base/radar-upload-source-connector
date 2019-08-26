@@ -1,5 +1,6 @@
 import axios from 'axios';
 import uuidv1 from 'uuid/v1';
+import { downLoadFile } from '@/helpers';
 
 export default {
   /** response
@@ -33,15 +34,20 @@ export default {
   // Post /records with file info to get id then
   // PUT /records/{id}/contents/{fileName} to upload the file
   postRecords({
-    projectId, userId, sourceType, timeZoneOffset, time, sourceId,
+    projectId,
+    userId,
+    sourceType,
+    timeZoneOffset = new Date().getTimezoneOffset(),
+    time = new Date().toISOString(),
+    sourceId = uuidv1(),
   }) {
     const payload = {
       data: {
         projectId,
         userId,
-        sourceId: sourceId || uuidv1(),
-        time: time || new Date().toISOString(),
-        timeZoneOffset: timeZoneOffset || new Date().getTimezoneOffset(),
+        sourceId,
+        time,
+        timeZoneOffset,
       },
       sourceType,
     };
@@ -93,5 +99,10 @@ export default {
           userId: record.data.userId,
         }))
         .reverse());
+  },
+
+  async download({ recordId, fileName }) {
+    const file = await axios.get(`/records/${recordId}/contents/${fileName}`);
+    downLoadFile(fileName, file);
   },
 };

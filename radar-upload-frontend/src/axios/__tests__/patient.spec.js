@@ -19,7 +19,7 @@ describe('axios/patient', () => {
     const expectedData = resp.users.map((el, index) => ({
       sequence: index + 1,
       patientName: el.externalId,
-      updatedAt: 'Date',
+      status: el.status,
       patientId: el.id,
     }));
 

@@ -44,9 +44,9 @@ export const getAuth = async () => {
     window.close();
   }
 };
-function downLoadFile(filename, text) {
+export function downLoadFile(filename, file) {
   const element = document.createElement('a');
-  element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`);
+  element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(file)}`);
   element.setAttribute('download', filename);
   element.style.display = 'none';
   document.body.appendChild(element);
