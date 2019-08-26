@@ -42,39 +42,10 @@
 </template>
 
 <script>
-import api from '@/axios/project.js';
+import projectMixin from './projectMixin';
 
 export default {
-  data() {
-    return {
-      selectedProject: '',
-      projects: [],
-      loading: false,
-      errorMessage: '',
-    };
-  },
-  methods: {
-    async getProjects() {
-      this.loading = true;
-      const projects = await api.getProjects().catch(() => {
-        this.errorMessage = 'Loading project fails, please try again later';
-      });
-      this.loading = false;
-      if (projects) {
-        this.errorMessage = '';
-        this.projects = projects.map(el => ({
-          text: el.name || el.id,
-          value: el.id,
-        }));
-      }
-    },
-    selectProject(project) {
-      this.$store.commit('project/setCurrentProject', project);
-    },
-  },
-  created() {
-    this.getProjects();
-  },
+  mixins: [projectMixin],
 };
 </script>
 
