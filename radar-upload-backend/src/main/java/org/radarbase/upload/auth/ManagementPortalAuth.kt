@@ -53,6 +53,14 @@ class ManagementPortalAuth(private val token: RadarToken) : Auth {
 
     override fun hasPermission(permission: Permission) = token.hasPermission(permission)
 
+    override fun hasPermissionOnProject(permission: Permission, projectId: String): Boolean {
+        return token.hasPermissionOnProject(permission, projectId)
+    }
+
+    override fun hasPermissionOnSubject(permission: Permission, projectId: String, userId: String): Boolean {
+        return token.hasPermissionOnSubject(permission, projectId, userId)
+    }
+
     override fun authorizedProjects(permission: Permission): AccessRestriction {
         if (((token.authorities.contains(SYS_ADMIN) && permission.isAuthorityAllowed(SYS_ADMIN))
                         || isClientCredentials) && permission.scopeName() in token.scopes) {

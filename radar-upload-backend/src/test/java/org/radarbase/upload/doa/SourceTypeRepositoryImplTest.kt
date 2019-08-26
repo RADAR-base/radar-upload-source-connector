@@ -6,35 +6,48 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import org.mockito.Mock
+import org.mockito.Mockito
+import org.mockito.MockitoAnnotations
 import org.radarbase.upload.Config
 import org.radarbase.upload.api.SourceTypeMapper
 import org.radarbase.upload.api.SourceTypeMapperImpl
 import org.radarbase.upload.doa.entity.SourceType
 import org.radarbase.upload.inject.DoaEntityManagerFactory
+import org.radarbase.upload.inject.DoaEntityManagerFactoryFactory
 import java.nio.file.Path
 import javax.persistence.EntityManager
+import javax.persistence.EntityManagerFactory
 
 internal class SourceTypeRepositoryImplTest {
     private lateinit var repository: SourceTypeRepository
-    private lateinit var doaFactory: DoaEntityManagerFactory
+    private lateinit var doaEMFFactory: DoaEntityManagerFactoryFactory
+    private lateinit var doaEMF: EntityManagerFactory
     private lateinit var sourceTypeMapper: SourceTypeMapper
     private lateinit var entityManager: EntityManager
 
     @TempDir
     lateinit var tempDir: Path
 
+    @Mock
+    lateinit var mockEntityManagerProvider: javax.inject.Provider<EntityManager>
+
     @BeforeEach
     fun setUp() {
+        MockitoAnnotations.initMocks(this)
         val config = Config(jdbcUrl = "jdbc:h2:file:${tempDir.resolve("db.h2")};DB_CLOSE_DELAY=-1;MVCC=true")
-        doaFactory = DoaEntityManagerFactory(config)
-        entityManager = doaFactory.get()
+        doaEMFFactory = DoaEntityManagerFactoryFactory(config)
+        doaEMF = doaEMFFactory.get()
+        entityManager = doaEMF.createEntityManager()
         sourceTypeMapper = SourceTypeMapperImpl()
-        repository = SourceTypeRepositoryImpl(entityManager, config, sourceTypeMapper)
+        repository = SourceTypeRepositoryImpl(mockEntityManagerProvider, config, sourceTypeMapper)
+        Mockito.`when`(mockEntityManagerProvider.get()).thenReturn(entityManager)
     }
 
     @AfterEach
     fun tearDown() {
-        doaFactory.dispose(entityManager)
+        doaEMFFactory.dispose(doaEMF)
+        entityManager.close()
     }
 
     @Test

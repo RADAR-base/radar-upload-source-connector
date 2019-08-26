@@ -6,6 +6,7 @@ import org.radarbase.upload.auth.AuthValidator
 import org.radarbase.upload.auth.ManagementPortalAuth
 import org.radarcns.auth.authentication.TokenValidator
 import org.radarcns.auth.config.TokenVerifierPublicKeyConfig
+import org.slf4j.LoggerFactory
 import java.net.URI
 import javax.ws.rs.container.ContainerRequestContext
 import javax.ws.rs.core.Context
@@ -21,9 +22,18 @@ class RadarTokenValidator constructor(@Context config: Config) : AuthValidator {
         })
     }
 
+    init {
+        this.tokenValidator.refresh()
+        logger.info("Refreshed Token Validator")
+    }
+
     override fun verify(request: ContainerRequestContext): Auth? {
         return getToken(request)?.let {
             ManagementPortalAuth(tokenValidator.validateAccessToken(it))
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(RadarTokenValidator::class.java)
     }
 }

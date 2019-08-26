@@ -7,7 +7,7 @@ services:
   # Zookeeper Cluster                                                         #
   #---------------------------------------------------------------------------#
   zookeeper-1:
-    image: confluentinc/cp-zookeeper:5.0.0
+    image: confluentinc/cp-zookeeper:5.3.0
     environment:
       ZOOKEEPER_SERVER_ID: 1
       ZOOKEEPER_CLIENT_PORT: 2181
@@ -17,7 +17,7 @@ services:
       ZOOKEEPER_SERVERS: zookeeper-1:2888:3888;zookeeper-2:2888:3888;zookeeper-3:2888:3888
 
   zookeeper-2:
-    image: confluentinc/cp-zookeeper:5.0.0
+    image: confluentinc/cp-zookeeper:5.3.0
     environment:
       ZOOKEEPER_SERVER_ID: 2
       ZOOKEEPER_CLIENT_PORT: 2181
@@ -27,7 +27,7 @@ services:
       ZOOKEEPER_SERVERS: zookeeper-1:2888:3888;zookeeper-2:2888:3888;zookeeper-3:2888:3888
 
   zookeeper-3:
-    image: confluentinc/cp-zookeeper:5.0.0
+    image: confluentinc/cp-zookeeper:5.3.0
     environment:
       ZOOKEEPER_SERVER_ID: 3
       ZOOKEEPER_CLIENT_PORT: 2181
@@ -40,7 +40,7 @@ services:
   # Kafka Cluster                                                             #
   #---------------------------------------------------------------------------#
   kafka-1:
-    image: confluentinc/cp-kafka:5.0.0
+    image: confluentinc/cp-kafka:5.3.0
     depends_on:
       - zookeeper-1
       - zookeeper-2
@@ -59,7 +59,7 @@ services:
       KAFKA_CONFLUENT_SUPPORT_METRICS_ENABLE: "false"
 
   kafka-2:
-    image: confluentinc/cp-kafka:5.0.0
+    image: confluentinc/cp-kafka:5.3.0
     depends_on:
       - zookeeper-1
       - zookeeper-2
@@ -78,7 +78,7 @@ services:
       KAFKA_CONFLUENT_SUPPORT_METRICS_ENABLE: "false"
 
   kafka-3:
-    image: confluentinc/cp-kafka:5.0.0
+    image: confluentinc/cp-kafka:5.3.0
     depends_on:
       - zookeeper-1
       - zookeeper-2
@@ -100,7 +100,7 @@ services:
   # Schema Registry                                                           #
   #---------------------------------------------------------------------------#
   schema-registry-1:
-    image: confluentinc/cp-schema-registry:5.0.0
+    image: confluentinc/cp-schema-registry:5.3.0
     depends_on:
       - zookeeper-1
       - zookeeper-2
@@ -122,7 +122,7 @@ services:
   # REST proxy                                                                #
   #---------------------------------------------------------------------------#
   rest-proxy-1:
-    image: confluentinc/cp-kafka-rest:5.0.0
+    image: confluentinc/cp-kafka-rest:5.3.0
     depends_on:
       - zookeeper-1
       - zookeeper-2
@@ -149,8 +149,6 @@ services:
     image: radarbase/management-portal:0.5.6
     depends_on:
       - radarbase-postgresql
-    ports:
-      - "8090:8080"
     environment:
       SPRING_PROFILES_ACTIVE: prod
       SPRING_DATASOURCE_URL: jdbc:postgresql://radarbase-postgresql:5432/managementportal
@@ -168,8 +166,6 @@ services:
 
   radarbase-postgresql:
     image: radarbase/radarbase-postgres:latest
-    ports:
-      - "5434:5432"
     environment:
       - POSTGRES_USER=radarcns
       - POSTGRES_PASSWORD=radarcns
@@ -182,10 +178,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.connector
-    image: radarbase/radar-connect-upload-source
+    image: radarbase/radar-connect-upload-source:dev
     restart: on-failure
     volumes:
       - ./docker/source-upload.properties:/etc/kafka-connect/source-upload.properties
+      - ./docker/kafka-wait:/usr/bin/kafka-wait
     depends_on:
       - zookeeper-1
       - zookeeper-2
@@ -194,7 +191,7 @@ services:
       - kafka-2
       - kafka-3
       - schema-registry-1
-      - radar-upload-connect-backend
+      - radar-connect-upload-backend
     environment:
       CONNECT_BOOTSTRAP_SERVERS: PLAINTEXT://kafka-1:9092,PLAINTEXT://kafka-2:9092,PLAINTEXT://kafka-3:9092
       CONNECT_REST_PORT: 8083
@@ -216,15 +213,18 @@ services:
       KAFKA_BROKERS: 3
       CONNECT_LOG4J_LOGGERS: "org.reflections=ERROR"
 
-  radar-upload-connect-backend:
+  radar-connect-upload-backend:
     build:
       context: .
       dockerfile: Dockerfile.backend
-    image: radarbase/radar-upload-connect-backend
+    image: radarbase/radar-connect-upload-backend:dev
     depends_on:
       - managementportal-app
       - radarbase-postgresql
     volumes:
       - ./docker/upload.yml:/etc/upload-backend/upload.yml
+      - ./docker/logback.xml:/etc/upload-backend/logback.xml
+    environment:
+      JAVA_OPTS: "-Dlogback.configurationFile=/etc/upload-backend/logback.xml"
     command: ["radar-upload-backend", "/etc/upload-backend/upload.yml"]
 
