@@ -1,13 +1,13 @@
 /* eslint-disable no-undef */
 import { shallowMount } from '@vue/test-utils';
 import { Store } from 'vuex-mock-store';
-import PatientFilter from '../PatientFilter.vue';
+import FileFilter from '../FileFilter.vue';
 
 
-describe('PatientFilter', () => {
+describe('FileFilter', () => {
   // call this api when component is created
   const $store = new Store();
-  const wrapper = shallowMount(PatientFilter, {
+  const wrapper = shallowMount(FileFilter, {
     propsData: {
     },
     mocks: {
@@ -16,10 +16,9 @@ describe('PatientFilter', () => {
     stubs: ['v-text-field'],
   });
 
-  it('handleSearch: commit searchText', () => {
+  it('handleSearch: commit search text', () => {
     const handleSearch = jest.spyOn(wrapper.vm, 'handleSearch');
-    const searchText = 'search ';
-    handleSearch(searchText);
-    expect($store.commit).toBeCalledWith('patient', searchText);
+    handleSearch('searchText');
+    expect($store.commit).toBeCalledWith('file/handleSearch', 'searchText');
   });
 });

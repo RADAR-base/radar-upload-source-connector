@@ -13,7 +13,7 @@
       </td>
     </template>
 
-    <template #top="{items}">
+    <!-- <template #top="{items}">
       <v-layout align-content-start>
         <v-flex
           xs12
@@ -22,21 +22,20 @@
         >
           <FileFilter
             :files="items"
-            @filterFiles="filterFiles"
           />
         </v-flex>
       </v-layout>
-    </template>
+    </template> -->
   </v-data-table>
 </template>
 
 <script>
 import fileAPI from '@/axios/file';
-import FileFilter from './FileFilter';
+// import FileFilter from './FileFilter';
 
 export default {
   components: {
-    FileFilter,
+    // FileFilter,
   },
   props: {
     isActive: {
@@ -47,7 +46,6 @@ export default {
   data() {
     return {
       loading: false,
-      searchText: '',
       headers: [
         { text: 'File name', value: 'fileName' },
         { text: 'File type', value: 'fileType' },
@@ -81,6 +79,9 @@ export default {
     currentProject() {
       return this.$store.state.project.currentProject.value;
     },
+    searchText() {
+      return this.$store.state.file.searchText;
+    },
   },
   watch: {
     currentProject: {
@@ -108,9 +109,6 @@ export default {
         .catch(() => []);
       this.loading = false;
       this.fileList = fileList;
-    },
-    filterFiles(searchText) {
-      this.searchText = searchText;
     },
   },
 };

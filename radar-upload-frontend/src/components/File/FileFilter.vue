@@ -5,7 +5,7 @@
       class="mt-0"
       prepend-inner-icon="mdi-magnify"
       label="search your file"
-      @input="(val) => $emit('filterFiles',val)"
+      @input.native="handleSearch(val)"
     >
       <!-- add filter button and chips-->
       <!-- <template #append-outer>
@@ -99,13 +99,13 @@
 export default {
   data() {
     return {
-      // fileStatus: '',
-      // fileStatusList: ['complete', 'incomplete'],
-      // fileType: '',
-      // fileTypeList: ['mp3', 'text'],
-      // menu: false,
       searchText: '',
     };
+  },
+  methods: {
+    handleSearch(val) {
+      this.$store.commit('file/handleSearch', val);
+    },
   },
 };
 </script>
