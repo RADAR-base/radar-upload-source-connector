@@ -14,17 +14,15 @@ describe('index', () => {
       project: {
         currentProject: { value: PROJECT_ID },
       },
+      patient: {
+        searchText: '',
+      },
     },
   });
 
   const wrapper = shallowMount(index, {
     propsData: {
       isActive: false,
-    },
-    computed: {
-      currentProject() {
-        return this.$store.state.project.currentProject.value;
-      },
     },
     mocks: {
       $store,
@@ -36,7 +34,30 @@ describe('index', () => {
     expect(wrapper.vm.items).toEqual([]);
   });
 
-  it('call api to load patient list when a project selected and tab is active', async () => {
+  it('watch: currentProject', async () => {
+    wrapper.setProps({ isActive: false });
+    wrapper.vm.$store.state.project.currentProject.value = 'original';
+    const getPatientList = jest.spyOn(wrapper.vm, 'getPatientList');
+    expect(getPatientList).not.toBeCalled();
+
+    wrapper.setProps({ isActive: true });
+    wrapper.vm.$store.state.project.currentProject.value = '12312';
+    await flushPromises();
+    expect(getPatientList).toBeCalledWith('12312');
+  });
+
+  it('watch:isActive, if true & currentProject, getPatientList', () => {
+    const getPatientList = jest.spyOn(wrapper.vm, 'getPatientList');
+
+    wrapper.setProps({ isActive: false });
+    wrapper.setProps({ isActive: true });
+    expect(wrapper.vm.items).toEqual([]);
+    expect(getPatientList).toBeCalledWith(wrapper.vm.currentProject);
+  });
+
+  it('getPatientList', async () => {
+    const projectId = 'projectId';
+    const getPatientList = jest.spyOn(wrapper.vm, 'getPatientList');
     const patientList = [{
       sequence: 1,
       patientName: 'alex',
@@ -44,25 +65,12 @@ describe('index', () => {
       patientId: 'xxxx',
     }];
     patientAPI.filteredPatients = jest.fn().mockResolvedValue(patientList);
-    wrapper.setData({ currentProject: 'originalProject' });
+    getPatientList(projectId);
+    expect(wrapper.vm.loading).toEqual(true);
 
-    expect(patientAPI.filteredPatients).not.toBeCalledWith('originalProject');
-
-    wrapper.setProps({ isActive: true });
-    wrapper.vm.$store.state.project.currentProject.value = '12312';
     await flushPromises();
-
-    expect(patientAPI.filteredPatients).toBeCalledWith('12312');
+    expect(wrapper.vm.loading).toEqual(false);
     expect(wrapper.vm.items).toEqual(patientList);
-  });
-
-  it('watch isActive, if true & currentProject, getPatientList', () => {
-    const getPatientList = jest.spyOn(wrapper.vm, 'getPatientList');
-
-    wrapper.setProps({ isActive: false });
-    wrapper.setProps({ isActive: true });
-    expect(wrapper.vm.items).toEqual([]);
-    expect(getPatientList).toBeCalledWith(wrapper.vm.currentProject);
   });
 
   it('load file list of a patient when open the dropdown:SUCCESS CASE', async () => {

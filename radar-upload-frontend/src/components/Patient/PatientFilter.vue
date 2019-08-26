@@ -3,9 +3,8 @@
     v-model="text"
     class="mt-4"
     prepend-inner-icon="mdi-magnify"
-    label="Search your patients"
-    deletable-chips
-    chips
+    label="Search the patients"
+    @input="handleSearch(val)"
   />
 </template>
 
@@ -13,8 +12,13 @@
 export default {
   data() {
     return {
-      text: '',
+      searchText: '',
     };
+  },
+  methods: {
+    handleSearch(val) {
+      this.$store.commit('patient', val);
+    },
   },
 };
 </script>

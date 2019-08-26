@@ -32,14 +32,16 @@ export default {
   // upload has 2 phases
   // Post /records with file info to get id then
   // PUT /records/{id}/contents/{fileName} to upload the file
-  postRecords({ projectId, userId, sourceType }) {
+  postRecords({
+    projectId, userId, sourceType, timeZoneOffset, time, sourceId,
+  }) {
     const payload = {
       data: {
         projectId,
         userId,
-        sourceId: uuidv1(),
-        time: new Date().toISOString(),
-        timeZoneOffset: new Date().getTimezoneOffset(),
+        sourceId: sourceId || uuidv1(),
+        time: time || new Date().toISOString(),
+        timeZoneOffset: timeZoneOffset || new Date().getTimezoneOffset(),
       },
       sourceType,
     };

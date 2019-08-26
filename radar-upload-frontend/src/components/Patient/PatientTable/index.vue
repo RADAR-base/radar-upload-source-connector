@@ -2,6 +2,7 @@
   <v-data-table
     :items="items"
     single-expand
+    :search="searchText"
     show-expand
     :headers="headers"
     hide-default-header
@@ -96,6 +97,9 @@ export default {
     ...mapState('project', {
       currentProject: state => state.currentProject.value,
     }),
+    ...mapState('patient', {
+      searchText: state => state.searchText,
+    }),
   },
   watch: {
     currentProject: {
@@ -129,7 +133,7 @@ export default {
       const records = await fileAPI
         .filterRecords({ userId: item.patientId, projectId: this.currentProject })
         .catch((error) => {
-          this.fileLoadingError = error || 'Error when loading file, please try again later';
+          this.fileLoadingError = error;
           return [];
         });
       this.patientRecords = records;

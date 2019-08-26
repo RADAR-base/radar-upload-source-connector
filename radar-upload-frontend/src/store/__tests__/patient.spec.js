@@ -4,6 +4,12 @@ import { originalState, mutations, actions } from '../file';
 
 describe('mutations', () => {
   const state = originalState();
+  it('addUploadingFile', () => {
+    const fileName = 'FileName';
+    mutations.addUploadingFile(state, { fileName });
+    expect(state.uploadingFile).toEqual([fileName]);
+  });
+
   it('handleSearch', () => {
     const searchText = 'xx';
     mutations.handleSearch(state, searchText);

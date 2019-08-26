@@ -15,6 +15,9 @@ describe('FileTable', () => {
           value: projectID,
         },
       },
+      file: {
+        searchText: 'search text',
+      },
     },
   });
   const wrapper = shallowMount(FileTable, {
