@@ -6,24 +6,21 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import okhttp3.*
-import org.radarbase.connect.upload.auth.Authorizer
 import org.radarbase.connect.upload.exception.BadGatewayException
 import org.radarbase.connect.upload.exception.NotAuthorizedException
 import org.slf4j.LoggerFactory
 import java.io.Closeable
 
 class UploadBackendClient(
-        private val auth: Authorizer,
+        auth: Authenticator,
         private var httpClient: OkHttpClient,
         private var uploadBackendBaseUrl: String) : Closeable {
 
     init {
-        httpClient = httpClient.newBuilder().authenticator { _, response ->
-            response.request()
-                    .newBuilder()
-                    .header("Authorization", "Bearer ${auth.accessToken()}")
-                    .build()
-        }.build()
+        httpClient = httpClient
+                .newBuilder()
+                .authenticator(auth)
+                .build()
 
         if (!this.uploadBackendBaseUrl.endsWith("/")) {
             this.uploadBackendBaseUrl += "/"
@@ -41,7 +38,7 @@ class UploadBackendClient(
 
     fun requestConnectorConfig(name: String): SourceTypeDTO {
         val request = Request.Builder()
-                .url(uploadBackendBaseUrl.plus("source-types/").plus(name))
+                .url(uploadBackendBaseUrl.plus("source-types/${name}/"))
                 .get()
                 .build()
         val response = httpClient.executeRequest(request)

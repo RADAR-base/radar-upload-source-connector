@@ -16,12 +16,13 @@ import java.lang.Exception
 import java.lang.IllegalStateException
 import java.net.URI
 import javax.annotation.Resource
-import javax.persistence.EntityManager
 import javax.ws.rs.*
 import javax.ws.rs.core.*
+import kotlin.math.max
+import kotlin.math.min
 
 
-@Path("/records")
+@Path("records")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Resource
@@ -46,8 +47,6 @@ class RecordResource {
     @Context
     lateinit var sourceTypeRepository: SourceTypeRepository
 
-    @Context
-    lateinit var em: EntityManager
 
     @GET
     fun query(
@@ -65,7 +64,7 @@ class RecordResource {
             auth.checkProjectPermission(PROJECT_READ, projectId)
         }
 
-        val imposedLimit = Math.min(Math.max(limit, 1), 100)
+        val imposedLimit = min(max(limit, 1), 100)
         val records = recordRepository.query(imposedLimit, lastId ?: -1L, projectId, userId, status)
 
         return recordMapper.fromRecords(records, imposedLimit)
@@ -145,7 +144,7 @@ class RecordResource {
 
         val contentDto = recordMapper.fromContent(content)
 
-        return Response.created(URI(contentDto.url))
+        return Response.created(URI(contentDto.url!!))
                 .entity(contentDto)
                 .build()
     }
@@ -179,7 +178,6 @@ class RecordResource {
     @POST
     @Path("poll")
     fun poll(pollDTO: PollDTO): RecordContainerDTO {
-
         if (auth.isClientCredentials) {
             val imposedLimit = Math.min(Math.max(pollDTO.limit, 1), 100)
             val records = recordRepository.poll(imposedLimit)
@@ -192,7 +190,6 @@ class RecordResource {
     @GET
     @Path("{recordId}/metadata")
     fun getRecordMetaData(@PathParam("recordId") recordId: Long): RecordMetadataDTO {
-
         val record = recordRepository.read(recordId)
                 ?: throw NotFoundException("Record with ID $recordId does not exist")
 
@@ -207,11 +204,8 @@ class RecordResource {
             @Context callbackManager: CallbackManager): RecordMetadataDTO {
         val updatedRecord = recordRepository.updateMetadata(recordId, metaData)
 
-        val updatedMetadata = recordMapper.fromMetadata(updatedRecord)
-
-        callbackManager.callback(updatedMetadata)
-
-        return updatedMetadata
+        return recordMapper.fromMetadata(updatedRecord)
+                .also { callbackManager.callback(it) }
     }
 
     @GET
@@ -242,13 +236,12 @@ class RecordResource {
     @Path("{recordId}/logs")
     fun addRecordLogs(
             recordLogs: LogsDto,
-            @PathParam("recordId") recordId: Long): Response {
+            @PathParam("recordId") recordId: Long): RecordMetadataDTO {
         recordLogs.contents
                 ?: throw IllegalStateException("No content provided to update the logs")
 
         val uploadedMetaData = recordRepository.updateLogs(recordId, recordLogs.contents!!)
-        return Response.ok(recordMapper.fromMetadata(uploadedMetaData))
-                .build()
+        return recordMapper.fromMetadata(uploadedMetaData)
     }
 
     companion object {

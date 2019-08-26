@@ -36,7 +36,9 @@ abstract class RecordConverter(override val sourceType: String, val avroData: Av
     }
 
     override fun close() {
-        this.client.close()
+        if(this::client.isInitialized) {
+            this.client.close()
+        }
     }
 
     fun log(logLevel: LogLevel, logMessage: String) {
@@ -78,16 +80,17 @@ abstract class RecordConverter(override val sourceType: String, val avroData: Av
                         return@topicDataMap SourceRecord(getPartition(), offset, it.topic, key.schema(), key.value(), valRecord.schema(), valRecord.value())
                     }.toList()
         }.toList()
-        commitLogs(record, client)
+//        record.metadata = commitLogs(record, client)
         return ConversionResult(record, sourceRecords.flatMap { it.toList() })
     }
 
-    private fun commitLogs(record: RecordDTO, client: UploadBackendClient) {
+    private fun commitLogs(record: RecordDTO, client: UploadBackendClient): RecordMetadataDTO {
+        logger.debug("Sending record logs..")
         val logs = LogsDto().apply {
                 contents = UploadSourceConnectorConfig.mapper.writeValueAsString(logsRepository)
         }
         logger.info(UploadSourceConnectorConfig.mapper.writeValueAsString(logsRepository))
-        client.addLogs(record.id!!, logs)
+        return client.addLogs(record.id!!, logs)
     }
 
     /** process file content with the record data. The implementing method should close response-body. */

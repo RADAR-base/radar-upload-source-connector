@@ -8,49 +8,27 @@ import liquibase.resource.ClassLoaderResourceAccessor
 import org.glassfish.jersey.internal.inject.DisposableSupplier
 import org.hibernate.Session
 import org.hibernate.internal.SessionImpl
-import org.radarbase.upload.Config
+import org.radarbase.upload.logger
+import org.slf4j.LoggerFactory
+import java.lang.Exception
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.persistence.EntityManager
-import javax.persistence.Persistence
+import javax.persistence.EntityManagerFactory
 import javax.ws.rs.core.Context
 
-class DoaEntityManagerFactory(@Context config: Config) : DisposableSupplier<EntityManager> {
-    private val configMap: Map<String, String>
-
-    init {
-        configMap = HashMap()
-        config.jdbcDriver?.let {
-            configMap["javax.persistence.jdbc.driver"] = it
-        }
-        config.jdbcUrl?.let {
-            configMap["javax.persistence.jdbc.url"] = it
-        }
-        config.jdbcUser?.let {
-            configMap["javax.persistence.jdbc.user"] = it
-        }
-        config.jdbcPassword?.let {
-            configMap["javax.persistence.jdbc.password"] = it
-        }
-    }
-
+class DoaEntityManagerFactory(@Context private val emf: EntityManagerFactory) : DisposableSupplier<EntityManager> {
     override fun get(): EntityManager {
-        val emf = Persistence.createEntityManagerFactory("org.radarbase.upload.doa", configMap)
-        val em = emf.createEntityManager()
-
-        val connection = em.unwrap(SessionImpl::class.java).connection()
-
-        try {
-            val database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(JdbcConnection(connection))
-            val liquibase = Liquibase("dbChangelog.xml", ClassLoaderResourceAccessor(), database)
-            liquibase.update("test")
-        } catch (e: LiquibaseException) {
-            e.printStackTrace()
-        }
-
-        return em
+        logger.debug("Creating EntityManager...")
+        return emf.createEntityManager()
     }
 
     override fun dispose(instance: EntityManager?) {
-        instance?.entityManagerFactory?.close()
+        logger.debug("Disposing  EntityManager")
+        instance?.close()
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(DoaEntityManagerFactory::class.java)
     }
 }
 
@@ -59,7 +37,12 @@ fun <T> EntityManager.transact(transaction: EntityManager.() -> T): T {
     try {
         return transaction()
     } finally {
-        getTransaction().commit()
+        try {
+            getTransaction().commit()
+        } catch (exe: Exception) {
+            logger.warn("Rolling back operation: {}", exe.toString())
+            getTransaction().rollback()
+        }
     }
 }
 
