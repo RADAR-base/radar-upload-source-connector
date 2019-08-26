@@ -2,24 +2,25 @@ package org.radarbase.connect.upload.converter.altoida
 
 import org.radarbase.connect.upload.converter.CsvRecordConverter
 import org.radarbase.connect.upload.converter.TopicData
-import org.radarcns.connector.altoida.AltoidaAcceleration
+import org.radarcns.connector.altoida.UploadAltoidaAction
 
-class AltoidaAccelerometerConverter(override val sourceType: String = "acceleration", val topic: String = "connect_upload_altoida_acceleration")
+class ActionCsvRecordConverter(override val sourceType: String = "log", val topic: String = "connect_upload_altoida_action")
     : CsvRecordConverter(sourceType) {
 
     override fun validateHeaderSchema(csvHeader: List<String>) =
-            listOf("TIMESTAMP", "X", "Y", "Z") == (csvHeader)
+            listOf("TIMESTAMP", "TAG", "PAYLOAD") == (csvHeader)
 
     override fun convertLineToRecord(lineValues: Map<String, String>, timeReceived: Double): TopicData? {
         val time = lineValues["TIMESTAMP"]?.toDouble()
-        val acceleration = AltoidaAcceleration(
+        val log = UploadAltoidaAction(
                 time,
                 timeReceived,
-                lineValues["X"]?.toFloat(),
-                lineValues["Y"]?.toFloat(),
-                lineValues["Z"]?.toFloat()
+                lineValues["TAG"]?.toString(),
+                lineValues["PAYLOAD"]?.toString()
+
         )
 
-        return TopicData(false, topic, acceleration)
+        return TopicData(false, topic, log)
     }
 }
+
