@@ -9,6 +9,7 @@ describe('axios/projects', () => {
     const projects = [{ text: '', value: '' }].map(el => ({
       text: el.name || el.id,
       value: el.id,
+      ...el,
     }));
     const resp = { projects };
     axios.get.mockResolvedValue(resp);
