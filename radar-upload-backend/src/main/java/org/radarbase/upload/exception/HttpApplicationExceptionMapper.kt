@@ -1,4 +1,4 @@
-package org.radarbase.appconfig.exception
+package org.radarbase.upload.exception
 
 import com.fasterxml.jackson.core.util.BufferRecyclers
 import org.glassfish.jersey.message.internal.ReaderWriter

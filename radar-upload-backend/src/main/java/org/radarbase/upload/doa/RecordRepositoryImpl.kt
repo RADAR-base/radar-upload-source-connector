@@ -14,7 +14,6 @@ import java.time.Instant
 import javax.persistence.EntityManager
 import javax.persistence.LockModeType
 import javax.persistence.PessimisticLockScope
-import javax.ws.rs.BadRequestException
 import javax.ws.rs.NotFoundException
 import javax.ws.rs.core.Context
 import kotlin.collections.HashSet
@@ -194,7 +193,7 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
                 ?: throw NotFoundException("RecordMetadata with ID $id does not exist")
 
         if (existingMetadata.revision != metadata.revision)
-            throw BadRequestException("Requested meta data revision ${metadata.revision} " +
+            throw ConflictException("incompatible_revision", "Requested meta data revision ${metadata.revision} " +
                     "should match the latest existing revision ${existingMetadata.revision}")
 
         if (metadata.status == RecordStatus.PROCESSING.toString()
