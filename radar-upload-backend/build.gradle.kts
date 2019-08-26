@@ -4,9 +4,9 @@ plugins {
     java
     application
     kotlin("jvm")
-    id("org.jetbrains.kotlin.plugin.noarg") version "1.3.31"
-    id("org.jetbrains.kotlin.plugin.jpa") version "1.3.31"
-    id("org.jetbrains.kotlin.plugin.allopen") version "1.3.31"
+    id("org.jetbrains.kotlin.plugin.noarg") version "1.3.41"
+    id("org.jetbrains.kotlin.plugin.jpa") version "1.3.41"
+    id("org.jetbrains.kotlin.plugin.allopen") version "1.3.41"
 }
 
 application {
@@ -14,16 +14,17 @@ application {
 }
 
 project.extra.apply {
-    set("okhttpVersion", "3.14.1")
+    set("okhttpVersion", "4.0.1")
     set("radarMpVersion", "0.5.4")
     set("radarCommonsVersion", "0.11.3")
     set("radarSchemasVersion", "0.4.3")
-    set("jacksonVersion", "2.9.9")
+    set("jacksonVersion", "2.9.9.1")
+    set("jacksonDataVersion", "2.9.9")
     set("slf4jVersion", "1.7.25")
     set("logbackVersion", "1.2.3")
     set("grizzlyVersion", "2.4.4")
     set("jerseyVersion", "2.28")
-    set("hibernateVersion", "5.4.2.Final")
+    set("hibernateVersion", "5.4.4.Final")
 }
 
 repositories {
@@ -41,17 +42,18 @@ dependencies {
     implementation("org.glassfish.jersey.inject:jersey-hk2:${project.extra["jerseyVersion"]}")
     runtimeOnly("org.glassfish.jersey.media:jersey-media-json-jackson:${project.extra["jerseyVersion"]}")
 
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:${project.extra["jacksonVersion"]}")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:${project.extra["jacksonDataVersion"]}")
     implementation("com.fasterxml.jackson.core:jackson-databind:${project.extra["jacksonVersion"]}")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${project.extra["jacksonVersion"]}")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${project.extra["jacksonVersion"]}")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:${project.extra["jacksonVersion"]}")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${project.extra["jacksonDataVersion"]}")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${project.extra["jacksonDataVersion"]}")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:${project.extra["jacksonDataVersion"]}")
 
     implementation("org.radarcns:radar-auth:${project.extra["radarMpVersion"]}")
 
     implementation("org.slf4j:slf4j-api:${project.extra["slf4jVersion"]}")
 
     implementation("org.hibernate:hibernate-core:${project.extra["hibernateVersion"]}")
+    implementation("org.hibernate:hibernate-c3p0:${project.extra["hibernateVersion"]}")
     implementation("org.liquibase:liquibase-core:3.5.3")
 
     implementation("com.squareup.okhttp3:okhttp:${project.extra["okhttpVersion"]}")
@@ -63,7 +65,9 @@ dependencies {
 
 //    testImplementation("com.h2database:h2:1.4.199")
     testImplementation("org.junit.jupiter:junit-jupiter:5.4.2")
+    testImplementation("org.mockito:mockito-core:2.21.0")
     testImplementation("org.hamcrest:hamcrest-all:1.3")
+
 }
 
 // config JVM target to 1.8 for kotlin compilation tasks

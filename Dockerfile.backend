@@ -1,4 +1,4 @@
-FROM openjdk:11-jdk-slim as builder
+FROM openjdk:12 as builder
 
 RUN mkdir /code
 WORKDIR /code
@@ -16,15 +16,11 @@ RUN ./gradlew -Dkotlin.compiler.execution.strategy="in-process" -Dorg.gradle.par
     && tar xf *.tar \
     && rm *.tar radar-upload-backend-*/lib/radar-upload-backend-*.jar
 
-FROM openjdk:11-jre-slim
+FROM openjdk:12
 
 MAINTAINER @nivemaham @blootsvoets
 
 LABEL description="RADAR-base data upload connector backend container"
-
-RUN apt-get update && \
-        apt-get install -y curl && \
-        rm -rf /var/lib/apt/lists/* # remove the cached files.
 
 COPY --from=builder /code/radar-upload-backend/build/distributions/radar-upload-backend-*/bin/* /usr/bin/
 COPY --from=builder /code/radar-upload-backend/build/distributions/radar-upload-backend-*/lib/* /usr/lib/

@@ -11,36 +11,49 @@ import org.radarbase.upload.Config
 import org.radarbase.upload.doa.entity.Record
 import org.radarbase.upload.doa.entity.RecordContent
 import org.radarbase.upload.doa.entity.RecordStatus
-import org.radarbase.upload.inject.DoaEntityManagerFactory
+import org.radarbase.upload.inject.DoaEntityManagerFactoryFactory
 import java.io.ByteArrayInputStream
-import java.io.StringReader
 import java.nio.file.Path
 import java.time.Instant
 import java.time.LocalDateTime
 import javax.persistence.EntityManager
+import javax.persistence.EntityManagerFactory
 import kotlin.text.Charsets.UTF_8
+import org.mockito.Mock
+import org.mockito.Mockito
+import org.mockito.MockitoAnnotations
+
 
 internal class RecordRepositoryImplTest {
     private lateinit var repository: RecordRepository
-    private lateinit var doaFactory: DoaEntityManagerFactory
+    private lateinit var doaEMFFactory: DoaEntityManagerFactoryFactory
+    private lateinit var doaEMF: EntityManagerFactory
 
     private lateinit var entityManager: EntityManager
 
     @TempDir
     lateinit var tempDir: Path
 
+    @Mock
+    lateinit var mockEntityManagerProvider: javax.inject.Provider<EntityManager>
+
     @BeforeEach
     fun setUp() {
-        doaFactory = DoaEntityManagerFactory(
+        MockitoAnnotations.initMocks(this)
+
+        doaEMFFactory = DoaEntityManagerFactoryFactory(
                 Config(jdbcUrl = "jdbc:h2:file:${tempDir.resolve("db.h2")};DB_CLOSE_DELAY=-1;MVCC=true")
         )
-        entityManager = doaFactory.get()
-        repository = RecordRepositoryImpl(entityManager)
+        doaEMF = doaEMFFactory.get()
+        entityManager = doaEMF.createEntityManager()
+        repository = RecordRepositoryImpl(mockEntityManagerProvider)
+        Mockito.`when`(mockEntityManagerProvider.get()).thenReturn(entityManager)
     }
 
     @AfterEach
     fun tearDown() {
-        doaFactory.dispose(entityManager)
+        doaEMFFactory.dispose(doaEMF)
+        entityManager.close()
     }
 
     @Test

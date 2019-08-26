@@ -11,6 +11,8 @@ interface Auth {
     fun checkProjectPermission(permission: Permission, projectId: String?)
     fun hasRole(projectId: String, role: String): Boolean
     fun hasPermission(permission: Permission): Boolean
+    fun hasPermissionOnProject(permission: Permission, projectId: String): Boolean
+    fun hasPermissionOnSubject(permission: Permission, projectId: String, userId: String): Boolean
     fun authorizedProjects(permission: Permission): AccessRestriction
     val isClientCredentials: Boolean
 }
