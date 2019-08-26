@@ -2,6 +2,8 @@ package org.radarbase.upload.dto
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.radarbase.upload.api.RecordMetadataDTO
 import org.radarbase.upload.logger
 import java.io.IOException
@@ -17,7 +19,7 @@ class QueuedCallbackManager(
         metadata.callbackUrl?.let { url ->
             val request = Request.Builder()
                     .url(url)
-                    .post(RequestBody.create(JSON_TYPE, jsonWriter.writeValueAsString(metadata)))
+                    .post(jsonWriter.writeValueAsString(metadata).toRequestBody(JSON_TYPE))
                     .build()
 
             httpClient.newCall(request).enqueue(object : Callback {
@@ -26,13 +28,13 @@ class QueuedCallbackManager(
                         if (it.isSuccessful) {
                             logger.debug("Successful callback {}", url)
                         } else {
-                            val bodyString = if (it.body() != null) it.peekBody(255).string() else "<empty>"
+                            val bodyString = if (it.body != null) it.peekBody(255).string() else "<empty>"
 
                             if (retries > 0) {
-                                logger.debug("Callback to {} failed (code {}): {}, retrying", url, it.code(), bodyString)
+                                logger.debug("Callback to {} failed (code {}): {}, retrying", url, it.code, bodyString)
                                 scheduler.schedule({ callback(metadata, retries - 1) }, 10, TimeUnit.MINUTES)
                             } else {
-                                logger.debug("Callback to {} failed completely (code {}): {}", url, it.code(), bodyString)
+                                logger.debug("Callback to {} failed completely (code {}): {}", url, it.code, bodyString)
                             }
                         }
                     }
@@ -51,7 +53,7 @@ class QueuedCallbackManager(
     }
 
     companion object {
-        private val JSON_TYPE = MediaType.parse("application/json; charset=utf-8")
+        private val JSON_TYPE = "application/json; charset=utf-8".toMediaType()
         private val jsonWriter = ObjectMapper().writerFor(RecordMetadataDTO::class.java)
     }
 }

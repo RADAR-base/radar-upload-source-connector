@@ -1,5 +1,6 @@
 package org.radarbase.connect.upload
 
+import okhttp3.OkHttpClient
 import org.apache.kafka.connect.errors.ConnectException
 import org.apache.kafka.connect.source.SourceRecord
 import org.apache.kafka.connect.source.SourceTask
@@ -20,15 +21,16 @@ class UploadSourceTask : SourceTask() {
     private lateinit var converters: List<Converter>
 
     override fun start(props: Map<String, String>?) {
-
         val connectConfig = UploadSourceConnectorConfig(props!!)
+        val httpClient = connectConfig.httpClient
+
         uploadClient = UploadBackendClient(
-                connectConfig.getAuthorizer(),
-                connectConfig.getHttpClient(),
-                connectConfig.getBaseUrl())
+                connectConfig.getAuthenticator(),
+                httpClient,
+                connectConfig.uploadBackendBaseUrl)
 
         // init converters if configured
-        converters = connectConfig.getConverterClasses().map {
+        converters = connectConfig.converterClasses.map {
             try {
                 val converterClass = Class.forName(it)
                 converterClass.getDeclaredConstructor().newInstance() as Converter
@@ -47,6 +49,7 @@ class UploadSourceTask : SourceTask() {
             val config = uploadClient.requestConnectorConfig(converter.sourceType)
             converter.initialize(config, uploadClient, props)
         }
+        logger.info("Initialized ${converters.size} converters...")
     }
 
     override fun stop() {
@@ -58,9 +61,10 @@ class UploadSourceTask : SourceTask() {
     override fun version(): String = VersionUtil.getVersion()
 
     override fun poll(): List<SourceRecord> {
+        logger.info("Poll with interval $pollInterval millseconds")
         while (true) {
             val records = uploadClient.pollRecords(PollDTO(1, converters.map { it.sourceType })).records
-
+            logger.info("Received ${records.size} records")
             for (record in records) {
                 val converter = converters.find { it.sourceType == record.sourceType }
 
@@ -69,15 +73,15 @@ class UploadSourceTask : SourceTask() {
                     continue
                 } else {
                     record.metadata = uploadClient.updateStatus(record.id!!, record.metadata!!.copy(status = "PROCESSING"))
+                    logger.debug("updated metadata ${record.metadata}")
                 }
 
                 val result = converter.convert(record)
                 result.result?.takeIf(List<*>::isNotEmpty)?.let {
                     return@poll it
                 }
-
-                Thread.sleep(pollInterval)
             }
+            Thread.sleep(pollInterval)
         }
     }
 
@@ -92,7 +96,7 @@ class UploadSourceTask : SourceTask() {
 
         if (endOfRecord) {
             logger.info("Committing last record of Record $recordId, with Revision $revision")
-            uploadClient.updateStatus(recordId.toLong(), RecordMetadataDTO(revision = revision.toInt(), status = "SUCCESS", message = "Record has been processed successfully"))
+            uploadClient.updateStatus(recordId.toLong(), RecordMetadataDTO(revision = revision.toInt(), status = "SUCCEEDED", message = "Record has been processed successfully"))
         }
     }
 
