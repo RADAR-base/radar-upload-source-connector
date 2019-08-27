@@ -20,7 +20,7 @@
       />
     </v-layout>
     <v-subheader>
-      <span v-show="!loading&&patientRecords.length>0">
+      <span v-show="!loading">
         <slot name="fileListSubHeader" />
       </span>
       <span v-show="!loading&&patientRecords.length==0">
