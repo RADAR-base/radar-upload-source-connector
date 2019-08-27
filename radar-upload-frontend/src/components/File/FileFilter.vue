@@ -2,9 +2,9 @@
   <div class="file-filter">
     <v-text-field
       v-model="searchText"
-      class="mt-0"
+      class="mt-4"
       prepend-inner-icon="mdi-magnify"
-      label="search your file"
+      label="Search your records"
       @input="handleSearch"
     >
       <!-- add filter button and chips-->

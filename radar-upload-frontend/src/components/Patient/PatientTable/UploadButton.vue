@@ -3,6 +3,8 @@
     <v-menu
       :value="menu"
       attach
+      max-width="300px"
+      min-width="300px"
       :close-on-click="false"
       :close-on-content-click="false"
       v-model="menu"
@@ -24,11 +26,6 @@
 
       <v-card>
         <v-list>
-          <!-- <v-subheader>
-            {{ commonInfo.patientName }}
-            -
-            {{ commonInfo.projectName }}
-          </v-subheader> -->
           <v-list-item>
             <v-select
               label="Select source type"

@@ -74,7 +74,6 @@ export default {
         { text: '#', value: 'sequence' },
         { text: 'Patient name', value: 'patientName' },
         { text: 'Status', value: 'status' },
-        // { text: 'Upload', value: 'uploadButton', sortable: false },
       ],
     };
   },
