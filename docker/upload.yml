@@ -17,3 +17,88 @@ sourceTypes:
     configuration:
       "setting1": "value1"
       "setting2": "value2"
+  - name: "altoida_acceleration"
+    topics:
+      - "connect_upload_altoida_acceleration"
+    contentTypes:
+      - "text/csv"
+    timeRequired: false
+    sourceIdRequired: false
+  - name: "altoida_action"
+    topics:
+      - "connect_upload_altoida_action"
+    contentTypes:
+      - "text/csv"
+    timeRequired: false
+    sourceIdRequired: false
+  - name: "altoida_attitude"
+    topics:
+      - "connect_upload_altoida_attitude"
+    contentTypes:
+      - "text/csv"
+    timeRequired: false
+    sourceIdRequired: false
+  - name: "altoida_diagnostics"
+    topics:
+      - "connect_upload_altoida_diagnostics"
+    contentTypes:
+      - "text/csv"
+    timeRequired: false
+    sourceIdRequired: false
+  - name: "altoida_gravity"
+    topics:
+      - "connect_upload_altoida_gravity"
+    contentTypes:
+      - "text/csv"
+    timeRequired: false
+    sourceIdRequired: false
+  - name: "altoida_magnetometer"
+    topics:
+      - "connect_upload_altoida_magnetometer"
+    contentTypes:
+      - "text/csv"
+    timeRequired: false
+    sourceIdRequired: false
+  - name: "altoida_metadata"
+    topics:
+      - "connect_upload_altoida_metadata"
+    contentTypes:
+      - "text/csv"
+    timeRequired: false
+    sourceIdRequired: false
+  - name: "altoida_object"
+    topics:
+      - "connect_upload_altoida_object"
+    contentTypes:
+      - "text/csv"
+    timeRequired: false
+    sourceIdRequired: false
+  - name: "altoida_object"
+    topics:
+      - "connect_upload_altoida_object"
+    contentTypes:
+      - "text/csv"
+    timeRequired: false
+    sourceIdRequired: false
+  - name: "altoida_path"
+    topics:
+      - "connect_upload_altoida_path"
+    contentTypes:
+      - "text/csv"
+    timeRequired: false
+    sourceIdRequired: false
+  - name: "altoida_rotation"
+    topics:
+      - "connect_upload_altoida_rotation"
+    contentTypes:
+      - "text/csv"
+    timeRequired: false
+    sourceIdRequired: false
+  - name: "altoida_touchscreen"
+    topics:
+      - "connect_upload_altoida_touchscreen"
+    contentTypes:
+      - "text/csv"
+    timeRequired: false
+    sourceIdRequired: false
+

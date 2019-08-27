@@ -7,11 +7,11 @@
         </encoder>
     </appender>
 
-    <logger name="org.radarbase" level="DEBUG" additivity="false">
+    <logger name="org.radarbase" level="INFO" additivity="false">
         <appender-ref ref="STDOUT" />
     </logger>
 
-    <logger name="org.radarcns" level="DEBUG" additivity="false">
+    <logger name="org.radarcns" level="INFO" additivity="false">
         <appender-ref ref="STDOUT" />
     </logger>
 
