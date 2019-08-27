@@ -1,4 +1,5 @@
 import Vue from 'vue';
+import { truncate } from 'lodash';
 
 Vue.filter('capitalize', (value) => {
   if (!value) return '';
@@ -26,4 +27,10 @@ Vue.filter('upperCase', (value) => {
 Vue.filter('localTime', (val) => {
   if (!val) return '';
   return (new Date(val)).toLocaleString();
+});
+
+Vue.filter('textTruncate', (val, length = 24) => {
+  if (!val) return;
+  // eslint-disable-next-line consistent-return
+  return truncate(val, { length });
 });

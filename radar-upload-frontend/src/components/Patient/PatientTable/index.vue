@@ -17,21 +17,6 @@
       </td>
     </template>
 
-
-    <!-- <template #item.uploadButton="{item}">
-      <td class="pl-0">
-        <UploadButton
-          :upload-info="{
-            userId: item.patientId,
-            projectId: currentProject
-          }"
-          @addUploadingFile="addUploadingFile"
-          @startUploading="startUploading"
-        />
-      </td>
-    </template> -->
-
-
     <template #expanded-item="{item}">
       <td
         :colspan="12"
@@ -109,6 +94,7 @@ export default {
           this.getPatientList(projectId);
         }
       },
+      immediate: true,
     },
     isActive: {
       handler(val) {
@@ -124,7 +110,7 @@ export default {
       this.items = [];
       this.loading = true;
       const patientList = await patientAPI.filteredPatients(projectId).catch(() => ([]));
-      this.items.push(...patientList);
+      this.items = patientList;
       this.loading = false;
     },
     async getPatientRecords({ item }) {

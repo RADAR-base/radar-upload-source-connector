@@ -1,6 +1,5 @@
 /* eslint-disable consistent-return */
 import axios from 'axios';
-import { getAuth } from '@/helpers.js';
 
 const ApiService = {
   init(baseURL, store, router) {
@@ -14,8 +13,9 @@ const ApiService = {
         switch (error.response.status) {
           case 401:
             // store.commit('openSnackbar', { type: 'error', text: 'Please login to continue' });
-            await getAuth();
             // eslint-disable-next-line no-case-declarations
+            router.replace('/login');
+            store.commit('openSnackbar', { type: 'error', text: 'Please login to continue' });
             return;
           default:
             break;
