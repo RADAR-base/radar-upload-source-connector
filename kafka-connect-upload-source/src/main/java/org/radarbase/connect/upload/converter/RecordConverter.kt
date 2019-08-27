@@ -20,7 +20,6 @@
 package org.radarbase.connect.upload.converter
 
 import io.confluent.connect.avro.AvroData
-import okhttp3.ResponseBody
 import org.apache.kafka.connect.data.SchemaAndValue
 import org.apache.kafka.connect.source.SourceRecord
 import org.radarbase.connect.upload.UploadSourceConnectorConfig
@@ -32,6 +31,7 @@ import org.radarbase.connect.upload.api.LogLevel.*
 import org.radarcns.kafka.ObservationKey
 import org.slf4j.LoggerFactory
 import java.io.IOException
+import java.io.InputStream
 import java.time.Instant
 
 
@@ -82,22 +82,23 @@ abstract class RecordConverter(override val sourceType: String, val avroData: Av
 
         val sourceRecords = contents.asSequence().map contentMap@{
 
-
-            val fileStream = client.retrieveFile(record, it.fileName) // make sure zip files are unpacked first!!
+            val response = client.retrieveFile(record, it.fileName) // make sure zip files are unpacked first!!
                     ?: throw IOException("Cannot retrieve file ${it.fileName} from record with id ${record.id}")
             val timeReceived = Instant.now().epochSecond
 
-            return@contentMap processData(it, fileStream, record, timeReceived.toDouble())
-                    .map topicDataMap@{
-                        val valRecord = avroData.toConnectData(it.value.schema, it.value)
-                        val offset = mutableMapOf(
-                                END_OF_RECORD_KEY to it.endOfFileOffSet,
-                                RECORD_ID_KEY to record.id,
-                                REVISION_KEY to record.metadata?.revision
-                        )
-                        // find the last record and set END_OF_RECORD_KEY to true, otherwise false
-                        return@topicDataMap SourceRecord(getPartition(), offset, it.topic, key.schema(), key.value(), valRecord.schema(), valRecord.value())
-                    }.toList()
+            response.use responseResource@{ res ->
+                return@contentMap processData(it, res.byteStream(), record, timeReceived.toDouble())
+                        .map topicDataMap@{
+                            val valRecord = avroData.toConnectData(it.value.schema, it.value)
+                            val offset = mutableMapOf(
+                                    END_OF_RECORD_KEY to it.endOfFileOffSet,
+                                    RECORD_ID_KEY to record.id,
+                                    REVISION_KEY to record.metadata?.revision
+                            )
+                            // find the last record and set END_OF_RECORD_KEY to true, otherwise false
+                            return@topicDataMap SourceRecord(getPartition(), offset, it.topic, key.schema(), key.value(), valRecord.schema(), valRecord.value())
+                        }.toList()
+            }
         }.toList()
 //        record.metadata = commitLogs(record, client)
         return ConversionResult(record, sourceRecords.flatMap { it.toList() })
@@ -113,7 +114,7 @@ abstract class RecordConverter(override val sourceType: String, val avroData: Av
     }
 
     /** process file content with the record data. The implementing method should close response-body. */
-    abstract fun processData(contents: ContentsDTO, responseBody: ResponseBody, record: RecordDTO, timeReceived: Double)
+    abstract fun processData(contents: ContentsDTO, inputStream: InputStream, record: RecordDTO, timeReceived: Double)
             : List<TopicData>
 
     override fun getPartition(): MutableMap<String, Any> = mutableMapOf("source-type" to sourceType)

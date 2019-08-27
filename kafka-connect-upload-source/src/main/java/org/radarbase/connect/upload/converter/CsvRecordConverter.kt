@@ -27,12 +27,12 @@ import org.radarbase.connect.upload.api.RecordDTO
 import org.radarbase.connect.upload.exception.InvalidFormatException
 import org.radarbase.connect.upload.api.LogLevel.*
 import java.io.IOException
+import java.io.InputStream
 
 abstract class CsvRecordConverter(sourceType: String) : RecordConverter(sourceType) {
 
-    override fun processData(contents: ContentsDTO, responseBody: ResponseBody, record: RecordDTO, timeReceived: Double): List<TopicData> {
+    override fun processData(contents: ContentsDTO, inputStream: InputStream, record: RecordDTO, timeReceived: Double): List<TopicData> {
         log(INFO,"Retrieved file content from record id ${record.id} and filename ${contents.fileName}")
-        val inputStream = responseBody.byteStream()
         val reader = CSVReaderBuilder(inputStream.bufferedReader())
                 .withCSVParser(CSVParserBuilder().withSeparator(',').build())
                 .build()
@@ -57,7 +57,6 @@ abstract class CsvRecordConverter(sourceType: String) : RecordConverter(sourceTy
         } finally {
             log(INFO,"Closing resources of content ${contents.fileName}")
             inputStream.close()
-            responseBody.close()
         }
         return convertedTopicData
     }
