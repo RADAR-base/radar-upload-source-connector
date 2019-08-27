@@ -25,9 +25,9 @@ export const getToken = async (authCode, clientId = 'radar_upload_frontend') => 
 
 export function downLoadFile(filename, file) {
   const element = document.createElement('a');
-  element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(file)}`);
-  element.setAttribute('download', filename);
-  element.style.display = 'none';
+  element.href = file;
+  element.download = filename;
+  element.target = '_blank';
   document.body.appendChild(element);
   element.click();
   document.body.removeChild(element);

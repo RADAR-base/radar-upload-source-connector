@@ -24,54 +24,26 @@
         </v-btn>
       </template>
 
-      <v-card>
-        <v-list>
-          <v-list-item>
-            <v-select
-              label="Select source type"
-              :items="sourceTypeList"
-              v-model="sourceType"
-            />
-          </v-list-item>
-          <v-list-item>
-            <v-file-input
-              label="Select a file"
-              clear-icon
-              clearable
-              append-icon="mdi-paperclip"
-              :prepend-icon="''"
-              v-model="file"
-            />
-          </v-list-item>
-        </v-list>
-        <v-card-actions>
-          <v-spacer />
-
-          <v-btn
-            text
-            @click.native="menu=false"
-          >
-            Cancel
-          </v-btn>
-
-          <v-btn
-            color="primary"
-            text
-            @click.native="uploadFile"
-            :disabled="!sourceType||file.length===0"
-          >
-            Upload
-          </v-btn>
-        </v-card-actions>
-      </v-card>
+      <UploadForm
+        @finishUpload="finishUpload"
+        @startUploading="startUploading"
+        @uploadFailed="closeMenu"
+        @cancelClick="closeMenu"
+        @creatingRecord="creatingRecord"
+        :upload-info="uploadInfo"
+        :loading="loading"
+      />
     </v-menu>
   </div>
 </template>
 
 <script>
-import fileAPI from '@/axios/file.js';
+import UploadForm from '@/components/Common/UploadForm.vue';
 
 export default {
+  components: {
+    UploadForm,
+  },
   props: {
     uploadInfo: {
       type: Object,
@@ -81,52 +53,26 @@ export default {
   data() {
     return {
       menu: false,
-      file: [],
-      sourceType: '',
-      sourceTypeList: [],
+      loading: false,
     };
   },
-  watch: {
-    menu: {
-      handler(open) {
-        if (!open) {
-          this.removeData();
-        }
-      },
-    },
-  },
   methods: {
-    async getsourceTypeList() {
-      const res = await fileAPI.getSourceTypes();
-      this.sourceTypeList = res.map(el => el.name);
-      this.contentTypes = res.map(el => el.contentTypes);
+    finishUpload(file) {
+      console.log('finsih', file);
+      this.loading = false;
+      this.$emit('addUploadingFile', file);
+      this.menu = false;
     },
-    removeData() {
-      this.file = [];
-      this.sourceType = '';
-      this.sourceTypeList = [];
+    startUploading(payload) {
+      console.log('start', payload);
+      this.$emit('startUploading', payload);
     },
-    async uploadFile() {
-      const { userId, projectId } = this.uploadInfo;
-      const { sourceType } = this;
-      const postPayload = { userId, projectId, sourceType };
-      const files = [];
-      files.push({ fileName: this.file.name, uploading: true });
-      try {
-        const returnedRecord = await fileAPI.postRecords(postPayload);
-        this.$emit('startUploading', { ...returnedRecord, files, active: true });
-        this.menu = false;
-        const putPayload = { file: this.file, fileName: this.file.name, id: returnedRecord.id };
-        const uploadingFile = await fileAPI.putRecords(putPayload);
-        this.$emit('addUploadingFile', uploadingFile);
-      } catch (error) {
-        this.menu = false;
-        this.$error('Upload fails, please try again later');
-      }
+    closeMenu() {
+      this.menu = false;
+      this.loading = false;
     },
-  },
-  created() {
-    this.getsourceTypeList();
+    creatingRecord() {
+    },
   },
 };
 </script>
