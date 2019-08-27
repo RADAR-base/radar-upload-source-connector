@@ -1,11 +1,13 @@
 <template>
-  <v-text-field
-    v-model="searchText"
-    class="mt-4"
-    prepend-inner-icon="mdi-magnify"
-    label="Search the patients"
-    @input="handleSearch"
-  />
+  <div>
+    <v-text-field
+      v-model="searchText"
+      class="mt-4"
+      prepend-inner-icon="mdi-magnify"
+      label="Search the patients"
+      @input="handleSearch"
+    />
+  </div>
 </template>
 
 <script>

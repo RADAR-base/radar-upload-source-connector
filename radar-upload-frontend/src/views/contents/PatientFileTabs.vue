@@ -9,10 +9,9 @@
 
       <v-spacer />
 
-      <v-toolbar-title>
-        <PatientFilter v-show="tab==0" />
-        <FileFilter v-show="tab==1" />
-      </v-toolbar-title>
+      <QuickUpload />
+      <PatientFilter v-show="tab==0" />
+      <FileFilter v-show="tab==1" />
 
       <template #extension>
         <v-tabs
@@ -42,24 +41,18 @@
     <v-tabs-items
       v-model="tab"
     >
-      <v-tab-item :value="0">
-        <v-card
-          flat
-          class="mt-4 pa-2"
-        >
-          <PatientTable :is-active="tab==0" />
-        </v-card>
-      </v-tab-item>
-      <v-tab-item
-        :value="1"
+      <v-card
+        flat
       >
-        <v-card
-          flat
-          class="mt-4 pa-2"
+        <v-tab-item :value="0">
+          <PatientTable :is-active="tab==0" />
+        </v-tab-item>
+        <v-tab-item
+          :value="1"
         >
           <FileTable :is-active="tab==1" />
-        </v-card>
-      </v-tab-item>
+        </v-tab-item>
+      </v-card>
     </v-tabs-items>
   </v-card>
 </template>
@@ -69,6 +62,7 @@ import PatientTable from '@/components/Patient/PatientTable';
 import PatientFilter from '@/components/Patient/PatientFilter';
 import FileTable from '@/components/File/FileTable';
 import FileFilter from '@/components/File/FileFilter';
+import QuickUpload from '@/components/QuickUpload';
 
 export default {
   name: 'PatientFilterTabs',
@@ -77,6 +71,7 @@ export default {
     PatientTable,
     FileFilter,
     PatientFilter,
+    QuickUpload,
   },
   data() {
     return {
