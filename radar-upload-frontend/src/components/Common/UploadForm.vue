@@ -27,6 +27,7 @@
           append-icon="mdi-paperclip"
           :prepend-icon="''"
           v-model="file"
+          @change="selectFile"
         />
       </v-list-item>
     </v-list>
@@ -79,6 +80,9 @@ export default {
     };
   },
   methods: {
+    selectFile(file) {
+      console.log(file);
+    },
     async getsourceTypeList() {
       const res = await fileAPI.getSourceTypes();
       this.sourceTypeList = res.map(el => el.name);
@@ -107,6 +111,7 @@ export default {
         this.$emit('uploadFailed');
         this.$error('Upload fails, please try again later');
       }
+      this.removeData();
     },
   },
   created() {

@@ -35,11 +35,11 @@
     >
       <template #activator>
         <v-list-item-avatar>
-          <v-progress-circular
-            v-if="record.status==='INCOMPLETE'"
+          <!-- <v-progress-circular
+            v-if="record.status!=='READY'"
             indeterminate
             color="primary"
-          />
+          /> -->
           <v-icon
             color="info"
             v-if="record.status==='READY'"
@@ -83,7 +83,7 @@
           style="cursor: pointer;"
         >
           <v-list-item-title v-text="file.fileName" />
-          <v-list-item-subtitle>Size: {{ file.size }} Kb</v-list-item-subtitle>
+          <v-list-item-subtitle>Size: {{ file.size }} Bytes</v-list-item-subtitle>
           <v-list-item-subtitle>{{ file.createdDate | localTime }}</v-list-item-subtitle>
         </v-list-item-content>
       </v-list-item>

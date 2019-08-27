@@ -61,7 +61,11 @@ export default {
       }));
   },
   putRecords({ id, fileName, file }) {
-    return axios.put(`/records/${id}/contents/${fileName}`, { file });
+    const headers = {
+      'content-type': file.type,
+    };
+    // eslint-disable-next-line func-names
+    return axios.put(`/records/${id}/contents/${fileName}`, file, { headers });
   },
 
   async filterRecords({
@@ -102,7 +106,7 @@ export default {
   },
 
   async download({ recordId, fileName }) {
-    const file = await axios.get(`/records/${recordId}/contents/${fileName}`);
-    downLoadFile(fileName, file);
+    const url = `https://radar-test.thehyve.net/upload/records/${recordId}/contents/${fileName}`;
+    downLoadFile(fileName, url);
   },
 };

@@ -46,6 +46,7 @@
             <v-btn
               text
               @click="selectProject(project)"
+              color="primary"
             >
               Select
             </v-btn>
