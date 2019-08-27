@@ -47,9 +47,8 @@
         <v-tab-item :value="0">
           <PatientTable :is-active="tab==0" />
         </v-tab-item>
-        <v-tab-item
-          :value="1"
-        >
+
+        <v-tab-item :value="1">
           <FileTable :is-active="tab==1" />
         </v-tab-item>
       </v-card>
@@ -82,6 +81,14 @@ export default {
     currentProject() {
       return this.$store.state.project.currentProject.text
       || this.$store.state.project.currentProject.value;
+    },
+  },
+  watch: {
+    currentProject: {
+      handler(val) {
+        if (!val) this.$router.push('/');
+      },
+      immediate: true,
     },
   },
 };
