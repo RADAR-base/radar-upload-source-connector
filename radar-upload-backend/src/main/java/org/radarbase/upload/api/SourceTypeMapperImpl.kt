@@ -39,11 +39,11 @@ class SourceTypeMapperImpl : SourceTypeMapper {
     override fun toSourceType(sourceType: SourceTypeDTO): SourceType {
         val entity = SourceType()
         entity.name = sourceType.name
-        entity.topics = sourceType.topics ?: emptySet()
-        entity.contentTypes = sourceType.contentTypes ?: emptySet()
+        entity.topics = sourceType.topics ?: mutableSetOf()
+        entity.contentTypes = sourceType.contentTypes ?: mutableSetOf()
         entity.sourceIdRequired = sourceType.sourceIdRequired ?: false
         entity.timeRequired = sourceType.timeRequired ?: false
-        entity.configuration = sourceType.configuration ?: emptyMap()
+        entity.configuration = sourceType.configuration ?: mutableMapOf()
         return entity
     }
 
