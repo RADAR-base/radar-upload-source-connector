@@ -45,7 +45,7 @@ class SourceTypeRepositoryImpl(
             logger.info("Initializing source-type repository")
             val sourceType = sourceTypeMapper.toSourceType(it)
             em.get().transact {
-                val queryString = "SELECT s FROM SourceType s JOIN FETCH s.configuration WHERE s.name = :name"
+                val queryString = "SELECT s FROM SourceType s LEFT JOIN FETCH s.configuration WHERE s.name = :name"
 
                 val result = createQuery(queryString, SourceType::class.java).run {
                     setParameter("name", sourceType.name)
@@ -100,7 +100,7 @@ class SourceTypeRepositoryImpl(
     }
 
     override fun read(name: String): SourceType? = em.get().transact {
-        val queryString = "SELECT s FROM SourceType s JOIN FETCH s.configuration WHERE s.name = :name"
+        val queryString = "SELECT s FROM SourceType s LEFT JOIN FETCH s.configuration WHERE s.name = :name"
 
         createQuery(queryString, SourceType::class.java).run {
             setParameter("name", name)
