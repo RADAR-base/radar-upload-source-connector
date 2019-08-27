@@ -23,25 +23,26 @@
         sm="6"
         md="4"
         lg="3"
+        v-for="(project, i) in projects"
+        :key="i"
       >
-        <v-card
-          color="primary"
-          dark
-          v-for="(project, i) in projects"
-          :key="i"
-        >
-          <v-card-title>{{ project.text || project.value }}</v-card-title>
-          <v-card-text class="white--text">
-            <div class="my-4 subtitle-1">
-              {{ project.organization }}
-            </div>
-            <div class="my-4 subtitle-2 mb-2">
-              {{ project.location }}
-            </div>
-            {{ project.description }}
+        <v-card elevation="5">
+          <v-card-title class="px-2 headline">
+            {{ (project.text || project.value) | textTruncate }}
+          </v-card-title>
+
+          <v-card-text class="pl-3 pr-1">
+            {{ project.description | textTruncate(40) }}
           </v-card-text>
 
           <v-card-actions>
+            <div class="caption">
+              {{ project.organization }}
+              <br>
+              {{ project.location }}
+            </div>
+
+            <v-spacer />
             <v-btn
               text
               @click="selectProject(project)"

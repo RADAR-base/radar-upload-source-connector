@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const getToken = async (authCode, clientId = 'radar_upload_frontend') => {
+export const getToken = async (authCode, clientId = 'radar_upload_frontend') => {
   const headers = {
     'Content-Type': 'application/x-www-form-urlencoded',
     auth: {
@@ -23,27 +23,6 @@ const getToken = async (authCode, clientId = 'radar_upload_frontend') => {
   return access_token;
 };
 
-export const getAuth = async () => {
-  // const currentToken = localStorage.getItem('token');
-  const isRedirectUrl = window.location.pathname.includes('/login');
-  if (!isRedirectUrl) {
-    localStorage.removeItem('token');
-    window.open('https://radar-test.thehyve.net/managementportal/oauth/authorize?client_id=radar_upload_frontend&response_type=code&redirect_uri=http://localhost:8080/login');
-    const checkToken = setInterval(() => {
-      if (localStorage.getItem('token')) {
-        clearInterval(checkToken);
-        window.location.reload();
-      }
-    }, 500);
-    return;
-  }
-  if (isRedirectUrl) {
-    const authCode = window.location.search.replace('?code=', '');
-    const returnedToken = await getToken(authCode).catch(() => null);
-    localStorage.setItem('token', returnedToken);
-    window.close();
-  }
-};
 export function downLoadFile(filename, file) {
   const element = document.createElement('a');
   element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(file)}`);
@@ -54,6 +33,6 @@ export function downLoadFile(filename, file) {
   document.body.removeChild(element);
 }
 export default {
-  getAuth,
   downLoadFile,
+  getToken,
 };

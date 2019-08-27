@@ -16,8 +16,10 @@ describe('projectMixin', () => {
     mocks: {
       $store,
       $router: {
-        path: '',
         push: jest.fn(),
+      },
+      $route: {
+        path: '/some-path',
       },
     },
   });
@@ -55,8 +57,8 @@ describe('projectMixin', () => {
     expect($store.commit).toBeCalledWith('project/setCurrentProject', 'project');
     expect(wrapper.vm.$router.push).not.toBeCalled();
 
-    wrapper.vm.$router.path = 'projects';
+    wrapper.vm.$route.path = '/';
     selectProject('project');
-    expect(wrapper.vm.$router.push).toBeCalledWith('/');
+    expect(wrapper.vm.$router.push).toBeCalledWith('/projects');
   });
 });
