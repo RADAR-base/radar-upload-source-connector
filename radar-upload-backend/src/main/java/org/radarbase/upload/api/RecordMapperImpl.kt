@@ -23,6 +23,7 @@ import org.radarbase.upload.doa.SourceTypeRepository
 import org.radarbase.upload.doa.entity.Record
 import org.radarbase.upload.doa.entity.RecordContent
 import org.radarbase.upload.doa.entity.RecordMetadata
+import org.radarbase.upload.doa.entity.RecordStatus
 import java.time.Instant
 import javax.ws.rs.BadRequestException
 import javax.ws.rs.core.Context
@@ -39,6 +40,11 @@ class RecordMapperImpl : RecordMapper {
         val data = record.data ?: throw BadRequestException("No data field included")
         if (record.metadata != null) {
             metadata = toMetadata(record.metadata)
+        } else {
+            metadata = RecordMetadata().apply {
+                revision = 1
+                status = RecordStatus.INCOMPLETE
+            }
         }
         projectId = data.projectId ?: throw BadRequestException("Missing project ID")
         userId = data.userId ?: throw BadRequestException("Missing user ID")
@@ -58,7 +64,7 @@ class RecordMapperImpl : RecordMapper {
 
     override fun fromRecord(record: Record) = RecordDTO(
             id = record.id!!,
-            metadata = fromMetadata(record.metadata).apply { id = null },
+            metadata = fromMetadata(record.metadata!!).apply { id = null },
             sourceType = record.sourceType.name,
             data = RecordDataDTO(
                     projectId = record.projectId,

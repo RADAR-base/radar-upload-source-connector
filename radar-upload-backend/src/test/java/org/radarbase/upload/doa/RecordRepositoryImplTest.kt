@@ -41,6 +41,7 @@ import kotlin.text.Charsets.UTF_8
 import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.MockitoAnnotations
+import org.radarbase.upload.api.RecordMetadataDTO
 
 
 internal class RecordRepositoryImplTest {
@@ -77,11 +78,34 @@ internal class RecordRepositoryImplTest {
 
     @Test
     fun create() {
-        doCreate()
+        val beforeTime = Instant.now()
+        val result = doCreate()
+        val afterTime = Instant.now()
+
+        assertThat(result.id, notNullValue())
+        assertThat(result.id ?: 0L, greaterThan(0L))
+        assertThat(result.contents, notNullValue())
+        result.contents?.first()?.let {
+            assertThat(it.content, notNullValue())
+            assertThat(it.content.binaryStream?.readAllBytes()?.toString(UTF_8), equalTo("test"))
+        }
+        assertThat(result.metadata, notNullValue())
+        result.metadata.run {
+            assertThat(createdDate, greaterThanOrEqualTo(beforeTime))
+            assertThat(createdDate, lessThanOrEqualTo(afterTime))
+            assertThat(modifiedDate, greaterThanOrEqualTo(beforeTime))
+            assertThat(modifiedDate, lessThanOrEqualTo(afterTime))
+            assertThat(committedDate, nullValue())
+            assertThat(status, sameInstance(RecordStatus.INCOMPLETE))
+        }
+
+        val metadata = repository.updateMetadata(result.id!!, RecordMetadataDTO(revision = 1, status = "READY"))
+
+        assertThat(metadata.status, sameInstance(RecordStatus.READY))
+        assertThat(metadata.revision, equalTo(2))
     }
 
-    private fun doCreate(): Record {
-        val record = Record().apply {
+    private fun doCreate() = repository.create(Record().apply {
             projectId = "p"
             userId = "u"
             sourceId = "s"
@@ -93,29 +117,7 @@ internal class RecordRepositoryImplTest {
                 contentType = "audio/mp3"
                 content = BlobProxy.generateProxy("test".toByteArray())
             })
-        }
-        val beforeTime = Instant.now()
-        val result = repository.create(record)
-        val afterTime = Instant.now()
-
-        assertThat(result.id, notNullValue())
-        assertThat(result.id ?: 0L, greaterThan(0L))
-        assertThat(result.contents, notNullValue())
-        result.contents?.first()?.let {
-            assertThat(it.content, notNullValue())
-            assertThat(it.content.binaryStream?.readAllBytes()?.toString(UTF_8), equalTo("test"))
-        }
-        assertThat(result.metadata, notNullValue())
-        result.metadata.let {
-            assertThat(it.createdDate, greaterThanOrEqualTo(beforeTime))
-            assertThat(it.createdDate, lessThanOrEqualTo(afterTime))
-            assertThat(it.modifiedDate, greaterThanOrEqualTo(beforeTime))
-            assertThat(it.modifiedDate, lessThanOrEqualTo(afterTime))
-            assertThat(it.committedDate, nullValue())
-            assertThat(it.status, sameInstance(RecordStatus.READY))
-        }
-        return result
-    }
+        })
 
     @Test
     fun readContent() {
@@ -173,6 +175,44 @@ internal class RecordRepositoryImplTest {
             assertThat(it.fileName, equalTo("Gibson.mp3"))
             assertThat(it.contentType, equalTo("audio/mp4"))
         } ?: assert(false)
+    }
+
+    @Test
+    fun deleteContent() {
+        val record = Record().apply {
+            projectId = "p"
+            userId = "u"
+            sourceId = "s"
+            time = LocalDateTime.parse("2019-01-01T00:00:00")
+            timeZoneOffset = 3600
+
+            contents = mutableSetOf(RecordContent().apply {
+                fileName = "Gibson.mp3"
+                contentType = "audio/mp3"
+                content = BlobProxy.generateProxy("test".toByteArray())
+            })
+        }
+
+        val result = repository.create(record)
+
+        assertThat(result.contents, hasSize(1))
+
+        repository.deleteContents(result, "Gibson.mp3")
+        assertThat(result.contents, hasSize(0))
+
+        val newContent = "test2".toByteArray()
+        repository.updateContent(result, "Gibson2.mp4", "audio/mp4",
+                ByteArrayInputStream(newContent), newContent.size.toLong())
+
+        assertThat(result.contents, hasSize(1))
+
+        assertThat(result.contents, notNullValue())
+        result.contents?.find { it.fileName == "Gibson2.mp4" }?.let {
+            assertThat(it.content, notNullValue())
+            assertThat(it.content.binaryStream?.readAllBytes()?.toString(UTF_8), equalTo("test2"))
+            assertThat(it.fileName, equalTo("Gibson2.mp4"))
+            assertThat(it.contentType, equalTo("audio/mp4"))
+        }
     }
 
     @Test
@@ -238,7 +278,7 @@ internal class RecordRepositoryImplTest {
         val record = doCreate()
         val id = record.id!!
         readLogs()
-        repository.delete(record)
+        repository.delete(record, 1)
         assertThat(repository.read(id), nullValue())
         assertThat(repository.readRecordContent(id, "Gibson.mp3"), nullValue())
         assertThat(repository.readLogs(id), nullValue())

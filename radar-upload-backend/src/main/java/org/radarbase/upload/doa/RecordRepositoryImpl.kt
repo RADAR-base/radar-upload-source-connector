@@ -134,6 +134,7 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
         val existingContent = record.contents?.find { it.fileName == fileName } ?: throw NotFoundException("file_not_found", "Cannot file $fileName in record ${record.id}")
         record.contents?.remove(existingContent)
         remove(existingContent)
+        merge(record)
     }
 
     override fun poll(limit: Int): List<Record> = em.get().transact {
@@ -144,11 +145,13 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
                 .setLockMode(LockModeType.PESSIMISTIC_WRITE)
                 .resultStream
                 .peek {
-                    it.metadata.status = RecordStatus.QUEUED
-                    it.metadata.message = "Record is queued for processing"
-                    it.metadata.revision += 1
-                    it.metadata.modifiedDate = Instant.now()
-                    merge(it.metadata)
+                    it.metadata.apply {
+                        status = RecordStatus.QUEUED
+                        message = "Record is queued for processing"
+                        revision += 1
+                        modifiedDate = Instant.now()
+                        merge(this)
+                    }
                 }
                 .toList()
     }
@@ -186,8 +189,8 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
 
             metadata = RecordMetadata().apply {
                 this.record = record
-                status = if (tmpContent == null) RecordStatus.INCOMPLETE else RecordStatus.READY
-                message = if (tmpContent == null) "No data uploaded yet" else "Data successfully uploaded, ready for processing."
+                status = if (record.metadata.status == RecordStatus.READY && tmpContent != null) RecordStatus.READY else RecordStatus.INCOMPLETE
+                message = record.metadata.message ?: "Initial state"
                 createdDate = Instant.now()
                 modifiedDate = Instant.now()
                 revision = 1
