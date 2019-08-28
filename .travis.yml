@@ -22,6 +22,6 @@ before_install:
   - docker-compose --version
 
 script:
-  - ./gradlew check
-  - sudo docker-compose -f $DOCKER_COMPOSE_FILE up -d && sleep 90 && ./gradlew integrationTest
+  - ./gradlew check --stacktrace
+  - sudo docker-compose -f $DOCKER_COMPOSE_FILE up -d && sleep 90 && ./gradlew integrationTest --stacktrace
   - sudo docker-compose -f $DOCKER_COMPOSE_FILE down
