@@ -2,13 +2,14 @@
 import { shallowMount } from '@vue/test-utils';
 import flushPromises from 'flush-promises';
 import { Store } from 'vuex-mock-store';
+import { wrap } from 'module';
 import UploadForm from '../UploadForm.vue';
 import fileAPI from '@/axios/file.js';
 
 const sourceTypeList = [
   {
     name: 'audioMp3',
-    contentTypes: ['audio/mp3'],
+    sourceType: ['audio/mp3'],
   },
 ];
 
@@ -55,20 +56,29 @@ describe('UploadForm', () => {
   });
   it('call api to get sourceTypes/resourceTypes and contentTypes when created', async () => {
     expect(wrapper.vm.sourceTypeList).toEqual(sourceTypeList.map(el => el.name));
-    expect(wrapper.vm.contentTypes).toEqual(sourceTypeList.map(el => el.contentTypes));
   });
 
   it('disable button', () => {
     const file = new File([''], 'filename1');
-    const UploadForm = wrapper.findAll('v-btn-stub').at(1);
-    expect(UploadForm.attributes().disabled).toBe('true');
+    const uploadbtn = wrapper.findAll('v-btn-stub').at(1);
+    expect(uploadbtn.attributes().disabled).toBe('true');
+
     wrapper.setData({ sourceType: '123' });
-    expect(UploadForm.attributes().disabled).toBe('true');
+    expect(uploadbtn.attributes().disabled).toBe('true');
+
     wrapper.setData({ file });
-    expect(UploadForm.attributes().disabled).not.toBe('true');
+    expect(uploadbtn.attributes().disabled).not.toBe('true');
+
+    wrapper.setProps({ uploadInfo: { userId: null } });
+    expect(uploadbtn.attributes().disabled).toBe('true');
+
+    wrapper.setData({ userId: 'userId' });
+    expect(uploadbtn.attributes().disabled).not.toBe('true');
   });
 
   it('upload files success', async () => {
+    wrapper.setData({ uploadInfo: postRecordBody });
+    const removeData = jest.spyOn(wrapper.vm, 'removeData');
     // mock POST /records
     const postReturnVal = { id: 'id1', createdDate: '2019-10-10' };
     const { projectId, userId } = wrapper.vm.uploadInfo;
@@ -84,40 +94,34 @@ describe('UploadForm', () => {
     files.push({ fileName: file.name, uploading: true });
 
 
-    const UploadForm = wrapper.findAll('v-btn-stub').at(1);
-    UploadForm.trigger('click');
+    wrapper.vm.uploadFile();
+    expect(wrapper.emitted().creatingRecord).toBeTruthy();
     await flushPromises();
-
     // postRecords
     expect(fileAPI.postRecords).toBeCalledWith(postRecordPayload);
     // eslint-disable-next-line max-len
     expect(wrapper.emitted().startUploading[0][0]).toEqual({ ...postReturnVal, files, active: true });
-    expect(wrapper.vm.menu).toBe(false);
 
     // putRecords
     expect(fileAPI.putRecords).toBeCalledWith(putRecordPayload);
-    expect(wrapper.emitted().addUploadingFile[0][0]).toEqual(putReturnVal);
+    expect(wrapper.emitted().finishUpload[0][0]).toEqual(putReturnVal);
+    expect(removeData).toBeCalled();
   });
 
   it('uploadfile error', async () => {
-    wrapper.setData({ menu: true });
-    fileAPI.postRecords.mockRejectedValue();
-    const UploadForm = wrapper.findAll('v-btn-stub').at(1);
-    UploadForm.trigger('click');
+    const removeData = jest.spyOn(wrapper.vm, 'removeData');
+    fileAPI.postRecords = jest.fn().mockRejectedValue();
+
+    wrapper.vm.uploadFile();
     await flushPromises();
-    expect(wrapper.vm.menu).toBe(false);
+    expect(wrapper.emitted().uploadFailed).toBeTruthy();
     expect(wrapper.vm.$error).toBeCalled();
+    expect(removeData).toBeCalled();
   });
 
-  it('close menu on cancel click', () => {
-    const cancelBtn = wrapper.findAll('v-btn-stub').at(0);
-    cancelBtn.trigger('click');
-    expect(wrapper.vm.menu).toBe(false);
-  });
 
-  it('remove data when menu closes', () => {
-    wrapper.setData({ menu: true });
-    wrapper.setData({ menu: false });
+  it('removeData', () => {
+    wrapper.vm.removeData();
     expect(wrapper.vm.file).toEqual([]);
     expect(wrapper.vm.sourceType).toBe('');
     expect(wrapper.vm.sourceTypeList).toEqual([]);
