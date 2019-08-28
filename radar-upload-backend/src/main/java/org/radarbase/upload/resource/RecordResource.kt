@@ -28,6 +28,7 @@ import org.radarbase.upload.doa.RecordRepository
 import org.radarbase.upload.doa.SourceTypeRepository
 import org.radarbase.upload.doa.entity.RecordStatus
 import org.radarbase.upload.dto.CallbackManager
+import org.radarbase.upload.exception.ConflictException
 import org.radarcns.auth.authorization.Permission.*
 import org.slf4j.LoggerFactory
 import java.io.InputStream
@@ -66,7 +67,6 @@ class RecordResource {
     @Context
     lateinit var sourceTypeRepository: SourceTypeRepository
 
-
     @GET
     fun query(
             @QueryParam("projectId") projectId: String?,
@@ -92,7 +92,6 @@ class RecordResource {
     @POST
     @NeedsPermission(Entity.MEASUREMENT, Operation.CREATE)
     fun create(record: RecordDTO): Response {
-
         validateNewRecord(record, auth)
 
         val doaRecord = recordMapper.toRecord(record)
@@ -102,6 +101,21 @@ class RecordResource {
         return Response.created(URI("${uri.baseUri}records/${result.id}"))
                 .entity(recordMapper.fromRecord(result))
                 .build()
+    }
+
+    @DELETE
+    @Path("{recordId}")
+    @NeedsPermission(Entity.MEASUREMENT, Operation.CREATE)
+    fun delete(@PathParam("id") recordId: Long,
+            @QueryParam("revision") revision: Int): Response {
+        val record = recordRepository.read(recordId)
+                ?: throw NotFoundException("Record with ID $recordId does not exist")
+
+        auth.checkUserPermission(MEASUREMENT_CREATE, record.projectId, record.userId)
+
+        recordRepository.delete(record, revision)
+
+        return Response.noContent().build()
     }
 
     private fun validateNewRecord(record: RecordDTO, auth: Auth) {
@@ -156,7 +170,7 @@ class RecordResource {
         auth.checkUserPermission(MEASUREMENT_CREATE, record.projectId, record.userId)
 
         if (record.metadata.status != RecordStatus.INCOMPLETE) {
-            throw WebApplicationException("Cannot add files to saved record.", Response.Status.CONFLICT)
+            throw ConflictException("incompatible_status", "Cannot add files to saved record.")
         }
 
         val content = recordRepository.updateContent(record, fileName, contentType, input, contentLength)

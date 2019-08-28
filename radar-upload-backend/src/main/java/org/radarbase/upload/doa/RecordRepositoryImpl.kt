@@ -130,7 +130,7 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
         }
 
         merge(record)
-        return@transact result
+        result
     }
 
     override fun poll(limit: Int): List<Record> = em.get().transact {
@@ -233,7 +233,16 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
         merge<RecordMetadata>(existingMetadata)
     }
 
-    override fun delete(record: Record) = em.get().transact { remove(record) }
+    override fun delete(record: Record, revision: Int) = em.get().transact {
+        refresh(record)
+        if (record.metadata.revision != revision) {
+            throw ConflictException("incompatible_revision", "Revision in metadata ${record.metadata.revision} does not match provided revision $revision")
+        }
+        if (record.metadata.status == RecordStatus.PROCESSING) {
+            throw ConflictException("incompatible_status", "Cannot delete record ${record.id}: it is currently being processed.")
+        }
+        remove(record)
+    }
 
     override fun readMetadata(id: Long): RecordMetadata? = em.get().transact { find(RecordMetadata::class.java, id) }
 
@@ -247,16 +256,19 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
                 throw BadRequestException("unknown_status", "Record status $from is not a known status. Use one of: ${RecordStatus.values().joinToString()}.")
             }
 
-            return toStatus in allowedStateTransitions[from] ?: throw BadRequestException("unknown_status", "Record status $from is not a known status. Use one of: ${RecordStatus.values().joinToString()}.")
+            return toStatus == from
+                    || toStatus in allowedStateTransitions[from]
+                    ?: throw BadRequestException("unknown_status", "Record status $from is not a known status. Use one of: ${RecordStatus.values().joinToString()}.")
         }
 
         private val allowedStateTransitions: Map<RecordStatus, Set<RecordStatus>> = EnumMap<RecordStatus, Set<RecordStatus>>(RecordStatus::class.java).apply {
-            this[RecordStatus.INCOMPLETE] = setOf(RecordStatus.READY, RecordStatus.INCOMPLETE, RecordStatus.FAILED)
-            this[RecordStatus.READY] = setOf(RecordStatus.READY, RecordStatus.QUEUED, RecordStatus.FAILED)
-            this[RecordStatus.QUEUED] = setOf(RecordStatus.QUEUED, RecordStatus.PROCESSING, RecordStatus.READY, RecordStatus.FAILED)
-            this[RecordStatus.PROCESSING] = setOf(RecordStatus.READY, RecordStatus.PROCESSING, RecordStatus.SUCCEEDED, RecordStatus.FAILED)
-            this[RecordStatus.FAILED] = setOf(RecordStatus.FAILED)
-            this[RecordStatus.SUCCEEDED] = setOf(RecordStatus.SUCCEEDED)
+            this[RecordStatus.INCOMPLETE] = setOf(RecordStatus.READY, RecordStatus.FAILED)
+            this[RecordStatus.READY] = setOf(RecordStatus.QUEUED, RecordStatus.FAILED)
+            this[RecordStatus.QUEUED] = setOf(RecordStatus.PROCESSING, RecordStatus.READY, RecordStatus.FAILED)
+            this[RecordStatus.PROCESSING] = setOf(RecordStatus.READY, RecordStatus.SUCCEEDED, RecordStatus.FAILED)
+            this[RecordStatus.FAILED] = setOf()
+            this[RecordStatus.SUCCEEDED] = setOf()
         }
+
     }
 }
