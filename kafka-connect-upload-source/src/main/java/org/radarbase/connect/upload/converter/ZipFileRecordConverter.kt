@@ -44,11 +44,11 @@ abstract class ZipFileRecordConverter(sourceType: String, listOfDataProcessors: 
             zippedInput.use {
                 while ({ zippedEntry = zippedInput.nextEntry; zippedEntry }() != null) {
                     val entryName = zippedEntry!!.name.trim()
-                    logger.info("Processing entry $entryName from record ${record.id}")
+                    logger.debug("Processing entry $entryName from record ${record.id}")
                     convertedTopicData.addAll(processContent(object : FilterInputStream(zippedInput) {
                         @Throws(IOException::class)
                         override fun close() {
-                            logger.info("Closing entry $entryName")
+                            logger.debug("Closing entry $entryName")
                             zippedInput.closeEntry()
                         }
                     }, entryName, timeReceived))
@@ -56,9 +56,9 @@ abstract class ZipFileRecordConverter(sourceType: String, listOfDataProcessors: 
             }
             convertedTopicData.last().endOfFileOffSet = true
         } catch (exe: IOException) {
-            logger.error("Failed to process zipped input from record ${record.id}", exe)
+            log(LogLevel.ERROR, "Failed to process zipped input from record ${record.id}", exe)
         } catch (exe: Exception) {
-            logger.error("Could not process record ${record.id}", exe)
+            log(LogLevel.ERROR, "Could not process record ${record.id}", exe)
         }
 
         return convertedTopicData

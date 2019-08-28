@@ -32,6 +32,7 @@ import org.radarcns.kafka.ObservationKey
 import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.io.InputStream
+import java.lang.Exception
 import java.time.Instant
 
 
@@ -60,14 +61,20 @@ abstract class RecordConverter(override val sourceType: String, val avroData: Av
         }
     }
 
-    fun log(logLevel: LogLevel, logMessage: String) {
+    fun log(logLevel: LogLevel, logMessage: String, exe: Exception? = null) {
         logsRepository.add(Log(logLevel, logMessage))
 
         when (logLevel) {
             INFO -> logger.info(logMessage)
             WARN -> logger.warn(logMessage)
             DEBUG -> logger.debug(logMessage)
-            ERROR -> logger.error(logMessage)
+            ERROR -> {
+                if (exe != null) {
+                    logger.error(logMessage, exe)
+                } else {
+                    logger.error(logMessage)
+                }
+            }
         }
     }
 
