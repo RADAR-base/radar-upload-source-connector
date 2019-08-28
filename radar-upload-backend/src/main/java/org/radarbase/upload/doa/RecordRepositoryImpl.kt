@@ -174,7 +174,7 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
                 .resultList.firstOrNull()?.binaryStream?.readAllBytes()
     }
 
-    override fun create(record: Record): Record = em.get().transact {
+    override fun create(record: Record, metadataDto: RecordMetadataDTO?): Record = em.get().transact {
         val tmpContent = record.contents?.also { record.contents = null }
 
         persist(record)
@@ -189,8 +189,8 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
 
             metadata = RecordMetadata().apply {
                 this.record = record
-                status = if (record.metadata.status == RecordStatus.READY && tmpContent != null) RecordStatus.READY else RecordStatus.INCOMPLETE
-                message = record.metadata.message ?: "Initial state"
+                status = if (metadataDto?.status == RecordStatus.READY.toString() && tmpContent != null) RecordStatus.READY else RecordStatus.INCOMPLETE
+                message = metadataDto?.message ?: "Initial state"
                 createdDate = Instant.now()
                 modifiedDate = Instant.now()
                 revision = 1

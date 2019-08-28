@@ -64,7 +64,7 @@ class RecordMapperImpl : RecordMapper {
 
     override fun fromRecord(record: Record) = RecordDTO(
             id = record.id!!,
-            metadata = fromMetadata(record.metadata!!).apply { id = null },
+            metadata = fromMetadata(record.metadata).apply { id = null },
             sourceType = record.sourceType.name,
             data = RecordDataDTO(
                     projectId = record.projectId,
