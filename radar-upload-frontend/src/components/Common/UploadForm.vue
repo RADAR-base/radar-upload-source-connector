@@ -86,7 +86,6 @@ export default {
     removeData() {
       this.file = [];
       this.sourceType = '';
-      this.sourceTypeList = [];
     },
     async uploadFile() {
       const { projectId } = this.uploadInfo;
