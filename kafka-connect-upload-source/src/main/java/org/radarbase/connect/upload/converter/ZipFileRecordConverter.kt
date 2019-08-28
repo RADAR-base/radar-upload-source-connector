@@ -26,6 +26,8 @@ import org.slf4j.LoggerFactory
 import java.io.FilterInputStream
 import java.io.IOException
 import java.io.InputStream
+import java.lang.Exception
+import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 
 
@@ -33,36 +35,38 @@ abstract class ZipFileRecordConverter(sourceType: String) : RecordConverter(sour
 
     override fun processData(contents: ContentsDTO, inputStream: InputStream, record: RecordDTO, timeReceived: Double): List<TopicData> {
         log(LogLevel.INFO,"Retrieved file content from record id ${record.id} and filename ${contents.fileName}")
-        readZipStream(inputStream)
         val convertedTopicData = mutableListOf<TopicData>()
+        try {
+            val zippedInput = ZipInputStream(inputStream)
+            var zippedEntry: ZipEntry? = null
+            zippedInput.use {
+                while ({ zippedEntry = zippedInput.nextEntry; zippedEntry }() != null) {
+                    val entryName = zippedEntry!!.name
+                    logger.info("Processing entry $entryName from record ${record.id}")
+                    convertedTopicData.addAll(processContent(object : FilterInputStream(zippedInput) {
+                        @Throws(IOException::class)
+                        override fun close() {
+                            logger.info("Closing entry $entryName")
+                            zippedInput.closeEntry()
+                        }
+                    }, entryName, timeReceived))
+                }
+            }
+            convertedTopicData.last().endOfFileOffSet = true
+        } catch (exe: IOException) {
+            logger.error("Failed to process zipped input from record ${record.id}", exe)
+        } catch (exe: Exception) {
+            logger.error("Could not process record ${record.id}", exe)
+        }
 
         return convertedTopicData
     }
 
-    @Throws(IOException::class)
-    fun readZipStream(`in`: InputStream) {
-        val zipIn = ZipInputStream(`in`)
-        val entry = zipIn.nextEntry
-        while (entry != null) {
-            logger.info("This is ${entry.name}")
-            readContents(object : FilterInputStream(zipIn) {
-                @Throws(IOException::class)
-                override fun close() {
-                    zipIn.closeEntry()
-                }
-            })
-        }
+    private fun processContent(inputStream: InputStream, zipEntryName: String, timeReceived: Double): List<TopicData> {
+        return getCsvProcessor(zipEntryName).processCsvContent(inputStream, timeReceived)
     }
 
-    abstract fun validateHeaderSchema(csvHeader: List<String>): Boolean
-
-    private fun readContents(inputStream: InputStream): TopicData? {
-
-        logger.info("Processing each file ${inputStream.read()}")
-        return null
-    }
-
-    abstract fun convertLineToRecord(lineValues: Map<String, String>, timeReceived: Double): TopicData?
+    abstract fun getCsvProcessor(zipEntryName: String): CsvProcessor
 
     companion object {
         private val logger = LoggerFactory.getLogger(ZipFileRecordConverter::class.java)
