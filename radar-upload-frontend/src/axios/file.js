@@ -99,7 +99,7 @@ export default {
   },
 
   async download({ recordId, fileName }) {
-    const url = `${process.env.VUE_APP_BASE_URL}/${recordId}/contents/${fileName}`;
+    const url = `${process.env.VUE_APP_BASE_URL}/records/${recordId}/contents/${fileName}`;
     downLoadFile(fileName, url);
   },
 };
