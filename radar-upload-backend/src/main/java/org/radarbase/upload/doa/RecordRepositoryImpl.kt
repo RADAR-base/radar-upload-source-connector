@@ -19,21 +19,25 @@
 
 package org.radarbase.upload.doa
 
+import com.mchange.util.IntObjectMap
 import org.hibernate.Hibernate
 import org.hibernate.Session
 import org.radarbase.upload.api.RecordMetadataDTO
 import org.radarbase.upload.doa.entity.*
+import org.radarbase.upload.exception.BadRequestException
 import org.radarbase.upload.exception.ConflictException
+import org.radarbase.upload.exception.NotFoundException
 import org.radarbase.upload.inject.session
 import org.radarbase.upload.inject.transact
 import org.slf4j.LoggerFactory
 import java.io.InputStream
+import java.lang.IllegalArgumentException
 import java.sql.Blob
 import java.time.Instant
+import java.util.*
 import javax.persistence.EntityManager
 import javax.persistence.LockModeType
 import javax.persistence.PessimisticLockScope
-import javax.ws.rs.NotFoundException
 import javax.ws.rs.core.Context
 import kotlin.collections.HashSet
 import kotlin.streams.toList
@@ -215,18 +219,11 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
             throw ConflictException("incompatible_revision", "Requested meta data revision ${metadata.revision} " +
                     "should match the latest existing revision ${existingMetadata.revision}")
 
-        if (metadata.status == RecordStatus.PROCESSING.toString()
-                && existingMetadata.status != RecordStatus.QUEUED) {
+        if (!allowedStateTransition(existingMetadata.status, metadata.status)) {
             throw ConflictException("incompatible_status", "Record cannot be updated: Conflict in record meta-data status. " +
-                    "Found ${existingMetadata.status}, expected ${RecordStatus.QUEUED}")
+                    "Cannot transition from state ${existingMetadata.status} to ${metadata.status}")
         }
 
-        if ((metadata.status == RecordStatus.SUCCEEDED.toString()
-                || metadata.status == RecordStatus.FAILED.toString())
-                && existingMetadata.status != RecordStatus.PROCESSING) {
-            throw ConflictException("incompatible_status", "Record cannot be updated: Conflict in record meta-data status. " +
-                    "Found ${existingMetadata.status}, expected ${RecordStatus.PROCESSING}")
-        }
         logger.debug("Updating record $id status from ${existingMetadata.status} to ${metadata.status}")
         existingMetadata.apply {
             status = RecordStatus.valueOf(metadata.status)
@@ -242,5 +239,24 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
 
     companion object {
         private val logger = LoggerFactory.getLogger(RecordRepositoryImpl::class.java)
+
+        private fun allowedStateTransition(from: RecordStatus, to: String): Boolean {
+            val toStatus = try {
+                RecordStatus.valueOf(to)
+            } catch (ex: IllegalArgumentException) {
+                throw BadRequestException("unknown_status", "Record status $from is not a known status. Use one of: ${RecordStatus.values().joinToString()}.")
+            }
+
+            return toStatus in allowedStateTransitions[from] ?: throw BadRequestException("unknown_status", "Record status $from is not a known status. Use one of: ${RecordStatus.values().joinToString()}.")
+        }
+
+        private val allowedStateTransitions: Map<RecordStatus, Set<RecordStatus>> = EnumMap<RecordStatus, Set<RecordStatus>>(RecordStatus::class.java).apply {
+            this[RecordStatus.INCOMPLETE] = setOf(RecordStatus.READY, RecordStatus.INCOMPLETE, RecordStatus.FAILED)
+            this[RecordStatus.READY] = setOf(RecordStatus.READY, RecordStatus.QUEUED, RecordStatus.FAILED)
+            this[RecordStatus.QUEUED] = setOf(RecordStatus.QUEUED, RecordStatus.PROCESSING, RecordStatus.READY, RecordStatus.FAILED)
+            this[RecordStatus.PROCESSING] = setOf(RecordStatus.READY, RecordStatus.PROCESSING, RecordStatus.SUCCEEDED, RecordStatus.FAILED)
+            this[RecordStatus.FAILED] = setOf(RecordStatus.FAILED)
+            this[RecordStatus.SUCCEEDED] = setOf(RecordStatus.SUCCEEDED)
+        }
     }
 }
