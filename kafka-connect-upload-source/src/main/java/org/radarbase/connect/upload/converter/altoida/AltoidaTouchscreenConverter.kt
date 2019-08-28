@@ -19,12 +19,12 @@
 
 package org.radarbase.connect.upload.converter.altoida
 
-import org.radarbase.connect.upload.converter.CsvRecordConverter
-import org.radarbase.connect.upload.converter.TopicData
+import org.radarbase.connect.upload.converter.*
 import org.radarcns.connector.upload.altoida.AltoidaTouchscreen
 
-class AltoidaTouchscreenConverter(override val sourceType: String = "altoida_touchscreen", val topic: String = "connect_upload_altoida_touchscreen")
-    : CsvRecordConverter(sourceType) {
+class AltoidaTouchscreenCsvProcessor(
+        override val schemaType: String = "_NORMAL.csv",
+        val topic: String = "connect_upload_altoida_touchscreen") : AbstractCsvProcessor(schemaType) {
 
     override fun validateHeaderSchema(csvHeader: List<String>) =
             listOf("TIMESTAMP", "X", "Y") == (csvHeader)
@@ -41,3 +41,7 @@ class AltoidaTouchscreenConverter(override val sourceType: String = "altoida_tou
         return TopicData(false, topic, normalVector)
     }
 }
+
+class AltoidaTouchscreenConverter(
+        sourceType: String = "altoida_touchscreen", csvProcessor: CsvProcessor = AltoidaTouchscreenCsvProcessor())
+    : CsvFileConverter(sourceType, csvProcessor)
