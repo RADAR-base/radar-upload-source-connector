@@ -21,8 +21,9 @@ package org.radarbase.connect.upload.converter
 
 import org.radarcns.passive.phone.PhoneAcceleration
 
-class AccelerometerCsvRecordConverter(override val sourceType: String = "phone-acceleration", val topic: String = "android_phone_acceleration")
-    : CsvRecordConverter(sourceType) {
+class AccelerometerCsvProcessor(
+        override val schemaType: String = "_ACC.csv",
+        val topic: String = "android_phone_acceleration") : AbstractCsvProcessor(schemaType) {
 
     override fun validateHeaderSchema(csvHeader: List<String>) =
             listOf("TIMESTAMP", "X", "Y", "Z") == (csvHeader)
@@ -40,3 +41,7 @@ class AccelerometerCsvRecordConverter(override val sourceType: String = "phone-a
         return TopicData(false, topic, acceleration)
     }
 }
+
+class AccelerometerCsvRecordConverter(
+        sourceType: String = "phone-acceleration", csvProcessor: CsvProcessor = AccelerometerCsvProcessor())
+    : CsvFileConverter(sourceType, csvProcessor)
