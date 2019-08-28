@@ -32,7 +32,6 @@ import org.radarbase.upload.exception.ConflictException
 import org.radarcns.auth.authorization.Permission.*
 import org.slf4j.LoggerFactory
 import java.io.InputStream
-import java.lang.Exception
 import java.lang.IllegalStateException
 import java.net.URI
 import javax.annotation.Resource
@@ -106,7 +105,7 @@ class RecordResource {
     @DELETE
     @Path("{recordId}")
     @NeedsPermission(Entity.MEASUREMENT, Operation.CREATE)
-    fun delete(@PathParam("id") recordId: Long,
+    fun delete(@PathParam("recordId") recordId: Long,
             @QueryParam("revision") revision: Int): Response {
         val record = recordRepository.read(recordId)
                 ?: throw NotFoundException("Record with ID $recordId does not exist")
@@ -114,6 +113,21 @@ class RecordResource {
         auth.checkUserPermission(MEASUREMENT_CREATE, record.projectId, record.userId)
 
         recordRepository.delete(record, revision)
+
+        return Response.noContent().build()
+    }
+
+    @DELETE
+    @Path("{recordId}/contents/{fileName}")
+    fun deleteContents(
+            @PathParam("recordId") recordId: Long,
+            @PathParam("fileName") fileName: String): Response {
+        val record = recordRepository.read(recordId)
+                ?: throw NotFoundException("Record with ID $recordId does not exist")
+
+        auth.checkUserPermission(MEASUREMENT_CREATE, record.projectId, record.userId)
+
+        recordRepository.deleteContents(record, fileName)
 
         return Response.noContent().build()
     }
