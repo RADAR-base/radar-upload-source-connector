@@ -25,6 +25,7 @@ import org.radarbase.upload.doa.entity.RecordContent
 import org.radarbase.upload.doa.entity.RecordMetadata
 import org.radarbase.upload.doa.entity.RecordStatus
 import java.lang.IllegalArgumentException
+import java.net.URLEncoder
 import java.time.Instant
 import javax.ws.rs.BadRequestException
 import javax.ws.rs.core.Context
@@ -84,12 +85,18 @@ class RecordMapperImpl : RecordMapper {
             limit = limit,
             records = records.map(::fromRecord))
 
-    override fun fromContent(content: RecordContent) = ContentsDTO(
-            url = "${uri.baseUri}/records/${content.record.id}/contents/${content.fileName}",
-            contentType = content.contentType,
-            createdDate = content.createdDate,
-            size = content.size,
-            fileName = content.fileName)
+    override fun fromContent(content: RecordContent): ContentsDTO {
+        val cleanedFileName = URLEncoder.encode(content.fileName, "UTF-8")
+                .replace("+", "%20")
+        val cleanedBase = uri.baseUri.toString().trimEnd('/')
+
+        return ContentsDTO(
+                url = "$cleanedBase/records/${content.record.id}/contents/$cleanedFileName",
+                contentType = content.contentType,
+                createdDate = content.createdDate,
+                size = content.size,
+                fileName = content.fileName)
+    }
 
     override fun fromMetadata(metadata: RecordMetadata) = RecordMetadataDTO(
             id = metadata.id,
