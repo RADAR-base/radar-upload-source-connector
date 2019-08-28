@@ -28,6 +28,7 @@ import org.radarbase.upload.doa.RecordRepository
 import org.radarbase.upload.doa.SourceTypeRepository
 import org.radarbase.upload.doa.entity.RecordStatus
 import org.radarbase.upload.dto.CallbackManager
+import org.radarbase.upload.exception.BadRequestException as RbBadRequestException
 import org.radarbase.upload.exception.ConflictException
 import org.radarcns.auth.authorization.Permission.*
 import org.slf4j.LoggerFactory
@@ -39,7 +40,6 @@ import javax.ws.rs.*
 import javax.ws.rs.core.*
 import kotlin.math.max
 import kotlin.math.min
-
 
 @Path("records")
 @Produces(MediaType.APPLICATION_JSON)
@@ -74,7 +74,7 @@ class RecordResource {
             @QueryParam("lastId") lastId: Long?,
             @QueryParam("status") status: String?): RecordContainerDTO {
 
-        projectId ?: throw BadRequestException("Required project ID not provided.")
+        projectId ?: throw RbBadRequestException("missing_project", "Required project ID not provided.")
 
         if (userId != null) {
             auth.checkUserPermission(SUBJECT_READ, projectId, userId)
@@ -93,8 +93,8 @@ class RecordResource {
     fun create(record: RecordDTO): Response {
         validateNewRecord(record, auth)
 
-        val doaRecord = recordMapper.toRecord(record)
-        val result = recordRepository.create(doaRecord)
+        val (doaRecord, metadata) = recordMapper.toRecord(record)
+        val result = recordRepository.create(doaRecord, metadata, record.data?.contents)
 
         logger.info("Record created $result")
         return Response.created(URI("${uri.baseUri}records/${result.id}"))
@@ -134,36 +134,35 @@ class RecordResource {
 
     private fun validateNewRecord(record: RecordDTO, auth: Auth) {
         if (record.id != null) {
-            throw BadRequestException("Record ID cannot be set explicitly")
+            throw RbBadRequestException("field_forbidden", "Record ID cannot be set explicitly")
         }
         val sourceTypeName = record.sourceType
-                ?: throw BadRequestException("Record needs a source type")
-        val data = record.data ?: throw BadRequestException("Record needs data")
+                ?: throw RbBadRequestException("field_missing", "Record needs a source type")
+        val data = record.data ?: throw RbBadRequestException("field_missing", "Record needs data")
 
-        data.projectId ?: throw BadRequestException("Record needs a project ID")
-        data.userId ?: throw BadRequestException("Record needs a user ID")
+        data.projectId ?: throw RbBadRequestException("project_missing", "Record needs a project ID")
+        data.userId ?: throw RbBadRequestException("user_missing", "Record needs a user ID")
 
         auth.checkUserPermission(MEASUREMENT_CREATE, data.projectId, data.userId)
 
         data.contents?.forEach {
-            it.text
-                    ?: throw BadRequestException("Contents need explicit text value set in UTF-8 encoding.")
+            it.text ?: throw RbBadRequestException("field_missing", "Contents need explicit text value set in UTF-8 encoding.")
             if (it.url != null) {
-                throw BadRequestException("Cannot process URL for content file name ${it.fileName}")
+                throw RbBadRequestException("field_forbidden", "Cannot process URL for content file name ${it.fileName}")
             }
         }
         if (record.metadata != null) {
-            throw BadRequestException("Record metadata cannot be set explicitly")
+            throw RbBadRequestException("field_forbidden", "Record metadata cannot be set explicitly")
         }
 
         val sourceType = sourceTypeRepository.read(sourceTypeName)
-                ?: throw BadRequestException("Source type $sourceTypeName does not exist.")
+                ?: throw RbBadRequestException("source_type_not_found", "Source type $sourceTypeName does not exist.")
 
         if (sourceType.timeRequired && (data.time == null || data.timeZoneOffset == null)) {
-            throw BadRequestException("Time and time zone offset values are required for this source type.")
+            throw RbBadRequestException("field_missing", "Time and time zone offset values are required for this source type.")
         }
         if (sourceType.sourceIdRequired && data.sourceId == null) {
-            throw BadRequestException("Source ID is required for source type $sourceTypeName.")
+            throw RbBadRequestException("field_missing", "Source ID is required for source type $sourceTypeName.")
         }
     }
 
@@ -226,7 +225,9 @@ class RecordResource {
     @Path("poll")
     fun poll(pollDTO: PollDTO): RecordContainerDTO {
         if (auth.isClientCredentials) {
-            val imposedLimit = Math.min(Math.max(pollDTO.limit, 1), 100)
+            val imposedLimit = pollDTO.limit
+                    .coerceAtLeast(1)
+                    .coerceAtMost(100)
             val records = recordRepository.poll(imposedLimit)
             return recordMapper.fromRecords(records, imposedLimit)
         } else {

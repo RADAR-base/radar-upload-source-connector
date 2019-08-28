@@ -21,6 +21,7 @@ package org.radarbase.upload.doa
 
 import org.hibernate.Hibernate
 import org.hibernate.Session
+import org.radarbase.upload.api.ContentsDTO
 import org.radarbase.upload.api.RecordMetadataDTO
 import org.radarbase.upload.doa.entity.*
 import org.radarbase.upload.exception.BadRequestException
@@ -174,29 +175,37 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
                 .resultList.firstOrNull()?.binaryStream?.readAllBytes()
     }
 
-    override fun create(record: Record, metadataDto: RecordMetadataDTO?): Record = em.get().transact {
-        val tmpContent = record.contents?.also { record.contents = null }
-
+    override fun create(record: Record, metadata: RecordMetadata?, contents: Set<ContentsDTO>?): Record = em.get().transact {
         persist(record)
 
-        record.apply {
-            contents = tmpContent?.mapTo(HashSet()) {
-                it.record = record
-                it.createdDate = Instant.now()
-                persist(it)
-                it
-            }
+        record.contents = contents
+                ?.filter { it.text != null }
+                ?.takeIf { it.isNotEmpty() }
+                ?.mapTo(HashSet()) { content ->
+                    RecordContent().apply {
+                        this.record = record
+                        this.fileName = content.fileName
+                        this.createdDate = Instant.now()
+                        this.contentType = content.contentType
+                        this.size = content.text!!.length.toLong()
+                        this.content = Hibernate.getLobCreator(em.get().unwrap(Session::class.java))
+                                .createBlob(content.text!!.toByteArray(Charsets.UTF_8))
+                    }
+                }
+                ?.onEach { persist(it) }
 
-            metadata = RecordMetadata().apply {
-                this.record = record
-                status = if (metadataDto?.status == RecordStatus.READY.toString() && tmpContent != null) RecordStatus.READY else RecordStatus.INCOMPLETE
-                message = metadataDto?.message ?: "Initial state"
-                createdDate = Instant.now()
-                modifiedDate = Instant.now()
-                revision = 1
-                persist(this)
-            }
+        record.metadata = RecordMetadata().apply {
+            this.record = record
+            status = if (metadata?.status == RecordStatus.READY && record.contents != null) RecordStatus.READY else RecordStatus.INCOMPLETE
+            message = metadata?.message ?: "Initial state"
+            createdDate = Instant.now()
+            modifiedDate = Instant.now()
+            revision = 1
+            callbackUrl = metadata?.callbackUrl
+            persist(this)
         }
+
+        record
     }
 
     override fun read(id: Long): Record? = em.get().transact { find(Record::class.java, id) }
@@ -225,14 +234,16 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
             throw ConflictException("incompatible_revision", "Requested meta data revision ${metadata.revision} " +
                     "should match the latest existing revision ${existingMetadata.revision}")
 
-        if (!allowedStateTransition(existingMetadata.status, metadata.status)) {
-            throw ConflictException("incompatible_status", "Record cannot be updated: Conflict in record meta-data status. " +
-                    "Cannot transition from state ${existingMetadata.status} to ${metadata.status}")
-        }
-
         logger.debug("Updating record $id status from ${existingMetadata.status} to ${metadata.status}")
         existingMetadata.apply {
-            status = RecordStatus.valueOf(metadata.status)
+            metadata.status?.let { newStatus ->
+                if (!allowedStateTransition(existingMetadata.status, newStatus)) {
+                    throw ConflictException("incompatible_status", "Record cannot be updated: Conflict in record meta-data status. " +
+                            "Cannot transition from state ${existingMetadata.status} to ${metadata.status}")
+                }
+
+                status = RecordStatus.valueOf(newStatus)
+            }
             message = metadata.message
         }.update()
 

@@ -24,6 +24,7 @@ import org.radarbase.upload.doa.entity.Record
 import org.radarbase.upload.doa.entity.RecordContent
 import org.radarbase.upload.doa.entity.RecordMetadata
 import org.radarbase.upload.doa.entity.RecordStatus
+import java.lang.IllegalArgumentException
 import java.time.Instant
 import javax.ws.rs.BadRequestException
 import javax.ws.rs.core.Context
@@ -36,28 +37,32 @@ class RecordMapperImpl : RecordMapper {
     @Context
     lateinit var sourceTypeRepository: SourceTypeRepository
 
-    override fun toRecord(record: RecordDTO): Record = Record().apply {
-        val data = record.data ?: throw BadRequestException("No data field included")
-        if (record.metadata != null) {
-            metadata = toMetadata(record.metadata)
-        } else {
-            metadata = RecordMetadata().apply {
-                revision = 1
-                status = RecordStatus.INCOMPLETE
-            }
+    override fun toRecord(record: RecordDTO): Pair<Record, RecordMetadata> {
+        val recordDoa = Record().apply {
+            val data = record.data ?: throw BadRequestException("No data field included")
+            projectId = data.projectId ?: throw BadRequestException("Missing project ID")
+            userId = data.userId ?: throw BadRequestException("Missing user ID")
+            sourceId = data.sourceId ?: throw BadRequestException("Missing source ID")
+            sourceType = sourceTypeRepository.read(record.sourceType
+                    ?: throw BadRequestException("Missing source type"))
+                    ?: throw BadRequestException("Source type not found")
         }
-        projectId = data.projectId ?: throw BadRequestException("Missing project ID")
-        userId = data.userId ?: throw BadRequestException("Missing user ID")
-        sourceId = data.sourceId ?: throw BadRequestException("Missing source ID")
-        sourceType = sourceTypeRepository.read(record.sourceType
-                ?: throw BadRequestException("Missing source type"))
-                ?: throw BadRequestException("Source type not found")
+
+        return Pair(recordDoa, toMetadata(record.metadata))
     }
 
-    fun toMetadata(metadata: RecordMetadataDTO?) = RecordMetadata().apply {
+    private fun toMetadata(metadata: RecordMetadataDTO?) = RecordMetadata().apply {
         createdDate = Instant.now()
         modifiedDate = Instant.now()
         revision = 1
+
+        status = metadata?.status?.let {
+            try {
+                RecordStatus.valueOf(it)
+            } catch (ex: IllegalArgumentException) {
+                null
+            }
+        } ?: RecordStatus.INCOMPLETE
 
         callbackUrl = metadata?.callbackUrl
     }
