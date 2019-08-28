@@ -19,6 +19,7 @@
 
 package org.radarbase.upload.doa
 
+import org.radarbase.upload.api.ContentsDTO
 import org.radarbase.upload.api.RecordMetadataDTO
 import org.radarbase.upload.doa.entity.Record
 import org.radarbase.upload.doa.entity.RecordContent
@@ -28,7 +29,7 @@ import java.io.InputStream
 import java.io.Reader
 
 interface RecordRepository {
-    fun create(record: Record, metadataDto: RecordMetadataDTO? = null): Record
+    fun create(record: Record, metadata: RecordMetadata? = null, contents: Set<ContentsDTO>? = null): Record
     fun read(id: Long): Record?
     fun readLogs(id: Long): RecordLogs?
     fun updateLogs(id: Long, logsData: String): RecordMetadata
