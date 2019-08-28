@@ -11,7 +11,7 @@
 
       <QuickUpload />
       <PatientFilter v-show="tab==0" />
-      <FileFilter v-show="tab==1" />
+      <RecordFilter v-show="tab==1" />
 
       <template #extension>
         <v-tabs
@@ -49,7 +49,7 @@
         </v-tab-item>
 
         <v-tab-item :value="1">
-          <FileTable :is-active="tab==1" />
+          <RecordTable :is-active="tab==1" />
         </v-tab-item>
       </v-card>
     </v-tabs-items>
@@ -59,16 +59,16 @@
 <script>
 import PatientTable from '@/components/Patient/PatientTable';
 import PatientFilter from '@/components/Patient/PatientFilter';
-import FileTable from '@/components/File/FileTable';
-import FileFilter from '@/components/File/FileFilter';
+import RecordTable from '@/components/Record/RecordTable';
+import RecordFilter from '@/components/Record/RecordFilter';
 import QuickUpload from '@/components/QuickUpload';
 
 export default {
   name: 'PatientFilterTabs',
   components: {
-    FileTable,
+    RecordTable,
     PatientTable,
-    FileFilter,
+    RecordFilter,
     PatientFilter,
     QuickUpload,
   },

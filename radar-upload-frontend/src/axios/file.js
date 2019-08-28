@@ -69,28 +69,21 @@ export default {
   },
 
   async filterRecords({
-    projectId, status, userId, getFileOnly = false,
+    projectId, status, userId, getRecordOnly = false,
   }) {
     let endpoint = `/records?projectId=${projectId}`;
     endpoint = status ? endpoint += `&&status=${status}` : endpoint;
     endpoint = userId ? endpoint += `&&userId=${userId}` : endpoint;
-    if (getFileOnly) {
-      const data = await axios.get(endpoint)
+    if (getRecordOnly) {
+      return axios.get(endpoint)
         .then(res => res.records
-          .map(el => el.data)
-          .map(each => ({ contents: each.contents, userId: each.userId })));
-
-      const files = data
-        .map(each => each.contents)
-        .reduce((preVal, currVal) => [...preVal, ...currVal], [])
-        .map((file, index) => ({
-          fileSize: `${file.size} kb`,
-          patient: data[index].fileName || data[index].userId,
-          fileName: file.fileName,
-          fileType: file.contentType,
-          uploadedAt: file.createdDate,
-        }));
-      return files;
+          .map(record => ({
+            ...record.metadata,
+            id: record.id,
+            sourceType: record.sourceType,
+            userId: record.data.userId,
+          }))
+          .reverse());
     }
 
     return axios.get(endpoint)
@@ -106,7 +99,6 @@ export default {
   },
 
   async download({ recordId, fileName }) {
-    console.log(axios.baseURL);
     const url = `https://radar-test.thehyve.net/upload/records/${recordId}/contents/${fileName}`;
     downLoadFile(fileName, url);
   },

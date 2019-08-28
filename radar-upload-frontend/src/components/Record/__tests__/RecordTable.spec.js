@@ -2,10 +2,10 @@
 import { shallowMount } from '@vue/test-utils';
 import flushPromises from 'flush-promises';
 import { Store } from 'vuex-mock-store';
-import FileTable from '../FileTable.vue';
+import RecordTable from '../RecordTable.vue';
 import fileAPI from '@/axios/file';
 
-describe('FileTable', () => {
+describe('RecordTable', () => {
   // call this api when component is created
   const projectID = '1111';
   const $store = new Store({
@@ -20,7 +20,7 @@ describe('FileTable', () => {
       },
     },
   });
-  const wrapper = shallowMount(FileTable, {
+  const wrapper = shallowMount(RecordTable, {
     propsData: {
       isActive: false,
       currentProject: projectID,
@@ -47,26 +47,26 @@ describe('FileTable', () => {
 
     expect(wrapper.vm.loading).toBe(true);
     await flushPromises();
-    expect(fileAPI.filterRecords).toBeCalledWith({ projectId: 'watchingProject', getFileOnly: true });
-    expect(wrapper.vm.fileList).toEqual(resolvedValue);
+    expect(fileAPI.filterRecords).toBeCalledWith({ projectId: 'watchingProject', getRecordOnly: true });
+    expect(wrapper.vm.recordList).toEqual(resolvedValue);
     expect(wrapper.vm.loading).toBe(false);
   });
 
   it('watch isActive = true', () => {
-    const getFileList = jest.spyOn(wrapper.vm, 'getFileList');
+    const getRecordList = jest.spyOn(wrapper.vm, 'getRecordList');
     wrapper.setProps({ isActive: false });
     wrapper.setProps({ isActive: true });
-    expect(getFileList).toBeCalledWith(wrapper.vm.currentProject);
+    expect(getRecordList).toBeCalledWith(wrapper.vm.currentProject);
   });
 
-  it('getFileList: CASE ERROR', async () => {
+  it('getRecordList: CASE ERROR', async () => {
     const projectId = 'project id';
     fileAPI.filterRecords = jest.fn().mockRejectedValue('rejectedValue');
-    wrapper.vm.getFileList(projectId);
+    wrapper.vm.getRecordList(projectId);
     expect(wrapper.vm.loading).toBe(true);
-    expect(wrapper.vm.fileList).toEqual([]);
+    expect(wrapper.vm.recordList).toEqual([]);
     await flushPromises();
-    expect(wrapper.vm.fileList).toEqual([]);
+    expect(wrapper.vm.recordList).toEqual([]);
     expect(wrapper.vm.loading).toBe(false);
   });
 });

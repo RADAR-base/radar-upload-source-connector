@@ -1,13 +1,13 @@
 /* eslint-disable no-undef */
 import { shallowMount } from '@vue/test-utils';
 import { Store } from 'vuex-mock-store';
-import FileFilter from '../FileFilter.vue';
+import RecordFilter from '../RecordFilter.vue';
 
 
-describe('FileFilter', () => {
+describe('RecordFilter', () => {
   // call this api when component is created
   const $store = new Store();
-  const wrapper = shallowMount(FileFilter, {
+  const wrapper = shallowMount(RecordFilter, {
     propsData: {
     },
     mocks: {

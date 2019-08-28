@@ -113,13 +113,13 @@ describe('axios/file', () => {
       projectId: 12,
       userId: 12,
       status: 'Status',
-      getFileOnly: true,
+      getRecordOnly: true,
     };
     const params2 = {
       projectId: 12,
       userId: 12,
       status: 'Status',
-      getFileOnly: false,
+      getRecordOnly: false,
     };
     const response = {
       records: [
@@ -152,11 +152,10 @@ describe('axios/file', () => {
         }],
     };
     const expectedVal1 = [{
-      fileSize: `${response.records[0].data.contents[0].size} kb`,
-      patient: response.records[0].data.userId,
-      fileName: response.records[0].data.contents[0].fileName,
-      fileType: response.records[0].data.contents[0].contentType,
-      uploadedAt: response.records[0].data.contents[0].createdDate,
+      ...response.records[0].metadata,
+      sourceType: response.records[0].sourceType,
+      userId: response.records[0].data.userId,
+      id: response.records[0].id,
     }];
 
     const expectedVal2 = [{

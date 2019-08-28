@@ -42,7 +42,7 @@
 </template>
 
 <script>
-import projectMixin from './projectMixin';
+import projectMixin from './projectMixin.js';
 
 export default {
   mixins: [projectMixin],
