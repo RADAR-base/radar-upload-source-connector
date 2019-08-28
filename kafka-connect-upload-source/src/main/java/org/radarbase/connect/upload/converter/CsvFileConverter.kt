@@ -31,7 +31,7 @@ abstract class CsvFileConverter(sourceType: String, val csvProcessor: CsvProcess
         log(LogLevel.INFO,"Retrieved file content from record id ${record.id} and filename ${contents.fileName}")
         val convertedTopicData = mutableListOf<TopicData>()
         try {
-            convertedTopicData.addAll(csvProcessor.processCsvContent(inputStream, timeReceived))
+            convertedTopicData.addAll(csvProcessor.processData(inputStream, timeReceived))
             convertedTopicData.last().endOfFileOffSet = true
         } catch (exe: Exception) {
 

@@ -21,22 +21,22 @@ package org.radarbase.connect.upload.converter.altoida
 
 import org.radarbase.connect.upload.converter.AccelerationZipFileConverter
 import org.radarbase.connect.upload.converter.CsvProcessor
+import org.radarbase.connect.upload.converter.DataProcessor
 import org.radarbase.connect.upload.converter.ZipFileRecordConverter
 import org.radarbase.connect.upload.exception.ProcessorNotFoundException
 import org.slf4j.LoggerFactory
 
 class AltoidaZipFileRecordConverter(override val sourceType: String = "altoida-zip") : ZipFileRecordConverter(sourceType) {
 
-    override fun getCsvProcessor(zipEntryName: String): CsvProcessor {
-        val entryName = zipEntryName.trim()
-        val processorKey = processors.keys.find {entryName.endsWith(it)} ?: throw ProcessorNotFoundException("Could not find registered processor for zipped entry $entryName")
-        logger.debug("Processing $entryName with $processorKey processor")
-        return processors[processorKey] ?: throw throw ProcessorNotFoundException("No processor found for key $processorKey")
+    override fun getProcessors() : Map<String, DataProcessor> {
+        logger.info("Number of registered data Processors ${processors.size}")
+        return processors
     }
+
 
     companion object {
         private val logger = LoggerFactory.getLogger(AccelerationZipFileConverter::class.java)
-        private val processors = listOf<CsvProcessor>(
+        private val processors = listOf<DataProcessor>(
                 AltoidaAccelerationCsvProcessor(),
                 AltoidaActionCsvProcessor(),
                 AltoidaAttitudeCsvProcessor(),
