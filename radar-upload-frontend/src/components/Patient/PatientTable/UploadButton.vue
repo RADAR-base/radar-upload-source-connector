@@ -70,6 +70,7 @@ export default {
       this.loading = false;
     },
     creatingRecord() {
+      this.menu = false;
     },
   },
 };
