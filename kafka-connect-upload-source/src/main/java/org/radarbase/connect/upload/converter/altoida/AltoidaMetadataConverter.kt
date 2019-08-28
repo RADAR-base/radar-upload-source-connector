@@ -19,10 +19,7 @@
 
 package org.radarbase.connect.upload.converter.altoida
 
-import org.radarbase.connect.upload.api.ContentsDTO
-import org.radarbase.connect.upload.api.LogLevel
-import org.radarbase.connect.upload.api.RecordDTO
-import org.radarbase.connect.upload.converter.RecordConverter
+import org.radarbase.connect.upload.converter.DataProcessor
 import org.radarbase.connect.upload.converter.TopicData
 import org.radarcns.connector.upload.altoida.AltoidaMetadata
 import java.io.IOException
@@ -30,11 +27,11 @@ import java.io.InputStream
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 
-class AltoidaMetadataConverter(override val sourceType: String = "altoida_metadata", val topic: String = "connect_upload_altoida_metadata")
-    : RecordConverter(sourceType) {
+class AltoidaMetadataDataProcessor(
+        override val schemaType: String = "VERSION.csv",
+        val topic: String = "connect_upload_altoida_metadata") : DataProcessor {
 
-    override fun processData(contents: ContentsDTO, inputStream: InputStream, record: RecordDTO, timeReceived: Double): List<TopicData> {
-        log(LogLevel.INFO,"Retrieved file content from record id ${record.id} and filename ${contents.fileName}")
+    override fun processData(inputStream: InputStream, timeReceived: Double): List<TopicData> {
         val reader = inputStream.bufferedReader()
         try {
             val version = reader.readLine()
@@ -43,9 +40,9 @@ class AltoidaMetadataConverter(override val sourceType: String = "altoida_metada
                 return listOf(convertedLine)
             }
         } catch (exe: IOException) {
-            log(LogLevel.WARN,"Something went wrong while processing contents of file ${contents.fileName}: ${exe.message} ")
+//            log(LogLevel.WARN,"Something went wrong while processing contents of file ${contents.fileName}: ${exe.message} ")
         } finally {
-            log(LogLevel.INFO,"Closing resources of content ${contents.fileName}")
+//            log(LogLevel.INFO,"Closing resources of content ${contents.fileName}")
             inputStream.close()
         }
         return emptyList()
@@ -61,3 +58,4 @@ class AltoidaMetadataConverter(override val sourceType: String = "altoida_metada
         return TopicData(true, topic, metadata)
     }
 }
+
