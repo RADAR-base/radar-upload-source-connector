@@ -33,7 +33,7 @@ interface RecordRepository {
     fun readLogs(id: Long): RecordLogs?
     fun updateLogs(id: Long, logsData: String): RecordMetadata
     fun readFileContent(id: Long, fileName: String): ByteArray?
-    fun delete(record: Record)
+    fun delete(record: Record, revision: Int)
     fun update(record: Record): Record
     fun updateMetadata(id: Long, metadata: RecordMetadataDTO): RecordMetadata
     fun updateContent(record: Record, fileName: String, contentType: String, stream: InputStream, length: Long): RecordContent
