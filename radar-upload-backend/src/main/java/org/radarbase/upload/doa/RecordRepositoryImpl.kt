@@ -19,7 +19,6 @@
 
 package org.radarbase.upload.doa
 
-import com.mchange.util.IntObjectMap
 import org.hibernate.Hibernate
 import org.hibernate.Session
 import org.radarbase.upload.api.RecordMetadataDTO
@@ -31,7 +30,6 @@ import org.radarbase.upload.inject.session
 import org.radarbase.upload.inject.transact
 import org.slf4j.LoggerFactory
 import java.io.InputStream
-import java.lang.IllegalArgumentException
 import java.sql.Blob
 import java.time.Instant
 import java.util.*
@@ -49,7 +47,7 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
         val logs = find(RecordLogs::class.java, id)
         val metadataToSave = if (logs == null) {
             val metadataFromDb = find(RecordMetadata::class.java, id)
-                    ?: throw NotFoundException("RecordMetadata with ID $id does not exist")
+                    ?: throw NotFoundException("record_not_found", "RecordMetadata with ID $id does not exist")
             refresh(metadataFromDb)
             metadataFromDb.logs = RecordLogs().apply {
                 this.metadata = metadataFromDb
@@ -213,7 +211,7 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
     override fun updateMetadata(id: Long, metadata: RecordMetadataDTO): RecordMetadata = em.get().transact {
         val existingMetadata = find(RecordMetadata::class.java, id,  LockModeType.PESSIMISTIC_WRITE,
                 mapOf("javax.persistence.lock.scope" to PessimisticLockScope.EXTENDED))
-                ?: throw NotFoundException("RecordMetadata with ID $id does not exist")
+                ?: throw NotFoundException("record_not_found", "RecordMetadata with ID $id does not exist")
 
         if (existingMetadata.revision != metadata.revision)
             throw ConflictException("incompatible_revision", "Requested meta data revision ${metadata.revision} " +
