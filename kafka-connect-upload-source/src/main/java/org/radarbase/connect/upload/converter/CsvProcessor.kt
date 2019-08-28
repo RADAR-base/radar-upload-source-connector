@@ -26,19 +26,26 @@ import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.io.InputStream
 
-interface CsvProcessor {
+
+interface DataProcessor {
     val schemaType: String
+
+    fun processData(inputStream: InputStream, timeReceived: Double): List<TopicData>
+}
+
+
+interface CsvProcessor: DataProcessor {
+
     fun validateHeaderSchema(csvHeader: List<String>): Boolean
 
     fun convertLineToRecord(lineValues: Map<String, String>, timeReceived: Double): TopicData?
 
-    fun processCsvContent(inputStream: InputStream, timeReceived: Double): List<TopicData>
 }
 
 abstract class AbstractCsvProcessor(override val schemaType: String): CsvProcessor {
 
     //TODO pass the logrepository
-    override fun processCsvContent(inputStream: InputStream, timeReceived: Double): List<TopicData> {
+    override fun processData(inputStream: InputStream, timeReceived: Double): List<TopicData> {
         val reader = CSVReaderBuilder(inputStream.bufferedReader())
                 .withCSVParser(CSVParserBuilder().withSeparator(',').build())
                 .build()

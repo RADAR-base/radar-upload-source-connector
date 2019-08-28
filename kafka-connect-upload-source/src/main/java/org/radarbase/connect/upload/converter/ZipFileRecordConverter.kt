@@ -22,6 +22,7 @@ package org.radarbase.connect.upload.converter
 import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.LogLevel
 import org.radarbase.connect.upload.api.RecordDTO
+import org.radarbase.connect.upload.exception.ProcessorNotFoundException
 import org.slf4j.LoggerFactory
 import java.io.FilterInputStream
 import java.io.IOException
@@ -63,10 +64,18 @@ abstract class ZipFileRecordConverter(sourceType: String) : RecordConverter(sour
     }
 
     private fun processContent(inputStream: InputStream, zipEntryName: String, timeReceived: Double): List<TopicData> {
-        return getCsvProcessor(zipEntryName).processCsvContent(inputStream, timeReceived)
+        return getDataProcessor(zipEntryName).processData(inputStream, timeReceived)
     }
 
-    abstract fun getCsvProcessor(zipEntryName: String): CsvProcessor
+    fun getDataProcessor(zipEntryName: String): DataProcessor {
+        val entryName = zipEntryName.trim()
+        val processors = getProcessors()
+        val processorKey = processors.keys.find {entryName.endsWith(it)} ?: throw ProcessorNotFoundException("Could not find registered processor for zipped entry $entryName")
+        logger.debug("Processing $entryName with $processorKey processor")
+        return processors[processorKey] ?: throw throw ProcessorNotFoundException("No processor found for key $processorKey")
+    }
+
+    abstract fun getProcessors() : Map<String, DataProcessor>
 
     companion object {
         private val logger = LoggerFactory.getLogger(ZipFileRecordConverter::class.java)
