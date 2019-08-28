@@ -26,3 +26,5 @@ class BadGatewayException(message: String, cause: Throwable? = null) : RuntimeEx
 class ConflictException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
 
 class InvalidFormatException(message: String) : RuntimeException(message)
+
+class ProcessorNotFoundException(message: String) : RuntimeException(message)

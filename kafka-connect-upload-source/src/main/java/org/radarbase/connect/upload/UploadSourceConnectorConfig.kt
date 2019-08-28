@@ -29,6 +29,7 @@ import okhttp3.OkHttpClient
 import org.apache.kafka.common.config.AbstractConfig
 import org.apache.kafka.common.config.ConfigDef
 import org.radarbase.connect.upload.auth.ClientCredentialsAuthorizer
+import org.radarbase.connect.upload.converter.AccelerationZipFileConverter
 import org.radarbase.connect.upload.converter.AccelerometerCsvRecordConverter
 import org.radarbase.connect.upload.converter.altoida.*
 import org.slf4j.Logger
@@ -107,17 +108,8 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
         private const val UPLOAD_SOURCE_CONVERTERS_DISPLAY = "List of record converter class"
         private val UPLOAD_SOURCE_CONVERTERS_DEFAULT: List<String> = listOf(
                 AccelerometerCsvRecordConverter()::class.java.name,
-                AltoidaAccelerationConverter()::class.java.name,
-                AltoidaActionConverter()::class.java.name,
-                AltoidaAttitudeConverter()::class.java.name,
-                AltoidaDiagnosticsConverter()::class.java.name,
-                AltoidaGravityConverter()::class.java.name,
-                AltoidaMagnetometerConverter()::class.java.name,
-                AltoidaMetadataConverter()::class.java.name,
-                AltoidaObjectConverter()::class.java.name,
-                AltoidaPathConverter()::class.java.name,
-                AltoidaRotationConverter()::class.java.name,
-                AltoidaTouchscreenConverter()::class.java.name
+                AccelerationZipFileConverter()::class.java.name,
+                AltoidaZipFileRecordConverter()::class.java.name
                 )
 
 
