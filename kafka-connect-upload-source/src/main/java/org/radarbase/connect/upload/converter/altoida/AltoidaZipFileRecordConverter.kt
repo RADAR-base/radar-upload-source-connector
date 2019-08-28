@@ -24,7 +24,7 @@ import org.radarbase.connect.upload.converter.ZipFileRecordConverter
 
 class AltoidaZipFileRecordConverter(
         override val sourceType: String = "altoida-zip",
-        processors: List<DataProcessor> = listOf<DataProcessor>(
+        processors: List<DataProcessor> = listOf(
                 AltoidaAccelerationCsvProcessor(),
                 AltoidaActionCsvProcessor(),
                 AltoidaAttitudeCsvProcessor(),
