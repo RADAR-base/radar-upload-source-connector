@@ -121,12 +121,6 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
             }
         }
 
-        record.metadata.apply {
-            status = RecordStatus.READY
-            message = "Data successfully uploaded, ready for processing."
-            update()
-        }
-
         merge(record)
         result
     }
