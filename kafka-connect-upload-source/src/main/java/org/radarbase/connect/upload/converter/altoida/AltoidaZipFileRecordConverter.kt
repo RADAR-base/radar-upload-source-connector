@@ -31,7 +31,7 @@ class AltoidaZipFileRecordConverter(
                 AltoidaDiagnosticsCsvProcessor(),
                 AltoidaGravityCsvProcessor(),
                 AltoidaMagnetometerCsvProcessor(),
-                // add metadata processor
+                AltoidaMetadataDataProcessor(),
                 AltoidaObjectCsvProcessor(),
                 AltoidaPathCsvProcessor(),
                 AltoidaRotationCsvProcessor(),
