@@ -19,20 +19,7 @@
 
 package org.radarbase.connect.upload.converter
 
-import org.slf4j.LoggerFactory
-
-class AccelerationZipFileConverter(override val sourceType: String = "acceleration-zip") : ZipFileRecordConverter(sourceType) {
-
-    override fun getProcessors() : Map<String, DataProcessor> {
-        logger.info("Number of registered data Processors ${processors.size}")
-        return processors
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(AccelerationZipFileConverter::class.java)
-        private val processors = listOf<DataProcessor>(
-                AccelerometerCsvProcessor()
-        ).map { it.schemaType to it }.toMap()
-    }
-
-}
+class AccelerationZipFileConverter(
+        override val sourceType: String = "acceleration-zip",
+        processors: List<DataProcessor> = listOf(AccelerometerCsvProcessor())
+        ) : ZipFileRecordConverter(sourceType, processors)

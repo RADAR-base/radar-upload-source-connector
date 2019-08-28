@@ -31,8 +31,9 @@ import java.lang.Exception
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 
+abstract class ZipFileRecordConverter(sourceType: String, listOfDataProcessors: List<DataProcessor>) : RecordConverter(sourceType) {
 
-abstract class ZipFileRecordConverter(sourceType: String) : RecordConverter(sourceType) {
+    private var processors: Map<String, DataProcessor> = listOfDataProcessors.map { it.schemaType to it }.toMap()
 
     override fun processData(contents: ContentsDTO, inputStream: InputStream, record: RecordDTO, timeReceived: Double): List<TopicData> {
         log(LogLevel.INFO,"Retrieved file content from record id ${record.id} and filename ${contents.fileName}")
@@ -42,7 +43,7 @@ abstract class ZipFileRecordConverter(sourceType: String) : RecordConverter(sour
             var zippedEntry: ZipEntry? = null
             zippedInput.use {
                 while ({ zippedEntry = zippedInput.nextEntry; zippedEntry }() != null) {
-                    val entryName = zippedEntry!!.name
+                    val entryName = zippedEntry!!.name.trim()
                     logger.info("Processing entry $entryName from record ${record.id}")
                     convertedTopicData.addAll(processContent(object : FilterInputStream(zippedInput) {
                         @Throws(IOException::class)
@@ -67,15 +68,11 @@ abstract class ZipFileRecordConverter(sourceType: String) : RecordConverter(sour
         return getDataProcessor(zipEntryName).processData(inputStream, timeReceived)
     }
 
-    fun getDataProcessor(zipEntryName: String): DataProcessor {
-        val entryName = zipEntryName.trim()
-        val processors = getProcessors()
-        val processorKey = processors.keys.find {entryName.endsWith(it)} ?: throw ProcessorNotFoundException("Could not find registered processor for zipped entry $entryName")
-        logger.debug("Processing $entryName with $processorKey processor")
+    private fun getDataProcessor(zipEntryName: String): DataProcessor {
+        val processorKey = processors.keys.find {zipEntryName.endsWith(it)} ?: throw ProcessorNotFoundException("Could not find registered processor for zipped entry $zipEntryName")
+        logger.debug("Processing $zipEntryName with $processorKey processor")
         return processors[processorKey] ?: throw throw ProcessorNotFoundException("No processor found for key $processorKey")
     }
-
-    abstract fun getProcessors() : Map<String, DataProcessor>
 
     companion object {
         private val logger = LoggerFactory.getLogger(ZipFileRecordConverter::class.java)
