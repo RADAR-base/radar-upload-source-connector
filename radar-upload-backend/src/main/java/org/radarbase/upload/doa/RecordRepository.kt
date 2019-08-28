@@ -41,4 +41,5 @@ interface RecordRepository {
     fun query(limit: Int, lastId: Long, projectId: String, userId: String?, status: String?): List<Record>
     fun poll(limit: Int): List<Record>
     fun readRecordContent(recordId: Long, fileName: String): RecordContent?
+    fun deleteContents(record: Record, fileName: String)
 }

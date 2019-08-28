@@ -125,6 +125,17 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
         result
     }
 
+
+    override fun deleteContents(record: Record, fileName: String): Unit = em.get().transact {
+        refresh(record)
+        if (record.metadata.status != RecordStatus.INCOMPLETE) {
+            throw ConflictException("incompatible_status", "Cannot delete file contents from record ${record.id} that is already saved with status ${record.metadata.status}.")
+        }
+        val existingContent = record.contents?.find { it.fileName == fileName } ?: throw NotFoundException("file_not_found", "Cannot file $fileName in record ${record.id}")
+        record.contents?.remove(existingContent)
+        remove(existingContent)
+    }
+
     override fun poll(limit: Int): List<Record> = em.get().transact {
         setProperty("javax.persistence.lock.scope", PessimisticLockScope.EXTENDED)
         createQuery("SELECT r FROM Record r WHERE r.metadata.status = :status ORDER BY r.metadata.modifiedDate", Record::class.java)
