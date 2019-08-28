@@ -13,7 +13,7 @@ function expected(expectedValue, service) {
     .then((data) => { expect(data).toEqual(expectedValue); });
 }
 
-describe.only('axios/file', () => {
+describe('axios/file', () => {
   afterEach(() => {
     axios.get.mockClear();
     axios.post.mockClear();
@@ -54,11 +54,12 @@ describe.only('axios/file', () => {
   it('putRecords', () => {
     const id = 'id';
     const fileName = 'fileName';
-    const file = 'fileObject';
+    const file = { type: 'fileObject' };
+    const headers = { 'content-type': file.type };
     axios.put.mockResolvedValue();
     return fileAPI.putRecords({ id, fileName, file })
       .then(() => {
-        expect(axios.put).toBeCalledWith(`/records/${id}/contents/${fileName}`, { file });
+        expect(axios.put).toBeCalledWith(`/records/${id}/contents/${fileName}`, file, { headers });
       });
   });
 
@@ -189,11 +190,8 @@ describe.only('axios/file', () => {
   it('download', async () => {
     const recordId = 'id';
     const fileName = 'name';
-    const file = {};
-    axios.get.mockResolvedValue(file);
     await fileAPI.download({ recordId, fileName });
-
-    expect(axios.get).toBeCalledWith(`/records/${recordId}/contents/${fileName}`);
-    expect(downLoadFile).toBeCalledWith(fileName, file);
+    const url = `https://radar-test.thehyve.net/upload/records/${recordId}/contents/${fileName}`;
+    expect(downLoadFile).toBeCalledWith(fileName, url);
   });
 });
