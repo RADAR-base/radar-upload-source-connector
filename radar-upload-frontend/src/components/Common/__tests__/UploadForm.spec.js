@@ -123,6 +123,5 @@ describe('UploadForm', () => {
     wrapper.vm.removeData();
     expect(wrapper.vm.file).toEqual([]);
     expect(wrapper.vm.sourceType).toBe('');
-    expect(wrapper.vm.sourceTypeList).toEqual([]);
   });
 });
