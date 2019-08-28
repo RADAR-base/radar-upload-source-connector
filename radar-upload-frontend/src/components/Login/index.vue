@@ -56,6 +56,7 @@
 </template>
 
 <script>
+import { clearInterval } from 'timers';
 
 export default {
   data: () => ({
@@ -65,14 +66,17 @@ export default {
     async redirectLogin() {
       window.open('https://radar-test.thehyve.net/managementportal/oauth/authorize?client_id=radar_upload_frontend&response_type=code&redirect_uri=http://localhost:8080/login');
       this.loading = true;
-      const checkToken = setInterval(() => {
+      // eslint-disable-next-line func-names
+      this.checkToken = setInterval(() => {
         if (localStorage.getItem('token')) {
-          clearInterval(checkToken);
-          this.loading = false;
-          this.$router.replace('/');
+          window.location.replace('');
         }
       }, 500);
     },
+  },
+  beforeDestroy() {
+    this.loading = false;
+    clearInterval(this.checkToken);
   },
 };
 </script>

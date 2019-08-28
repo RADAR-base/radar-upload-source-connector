@@ -58,13 +58,11 @@ export default {
   },
   methods: {
     finishUpload(file) {
-      console.log('finsih', file);
       this.loading = false;
       this.$emit('addUploadingFile', file);
       this.menu = false;
     },
     startUploading(payload) {
-      console.log('start', payload);
       this.$emit('startUploading', payload);
     },
     closeMenu() {
