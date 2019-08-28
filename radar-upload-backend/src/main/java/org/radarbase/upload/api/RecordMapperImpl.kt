@@ -77,8 +77,10 @@ class RecordMapperImpl : RecordMapper {
     override fun fromContent(content: RecordContent): ContentsDTO {
         val cleanedFileName = URLEncoder.encode(content.fileName, "UTF-8")
                 .replace("+", "%20")
+        val cleanedBase = uri.baseUri.toString().trimEnd('/')
+
         return ContentsDTO(
-                url = "${uri.baseUri}/records/${content.record.id}/contents/$cleanedFileName",
+                url = "$cleanedBase/records/${content.record.id}/contents/$cleanedFileName",
                 contentType = content.contentType,
                 createdDate = content.createdDate,
                 size = content.size,
