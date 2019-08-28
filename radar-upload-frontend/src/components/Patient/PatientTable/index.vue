@@ -3,6 +3,7 @@
     :items="items"
     single-expand
     :search="searchText"
+    :expanded.sync="expandedItems"
     show-expand
     :headers="headers"
     hide-default-header
@@ -19,8 +20,8 @@
 
     <template #expanded-item="{item}">
       <td
-        :colspan="12"
-        class="py-4"
+        :colspan="$vuetify.breakpoint.name==='xs' ? 0 :12"
+        class="pa-2"
       >
         <Records
           :patient-records="patientRecords"
@@ -66,6 +67,7 @@ export default {
       loading: false,
       fileLoading: false,
       fileLoadingError: '',
+      expandedItems: [],
       items: [
       ],
       patientRecords: [
@@ -90,6 +92,7 @@ export default {
       handler(projectId) {
         if (projectId && this.isActive) {
           this.items = [];
+          this.expandedItems = [];
           this.getPatientList(projectId);
         }
       },
