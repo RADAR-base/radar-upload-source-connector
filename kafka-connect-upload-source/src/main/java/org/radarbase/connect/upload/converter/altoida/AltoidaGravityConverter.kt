@@ -19,12 +19,12 @@
 
 package org.radarbase.connect.upload.converter.altoida
 
-import org.radarbase.connect.upload.converter.CsvRecordConverter
-import org.radarbase.connect.upload.converter.TopicData
+import org.radarbase.connect.upload.converter.*
 import org.radarcns.connector.upload.altoida.AltoidaGravity
 
-class AltoidaGravityConverter(override val sourceType: String = "altoida_gravity", val topic: String = "connect_upload_altoida_gravity")
-    : CsvRecordConverter(sourceType) {
+class AltoidaGravityCsvProcessor(
+        override val schemaType: String = "_GRA.csv",
+        val topic: String = "connect_upload_altoida_gravity") : AbstractCsvProcessor(schemaType) {
 
     override fun validateHeaderSchema(csvHeader: List<String>) =
             listOf("TIMESTAMP", "X", "Y", "Z") == (csvHeader)
@@ -42,3 +42,7 @@ class AltoidaGravityConverter(override val sourceType: String = "altoida_gravity
         return TopicData(false, topic, gravity)
     }
 }
+
+class AltoidaGravityConverter(
+        sourceType: String = "altoida_gravity", csvProcessor: CsvProcessor = AltoidaGravityCsvProcessor())
+    : CsvFileConverter(sourceType, csvProcessor)
