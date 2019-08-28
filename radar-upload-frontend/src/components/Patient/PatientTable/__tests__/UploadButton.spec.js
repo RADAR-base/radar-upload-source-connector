@@ -1,8 +1,6 @@
 /* eslint-disable no-undef */
 import { shallowMount } from '@vue/test-utils';
-import flushPromises from 'flush-promises';
 import { Store } from 'vuex-mock-store';
-import { wrap } from 'module';
 import UploadButton from '../UploadButton.vue';
 import fileAPI from '@/axios/file.js';
 

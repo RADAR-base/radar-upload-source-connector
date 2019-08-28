@@ -24,9 +24,9 @@
         :patient-list="patientList"
         :loading="loading"
         @finishUpload="finishUpload"
-        @cancelClick="cancelUpload"
+        @cancelClick="removeData"
         @creatingRecord="loading=true"
-        @uploadFailed="cancelUpload"
+        @uploadFailed="removeData"
       />
     </v-sheet>
   </v-bottom-sheet>
@@ -68,10 +68,9 @@ export default {
     },
     finishUpload() {
       this.$success('Upload successfully');
-      this.loading = false;
-      this.sheet = false;
+      this.removeData();
     },
-    cancelUpload() {
+    removeData() {
       this.patientList = [];
       this.loading = false;
       this.sheet = false;
