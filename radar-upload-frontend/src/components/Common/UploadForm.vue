@@ -27,7 +27,6 @@
           append-icon="mdi-paperclip"
           :prepend-icon="''"
           v-model="file"
-          @change="selectFile"
         />
       </v-list-item>
     </v-list>
@@ -45,7 +44,7 @@
         color="primary"
         text
         @click.native="uploadFile"
-        :disabled="!sourceType||file.length===0"
+        :disabled="!sourceType||file.length===0||(!uploadInfo.userId&&!userId)"
       >
         Upload
       </v-btn>
@@ -80,13 +79,9 @@ export default {
     };
   },
   methods: {
-    selectFile(file) {
-      console.log(file);
-    },
     async getsourceTypeList() {
       const res = await fileAPI.getSourceTypes();
       this.sourceTypeList = res.map(el => el.name);
-      this.contentTypes = res.map(el => el.contentTypes);
     },
     removeData() {
       this.file = [];
