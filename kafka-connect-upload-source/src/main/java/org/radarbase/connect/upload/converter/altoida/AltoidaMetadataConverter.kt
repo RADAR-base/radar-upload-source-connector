@@ -55,7 +55,7 @@ class AltoidaMetadataDataProcessor(
                 timeReceived,
                 version
         )
-        return TopicData(true, topic, metadata)
+        return TopicData(false, topic, metadata)
     }
 }
 
