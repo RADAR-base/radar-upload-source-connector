@@ -43,13 +43,13 @@ data class RecordDataDTO(
         var contents: Set<ContentsDTO>? = null)
 
 data class RecordMetadataDTO(
-        var id: Long?,
+        var id: Long? = null,
         var revision: Int,
         var status: String,
-        var message: String?,
-        var createdDate: Instant?,
-        var modifiedDate: Instant?,
-        var committedDate: Instant?,
+        var message: String? = null,
+        var createdDate: Instant? = null,
+        var modifiedDate: Instant? = null,
+        var committedDate: Instant? = null,
         var logs: LogsDto? = null,
         var callbackUrl: String? = null)
 
