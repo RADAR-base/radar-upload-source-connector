@@ -28,7 +28,7 @@ import java.io.InputStream
 import java.io.Reader
 
 interface RecordRepository {
-    fun create(record: Record): Record
+    fun create(record: Record, metadataDto: RecordMetadataDTO? = null): Record
     fun read(id: Long): Record?
     fun readLogs(id: Long): RecordLogs?
     fun updateLogs(id: Long, logsData: String): RecordMetadata
