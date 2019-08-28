@@ -40,10 +40,10 @@ describe('PatientFileTabs', () => {
   it('toggle PatientFilter and FileFilter on tabs changes', () => {
     wrapper.setData({ tab: 0 });
     expect(wrapper.find('patientfilter-stub').isVisible()).toBe(true);
-    expect(wrapper.find('filefilter-stub').isVisible()).toBe(false);
+    expect(wrapper.find('recordfilter-stub').isVisible()).toBe(false);
     wrapper.setData({ tab: 1 });
     expect(wrapper.find('patientfilter-stub').isVisible()).toBe(false);
-    expect(wrapper.find('filefilter-stub').isVisible()).toBe(true);
+    expect(wrapper.find('recordfilter-stub').isVisible()).toBe(true);
   });
 
   it('display current selected project', () => {
