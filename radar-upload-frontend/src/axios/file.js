@@ -99,7 +99,7 @@ export default {
   },
 
   async download({ recordId, fileName }) {
-    const url = `https://radar-test.thehyve.net/upload/records/${recordId}/contents/${fileName}`;
+    const url = `${process.env.VUE_APP_BASE_URL}/${recordId}/contents/${fileName}`;
     downLoadFile(fileName, url);
   },
 };
