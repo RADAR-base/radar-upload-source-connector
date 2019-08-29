@@ -103,7 +103,7 @@ abstract class RecordConverter(override val sourceType: String, val avroData: Av
                                     REVISION_KEY to record.metadata?.revision
                             )
                             return@topicDataMap SourceRecord(getPartition(), offset, topicData.topic, key.schema(), key.value(), valRecord.schema(), valRecord.value())
-                        }.toList()
+                        }
             }
         }.toList()
 //        record.metadata = commitLogs(record, client)
