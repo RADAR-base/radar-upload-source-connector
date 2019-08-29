@@ -19,6 +19,7 @@
 
 package org.radarbase.upload.api
 
+import org.radarbase.upload.Config
 import org.radarbase.upload.doa.SourceTypeRepository
 import org.radarbase.upload.doa.entity.Record
 import org.radarbase.upload.doa.entity.RecordContent
@@ -31,15 +32,13 @@ import javax.ws.rs.BadRequestException
 import javax.ws.rs.core.Context
 import javax.ws.rs.core.UriInfo
 
-class RecordMapperImpl : RecordMapper {
-    @Context
-    lateinit var uri: UriInfo
+class RecordMapperImpl(
+        @Context val uri: UriInfo,
+        @Context val sourceTypeRepository: SourceTypeRepository,
+        @Context val config: Config) : RecordMapper {
 
-    private val cleanBaseUri
-        get() = uri.baseUri.toString().trimEnd('/')
-
-    @Context
-    lateinit var sourceTypeRepository: SourceTypeRepository
+    private val cleanBaseUri: String
+        get() = (config.advertisedBaseUri ?: uri.baseUri).toString().trimEnd('/')
 
     override fun toRecord(record: RecordDTO): Pair<Record, RecordMetadata> {
         val recordDoa = Record().apply {

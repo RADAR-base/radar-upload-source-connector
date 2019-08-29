@@ -201,8 +201,13 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
 
         record.metadata = RecordMetadata().apply {
             this.record = record
-            status = if (metadata?.status == RecordStatus.READY && record.contents != null) RecordStatus.READY else RecordStatus.INCOMPLETE
-            message = metadata?.message ?: "Initial state"
+            if (metadata?.status == RecordStatus.READY && record.contents != null) {
+                status = RecordStatus.READY
+                message = metadata.message ?: "Data had been uploaded and ready for processing"
+            } else {
+                status = RecordStatus.INCOMPLETE
+                message = metadata.message ?: "Record has been created. Data must be uploaded"
+            }
             createdDate = Instant.now()
             modifiedDate = Instant.now()
             revision = 1
@@ -275,7 +280,7 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
             val toStatus = try {
                 RecordStatus.valueOf(to)
             } catch (ex: IllegalArgumentException) {
-                throw BadRequestException("unknown_status", "Record status $from is not a known status. Use one of: ${RecordStatus.values().joinToString()}.")
+                throw BadRequestException("unknown_status", "Record status $to is not a known status. Use one of: ${RecordStatus.values().joinToString()}.")
             }
 
             return toStatus == from
