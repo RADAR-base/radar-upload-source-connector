@@ -13,6 +13,7 @@ import javax.ws.rs.core.*
 @Resource
 class LoginResource {
     @GET
+    @Produces("application/json")
     fun login(@QueryParam("redirect") redirect: String?, @Context auth: Auth, @Context config: Config, @Context uri: UriInfo): Response {
         val token = auth.bearerToken
                 ?: throw BadRequestException("Cannot log in without bearer token")
@@ -20,7 +21,7 @@ class LoginResource {
         val myUri = config.advertisedBaseUri ?: uri.baseUri
 
         val responseBuilder = redirect?.let { Response.temporaryRedirect(URI.create(it)) }
-                ?: Response.noContent()
+                ?: Response.ok().entity(mapOf("authorizationBearer" to token))
 
         return responseBuilder
                 .cookie(NewCookie("authorizationBearer", token, myUri.path, myUri.host, null, -1, true, true))
