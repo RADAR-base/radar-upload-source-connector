@@ -85,18 +85,46 @@
             color="primary"
           />
         </v-list-item-avatar>
-        <v-list-item-content
-          @click="downloadFile(record.id, file.fileName)"
-          style="cursor: pointer;"
-        >
+        <v-list-item-content>
           <v-list-item-title v-text="file.fileName" />
           <v-list-item-subtitle>Size: {{ file.size }} Bytes</v-list-item-subtitle>
           <v-list-item-subtitle>{{ file.createdDate | localTime }}</v-list-item-subtitle>
         </v-list-item-content>
+
+        <v-list-item-action>
+          <v-menu
+            open-on-hover
+            bottom
+            offset-y
+          >
+            <template #activator="{on}">
+              <v-btn
+                icon
+                v-on="on"
+              >
+                <v-icon color="primary">
+                  mdi-dots-vertical
+                </v-icon>
+              </v-btn>
+            </template>
+            <v-card>
+              <v-list
+                shaped
+              >
+                <v-list-item-group color="primary lighten-2">
+                  <v-list-item @click="downloadFile(record.id, file.fileName)">
+                    Download
+                  </v-list-item>
+                </v-list-item-group>
+              </v-list>
+            </v-card>
+          </v-menu>
+        </v-list-item-action>
       </v-list-item>
     </v-list-group>
   </v-list>
 </template>
+
 
 <script>
 import fileAPI from '@/axios/file';
