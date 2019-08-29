@@ -22,10 +22,9 @@ package org.radarbase.connect.upload.converter
 import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.LogLevel
 import org.radarbase.connect.upload.api.RecordDTO
-import org.slf4j.LoggerFactory
 import java.io.InputStream
 
-abstract class CsvFileConverter(sourceType: String, val csvProcessor: CsvProcessor) : RecordConverter(sourceType) {
+abstract class CsvFileRecordConverter(sourceType: String, val csvProcessor: CsvProcessor) : RecordConverter(sourceType) {
 
     override fun processData(contents: ContentsDTO, inputStream: InputStream, record: RecordDTO, timeReceived: Double): List<TopicData> {
         log(LogLevel.INFO,"Retrieved file content from record id ${record.id} and filename ${contents.fileName}")
@@ -34,12 +33,8 @@ abstract class CsvFileConverter(sourceType: String, val csvProcessor: CsvProcess
             convertedTopicData.addAll(csvProcessor.processData(inputStream, timeReceived))
             convertedTopicData.last().endOfFileOffSet = true
         } catch (exe: Exception) {
-
+            log(LogLevel.ERROR, "Could not convert csv file ${contents.fileName}", exe)
         }
         return convertedTopicData
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(CsvFileConverter::class.java)
     }
 }

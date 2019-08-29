@@ -45,4 +45,4 @@ class AltoidaAccelerationCsvProcessor(
 
 class AltoidaAccelerationConverter(
         sourceType: String = "altoida_acceleration", csvProcessor: CsvProcessor = AltoidaAccelerationCsvProcessor())
-    : CsvFileConverter(sourceType, csvProcessor)
+    : CsvFileRecordConverter(sourceType, csvProcessor)

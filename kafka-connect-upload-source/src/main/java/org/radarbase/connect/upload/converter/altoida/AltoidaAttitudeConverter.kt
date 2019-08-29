@@ -46,4 +46,4 @@ class AltoidaAttitudeCsvProcessor(
 
 class AltoidaAttitudeConverter(
         sourceType: String = "altoida_attitude", csvProcessor: CsvProcessor = AltoidaAttitudeCsvProcessor())
-    : CsvFileConverter(sourceType, csvProcessor)
+    : CsvFileRecordConverter(sourceType, csvProcessor)

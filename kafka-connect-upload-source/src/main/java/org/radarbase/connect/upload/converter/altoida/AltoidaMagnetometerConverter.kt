@@ -46,4 +46,4 @@ class AltoidaMagnetometerCsvProcessor(
 
 class AltoidaMagnetometerConverter(
         sourceType: String = "altoida_magnetometer", csvProcessor: CsvProcessor = AltoidaMagnetometerCsvProcessor())
-    : CsvFileConverter(sourceType, csvProcessor)
+    : CsvFileRecordConverter(sourceType, csvProcessor)

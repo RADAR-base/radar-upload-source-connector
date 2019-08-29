@@ -44,4 +44,4 @@ class AltoidaActionCsvProcessor(
 
 class AltoidaActionConverter(
         sourceType: String = "altoida_action", csvProcessor: CsvProcessor = AltoidaActionCsvProcessor())
-    : CsvFileConverter(sourceType, csvProcessor)
+    : CsvFileRecordConverter(sourceType, csvProcessor)

@@ -46,4 +46,4 @@ class AltoidaObjectCsvProcessor(
 
 class AltoidaObjectConverter(
         sourceType: String = "altoida_object", csvProcessor: CsvProcessor = AltoidaObjectCsvProcessor())
-    : CsvFileConverter(sourceType, csvProcessor)
+    : CsvFileRecordConverter(sourceType, csvProcessor)
