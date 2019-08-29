@@ -21,6 +21,8 @@ package org.radarbase.upload.doa
 
 import org.hibernate.Hibernate
 import org.hibernate.Session
+import org.hibernate.engine.jdbc.BlobProxy
+import org.hibernate.engine.jdbc.ClobProxy
 import org.radarbase.upload.api.ContentsDTO
 import org.radarbase.upload.api.RecordMetadataDTO
 import org.radarbase.upload.doa.entity.*
@@ -54,7 +56,7 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
                 this.metadata = metadataFromDb
                 this.modifiedDate = Instant.now()
                 this.size = logsData.length.toLong()
-                this.logs = Hibernate.getLobCreator(em.get().session).createClob(logsData)
+                this.logs = ClobProxy.generateProxy(logsData)
             }.also {
                 persist(it)
             }
@@ -62,7 +64,7 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
         } else {
             logs.apply {
                 this.modifiedDate = Instant.now()
-                this.logs = Hibernate.getLobCreator(em.get().session).createClob(logsData)
+                this.logs = ClobProxy.generateProxy(logsData)
             }
             merge(logs)
             logs.metadata
@@ -110,14 +112,14 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
         val result = existingContent?.apply {
             this.createdDate = Instant.now()
             this.contentType = contentType
-            this.content = Hibernate.getLobCreator(em.get().unwrap(Session::class.java)).createBlob(stream, length)
+            this.content = BlobProxy.generateProxy(stream, length)
         } ?: RecordContent().apply {
             this.record = record
             this.fileName = fileName
             this.createdDate = Instant.now()
             this.contentType = contentType
             this.size = length
-            this.content = Hibernate.getLobCreator(em.get().unwrap(Session::class.java)).createBlob(stream, length)
+            this.content = BlobProxy.generateProxy(stream, length)
         }.also {
             if (record.contents != null) {
                 record.contents?.add(it)
@@ -192,8 +194,7 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
                         this.createdDate = Instant.now()
                         this.contentType = content.contentType
                         this.size = content.text!!.length.toLong()
-                        this.content = Hibernate.getLobCreator(em.get().unwrap(Session::class.java))
-                                .createBlob(content.text!!.toByteArray(Charsets.UTF_8))
+                        this.content = BlobProxy.generateProxy(content.text!!.toByteArray(Charsets.UTF_8))
                     }
                 }
                 ?.onEach { persist(it) }

@@ -263,7 +263,7 @@ class RecordResource {
             metaData: RecordMetadataDTO,
             @PathParam("recordId") recordId: Long,
             @Context callbackManager: CallbackManager): RecordMetadataDTO {
-        ensureRecord(recordId, SUBJECT_UPDATE)
+        ensureRecord(recordId)
 
         val updatedRecord = recordRepository.updateMetadata(recordId, metaData)
 
