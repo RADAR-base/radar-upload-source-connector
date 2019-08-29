@@ -36,6 +36,7 @@
               }"
               @addUploadingFile="addUploadingFile"
               @startUploading="startUploading"
+              @uploadFailed="uploadFailed"
             />
           </template>
         </Records>
@@ -139,6 +140,13 @@ export default {
     },
     addUploadingFile(file) {
       this.patientRecords[0].files.splice(0, 1, file);
+    },
+    uploadFailed({
+      recordId, fileName, uploading, uploadFailed,
+    }) {
+      const failedRecordIndex = this.patientRecords.findIndex(record => record.id === recordId);
+      this.patientRecords[failedRecordIndex].files
+        .splice(0, 1, { fileName, uploading, uploadFailed });
     },
   },
 };

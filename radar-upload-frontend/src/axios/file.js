@@ -90,7 +90,8 @@ export default {
       .then(res => res.records
         .map(record => ({
           ...record.metadata,
-          files: record.data.contents,
+          files: record.data.contents
+            .map(file => ({ ...file, uploadFailed: false, uploading: false })),
           id: record.id,
           sourceType: record.sourceType,
           userId: record.data.userId,
@@ -100,6 +101,7 @@ export default {
 
   async download({ recordId, fileName }) {
     const url = `${process.env.VUE_APP_BASE_URL}/records/${recordId}/contents/${fileName}`;
+    await axios.get(url);
     downLoadFile(fileName, url);
   },
 };

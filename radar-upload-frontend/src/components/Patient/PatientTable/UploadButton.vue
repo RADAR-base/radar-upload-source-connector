@@ -27,7 +27,7 @@
       <UploadForm
         @finishUpload="finishUpload"
         @startUploading="startUploading"
-        @uploadFailed="closeMenu"
+        @uploadFailed="uploadFailed"
         @cancelClick="closeMenu"
         @creatingRecord="creatingRecord"
         :upload-info="uploadInfo"
@@ -71,6 +71,10 @@ export default {
     },
     creatingRecord() {
       this.menu = false;
+    },
+    uploadFailed(record) {
+      this.closeMenu();
+      this.$emit('uploadFailed', record);
     },
   },
 };
