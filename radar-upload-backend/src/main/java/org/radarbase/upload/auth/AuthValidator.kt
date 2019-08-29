@@ -33,7 +33,7 @@ interface AuthValidator {
 
         // Check if the HTTP Authorization header is present and formatted correctly
         if (authorizationHeader != null
-                && !authorizationHeader.startsWith(AuthenticationFilter.BEARER, ignoreCase = true)) {
+                && authorizationHeader.startsWith(AuthenticationFilter.BEARER, ignoreCase = true)) {
             // Extract the token from the HTTP Authorization header
             return authorizationHeader.substring(AuthenticationFilter.BEARER.length).trim { it <= ' ' }
         }
