@@ -20,6 +20,7 @@
 package org.radarbase.upload.resource
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.radarbase.upload.Config
 import org.radarbase.upload.api.*
 import org.radarbase.upload.auth.Auth
 import org.radarbase.upload.auth.Authenticated
@@ -172,17 +173,25 @@ class RecordResource {
     @Path("{recordId}/contents/{fileName}")
     fun getContents(
             @PathParam("fileName") fileName: String,
-            @PathParam("recordId") recordId: Long): Response {
+            @PathParam("recordId") recordId: Long,
+            @Context config: Config): Response {
 
         val recordContent = recordRepository.readRecordContent(recordId, fileName)
                 ?: throw NotFoundException("Cannot find record content with record-id $recordId and fileName $fileName")
 
-        val content = recordRepository.readFileContent(recordId, fileName)
-                ?: throw NotFoundException("Cannot read content of file $fileName from record $recordId")
+        logger.info("Reading record $recordId file $fileName of size ${recordContent.size}")
 
-        val streamingOutput = StreamingOutput {
-            content.inputStream().use { inStream -> inStream.copyTo(it) }
-            it.flush()
+        val streamingOutput = StreamingOutput { out ->
+            for (position in 0L .. recordContent.size step config.contentStreamBufferSize) {
+                val len = config.contentStreamBufferSize.coerceAtMost(recordContent.size - position)
+                if (len > 0) {
+                    val content = recordRepository.readFileContent(recordId, recordContent.record.metadata.revision, recordContent.fileName, position, len)
+                            ?: throw NotFoundException("Cannot read content of file $fileName from record $recordId")
+
+                    content.inputStream().use { inStream -> inStream.copyTo(out) }
+                }
+            }
+            out.flush()
         }
 
         return Response
@@ -191,7 +200,6 @@ class RecordResource {
                 .header("Content-Length", recordContent.size)
                 .header("Last-Modified", recordContent.createdDate)
                 .build()
-
     }
 
     @POST

@@ -38,4 +38,5 @@ data class Config(
         var jwtIssuer: String? = null,
         var jwtResourceName: String = "res_upload",
         var sourceTypes: List<SourceTypeDTO>? = null,
-        var additionalPersistenceConfig: Map<String, String>? = null)
+        var additionalPersistenceConfig: Map<String, String>? = null,
+        var contentStreamBufferSize: Long = 1048576L)

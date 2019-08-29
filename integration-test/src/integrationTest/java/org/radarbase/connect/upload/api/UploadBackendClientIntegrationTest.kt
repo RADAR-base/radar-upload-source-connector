@@ -32,6 +32,7 @@ import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.hamcrest.CoreMatchers
 import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.greaterThan
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.*
@@ -162,6 +163,7 @@ class UploadBackendClientIntegrationTest {
 
         //Test uploading request contentFile for created record
         uploadContent(recordCreated.id!!, clientUserToken)
+        retrieveFile(recordCreated)
 
         val records = pollRecords()
 
@@ -212,10 +214,13 @@ class UploadBackendClientIntegrationTest {
     }
 
     private fun retrieveFile(recordId: RecordDTO) {
-        val file = uploadBackendClient.retrieveFile(recordId, fileName)
-        assertNotNull(file)
+        uploadBackendClient.retrieveFile(recordId, fileName).use { response ->
+            assertNotNull(response)
+            val responseData = response!!.bytes()
+            assertThat(responseData.size.toLong(), equalTo(File(fileName).length()))
+            assertThat(responseData, equalTo(File(fileName).readBytes()))
+        }
     }
-
 
     companion object {
         const val fileName = "TEST_ACC.csv"
