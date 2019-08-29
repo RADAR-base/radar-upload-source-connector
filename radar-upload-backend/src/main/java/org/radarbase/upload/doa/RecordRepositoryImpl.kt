@@ -19,8 +19,6 @@
 
 package org.radarbase.upload.doa
 
-import org.hibernate.Hibernate
-import org.hibernate.Session
 import org.hibernate.engine.jdbc.BlobProxy
 import org.hibernate.engine.jdbc.ClobProxy
 import org.radarbase.upload.api.ContentsDTO
@@ -29,7 +27,6 @@ import org.radarbase.upload.doa.entity.*
 import org.radarbase.upload.exception.BadRequestException
 import org.radarbase.upload.exception.ConflictException
 import org.radarbase.upload.exception.NotFoundException
-import org.radarbase.upload.inject.session
 import org.radarbase.upload.inject.transact
 import org.slf4j.LoggerFactory
 import java.io.InputStream
@@ -172,8 +169,7 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
                 .resultList.firstOrNull()
     }
 
-    override fun readFileContent(id: Long, revision: Int, fileName: String, offset: Long, limit: Long): ByteArray? = em.get().transact {
-        logger.info("Reading record $id file $fileName from offset $offset with length $limit")
+    override fun readFileContent(id: Long, revision: Int, fileName: String, range: LongRange?): ByteArray? = em.get().transact {
         val queryString = "SELECT rc.content from RecordContent rc WHERE rc.record.id = :id AND rc.fileName = :fileName"
 
         val blob = createQuery(queryString, Blob::class.java)
@@ -181,11 +177,19 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
                 .setParameter("id", id)
                 .resultList.firstOrNull() ?: return@transact null
 
-        val result = blob.getBinaryStream(offset + 1, limit)?.use {
-            it.readBytes()
+        val bytes = if (range == null
+                || (range.first == 0L && range.count().toLong() == blob.length())) {
+            blob.binaryStream.readBytes()
+        } else {
+            val offset = range.first + 1
+            val limit = range.count().toLong()
+            logger.debug("Reading record $id file $fileName from offset $offset with length $limit")
+            blob.getBinaryStream(offset, limit)?.use {
+                it.readBytes()
+            }
         }
         blob.free()
-        result
+        bytes
     }
 
     override fun create(record: Record, metadata: RecordMetadata?, contents: Set<ContentsDTO>?): Record = em.get().transact {
