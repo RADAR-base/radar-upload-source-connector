@@ -34,6 +34,8 @@ class ManagementPortalAuth(private val token: RadarToken) : Auth {
             .firstOrNull { token.hasPermissionOnProject(MEASUREMENT_CREATE, it) }
     override val userId: String? = token.subject.takeUnless { it.isEmpty() }
 
+    override val bearerToken: String? = token.token
+
     override fun checkSourcePermission(permission: Permission, projectId: String?, userId: String?, sourceId: String?) {
         if (!token.hasPermissionOnSource(permission,
                         projectId ?: throw BadRequestException("Missing project ID in request"),
