@@ -85,25 +85,24 @@ abstract class RecordConverter(override val sourceType: String, val avroData: Av
 
         val key = record.computeObservationKey(avroData)
 
-        val contents = record.data!!.contents!!
+        val recordContents = record.data!!.contents!!
 
-        val sourceRecords = contents.asSequence().map contentMap@{
+        val sourceRecords = recordContents.map contentMap@{ content ->
 
-            val response = client.retrieveFile(record, it.fileName) // make sure zip files are unpacked first!!
-                    ?: throw IOException("Cannot retrieve file ${it.fileName} from record with id ${record.id}")
+            val response = client.retrieveFile(record, content.fileName)
+                    ?: throw IOException("Cannot retrieve file ${content.fileName} from record with id ${record.id}")
             val timeReceived = Instant.now().epochSecond
 
             response.use responseResource@{ res ->
-                return@contentMap processData(it, res.byteStream(), record, timeReceived.toDouble())
-                        .map topicDataMap@{
-                            val valRecord = avroData.toConnectData(it.value.schema, it.value)
+                return@contentMap processData(content, res.byteStream(), record, timeReceived.toDouble())
+                        .map topicDataMap@{ topicData ->
+                            val valRecord = avroData.toConnectData(topicData.value.schema, topicData.value)
                             val offset = mutableMapOf(
-                                    END_OF_RECORD_KEY to it.endOfFileOffSet,
+                                    END_OF_RECORD_KEY to topicData.endOfFileOffSet,
                                     RECORD_ID_KEY to record.id,
                                     REVISION_KEY to record.metadata?.revision
                             )
-                            // find the last record and set END_OF_RECORD_KEY to true, otherwise false
-                            return@topicDataMap SourceRecord(getPartition(), offset, it.topic, key.schema(), key.value(), valRecord.schema(), valRecord.value())
+                            return@topicDataMap SourceRecord(getPartition(), offset, topicData.topic, key.schema(), key.value(), valRecord.schema(), valRecord.value())
                         }.toList()
             }
         }.toList()
