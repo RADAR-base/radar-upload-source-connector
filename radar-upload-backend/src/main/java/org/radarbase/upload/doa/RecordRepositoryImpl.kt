@@ -206,7 +206,7 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
                 message = metadata.message ?: "Data had been uploaded and ready for processing"
             } else {
                 status = RecordStatus.INCOMPLETE
-                message = metadata.message ?: "Record has been created. Data must be uploaded"
+                message = metadata?.message ?: "Record has been created. Data must be uploaded"
             }
             createdDate = Instant.now()
             modifiedDate = Instant.now()
