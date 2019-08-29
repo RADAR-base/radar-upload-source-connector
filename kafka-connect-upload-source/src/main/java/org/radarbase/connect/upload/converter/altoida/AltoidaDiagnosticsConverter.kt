@@ -44,4 +44,4 @@ class AltoidaDiagnosticsCsvProcessor(
 
 class AltoidaDiagnosticsConverter(
         sourceType: String = "altoida_diagnostics", csvProcessor: CsvProcessor = AltoidaDiagnosticsCsvProcessor())
-    : CsvFileConverter(sourceType, csvProcessor)
+    : CsvFileRecordConverter(sourceType, csvProcessor)

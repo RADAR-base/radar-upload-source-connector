@@ -45,4 +45,4 @@ class AltoidaRotationCsvProcessor(
 
 class AltoidaRotationConverter(
         sourceType: String = "altoida_rotation", csvProcessor: CsvProcessor = AltoidaRotationCsvProcessor())
-    : CsvFileConverter(sourceType, csvProcessor)
+    : CsvFileRecordConverter(sourceType, csvProcessor)

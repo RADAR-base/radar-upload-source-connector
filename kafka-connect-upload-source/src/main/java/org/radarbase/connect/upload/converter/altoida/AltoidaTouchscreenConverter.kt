@@ -44,4 +44,4 @@ class AltoidaTouchscreenCsvProcessor(
 
 class AltoidaTouchscreenConverter(
         sourceType: String = "altoida_touchscreen", csvProcessor: CsvProcessor = AltoidaTouchscreenCsvProcessor())
-    : CsvFileConverter(sourceType, csvProcessor)
+    : CsvFileRecordConverter(sourceType, csvProcessor)

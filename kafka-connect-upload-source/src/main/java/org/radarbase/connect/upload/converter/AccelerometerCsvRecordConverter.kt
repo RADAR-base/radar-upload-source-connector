@@ -44,4 +44,4 @@ class AccelerometerCsvProcessor(
 
 class AccelerometerCsvRecordConverter(
         sourceType: String = "phone-acceleration", csvProcessor: CsvProcessor = AccelerometerCsvProcessor())
-    : CsvFileConverter(sourceType, csvProcessor)
+    : CsvFileRecordConverter(sourceType, csvProcessor)

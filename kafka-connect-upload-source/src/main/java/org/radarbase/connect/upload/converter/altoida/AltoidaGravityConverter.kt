@@ -45,4 +45,4 @@ class AltoidaGravityCsvProcessor(
 
 class AltoidaGravityConverter(
         sourceType: String = "altoida_gravity", csvProcessor: CsvProcessor = AltoidaGravityCsvProcessor())
-    : CsvFileConverter(sourceType, csvProcessor)
+    : CsvFileRecordConverter(sourceType, csvProcessor)

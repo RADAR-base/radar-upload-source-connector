@@ -45,4 +45,4 @@ class AltoidaPathCsvProcessor(
 
 class AltoidaPathConverter(
         sourceType: String = "altoida_path", csvProcessor: CsvProcessor = AltoidaPathCsvProcessor())
-    : CsvFileConverter(sourceType, csvProcessor)
+    : CsvFileRecordConverter(sourceType, csvProcessor)
