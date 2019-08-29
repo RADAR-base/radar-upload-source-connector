@@ -160,7 +160,7 @@ describe('axios/file', () => {
 
     const expectedVal2 = [{
       ...response.records[0].metadata,
-      files: response.records[0].data.contents,
+      files: response.records[0].data.contents.map(file => ({ ...file, uploadFailed: false, uploading: false })),
       sourceType: response.records[0].sourceType,
       userId: response.records[0].data.userId,
       id: response.records[0].id,

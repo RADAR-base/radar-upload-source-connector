@@ -93,16 +93,24 @@ export default {
       const { sourceType } = this;
       const postPayload = { userId, projectId, sourceType };
       const files = [];
-      files.push({ fileName: this.file.name, uploading: true });
+      files.push({ fileName: this.file.name, uploading: true, uploadFailed: false });
       try {
         this.$emit('creatingRecord');
         const returnedRecord = await fileAPI.postRecords(postPayload);
         this.$emit('startUploading', { ...returnedRecord, files, active: true });
         const putPayload = { file: this.file, fileName: this.file.name, id: returnedRecord.id };
-        const uploadingFile = await fileAPI.putRecords(putPayload);
+        const uploadingFile = await fileAPI.putRecords(putPayload)
+          .catch(() => {
+            this.$emit('uploadFailed', {
+              fileName: this.file.name,
+              uploading: false,
+              uploadFailed: true,
+              recordId: returnedRecord.id,
+            });
+            throw new Error();
+          });
         this.$emit('finishUpload', uploadingFile);
       } catch (error) {
-        this.$emit('uploadFailed');
         this.$error('Upload fails, please try again later');
       }
       this.removeData();

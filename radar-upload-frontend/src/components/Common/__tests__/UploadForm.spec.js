@@ -90,7 +90,7 @@ describe('UploadForm', () => {
     fileAPI.putRecords = jest.fn().mockResolvedValue(putReturnVal);
     // file uploaded
     const files = [];
-    files.push({ fileName: file.name, uploading: true });
+    files.push({ fileName: file.name, uploading: true, uploadFailed: false });
 
 
     wrapper.vm.uploadFile();
@@ -105,19 +105,31 @@ describe('UploadForm', () => {
     expect(fileAPI.putRecords).toBeCalledWith(putRecordPayload);
     expect(wrapper.emitted().finishUpload[0][0]).toEqual(putReturnVal);
     expect(removeData).toBeCalled();
+
+    fileAPI.postRecords.mockClear();
   });
 
-  it('uploadfile error', async () => {
+  it('uploadfile: POST error', async () => {
     const removeData = jest.spyOn(wrapper.vm, 'removeData');
     fileAPI.postRecords = jest.fn().mockRejectedValue();
 
     wrapper.vm.uploadFile();
     await flushPromises();
-    expect(wrapper.emitted().uploadFailed).toBeTruthy();
     expect(wrapper.vm.$error).toBeCalled();
     expect(removeData).toBeCalled();
   });
 
+
+  it('uploadfile: PUT error', async () => {
+    fileAPI.postRecords = jest.fn().mockResolvedValue({ id: 'id1', createdDate: '2019-10-10' });
+    fileAPI.putRecords = jest.fn().mockRejectedValue();
+
+    wrapper.vm.uploadFile();
+
+    await flushPromises();
+    expect(wrapper.vm.$error).toBeCalled();
+    expect(wrapper.emitted().uploadFailed).toBeTruthy();
+  });
 
   it('removeData', () => {
     wrapper.vm.removeData();

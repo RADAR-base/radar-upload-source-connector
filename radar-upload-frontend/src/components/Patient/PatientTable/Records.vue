@@ -67,13 +67,20 @@
         :key="fileIndex"
       >
         <v-list-item-avatar>
-          <v-icon v-show="!file.uploading">
+          <v-icon v-show="!file.uploading&&!file.uploadFailed">
             mdi-file
+          </v-icon>
+
+          <v-icon
+            v-show="file.uploadFailed"
+            color="error"
+          >
+            mdi-close-octagon
           </v-icon>
 
           <v-progress-circular
             class="mt-2"
-            v-show="file.uploading"
+            v-show="!file.uploadFailed&&file.uploading"
             indeterminate
             color="primary"
           />
