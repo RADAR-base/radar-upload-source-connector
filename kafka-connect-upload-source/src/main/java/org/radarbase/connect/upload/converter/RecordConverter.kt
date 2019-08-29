@@ -31,7 +31,6 @@ import org.radarbase.connect.upload.api.LogLevel.*
 import org.radarbase.connect.upload.exception.ConversionFailedException
 import org.radarcns.kafka.ObservationKey
 import org.slf4j.LoggerFactory
-import java.io.IOException
 import java.io.InputStream
 import java.lang.Exception
 import java.time.Instant
@@ -80,7 +79,8 @@ abstract class RecordConverter(override val sourceType: String, val avroData: Av
     }
 
     override fun convert(record: RecordDTO): ConversionResult {
-        log(record.id!!, INFO, "Converting record : record-id ${record.id}")
+        val recordId = record.id!!
+        log(recordId, INFO, "Converting record : record-id $recordId")
 
         try {
             record.validateRecord()
@@ -92,7 +92,17 @@ abstract class RecordConverter(override val sourceType: String, val avroData: Av
             val sourceRecords = recordContents.map contentMap@{ content ->
 
                 val response = client.retrieveFile(record, content.fileName)
-                        ?: throw IOException("Cannot retrieve file ${content.fileName} from record with id ${record.id}")
+                // if receiving a content fails, mark that record as READY and stop converting
+                if(response == null) {
+                    client.updateStatus(recordId, record.metadata!!.copy(
+                            status = "READY",
+                            message = "Could not retrieve file ${content.fileName} from record with id $recordId"
+                    ))
+
+                    log(recordId, ERROR,"Could not retrieve file ${content.fileName} from record with id $recordId")
+                    return@convert ConversionResult(record, emptyList())
+                }
+
                 val timeReceived = Instant.now().epochSecond
 
                 response.use responseResource@{ res ->
@@ -110,7 +120,7 @@ abstract class RecordConverter(override val sourceType: String, val avroData: Av
             }
             return ConversionResult(record, sourceRecords.flatMap { it.toList() })
         } catch (exe: Exception){
-            throw ConversionFailedException("Could not convert record ${record.id}",exe)
+            throw ConversionFailedException("Could not convert record ${recordId}",exe)
         }
     }
 
