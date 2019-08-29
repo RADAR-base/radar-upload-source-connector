@@ -24,9 +24,11 @@ import java.time.Instant
 import java.time.LocalDateTime
 
 enum class LogLevel {
-    INFO, DEBUG, WARN, ERROR}
+    INFO, DEBUG, WARN, ERROR
+}
 
-data class Log (
+data class Log(
+        var recordId: Long,
         var logLevel: LogLevel,
         var message: String)
 

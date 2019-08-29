@@ -29,6 +29,7 @@ import org.radarbase.connect.upload.converter.Converter.Companion.END_OF_RECORD_
 import org.radarbase.connect.upload.converter.Converter.Companion.RECORD_ID_KEY
 import org.radarbase.connect.upload.converter.Converter.Companion.REVISION_KEY
 import org.radarbase.connect.upload.exception.ConflictException
+import org.radarbase.connect.upload.exception.ConversionFailedException
 import org.radarbase.connect.upload.util.VersionUtil
 import org.slf4j.LoggerFactory
 
@@ -110,15 +111,30 @@ class UploadSourceTask : SourceTask() {
                         }
                     }
 
-                    val result = converter.convert(record)
-                    result.result?.takeIf(List<*>::isNotEmpty)?.let {
-                        return@poll it
+                    try {
+                        val result = converter.convert(record)
+                        result.result?.takeIf(List<*>::isNotEmpty)?.let {
+                            return@poll it
+                        }
+                    } catch (exe: ConversionFailedException) {
+                        logger.error("Could not convert record ${record.id}", exe)
+                        updateRecordFailure(record)
                     }
+
                 }
             }
 
             Thread.sleep(pollInterval)
         }
+    }
+
+    private fun updateRecordFailure(record: RecordDTO) {
+        logger.info("Update record conversion failure")
+        val metadata = uploadClient.retrieveRecordMetadata(record.id!!)
+        uploadClient.updateStatus(record.id!!, metadata.copy(
+            status = "FAILED",
+            message = "Could not convert this record. Please refer to the conversion logs for more details"
+        ))
     }
 
     override fun commitRecord(record: SourceRecord?) {

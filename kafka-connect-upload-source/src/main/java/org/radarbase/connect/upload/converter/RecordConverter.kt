@@ -28,6 +28,7 @@ import org.radarbase.connect.upload.converter.Converter.Companion.END_OF_RECORD_
 import org.radarbase.connect.upload.converter.Converter.Companion.RECORD_ID_KEY
 import org.radarbase.connect.upload.converter.Converter.Companion.REVISION_KEY
 import org.radarbase.connect.upload.api.LogLevel.*
+import org.radarbase.connect.upload.exception.ConversionFailedException
 import org.radarcns.kafka.ObservationKey
 import org.slf4j.LoggerFactory
 import java.io.IOException
@@ -61,8 +62,8 @@ abstract class RecordConverter(override val sourceType: String, val avroData: Av
         }
     }
 
-    fun log(logLevel: LogLevel, logMessage: String, exe: Exception? = null) {
-        logsRepository.add(Log(logLevel, logMessage))
+    fun log(recordId: Long, logLevel: LogLevel, logMessage: String, exe: Exception? = null) {
+        logsRepository.add(Log(recordId, logLevel, logMessage))
 
         when (logLevel) {
             INFO -> logger.info(logMessage)
@@ -79,35 +80,38 @@ abstract class RecordConverter(override val sourceType: String, val avroData: Av
     }
 
     override fun convert(record: RecordDTO): ConversionResult {
-        log(INFO, "Converting record : record-id ${record.id}")
+        log(record.id!!, INFO, "Converting record : record-id ${record.id}")
 
-        record.validateRecord()
+        try {
+            record.validateRecord()
 
-        val key = record.computeObservationKey(avroData)
+            val key = record.computeObservationKey(avroData)
 
-        val recordContents = record.data!!.contents!!
+            val recordContents = record.data!!.contents!!
 
-        val sourceRecords = recordContents.map contentMap@{ content ->
+            val sourceRecords = recordContents.map contentMap@{ content ->
 
-            val response = client.retrieveFile(record, content.fileName)
-                    ?: throw IOException("Cannot retrieve file ${content.fileName} from record with id ${record.id}")
-            val timeReceived = Instant.now().epochSecond
+                val response = client.retrieveFile(record, content.fileName)
+                        ?: throw IOException("Cannot retrieve file ${content.fileName} from record with id ${record.id}")
+                val timeReceived = Instant.now().epochSecond
 
-            response.use responseResource@{ res ->
-                return@contentMap processData(content, res.byteStream(), record, timeReceived.toDouble())
-                        .map topicDataMap@{ topicData ->
-                            val valRecord = avroData.toConnectData(topicData.value.schema, topicData.value)
-                            val offset = mutableMapOf(
-                                    END_OF_RECORD_KEY to topicData.endOfFileOffSet,
-                                    RECORD_ID_KEY to record.id,
-                                    REVISION_KEY to record.metadata?.revision
-                            )
-                            return@topicDataMap SourceRecord(getPartition(), offset, topicData.topic, key.schema(), key.value(), valRecord.schema(), valRecord.value())
-                        }
+                response.use responseResource@{ res ->
+                    return@contentMap processData(content, res.byteStream(), record, timeReceived.toDouble())
+                            .map topicDataMap@{ topicData ->
+                                val valRecord = avroData.toConnectData(topicData.value.schema, topicData.value)
+                                val offset = mutableMapOf(
+                                        END_OF_RECORD_KEY to topicData.endOfFileOffSet,
+                                        RECORD_ID_KEY to record.id,
+                                        REVISION_KEY to record.metadata?.revision
+                                )
+                                return@topicDataMap SourceRecord(getPartition(), offset, topicData.topic, key.schema(), key.value(), valRecord.schema(), valRecord.value())
+                            }
+                }
             }
+            return ConversionResult(record, sourceRecords.flatMap { it.toList() })
+        } catch (exe: Exception){
+            throw ConversionFailedException("Could not convert record ${record.id}",exe)
         }
-//        record.metadata = commitLogs(record, client)
-        return ConversionResult(record, sourceRecords.flatMap { it.toList() })
     }
 
     private fun commitLogs(record: RecordDTO, client: UploadBackendClient): RecordMetadataDTO {
@@ -133,8 +137,7 @@ abstract class RecordConverter(override val sourceType: String, val avroData: Av
     }
 
     private fun RecordDTO.computeObservationKey(avroData: AvroData): SchemaAndValue {
-        val data = this.data
-        data ?: throw IllegalStateException("Cannot process record without data")
+        val data = this.data ?: throw IllegalStateException("Cannot process record without data")
         return avroData.toConnectData(
                 ObservationKey.getClassSchema(),
                 ObservationKey(
