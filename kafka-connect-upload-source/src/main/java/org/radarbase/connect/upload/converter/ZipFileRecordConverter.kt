@@ -29,6 +29,10 @@ import java.io.IOException
 import java.io.InputStream
 import java.util.zip.ZipInputStream
 
+/**
+ * Abstract Zip file converter. Implementing classes should provide specific source-type and compatible
+ * DataProcessors that can process each entry in the Zip file.
+ */
 abstract class ZipFileRecordConverter(sourceType: String, listOfDataProcessors: List<DataProcessor>) : RecordConverter(sourceType) {
 
     private var processors: Map<String, DataProcessor> = listOfDataProcessors.map { it.schemaType to it }.toMap()
