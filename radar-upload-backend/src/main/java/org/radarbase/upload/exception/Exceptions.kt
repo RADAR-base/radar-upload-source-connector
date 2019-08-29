@@ -29,6 +29,9 @@ open class HttpApplicationException(val status: Int, val code: String, val detai
 class BadGatewayException(message: String) :
         HttpApplicationException(Status.BAD_GATEWAY, "bad_gateway", message)
 
+class BadRequestException(code: String, message: String) :
+        HttpApplicationException(Status.BAD_REQUEST, code, message)
+
 class ConflictException(code: String, messageText: String) :
         HttpApplicationException(Status.CONFLICT, code, messageText)
 

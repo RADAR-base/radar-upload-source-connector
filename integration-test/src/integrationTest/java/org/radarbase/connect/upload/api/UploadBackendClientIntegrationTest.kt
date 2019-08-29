@@ -139,14 +139,13 @@ class UploadBackendClientIntegrationTest {
                         userId = USER,
                         sourceId = SOURCE,
                         time = LocalDateTime.now()
-
                 ),
                 sourceType = mySourceTypeName,
                 metadata = null
         )
 
         val request = Request.Builder()
-                .url(baseUri.plus("records"))
+                .url("$baseUri/records")
                 .post(record.toJsonString().toRequestBody(APPLICATION_JSON))
                 .addHeader("Authorization", BEARER + clientUserToken)
                 .addHeader("Content-type", "application/json")
@@ -162,6 +161,7 @@ class UploadBackendClientIntegrationTest {
 
         //Test uploading request contentFile for created record
         uploadContent(recordCreated.id!!, clientUserToken)
+        markReady(recordCreated.id!!, clientUserToken)
 
         val records = pollRecords()
 
@@ -185,7 +185,7 @@ class UploadBackendClientIntegrationTest {
         val file = File(fileName)
 
         val requestToUploadFile = Request.Builder()
-                .url(baseUri.plus("records/$recordId/contents/$fileName"))
+                .url("$baseUri/records/$recordId/contents/$fileName")
                 .put(file.asRequestBody(TEXT_CSV))
                 .addHeader("Authorization", BEARER + clientUserToken)
                 .build()
@@ -196,6 +196,23 @@ class UploadBackendClientIntegrationTest {
         val content = mapper.readValue(uploadResponse.body?.string(), ContentsDTO::class.java)
         assertNotNull(content)
         assertEquals(fileName, content.fileName)
+    }
+
+
+    private fun markReady(recordId: Long, clientUserToken: String) {
+        //Test uploading request contentFile
+        val requestToUploadFile = Request.Builder()
+                .url("$baseUri/records/$recordId/metadata")
+                .post("{\"status\":\"READY\",\"revision\":1}".toRequestBody("application/json".toMediaType()))
+                .addHeader("Authorization", BEARER + clientUserToken)
+                .build()
+
+        val uploadResponse = httpClient.newCall(requestToUploadFile).execute()
+        assertTrue(uploadResponse.isSuccessful)
+
+        val metadata = mapper.readValue(uploadResponse.body?.string(), RecordMetadataDTO::class.java)
+        assertNotNull(metadata)
+        assertEquals("READY", metadata.status)
     }
 
     fun pollRecords(): RecordContainerDTO {
@@ -232,7 +249,7 @@ class UploadBackendClientIntegrationTest {
                 .registerModule(KotlinModule())
                 .registerModule(JavaTimeModule())
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-        private const val baseUri = "http://0.0.0.0:8080/radar-upload/"
+        private const val baseUri = "http://0.0.0.0:8080/radar-upload"
         private const val mySourceTypeName = "phone-acceleration"
         private const val BEARER = "Bearer "
         private val APPLICATION_JSON = "application/json; charset=utf-8".toMediaType()

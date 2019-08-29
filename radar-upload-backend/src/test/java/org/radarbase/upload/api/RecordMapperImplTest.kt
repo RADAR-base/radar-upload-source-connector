@@ -6,6 +6,8 @@ import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.Assertions.*
 import org.mockito.Mockito.mock
+import org.radarbase.upload.Config
+import org.radarbase.upload.doa.SourceTypeRepository
 import org.radarbase.upload.doa.entity.Record
 import org.radarbase.upload.doa.entity.RecordContent
 import java.net.URI
@@ -31,14 +33,15 @@ internal class RecordMapperImplTest {
             contents = mutableSetOf(content)
         }
 
-        val mapper = RecordMapperImpl().apply {
-            uri = mock {
-                on { baseUri } doReturn URI.create("http://localhost/upload/")
-            }
-        }
+        val mapper = RecordMapperImpl(
+                mock {
+                    on { baseUri } doReturn URI.create("http://localhost/upload/")
+                },
+                mock(SourceTypeRepository::class.java),
+                Config(advertisedBaseUri = URI.create("https://localhost/upload/")))
 
         val expected = ContentsDTO(
-                url = "http://localhost/upload/records/1/contents/test%20123%20%281%29.zip",
+                url = "https://localhost/upload/records/1/contents/test%20123%20%281%29.zip",
                 createdDate = Instant.EPOCH,
                 contentType = "application/zip",
                 size = 11L,
