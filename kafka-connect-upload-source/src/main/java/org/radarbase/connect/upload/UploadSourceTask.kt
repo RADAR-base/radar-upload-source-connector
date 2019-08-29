@@ -94,12 +94,12 @@ class UploadSourceTask : SourceTask() {
                     val converter = converters.find { it.sourceType == record.sourceType }
                     try {
                         if (converter == null) {
-                            uploadClient.updateStatus(record.id!!, record.metadata!!.copy(status = "FAILED", message = "Converter for Source type ${record.sourceType} not found."))
-                            logger.debug("Could not find converter $converter for record ${record.id}")
+                            uploadClient.updateStatus(record.id!!, record.metadata!!.copy(status = "FAILED", message = "Converter for data source-type ${record.sourceType} not found."))
+                            logger.debug("Could not find converter ${record.sourceType} for record ${record.id}")
                             continue
                         } else {
                             record.metadata = uploadClient.updateStatus(record.id!!, record.metadata!!.copy(status = "PROCESSING"))
-                            logger.debug("updated metadata ${record.metadata}")
+                            logger.debug("Updated metadata ${record.id} to PROCESSING")
                         }
                     } catch (exe: Exception) {
                         when(exe) {
