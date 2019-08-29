@@ -100,6 +100,10 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
         find(RecordLogs::class.java, id)
     }
 
+    override fun readLogContents(id: Long): String? = em.get().transact {
+        find(RecordLogs::class.java, id)?.logs?.characterStream?.readText()
+    }
+
     override fun updateContent(record: Record, fileName: String, contentType: String, stream: InputStream, length: Long): RecordContent = em.get().transact {
         val existingContent = record.contents?.find { it.fileName == fileName }
 

@@ -35,6 +35,9 @@ class RecordMapperImpl : RecordMapper {
     @Context
     lateinit var uri: UriInfo
 
+    private val cleanBaseUri
+        get() = uri.baseUri.toString().trimEnd('/')
+
     @Context
     lateinit var sourceTypeRepository: SourceTypeRepository
 
@@ -88,10 +91,9 @@ class RecordMapperImpl : RecordMapper {
     override fun fromContent(content: RecordContent): ContentsDTO {
         val cleanedFileName = URLEncoder.encode(content.fileName, "UTF-8")
                 .replace("+", "%20")
-        val cleanedBase = uri.baseUri.toString().trimEnd('/')
 
         return ContentsDTO(
-                url = "$cleanedBase/records/${content.record.id}/contents/$cleanedFileName",
+                url = "$cleanBaseUri/records/${content.record.id}/contents/$cleanedFileName",
                 contentType = content.contentType,
                 createdDate = content.createdDate,
                 size = content.size,
@@ -108,7 +110,7 @@ class RecordMapperImpl : RecordMapper {
             committedDate = metadata.committedDate,
             // use record.id, since metadata and record have one-to-one
             logs = metadata.logs?.let {
-                LogsDto(url = "${uri.baseUri}/records/${metadata.id}/logs")
+                LogsDto(url = "${cleanBaseUri}/records/${metadata.id}/logs")
             }
     )
 }
