@@ -32,6 +32,7 @@ interface RecordRepository {
     fun create(record: Record, metadata: RecordMetadata? = null, contents: Set<ContentsDTO>? = null): Record
     fun read(id: Long): Record?
     fun readLogs(id: Long): RecordLogs?
+    fun readLogContents(id: Long): String?
     fun updateLogs(id: Long, logsData: String): RecordMetadata
     fun readFileContent(id: Long, fileName: String): ByteArray?
     fun delete(record: Record, revision: Int)

@@ -26,14 +26,16 @@ import org.radarbase.upload.auth.Authenticated
 import org.radarbase.upload.auth.NeedsPermission
 import org.radarbase.upload.doa.RecordRepository
 import org.radarbase.upload.doa.SourceTypeRepository
+import org.radarbase.upload.doa.entity.Record
 import org.radarbase.upload.doa.entity.RecordStatus
 import org.radarbase.upload.dto.CallbackManager
 import org.radarbase.upload.exception.BadRequestException as RbBadRequestException
 import org.radarbase.upload.exception.ConflictException
+import org.radarbase.upload.exception.NotFoundException as RbNotFoundException
+import org.radarcns.auth.authorization.Permission
 import org.radarcns.auth.authorization.Permission.*
 import org.slf4j.LoggerFactory
 import java.io.InputStream
-import java.lang.IllegalStateException
 import java.net.URI
 import javax.annotation.Resource
 import javax.ws.rs.*
@@ -73,7 +75,6 @@ class RecordResource {
             @DefaultValue("10") @QueryParam("limit") limit: Int,
             @QueryParam("lastId") lastId: Long?,
             @QueryParam("status") status: String?): RecordContainerDTO {
-
         projectId ?: throw RbBadRequestException("missing_project", "Required project ID not provided.")
 
         if (userId != null) {
@@ -107,14 +108,20 @@ class RecordResource {
     @NeedsPermission(Entity.MEASUREMENT, Operation.CREATE)
     fun delete(@PathParam("recordId") recordId: Long,
             @QueryParam("revision") revision: Int): Response {
-        val record = recordRepository.read(recordId)
-                ?: throw NotFoundException("Record with ID $recordId does not exist")
-
-        auth.checkUserPermission(MEASUREMENT_CREATE, record.projectId, record.userId)
+        val record = ensureRecord(recordId)
 
         recordRepository.delete(record, revision)
 
         return Response.noContent().build()
+    }
+
+    @GET
+    @Path("{recordId}")
+    @NeedsPermission(Entity.SUBJECT, Operation.READ)
+    fun readRecord(@PathParam("recordId") recordId: Long): RecordDTO {
+        val record = ensureRecord(recordId)
+
+        return recordMapper.fromRecord(record)
     }
 
     @DELETE
@@ -122,10 +129,7 @@ class RecordResource {
     fun deleteContents(
             @PathParam("recordId") recordId: Long,
             @PathParam("fileName") fileName: String): Response {
-        val record = recordRepository.read(recordId)
-                ?: throw NotFoundException("Record with ID $recordId does not exist")
-
-        auth.checkUserPermission(MEASUREMENT_CREATE, record.projectId, record.userId)
+        val record = ensureRecord(recordId)
 
         recordRepository.deleteContents(record, fileName)
 
@@ -177,10 +181,7 @@ class RecordResource {
             @PathParam("fileName") fileName: String,
             @PathParam("recordId") recordId: Long): Response {
 
-        val record = recordRepository.read(recordId)
-                ?: throw NotFoundException("Record with ID $recordId does not exist")
-
-        auth.checkUserPermission(MEASUREMENT_CREATE, record.projectId, record.userId)
+        val record = ensureRecord(recordId)
 
         if (record.metadata.status != RecordStatus.INCOMPLETE) {
             throw ConflictException("incompatible_status", "Cannot add files to saved record.")
@@ -195,17 +196,30 @@ class RecordResource {
                 .build()
     }
 
+    private fun ensureRecord(recordId: Long, permission: Permission? = MEASUREMENT_CREATE): Record {
+        val record = recordRepository.read(recordId)
+                ?: throw RbNotFoundException("record_not_found", "Record with ID $recordId does not exist")
+
+        permission?.let {
+            auth.checkUserPermission(it, record.projectId, record.userId)
+        }
+
+        return record
+    }
+
     @GET
     @Path("{recordId}/contents/{fileName}")
     fun getContents(
             @PathParam("fileName") fileName: String,
             @PathParam("recordId") recordId: Long): Response {
 
+        ensureRecord(recordId)
+
         val recordContent = recordRepository.readRecordContent(recordId, fileName)
-                ?: throw NotFoundException("Cannot find record content with record-id $recordId and fileName $fileName")
+                ?: throw RbNotFoundException("file_not_found", "Cannot find record content with record-id $recordId and fileName $fileName")
 
         val content = recordRepository.readFileContent(recordId, fileName)
-                ?: throw NotFoundException("Cannot read content of file $fileName from record $recordId")
+                ?: throw RbNotFoundException("file_not_found", "Cannot read content of file $fileName from record $recordId")
 
         val streamingOutput = StreamingOutput {
             content.inputStream().use { inStream -> inStream.copyTo(it) }
@@ -238,8 +252,7 @@ class RecordResource {
     @GET
     @Path("{recordId}/metadata")
     fun getRecordMetaData(@PathParam("recordId") recordId: Long): RecordMetadataDTO {
-        val record = recordRepository.read(recordId)
-                ?: throw NotFoundException("Record with ID $recordId does not exist")
+        val record = ensureRecord(recordId, SUBJECT_READ)
 
         return recordMapper.fromMetadata(record.metadata)
     }
@@ -250,6 +263,8 @@ class RecordResource {
             metaData: RecordMetadataDTO,
             @PathParam("recordId") recordId: Long,
             @Context callbackManager: CallbackManager): RecordMetadataDTO {
+        ensureRecord(recordId, SUBJECT_UPDATE)
+
         val updatedRecord = recordRepository.updateMetadata(recordId, metaData)
 
         return recordMapper.fromMetadata(updatedRecord)
@@ -260,35 +275,25 @@ class RecordResource {
     @Path("{recordId}/logs")
     fun getRecordLogs(
             @PathParam("recordId") recordId: Long): Response {
+        val record = ensureRecord(recordId, SUBJECT_READ)
 
-        val record = recordRepository.read(recordId)
-                ?: throw NotFoundException("Record with ID $recordId does not exist")
+        val log = recordRepository.readLogContents(recordId)
+                ?: throw RbNotFoundException("log_not_found", "Cannot find logs for record with record id $recordId")
 
-        val charStream = record.metadata.logs?.logs?.characterStream
-                ?: throw NotFoundException("Cannot find logs for record with record id $recordId")
-
-        val streamingOutput = StreamingOutput {
-            val writer = it.writer()
-            charStream.use { reader ->
-                reader.copyTo(writer)
-            }
-            writer.flush()
-
-        }
-        return Response.ok(streamingOutput, "text/plain")
+        return Response.ok(log, "text/plain")
                 .header("Last-Modified", record.metadata.modifiedDate)
                 .build()
     }
 
-    @POST
+    @PUT
+    @Consumes("text/plain")
     @Path("{recordId}/logs")
     fun addRecordLogs(
-            recordLogs: LogsDto,
+            recordLogs: String,
             @PathParam("recordId") recordId: Long): RecordMetadataDTO {
-        recordLogs.contents
-                ?: throw IllegalStateException("No content provided to update the logs")
+        ensureRecord(recordId, SUBJECT_UPDATE)
 
-        val uploadedMetaData = recordRepository.updateLogs(recordId, recordLogs.contents!!)
+        val uploadedMetaData = recordRepository.updateLogs(recordId, recordLogs)
         return recordMapper.fromMetadata(uploadedMetaData)
     }
 
