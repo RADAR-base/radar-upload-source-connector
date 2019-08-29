@@ -17,14 +17,9 @@
  *
  */
 
-package org.radarbase.connect.upload.exception
+package org.radarbase.connect.upload.converter
 
-class NotAuthorizedException(message: String) : RuntimeException(message)
-
-class BadGatewayException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
-
-class ConflictException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
-
-class InvalidFormatException(message: String) : RuntimeException(message)
-
-class ProcessorNotFoundException(message: String) : RuntimeException(message)
+class AccelerationZipFileConverter(
+        override val sourceType: String = "acceleration-zip",
+        processors: List<DataProcessor> = listOf(AccelerometerCsvProcessor())
+        ) : ZipFileRecordConverter(sourceType, processors)
