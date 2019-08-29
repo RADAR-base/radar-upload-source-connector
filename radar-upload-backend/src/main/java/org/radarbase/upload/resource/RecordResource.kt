@@ -226,7 +226,7 @@ class RecordResource {
             for (position in 0L .. recordContent.size step config.contentStreamBufferSize) {
                 val len = config.contentStreamBufferSize.coerceAtMost(recordContent.size - position)
                 if (len > 0) {
-                    val content = recordRepository.readFileContent(recordId, record.metadata.revision, recordContent.fileName, position, len)
+                    val content = recordRepository.readFileContent(recordId, record.metadata.revision, recordContent.fileName, position.until(position + len))
                             ?: throw NotFoundException("Cannot read content of file $fileName from record $recordId")
 
                     content.inputStream().use { inStream -> inStream.copyTo(out) }
