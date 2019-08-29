@@ -11,11 +11,13 @@ export const getToken = async (authCode, clientId = 'radar_upload_frontend') => 
   const params = new URLSearchParams();
   params.append('code', authCode);
   params.append('grant_type', 'authorization_code');
-  params.append('redirect_uri', 'http://localhost:8080/login');
+  // eslint-disable-next-line no-undef
+  params.append('redirect_uri', process.env.VUE_APP_AUTH_CALLBACK || $VUE_APP_AUTH_CALLBACK);
 
   // eslint-disable-next-line camelcase
   const { access_token } = await axios.post(
-    'https://radar-test.thehyve.net/managementportal/oauth/token',
+    // eslint-disable-next-line no-undef
+    process.env.VUE_APP_AUTH_API || $VUE_APP_AUTH_API,
     params,
     headers,
   );

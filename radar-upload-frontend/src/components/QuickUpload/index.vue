@@ -7,13 +7,15 @@
     <template v-slot:activator="{ on }">
       <v-btn
         color="primary lighten-1"
-        fab
         class="mr-2"
-        small
         depressed
         v-on="on"
       >
-        <v-icon dark>
+        Quick upload
+        <v-icon
+          dark
+          class="pl-2"
+        >
           mdi-cloud-upload-outline
         </v-icon>
       </v-btn>

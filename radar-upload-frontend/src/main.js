@@ -10,7 +10,8 @@ import services from '@/axios/';
 import '@/assets/styles/main.scss';
 import Snackbar from './plugins/snackbar';
 // init api services
-services.init(process.env.VUE_APP_BASE_URL, store, router);
+// eslint-disable-next-line no-undef
+services.init(process.env.VUE_APP_BASE_URL || $VUE_APP_BASE_URL, store, router);
 
 Vue.config.productionTip = false;
 Vue.use(Snackbar, store);
