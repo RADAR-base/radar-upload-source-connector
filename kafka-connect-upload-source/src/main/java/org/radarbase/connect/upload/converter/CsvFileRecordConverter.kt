@@ -31,13 +31,13 @@ import java.io.InputStream
 abstract class CsvFileRecordConverter(sourceType: String, val csvProcessor: CsvProcessor) : RecordConverter(sourceType) {
 
     override fun processData(contents: ContentsDTO, inputStream: InputStream, record: RecordDTO, timeReceived: Double): List<TopicData> {
-        log(LogLevel.INFO,"Retrieved file content from record id ${record.id} and filename ${contents.fileName}")
+        log(record.id!!, LogLevel.INFO,"Retrieved file content from record id ${record.id} and filename ${contents.fileName}")
         val convertedTopicData = mutableListOf<TopicData>()
         try {
             convertedTopicData.addAll(csvProcessor.processData(inputStream, timeReceived))
             convertedTopicData.last().endOfFileOffSet = true
         } catch (exe: Exception) {
-            log(LogLevel.ERROR, "Could not convert csv file ${contents.fileName}", exe)
+            log(record.id!!, LogLevel.ERROR, "Could not convert csv file ${contents.fileName}", exe)
         }
         return convertedTopicData
     }
