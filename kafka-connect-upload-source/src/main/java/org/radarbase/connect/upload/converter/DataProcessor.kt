@@ -21,18 +21,31 @@ package org.radarbase.connect.upload.converter
 
 import com.opencsv.CSVParserBuilder
 import com.opencsv.CSVReaderBuilder
-import okhttp3.ResponseBody
-import org.radarbase.connect.upload.api.ContentsDTO
-import org.radarbase.connect.upload.api.RecordDTO
 import org.radarbase.connect.upload.exception.InvalidFormatException
-import org.radarbase.connect.upload.api.LogLevel.*
+import org.slf4j.LoggerFactory
 import java.io.IOException
+import java.io.InputStream
 
-abstract class CsvRecordConverter(sourceType: String) : RecordConverter(sourceType) {
 
-    override fun processData(contents: ContentsDTO, responseBody: ResponseBody, record: RecordDTO, timeReceived: Double): List<TopicData> {
-        log(INFO,"Retrieved file content from record id ${record.id} and filename ${contents.fileName}")
-        val inputStream = responseBody.byteStream()
+interface DataProcessor {
+    val schemaType: String
+
+    fun processData(inputStream: InputStream, timeReceived: Double): List<TopicData>
+}
+
+
+interface CsvProcessor: DataProcessor {
+
+    fun validateHeaderSchema(csvHeader: List<String>): Boolean
+
+    fun convertLineToRecord(lineValues: Map<String, String>, timeReceived: Double): TopicData?
+
+}
+
+abstract class AbstractCsvProcessor(override val schemaType: String): CsvProcessor {
+
+    //TODO pass the logrepository
+    override fun processData(inputStream: InputStream, timeReceived: Double): List<TopicData> {
         val reader = CSVReaderBuilder(inputStream.bufferedReader())
                 .withCSVParser(CSVParserBuilder().withSeparator(',').build())
                 .build()
@@ -48,41 +61,39 @@ abstract class CsvRecordConverter(sourceType: String) : RecordConverter(sourceTy
                     }
                     line = reader.readNext()
                 }
-                convertedTopicData.last().endOfFileOffSet = true
             } else {
                 throw InvalidFormatException("Csv header does not match with expected converter format")
             }
         } catch (exe: IOException) {
-            log(WARN,"Something went wrong while processing contents of file ${contents.fileName}: ${exe.message} ")
+//            log(LogLevel.WARN,"Something went wrong while processing contents of file ${contents.fileName}: ${exe.message} ")
         } finally {
-            log(INFO,"Closing resources of content ${contents.fileName}")
+//            log(LogLevel.INFO,"Closing resources of content ${contents.fileName}")
             inputStream.close()
-            responseBody.close()
         }
         return convertedTopicData
     }
 
-    abstract fun validateHeaderSchema(csvHeader: List<String>): Boolean
-
     private fun convertLineToRecord(header: List<String>, line: List<String>, timeReceived: Double): TopicData? {
 
         if(line.isEmpty()) {
-            log(WARN, "Empty line found ${line.toList()}")
+//            log(LogLevel.WARN, "Empty line found ${line.toList()}")
             return null
         }
 
         if (header.size != line.size) {
-            log(WARN, "Line size ${line.size} did not match with header size ${header.size}. Skipping this line")
+//            log(LogLevel.WARN, "Line size ${line.size} did not match with header size ${header.size}. Skipping this line")
             return null
         }
 
         if (line.any { it.isEmpty()}) {
-            log(WARN,"Line with empty values found. Skipping this line")
+//            log(LogLevel.WARN,"Line with empty values found. Skipping this line")
             return null
         } else {
             return convertLineToRecord(header.zip(line).toMap(), timeReceived)
         }
     }
 
-    abstract fun convertLineToRecord(lineValues: Map<String, String>, timeReceived: Double): TopicData?
+    companion object {
+        private val logger = LoggerFactory.getLogger(AbstractCsvProcessor::class.java)
+    }
 }

@@ -19,12 +19,12 @@
 
 package org.radarbase.connect.upload.converter.altoida
 
-import org.radarbase.connect.upload.converter.CsvRecordConverter
-import org.radarbase.connect.upload.converter.TopicData
+import org.radarbase.connect.upload.converter.*
 import org.radarcns.connector.upload.altoida.AltoidaMagnetometer
 
-class AltoidaMagnetometerConverter(override val sourceType: String = "altoida_magnetometer", val topic: String = "connect_upload_altoida_magnetometer")
-    : CsvRecordConverter(sourceType) {
+class AltoidaMagnetometerCsvProcessor(
+        override val schemaType: String = "_MAG.csv",
+        val topic: String = "connect_upload_altoida_magnetometer") : AbstractCsvProcessor(schemaType) {
 
     override fun validateHeaderSchema(csvHeader: List<String>) =
             listOf("TIMESTAMP", "X", "Y", "Z", "ACCURACY") == (csvHeader)
@@ -43,3 +43,7 @@ class AltoidaMagnetometerConverter(override val sourceType: String = "altoida_ma
         return TopicData(false, topic, magnetometer)
     }
 }
+
+class AltoidaMagnetometerConverter(
+        sourceType: String = "altoida_magnetometer", csvProcessor: CsvProcessor = AltoidaMagnetometerCsvProcessor())
+    : CsvFileRecordConverter(sourceType, csvProcessor)

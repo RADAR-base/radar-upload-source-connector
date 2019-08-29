@@ -19,12 +19,12 @@
 
 package org.radarbase.connect.upload.converter.altoida
 
-import org.radarbase.connect.upload.converter.CsvRecordConverter
-import org.radarbase.connect.upload.converter.TopicData
+import org.radarbase.connect.upload.converter.*
 import org.radarcns.connector.upload.altoida.AltoidaAcceleration
 
-class AltoidaAccelerationConverter(override val sourceType: String = "altoida_acceleration", val topic: String = "connect_upload_altoida_acceleration")
-    : CsvRecordConverter(sourceType) {
+class AltoidaAccelerationCsvProcessor(
+        override val schemaType: String = "_ACC.csv",
+        val topic: String = "connect_upload_altoida_acceleration") : AbstractCsvProcessor(schemaType) {
 
     override fun validateHeaderSchema(csvHeader: List<String>) =
             listOf("TIMESTAMP", "X", "Y", "Z") == (csvHeader)
@@ -42,3 +42,7 @@ class AltoidaAccelerationConverter(override val sourceType: String = "altoida_ac
         return TopicData(false, topic, acceleration)
     }
 }
+
+class AltoidaAccelerationConverter(
+        sourceType: String = "altoida_acceleration", csvProcessor: CsvProcessor = AltoidaAccelerationCsvProcessor())
+    : CsvFileRecordConverter(sourceType, csvProcessor)

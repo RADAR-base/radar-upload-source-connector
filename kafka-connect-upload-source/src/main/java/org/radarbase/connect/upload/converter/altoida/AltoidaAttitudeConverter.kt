@@ -19,12 +19,12 @@
 
 package org.radarbase.connect.upload.converter.altoida
 
-import org.radarbase.connect.upload.converter.CsvRecordConverter
-import org.radarbase.connect.upload.converter.TopicData
+import org.radarbase.connect.upload.converter.*
 import org.radarcns.connector.upload.altoida.AltoidaAttitude
 
-class AltoidaAttitudeConverter(override val sourceType: String = "altoida_attitude", val topic: String = "connect_upload_altoida_attitude")
-    : CsvRecordConverter(sourceType) {
+class AltoidaAttitudeCsvProcessor(
+        override val schemaType: String = "_ATT.csv",
+        val topic: String = "connect_upload_altoida_attitude") : AbstractCsvProcessor(schemaType) {
 
     override fun validateHeaderSchema(csvHeader: List<String>) =
             listOf("TIMESTAMP", "PITCH", "ROLL", "YAW") == (csvHeader)
@@ -42,3 +42,8 @@ class AltoidaAttitudeConverter(override val sourceType: String = "altoida_attitu
         return TopicData(false, topic, attitude)
     }
 }
+
+
+class AltoidaAttitudeConverter(
+        sourceType: String = "altoida_attitude", csvProcessor: CsvProcessor = AltoidaAttitudeCsvProcessor())
+    : CsvFileRecordConverter(sourceType, csvProcessor)
