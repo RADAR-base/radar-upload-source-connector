@@ -104,4 +104,9 @@ export default {
     await axios.get(url);
     downLoadFile(fileName, url);
   },
+
+  async getRecordLog(url = 'https://radar-test.thehyve.net/upload/records/4/logs') {
+    const logs = await axios.get(url);
+    return logs;
+  },
 };
