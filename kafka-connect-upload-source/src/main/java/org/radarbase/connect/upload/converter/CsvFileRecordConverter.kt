@@ -24,6 +24,10 @@ import org.radarbase.connect.upload.api.LogLevel
 import org.radarbase.connect.upload.api.RecordDTO
 import java.io.InputStream
 
+/**
+ * Abstract CSV File converter. This can be used to convert a single CSV file into TopicData.
+ * Implementing classes should provide unique source-type and a compatible DataProcessor.
+ */
 abstract class CsvFileRecordConverter(sourceType: String, val csvProcessor: CsvProcessor) : RecordConverter(sourceType) {
 
     override fun processData(contents: ContentsDTO, inputStream: InputStream, record: RecordDTO, timeReceived: Double): List<TopicData> {
