@@ -19,40 +19,53 @@
 
 package org.radarbase.upload.api
 
+import org.radarbase.upload.Config
 import org.radarbase.upload.doa.SourceTypeRepository
 import org.radarbase.upload.doa.entity.Record
 import org.radarbase.upload.doa.entity.RecordContent
 import org.radarbase.upload.doa.entity.RecordMetadata
+import org.radarbase.upload.doa.entity.RecordStatus
+import java.lang.IllegalArgumentException
 import java.net.URLEncoder
 import java.time.Instant
 import javax.ws.rs.BadRequestException
 import javax.ws.rs.core.Context
 import javax.ws.rs.core.UriInfo
 
-class RecordMapperImpl : RecordMapper {
-    @Context
-    lateinit var uri: UriInfo
+class RecordMapperImpl(
+        @Context val uri: UriInfo,
+        @Context val sourceTypeRepository: SourceTypeRepository,
+        @Context val config: Config) : RecordMapper {
 
-    @Context
-    lateinit var sourceTypeRepository: SourceTypeRepository
+    private val cleanBaseUri: String
+        get() = (config.advertisedBaseUri ?: uri.baseUri).toString().trimEnd('/')
 
-    override fun toRecord(record: RecordDTO): Record = Record().apply {
-        val data = record.data ?: throw BadRequestException("No data field included")
-        if (record.metadata != null) {
-            metadata = toMetadata(record.metadata)
+    override fun toRecord(record: RecordDTO): Pair<Record, RecordMetadata> {
+        val recordDoa = Record().apply {
+            val data = record.data ?: throw BadRequestException("No data field included")
+            projectId = data.projectId ?: throw BadRequestException("Missing project ID")
+            userId = data.userId ?: throw BadRequestException("Missing user ID")
+            sourceId = data.sourceId ?: throw BadRequestException("Missing source ID")
+            sourceType = sourceTypeRepository.read(record.sourceType
+                    ?: throw BadRequestException("Missing source type"))
+                    ?: throw BadRequestException("Source type not found")
         }
-        projectId = data.projectId ?: throw BadRequestException("Missing project ID")
-        userId = data.userId ?: throw BadRequestException("Missing user ID")
-        sourceId = data.sourceId ?: throw BadRequestException("Missing source ID")
-        sourceType = sourceTypeRepository.read(record.sourceType
-                ?: throw BadRequestException("Missing source type"))
-                ?: throw BadRequestException("Source type not found")
+
+        return Pair(recordDoa, toMetadata(record.metadata))
     }
 
-    fun toMetadata(metadata: RecordMetadataDTO?) = RecordMetadata().apply {
+    private fun toMetadata(metadata: RecordMetadataDTO?) = RecordMetadata().apply {
         createdDate = Instant.now()
         modifiedDate = Instant.now()
         revision = 1
+
+        status = metadata?.status?.let {
+            try {
+                RecordStatus.valueOf(it)
+            } catch (ex: IllegalArgumentException) {
+                null
+            }
+        } ?: RecordStatus.INCOMPLETE
 
         callbackUrl = metadata?.callbackUrl
     }
@@ -77,10 +90,9 @@ class RecordMapperImpl : RecordMapper {
     override fun fromContent(content: RecordContent): ContentsDTO {
         val cleanedFileName = URLEncoder.encode(content.fileName, "UTF-8")
                 .replace("+", "%20")
-        val cleanedBase = uri.baseUri.toString().trimEnd('/')
 
         return ContentsDTO(
-                url = "$cleanedBase/records/${content.record.id}/contents/$cleanedFileName",
+                url = "$cleanBaseUri/records/${content.record.id}/contents/$cleanedFileName",
                 contentType = content.contentType,
                 createdDate = content.createdDate,
                 size = content.size,
@@ -97,7 +109,7 @@ class RecordMapperImpl : RecordMapper {
             committedDate = metadata.committedDate,
             // use record.id, since metadata and record have one-to-one
             logs = metadata.logs?.let {
-                LogsDto(url = "${uri.baseUri}/records/${metadata.id}/logs")
+                LogsDto(url = "${cleanBaseUri}/records/${metadata.id}/logs")
             }
     )
 }
