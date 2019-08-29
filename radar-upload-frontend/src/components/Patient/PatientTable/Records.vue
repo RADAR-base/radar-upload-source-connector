@@ -61,6 +61,50 @@
           </v-list-item-subtitle>
         </v-list-item-content>
       </template>
+      <!-- view logs dialog -->
+
+      <v-dialog
+        v-model="dialog"
+        max-width="700"
+      >
+        <template #activator="{ on }">
+          <v-list-item-title
+            v-show="record.logs"
+            class="pl-10 ml-10"
+            style="cursor: pointer;"
+            @click="viewLogs(record.logs&&record.logs.url)"
+            v-on="on"
+          >
+            <v-icon color="primary">
+              mdi-logout-variant
+            </v-icon>
+            View logs
+          </v-list-item-title>
+        </template>
+        <v-card>
+          <v-card-title v-show="!loadingLog">
+            Record ID: {{ record.id }}
+          </v-card-title>
+
+          <v-card-text
+            color="black"
+            v-show="!loadingLog"
+          >
+            {{ recordLogs }}
+          </v-card-text>
+
+          <v-card-text v-show="loadingLog">
+            Loading logs...
+            <v-progress-circular
+              indeterminate
+              color="white"
+              class="mb-0"
+            />
+          </v-card-text>
+        </v-card>
+      </v-dialog>
+
+      <!-- End of view logs dialog -->
 
       <v-list-item
         v-for="(file,fileIndex) in record.files"
@@ -146,6 +190,9 @@ export default {
   },
   data() {
     return {
+      recordLogs: '',
+      dialog: false,
+      loadingLog: false,
     };
   },
   computed: {
@@ -156,6 +203,12 @@ export default {
   methods: {
     async downloadFile(recordId, fileName) {
       await fileAPI.download({ recordId, fileName });
+    },
+    async viewLogs(url) {
+      this.loadingLog = true;
+      const recordLogs = await fileAPI.getRecordLog(url);
+      this.recordLogs = recordLogs;
+      this.loadingLog = false;
     },
   },
 };

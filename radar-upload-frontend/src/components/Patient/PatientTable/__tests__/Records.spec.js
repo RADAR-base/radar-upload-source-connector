@@ -47,6 +47,11 @@ describe('Records', () => {
       'v-layout',
       'v-list-group',
       'v-list-item-avatar',
+      'v-card',
+      'v-card-text',
+      'v-card-title',
+      'v-dialog',
+      'v-menu',
     ],
     filters: {
       localTime: () => 'filteredDate',
