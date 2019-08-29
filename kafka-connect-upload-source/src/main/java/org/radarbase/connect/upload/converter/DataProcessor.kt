@@ -66,6 +66,7 @@ abstract class AbstractCsvProcessor(override val schemaType: String): CsvProcess
             }
         } catch (exe: IOException) {
 //            log(LogLevel.WARN,"Something went wrong while processing contents of file ${contents.fileName}: ${exe.message} ")
+            throw exe
         } finally {
 //            log(LogLevel.INFO,"Closing resources of content ${contents.fileName}")
             inputStream.close()
