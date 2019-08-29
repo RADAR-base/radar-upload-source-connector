@@ -30,8 +30,8 @@ data class ContentsDTO(
         var url: String? = null,
         var text: String? = null,
         var contentType: String,
-        var createdDate: Instant,
-        var size: Long,
+        var createdDate: Instant? = null,
+        var size: Long? = null,
         var fileName: String)
 
 data class RecordDataDTO(
@@ -43,13 +43,13 @@ data class RecordDataDTO(
         var contents: Set<ContentsDTO>? = null)
 
 data class RecordMetadataDTO(
-        var id: Long?,
-        var revision: Int,
-        var status: String,
-        var message: String?,
-        var createdDate: Instant?,
-        var modifiedDate: Instant?,
-        var committedDate: Instant?,
+        var id: Long? = null,
+        var revision: Int? = null,
+        var status: String? = null,
+        var message: String? = null,
+        var createdDate: Instant? = null,
+        var modifiedDate: Instant? = null,
+        var committedDate: Instant? = null,
         var logs: LogsDto? = null,
         var callbackUrl: String? = null)
 
