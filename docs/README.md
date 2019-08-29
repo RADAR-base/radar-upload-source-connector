@@ -17,6 +17,8 @@ It will use approximately the following architecture:
 
 The backend should have the following API calls
 
+### Source types
+
 **Get converter types**
 `GET /source-types`
 
@@ -67,7 +69,12 @@ The backend should have the following API calls
 }
 ```
 
-**Create a new data point**
+### Records
+
+All uploads are stored in so-called records. A record may contain one or more files that should be processed. To track the status of a record, use the `metadata.status` field. This field follows the state transitions as outlined below.
+![State transitions](state-transitions.png)
+
+**Create a new record**
 `POST /records` 
 
 ```json
@@ -109,7 +116,6 @@ Returns
 
 **PUT record data**
 `PUT /records/{id}/contents/{fileName}` <br>
-X-Progress-ID: \<random-UUID\>
 
 returns `HTTP 200` or `HTTP 201` if existing and the state is incomplete, with body
 
@@ -122,12 +128,6 @@ returns `HTTP 200` or `HTTP 201` if existing and the state is incomplete, with b
   "url": "/records/{id}/contents/{fileName}"
 }
 ```
-
-**Get progress for a record** GET /progress<br>
-X-Progress-ID: \<random-UUID\>
-
-See <https://www.nginx.com/resources/wiki/modules/upload_progress/> for result values.
-
 
 **Mark record ready for processing** `POST /records/{id}/metadata`
 
@@ -147,7 +147,7 @@ Content-Length: 23011
 ...
 ```
 
-**Reset a record to initial state to allow reprocessing** POST /records/{id}/reset with empty body.
+**Reset a record to initial state to allow reprocessing** `POST /records/{id}/reset with empty body.`
 
 **Get records for given filters**<br>
 `GET /records`<br>

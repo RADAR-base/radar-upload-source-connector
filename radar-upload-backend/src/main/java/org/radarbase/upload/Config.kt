@@ -25,6 +25,7 @@ import java.net.URI
 
 data class Config(
         var baseUri: URI = URI.create("http://0.0.0.0:8080/radar-upload/"),
+        var advertisedBaseUri: URI? = null,
         var managementPortalUrl: String = "http://managementportal-app:8080/managementportal/",
         var resourceConfig: Class<*> = ManagementPortalResourceConfig::class.java,
         var clientId: String = "UploadBackend",

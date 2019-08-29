@@ -19,6 +19,7 @@
 
 package org.radarbase.upload.doa
 
+import org.radarbase.upload.api.ContentsDTO
 import org.radarbase.upload.api.RecordMetadataDTO
 import org.radarbase.upload.doa.entity.Record
 import org.radarbase.upload.doa.entity.RecordContent
@@ -28,11 +29,12 @@ import java.io.InputStream
 import java.io.Reader
 
 interface RecordRepository {
-    fun create(record: Record): Record
+    fun create(record: Record, metadata: RecordMetadata? = null, contents: Set<ContentsDTO>? = null): Record
     fun read(id: Long): Record?
     fun readLogs(id: Long): RecordLogs?
+    fun readLogContents(id: Long): String?
     fun updateLogs(id: Long, logsData: String): RecordMetadata
-    fun delete(record: Record)
+    fun delete(record: Record, revision: Int)
     fun readFileContent(id: Long, revision: Int, fileName: String, offset: Long, limit: Long): ByteArray?
     fun update(record: Record): Record
     fun updateMetadata(id: Long, metadata: RecordMetadataDTO): RecordMetadata
@@ -41,4 +43,5 @@ interface RecordRepository {
     fun query(limit: Int, lastId: Long, projectId: String, userId: String?, status: String?): List<Record>
     fun poll(limit: Int): List<Record>
     fun readRecordContent(recordId: Long, fileName: String): RecordContent?
+    fun deleteContents(record: Record, fileName: String)
 }

@@ -37,7 +37,7 @@ class RecordMetadata {
     var revision: Int = 0
 
     @Enumerated(EnumType.STRING)
-    lateinit var status: RecordStatus
+    var status: RecordStatus = RecordStatus.INCOMPLETE
 
     var message: String? = null
 
