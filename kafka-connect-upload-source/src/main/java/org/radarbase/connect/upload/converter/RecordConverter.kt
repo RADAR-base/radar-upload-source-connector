@@ -105,7 +105,7 @@ abstract class RecordConverter(override val sourceType: String, val avroData: Av
                             return@topicDataMap SourceRecord(getPartition(), offset, topicData.topic, key.schema(), key.value(), valRecord.schema(), valRecord.value())
                         }
             }
-        }.toList()
+        }
 //        record.metadata = commitLogs(record, client)
         return ConversionResult(record, sourceRecords.flatMap { it.toList() })
     }
