@@ -155,13 +155,20 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
                 .resultList.firstOrNull()
     }
 
-    override fun readFileContent(id: Long, fileName: String): ByteArray? = em.get().transact {
+    override fun readFileContent(id: Long, revision: Int, fileName: String, offset: Long, limit: Long): ByteArray? = em.get().transact {
+        logger.info("Reading record $id file $fileName from offset $offset with length $limit")
         val queryString = "SELECT rc.content from RecordContent rc WHERE rc.record.id = :id AND rc.fileName = :fileName"
 
-        createQuery(queryString, Blob::class.java)
+        val blob = createQuery(queryString, Blob::class.java)
                 .setParameter("fileName", fileName)
                 .setParameter("id", id)
-                .resultList.firstOrNull()?.binaryStream?.readAllBytes()
+                .resultList.firstOrNull() ?: return@transact null
+
+        val result = blob.getBinaryStream(offset + 1, limit)?.use {
+            it.readBytes()
+        }
+        blob.free()
+        result
     }
 
     override fun create(record: Record): Record = em.get().transact {
