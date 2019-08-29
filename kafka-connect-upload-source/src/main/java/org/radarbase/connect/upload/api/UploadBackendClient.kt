@@ -83,6 +83,15 @@ class UploadBackendClient(
         return response.body()
     }
 
+    fun retrieveRecordMetadata(recordId: Long): RecordMetadataDTO {
+        val request = Request.Builder()
+                .url("$uploadBackendBaseUrl/records/$recordId/metadata")
+                .get()
+                .build()
+        val response = httpClient.executeRequest(request)
+        return mapper.readValue(response.body()?.string(), RecordMetadataDTO::class.java)
+    }
+
     fun updateStatus(recordId: Long, newStatus: RecordMetadataDTO): RecordMetadataDTO {
         val request = Request.Builder()
                 .url(uploadBackendBaseUrl.plus("records/$recordId/metadata"))
