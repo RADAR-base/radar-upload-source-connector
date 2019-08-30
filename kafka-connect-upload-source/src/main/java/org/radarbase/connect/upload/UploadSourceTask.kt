@@ -101,9 +101,14 @@ class UploadSourceTask : SourceTask() {
                     val converter = converters.find { it.sourceType == record.sourceType }
                     try {
                         if (converter == null) {
-                            uploadClient.updateStatus(record.id!!, record.metadata!!.copy(status = "FAILED", message = "Converter for data source-type ${record.sourceType} not found."))
-                            logger.debug("Could not find converter ${record.sourceType} for record ${record.id}")
-                            continue
+                            uploadClient.updateStatus(
+                                    record.id!!,
+                                    record.metadata!!.copy(
+                                            status = "FAILED",
+                                            message = "No registered converter found for ${record.sourceType}.")
+                            )
+                            logger.error("Could not find converter ${record.sourceType} for record ${record.id}")
+                            continue@records
                         } else {
                             record.metadata = uploadClient.updateStatus(record.id!!, record.metadata!!.copy(status = "PROCESSING"))
                             logger.debug("Updated metadata ${record.id} to PROCESSING")
@@ -135,12 +140,12 @@ class UploadSourceTask : SourceTask() {
         }
     }
 
-    private fun updateRecordFailure(record: RecordDTO) {
+    private fun updateRecordFailure(record: RecordDTO, reason: String? = "Could not convert this record. Please refer to the conversion logs for more details") {
         logger.info("Update record conversion failure")
         val metadata = uploadClient.retrieveRecordMetadata(record.id!!)
         uploadClient.updateStatus(record.id!!, metadata.copy(
             status = "FAILED",
-            message = "Could not convert this record. Please refer to the conversion logs for more details"
+            message = reason
         ))
     }
 
