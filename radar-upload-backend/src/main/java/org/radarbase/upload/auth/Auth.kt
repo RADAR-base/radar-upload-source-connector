@@ -24,6 +24,7 @@ import org.radarcns.auth.authorization.Permission
 interface Auth {
     val defaultProject: String?
     val userId: String?
+    val bearerToken: String?
 
     fun checkSourcePermission(permission: Permission, projectId: String?, userId: String?, sourceId: String?)
     fun checkUserPermission(permission: Permission, projectId: String?, userId: String?)

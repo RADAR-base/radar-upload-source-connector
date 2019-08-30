@@ -22,7 +22,6 @@ package org.radarbase.upload.exception
 import com.fasterxml.jackson.core.util.BufferRecyclers
 import org.glassfish.jersey.message.internal.ReaderWriter
 import org.slf4j.LoggerFactory
-import javax.inject.Singleton
 import javax.ws.rs.core.Context
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.UriInfo
@@ -30,7 +29,6 @@ import javax.ws.rs.ext.ExceptionMapper
 import javax.ws.rs.ext.Provider
 
 @Provider
-@Singleton
 class HttpApplicationExceptionMapper : ExceptionMapper<HttpApplicationException> {
     @Context
     private lateinit var uriInfo: UriInfo
