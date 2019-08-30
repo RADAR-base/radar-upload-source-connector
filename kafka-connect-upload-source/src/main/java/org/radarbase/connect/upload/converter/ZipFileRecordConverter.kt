@@ -38,7 +38,7 @@ abstract class ZipFileRecordConverter(sourceType: String, listOfDataProcessors: 
     private var processors: Map<String, DataProcessor> = listOfDataProcessors.map { it.schemaType to it }.toMap()
 
     override fun processData(contents: ContentsDTO, inputStream: InputStream, record: RecordDTO, timeReceived: Double): List<TopicData> {
-        log(record.id!!, LogLevel.INFO, "Retrieved file content from record id ${record.id} and filename ${contents.fileName}")
+        logRepository.info(logger, record.id!!, "Retrieved file content from record id ${record.id} and filename ${contents.fileName}")
         val convertedTopicData = mutableListOf<TopicData>()
         try {
             val zippedInput = ZipInputStream(inputStream)
@@ -53,29 +53,29 @@ abstract class ZipFileRecordConverter(sourceType: String, listOfDataProcessors: 
                                     logger.debug("Closing entry $entryName")
                                     zippedInput.closeEntry()
                                 }
-                            }, entryName, timeReceived))
+                            }, entryName, record.id!!, timeReceived))
                         }
             }
             convertedTopicData.last().endOfFileOffSet = true
         } catch (exe: IOException) {
-            log(record.id!!, LogLevel.ERROR, "Failed to process zipped input from record ${record.id}", exe)
+            logRepository.error(logger, record.id!!,"Failed to process zipped input from record ${record.id}", exe)
             throw exe
         } catch (exe: Exception) {
-            log(record.id!!, LogLevel.ERROR, "Could not process record ${record.id}", exe)
+            logRepository.error(logger, record.id!!,"Could not process record ${record.id}", exe)
             throw exe
         }
 
         return convertedTopicData
     }
 
-    private fun processContent(inputStream: InputStream, zipEntryName: String, timeReceived: Double): List<TopicData> {
-        return getDataProcessor(zipEntryName).processData(inputStream, timeReceived)
+    private fun processContent(inputStream: InputStream, zipEntryName: String, recordId: Long, timeReceived: Double): List<TopicData> {
+        return getDataProcessor(zipEntryName, recordId).processData(inputStream, timeReceived)
     }
 
-    private fun getDataProcessor(zipEntryName: String): DataProcessor {
+    private fun getDataProcessor(zipEntryName: String, recordId: Long): DataProcessor {
         val processorKey = processors.keys.find { zipEntryName.endsWith(it) }
                 ?: throw DataProcessorNotFoundException("Could not find registered processor for zipped entry $zipEntryName")
-        logger.debug("Processing $zipEntryName with $processorKey processor")
+        logRepository.debug(logger, recordId, "Processing $zipEntryName with $processorKey processor")
         return processors[processorKey]
                 ?: throw throw DataProcessorNotFoundException("No processor found for key $processorKey")
     }

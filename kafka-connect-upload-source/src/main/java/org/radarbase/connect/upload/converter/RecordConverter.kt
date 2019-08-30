@@ -42,8 +42,12 @@ abstract class RecordConverter(override val sourceType: String, val avroData: Av
     private lateinit var client: UploadBackendClient
     private lateinit var settings: Map<String, String>
     private lateinit var topic: String
-    private lateinit var logsRepository: MutableList<Log>
-    override fun initialize(connectorConfig: SourceTypeDTO, client: UploadBackendClient, settings: Map<String, String>) {
+    private lateinit var logsRepository: LogRepository
+    override fun initialize(
+            connectorConfig: SourceTypeDTO,
+            client: UploadBackendClient,
+            logRepository: LogRepository,
+            settings: Map<String, String>) {
         this.connectorConfig = connectorConfig
         this.client = client
         this.settings = settings
@@ -52,35 +56,23 @@ abstract class RecordConverter(override val sourceType: String, val avroData: Av
             this.topic = this.connectorConfig.topics?.first()!!
         }
 
-        logsRepository = mutableListOf()
+        this.logsRepository = logRepository
     }
 
     override fun close() {
-        if(this::client.isInitialized) {
+        if (this::logsRepository.isInitialized) {
+            this.logsRepository.uploadAllLogs()
+        }
+        if (this::client.isInitialized) {
             this.client.close()
         }
     }
 
-    fun log(recordId: Long, logLevel: LogLevel, logMessage: String, exe: Exception? = null) {
-        logsRepository.add(Log(recordId, logLevel, logMessage))
-
-        when (logLevel) {
-            INFO -> logger.info(logMessage)
-            WARN -> logger.warn(logMessage)
-            DEBUG -> logger.debug(logMessage)
-            ERROR -> {
-                if (exe != null) {
-                    logger.error(logMessage, exe)
-                } else {
-                    logger.error(logMessage)
-                }
-            }
-        }
-    }
+    val logRepository get() = this.logsRepository
 
     override fun convert(record: RecordDTO): ConversionResult {
         val recordId = record.id!!
-        log(recordId, INFO, "Converting record : record-id $recordId")
+        logsRepository.info(logger, recordId,"Converting record : record-id $recordId")
 
         try {
             record.validateRecord()
@@ -99,7 +91,7 @@ abstract class RecordConverter(override val sourceType: String, val avroData: Av
                             message = "Could not retrieve file ${content.fileName} from record with id $recordId"
                     ))
 
-                    log(recordId, ERROR,"Could not retrieve file ${content.fileName} from record with id $recordId")
+                    logsRepository.error(logger, recordId,"Could not retrieve file ${content.fileName} from record with id $recordId")
                     return@convert ConversionResult(record, emptyList())
                 }
 
@@ -120,6 +112,7 @@ abstract class RecordConverter(override val sourceType: String, val avroData: Av
             }
             return ConversionResult(record, sourceRecords.flatMap { it.toList() })
         } catch (exe: Exception){
+            logsRepository.error(logger, recordId, "Could not convert record ${recordId}", exe)
             throw ConversionFailedException("Could not convert record ${recordId}",exe)
         }
     }

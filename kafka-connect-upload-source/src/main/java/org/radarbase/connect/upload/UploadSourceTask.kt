@@ -28,6 +28,8 @@ import org.radarbase.connect.upload.converter.Converter
 import org.radarbase.connect.upload.converter.Converter.Companion.END_OF_RECORD_KEY
 import org.radarbase.connect.upload.converter.Converter.Companion.RECORD_ID_KEY
 import org.radarbase.connect.upload.converter.Converter.Companion.REVISION_KEY
+import org.radarbase.connect.upload.converter.ConverterLogRepository
+import org.radarbase.connect.upload.converter.LogRepository
 import org.radarbase.connect.upload.exception.ConflictException
 import org.radarbase.connect.upload.exception.ConversionFailedException
 import org.radarbase.connect.upload.util.VersionUtil
@@ -37,6 +39,7 @@ class UploadSourceTask : SourceTask() {
     private var pollInterval: Long = 60_000L
     private lateinit var uploadClient: UploadBackendClient
     private lateinit var converters: List<Converter>
+    private lateinit var logRepository: LogRepository
 
     override fun start(props: Map<String, String>?) {
         val connectConfig = UploadSourceConnectorConfig(props!!)
@@ -63,10 +66,14 @@ class UploadSourceTask : SourceTask() {
 
         pollInterval = connectConfig.getLong(SOURCE_POLL_INTERVAL_CONFIG)
 
+        logRepository = ConverterLogRepository(uploadClient)
+
         for (converter in converters) {
             val config = uploadClient.requestConnectorConfig(converter.sourceType)
-            converter.initialize(config, uploadClient, props)
+            converter.initialize(config, uploadClient, logRepository, props)
         }
+
+
         logger.info("Poll with interval $pollInterval milliseconds")
         logger.info("Initialized ${converters.size} converters...")
     }
