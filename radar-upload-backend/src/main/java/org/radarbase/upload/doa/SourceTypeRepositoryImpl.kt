@@ -104,7 +104,7 @@ class SourceTypeRepositoryImpl(
 
         createQuery(queryString, SourceType::class.java).run {
             setParameter("name", name)
-            logger.info("Query Source type with name $name : {}", parameters)
+            logger.debug("Query source type with name $name: {}", parameters.map { it.name })
             resultList.firstOrNull()
         }
     }

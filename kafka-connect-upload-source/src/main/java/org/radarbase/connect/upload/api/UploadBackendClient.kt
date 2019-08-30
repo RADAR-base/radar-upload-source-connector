@@ -42,14 +42,12 @@ class UploadBackendClient(
                 .authenticator(auth)
                 .build()
 
-        if (!this.uploadBackendBaseUrl.endsWith("/")) {
-            this.uploadBackendBaseUrl += "/"
-        }
+        uploadBackendBaseUrl = uploadBackendBaseUrl.trimEnd('/')
     }
 
     fun pollRecords(configuration: PollDTO): RecordContainerDTO {
         val request = Request.Builder()
-                .url(uploadBackendBaseUrl.plus("records/poll"))
+                .url("$uploadBackendBaseUrl/records/poll")
                 .post(RequestBody.create(APPLICATION_JSON, configuration.toJsonString()))
                 .build()
         val response = httpClient.executeRequest(request)
@@ -58,7 +56,7 @@ class UploadBackendClient(
 
     fun requestConnectorConfig(name: String): SourceTypeDTO {
         val request = Request.Builder()
-                .url(uploadBackendBaseUrl.plus("source-types/${name}/"))
+                .url("$uploadBackendBaseUrl/source-types/${name}/")
                 .get()
                 .build()
         val response = httpClient.executeRequest(request)
@@ -67,7 +65,7 @@ class UploadBackendClient(
 
     fun requestAllConnectors(): SourceTypeContainerDTO {
         val request = Request.Builder()
-                .url(uploadBackendBaseUrl.plus("source-types"))
+                .url("$uploadBackendBaseUrl/source-types")
                 .get()
                 .build()
         val response = httpClient.executeRequest(request)
@@ -76,7 +74,7 @@ class UploadBackendClient(
 
     fun retrieveFile(record: RecordDTO, fileName: String): ResponseBody? {
         val request = Request.Builder()
-                .url(uploadBackendBaseUrl.plus("records/${record.id}/contents/${fileName}"))
+                .url("$uploadBackendBaseUrl/records/${record.id}/contents/$fileName")
                 .get()
                 .build()
         val response = httpClient.executeRequest(request)
@@ -94,7 +92,7 @@ class UploadBackendClient(
 
     fun updateStatus(recordId: Long, newStatus: RecordMetadataDTO): RecordMetadataDTO {
         val request = Request.Builder()
-                .url(uploadBackendBaseUrl.plus("records/$recordId/metadata"))
+                .url("$uploadBackendBaseUrl/records/$recordId/metadata")
                 .post(RequestBody.create(APPLICATION_JSON, newStatus.toJsonString()))
                 .build()
         val response = httpClient.executeRequest(request)
@@ -103,7 +101,7 @@ class UploadBackendClient(
 
     fun addLogs(recordId: Long, status: LogsDto): RecordMetadataDTO {
         val request = Request.Builder()
-                .url(uploadBackendBaseUrl.plus("records/$recordId/logs"))
+                .url("$uploadBackendBaseUrl/records/$recordId/logs")
                 .post(RequestBody.create(APPLICATION_JSON, status.toJsonString()))
                 .build()
         val response = httpClient.executeRequest(request)
