@@ -22,6 +22,8 @@ package org.radarbase.connect.upload.converter
 import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.LogLevel
 import org.radarbase.connect.upload.api.RecordDTO
+import org.radarbase.connect.upload.exception.ConversionFailedException
+import org.slf4j.LoggerFactory
 import java.io.InputStream
 
 /**
@@ -31,14 +33,19 @@ import java.io.InputStream
 abstract class CsvFileRecordConverter(sourceType: String, val csvProcessor: CsvProcessor) : RecordConverter(sourceType) {
 
     override fun processData(contents: ContentsDTO, inputStream: InputStream, record: RecordDTO, timeReceived: Double): List<TopicData> {
-        log(record.id!!, LogLevel.INFO,"Retrieved file content from record id ${record.id} and filename ${contents.fileName}")
+        logRepository.info(logger, record.id!!, "Retrieved file content from record id ${record.id} and filename ${contents.fileName}")
         val convertedTopicData = mutableListOf<TopicData>()
         try {
             convertedTopicData.addAll(csvProcessor.processData(inputStream, timeReceived))
             convertedTopicData.last().endOfFileOffSet = true
         } catch (exe: Exception) {
-            log(record.id!!, LogLevel.ERROR, "Could not convert csv file ${contents.fileName}", exe)
+            logRepository.error(logger, record.id!!, "Could not convert csv file ${contents.fileName}", exe)
+            throw ConversionFailedException("Coult not convert csv file ${contents.fileName}", exe)
         }
         return convertedTopicData
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(CsvFileRecordConverter::class.java)
     }
 }
