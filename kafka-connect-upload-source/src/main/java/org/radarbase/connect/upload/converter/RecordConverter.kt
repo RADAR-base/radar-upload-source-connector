@@ -27,7 +27,6 @@ import org.radarbase.connect.upload.api.*
 import org.radarbase.connect.upload.converter.Converter.Companion.END_OF_RECORD_KEY
 import org.radarbase.connect.upload.converter.Converter.Companion.RECORD_ID_KEY
 import org.radarbase.connect.upload.converter.Converter.Companion.REVISION_KEY
-import org.radarbase.connect.upload.api.LogLevel.*
 import org.radarbase.connect.upload.exception.ConversionFailedException
 import org.radarcns.kafka.ObservationKey
 import org.slf4j.LoggerFactory
