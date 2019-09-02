@@ -102,7 +102,7 @@ class UploadBackendClient(
     fun addLogs(recordId: Long, status: LogsDto): RecordMetadataDTO {
         val request = Request.Builder()
                 .url("$uploadBackendBaseUrl/records/$recordId/logs")
-                .post(RequestBody.create(APPLICATION_JSON, status.toJsonString()))
+                .put(RequestBody.create(TEXT_PLAIN, status.toJsonString()))
                 .build()
         val response = httpClient.executeRequest(request)
         return mapper.readValue(response.body()?.charStream(), RecordMetadataDTO::class.java)
@@ -133,6 +133,7 @@ class UploadBackendClient(
     companion object {
         private val logger = LoggerFactory.getLogger(UploadBackendClient::class.java)
         private val APPLICATION_JSON = MediaType.parse("application/json; charset=utf-8")
+        private val TEXT_PLAIN = MediaType.parse("text/plain; charset=utf-8")
         private var mapper: ObjectMapper = ObjectMapper()
                 .registerModule(KotlinModule())
                 .registerModule(JavaTimeModule())

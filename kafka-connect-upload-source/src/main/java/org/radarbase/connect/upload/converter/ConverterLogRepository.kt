@@ -19,51 +19,64 @@
 
 package org.radarbase.connect.upload.converter
 
-import org.radarbase.connect.upload.api.Log
-import org.radarbase.connect.upload.api.LogLevel
+import org.radarbase.connect.upload.UploadSourceConnectorConfig
+import org.radarbase.connect.upload.api.LogsDto
+import org.radarbase.connect.upload.api.RecordMetadataDTO
 import org.radarbase.connect.upload.api.UploadBackendClient
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.time.Instant
 
+enum class LogLevel {
+    INFO, DEBUG, WARN, ERROR
+}
+
+data class Log(
+        var logLevel: LogLevel,
+        var message: String
+)
 
 interface LogRepository {
     fun info(logger: Logger, recordId: Long, logMessage: String)
     fun debug(logger: Logger, recordId: Long, logMessage: String)
     fun warn(logger: Logger, recordId: Long, logMessage: String)
     fun error(logger: Logger, recordId: Long, logMessage: String, exe: Exception? = null)
-    fun uploadLogs(recordId: Long, isImmediate: Boolean? = false)
+    fun uploadLogs(recordId: Long, isImmediate: Boolean? = false): RecordMetadataDTO
     fun uploadAllLogs()
 }
+
 class ConverterLogRepository(
         val uploadClient: UploadBackendClient): LogRepository {
-    val logContainer = mutableListOf<Log>()
+    private val logContainer = mapOf<Long, MutableList<Log>>().withDefault { mutableListOf() }
 
     override fun info(logger: Logger, recordId: Long, logMessage: String) {
-        logger.info("IN logrepose")
-        logContainer.add(Log(recordId, LogLevel.INFO, logMessage))
+        logger.info("IN log info")
+        logContainer.getValue(recordId).add(Log(LogLevel.INFO, logMessage))
         logger.info(logMessage)
     }
 
     override fun debug(logger: Logger, recordId: Long, logMessage: String) {
-        logContainer.add(Log(recordId, LogLevel.DEBUG, logMessage))
+        logContainer.getValue(recordId).add(Log(LogLevel.DEBUG, logMessage))
         logger.debug(logMessage)
     }
 
     override fun warn(logger: Logger, recordId: Long, logMessage: String) {
-        logContainer.add(Log(recordId, LogLevel.WARN, logMessage))
+        logContainer.getValue(recordId).add(Log(LogLevel.WARN, logMessage))
         logger.warn(logMessage)
     }
 
     override fun error(logger: Logger, recordId: Long, logMessage: String, exe: Exception?) {
-        logContainer.add(Log(recordId, LogLevel.ERROR, "$logMessage: ${exe?.stackTrace?.toString()}"))
+        logContainer.getValue(recordId).add(Log(LogLevel.ERROR, "$logMessage: ${exe?.stackTrace?.toString()}"))
         logger.error(logMessage, exe)
     }
 
-    override fun uploadLogs(recordId: Long, isImmediate: Boolean?) {
-        // upload logs of a record and remove uploaded ones on success
-        logContainer.filter { it.recordId == recordId }
-                .toList().toString()
+    override fun uploadLogs(recordId: Long, isImmediate: Boolean?): RecordMetadataDTO {
+        val listOfLogs = logContainer.getValue(recordId)
+        logger.debug("Sending record logs..")
+        val logs = LogsDto().apply {
+            contents = UploadSourceConnectorConfig.mapper.writeValueAsString(listOfLogs)
+        }
+        logger.info(UploadSourceConnectorConfig.mapper.writeValueAsString(logs.contents))
+        return uploadClient.addLogs(recordId, logs)
     }
 
     override fun uploadAllLogs() {
