@@ -40,7 +40,7 @@ interface LogRepository {
     fun debug(logger: Logger, recordId: Long, logMessage: String)
     fun warn(logger: Logger, recordId: Long, logMessage: String)
     fun error(logger: Logger, recordId: Long, logMessage: String, exe: Exception? = null)
-    fun uploadLogs(recordId: Long, isImmediate: Boolean? = false): RecordMetadataDTO
+    fun uploadLogs(recordId: Long, isImmediate: Boolean? = false)
     fun uploadAllLogs()
 }
 
@@ -68,20 +68,27 @@ class ConverterLogRepository(
         logger.error(logMessage, exe)
     }
 
-    override fun uploadLogs(recordId: Long, isImmediate: Boolean?): RecordMetadataDTO {
+    override fun uploadLogs(recordId: Long, isImmediate: Boolean?) {
         val listOfLogs = logContainer.getValue(recordId)
-        logger.debug("Sending record $recordId logs...")
-        val logs = LogsDto().apply {
-            contents = UploadSourceConnectorConfig.mapper.writeValueAsString(listOfLogs)
+        if(listOfLogs.isNotEmpty()) {
+            logger.debug("Sending record $recordId logs...")
+            val logs = LogsDto().apply {
+                contents = UploadSourceConnectorConfig.mapper.writeValueAsString(listOfLogs)
+            }
+            logger.info(UploadSourceConnectorConfig.mapper.writeValueAsString(logs.contents))
+            uploadClient.addLogs(recordId, logs)
+            logContainer.remove(recordId)
         }
-        logger.info(UploadSourceConnectorConfig.mapper.writeValueAsString(logs.contents))
-        val metadata = uploadClient.addLogs(recordId, logs)
-        logContainer[recordId] = mutableListOf()
-        return metadata
+
     }
 
     override fun uploadAllLogs() {
-        logger.info("TODO: Uploading all remaining logs")
+        logger.info("Uploading all remaining logs")
+        if (logContainer.isNotEmpty()) {
+            logContainer.map { entry -> uploadLogs(entry.key) }
+        } else {
+            logger.info("All record logs are uploaded")
+        }
     }
 
     companion object {
