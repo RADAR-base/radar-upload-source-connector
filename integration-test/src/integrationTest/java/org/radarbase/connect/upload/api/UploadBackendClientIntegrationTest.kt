@@ -240,7 +240,7 @@ class UploadBackendClientIntegrationTest {
 
 
     companion object {
-        const val fileName = "TEST_ACC.zip"
+        const val fileName = "TEST_ACC.csv"
         const val REST_UPLOAD_CLIENT = "radar_upload_backend"
         const val REST_UPLOAD_SECRET = "secret"
         const val USER = "sub-1"
