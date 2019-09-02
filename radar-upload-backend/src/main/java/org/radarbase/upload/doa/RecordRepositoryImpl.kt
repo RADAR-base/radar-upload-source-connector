@@ -19,15 +19,17 @@
 
 package org.radarbase.upload.doa
 
+import org.hibernate.Hibernate
+import org.hibernate.Session
 import org.hibernate.engine.jdbc.BlobProxy
 import org.hibernate.engine.jdbc.ClobProxy
 import org.radarbase.upload.api.ContentsDTO
-import org.radarbase.upload.api.LogsDto
 import org.radarbase.upload.api.RecordMetadataDTO
 import org.radarbase.upload.doa.entity.*
 import org.radarbase.upload.exception.BadRequestException
 import org.radarbase.upload.exception.ConflictException
 import org.radarbase.upload.exception.NotFoundException
+import org.radarbase.upload.inject.session
 import org.radarbase.upload.inject.transact
 import org.slf4j.LoggerFactory
 import java.io.InputStream
@@ -44,26 +46,31 @@ import kotlin.streams.toList
 
 class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<EntityManager>) : RecordRepository {
 
-    override fun updateLogs(id: Long, logsData: LogsDto): RecordMetadata = em.get().transact {
+    override fun updateLogs(id: Long, logsData: String): RecordMetadata = em.get().transact {
+        val logs = find(RecordLogs::class.java, id)
+        val metadataToSave = if (logs == null) {
+            val metadataFromDb = find(RecordMetadata::class.java, id)
+                    ?: throw NotFoundException("record_not_found", "RecordMetadata with ID $id does not exist")
+            refresh(metadataFromDb)
+            metadataFromDb.logs = RecordLogs().apply {
+                this.metadata = metadataFromDb
+                this.modifiedDate = Instant.now()
+                this.size = logsData.length.toLong()
+                this.logs = ClobProxy.generateProxy(logsData)
+            }.also {
+                persist(it)
+            }
+            metadataFromDb
+        } else {
+            logs.apply {
+                this.modifiedDate = Instant.now()
+                this.logs = ClobProxy.generateProxy(logsData)
+            }
+            merge(logs)
+            logs.metadata
+        }
 
-        val metadataFromDb = find(RecordMetadata::class.java, id)
-                ?: throw NotFoundException("record_not_found", "RecordMetadata with ID $id does not exist")
-        refresh(metadataFromDb)
-
-        metadataFromDb.logs = logsData.logs
-                ?.filter { it.content != null }
-                ?.mapTo(HashSet()) { log ->
-                    RecordLogs().apply {
-                        this.metadata = metadataFromDb
-                        this.size = log.content!!.length.toLong()
-                        this.level = log.level?.let { LogLevel.valueOf(it) }
-                        this.logs = ClobProxy.generateProxy(log.content)
-                    }
-                }
-                ?.onEach { persist(it) }
-
-        metadataFromDb.update()
-        merge(metadataFromDb)
+        modifyNow(metadataToSave)
     }
 
     override fun query(limit: Int, lastId: Long, projectId: String, userId: String?, status: String?): List<Record> {

@@ -286,9 +286,10 @@ class RecordResource {
     }
 
     @PUT
+    @Consumes("text/plain")
     @Path("{recordId}/logs")
     fun addRecordLogs(
-            recordLogs: LogsDto,
+            recordLogs: String,
             @PathParam("recordId") recordId: Long): RecordMetadataDTO {
         ensureRecord(recordId, SUBJECT_UPDATE)
 

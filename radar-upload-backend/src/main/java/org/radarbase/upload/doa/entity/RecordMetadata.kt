@@ -50,8 +50,8 @@ class RecordMetadata {
     @Column(name = "committed_date")
     var committedDate: Instant? = null
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "metadata", cascade = [CascadeType.ALL])
-    var logs: MutableSet<RecordLogs>? = null
+    @OneToOne(fetch = FetchType.LAZY, mappedBy = "metadata", cascade = [CascadeType.REMOVE, CascadeType.DETACH, CascadeType.REFRESH])
+    var logs: RecordLogs? = null
 
     @Column(name = "callback_url")
     var callbackUrl: String? = null

@@ -19,28 +19,26 @@
 
 package org.radarbase.upload.doa.entity
 
-import org.radarbase.upload.doa.AbstractJpaPersistable
 import java.sql.Clob
 import java.time.Instant
 import javax.persistence.*
 
 @Entity
 @Table(name = "record_logs")
-class RecordLogs : AbstractJpaPersistable<Long>(){
-
+class RecordLogs {
+    @Id
+    @Column(name = "record_id")
+    var id: Long? = null
 
     @Column(name = "modified_date")
     lateinit var modifiedDate: Instant
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "record_id")
+    @MapsId
     lateinit var metadata: RecordMetadata
 
     var size: Long = 0
-
-    @Enumerated(EnumType.STRING)
-    var level: LogLevel? = LogLevel.INFO
-
     lateinit var logs: Clob
 
     override fun equals(other: Any?): Boolean {
@@ -53,12 +51,4 @@ class RecordLogs : AbstractJpaPersistable<Long>(){
     }
 
     override fun hashCode(): Int = id?.hashCode() ?: 0
-}
-
-
-enum class LogLevel {
-    INFO,
-    DEBUG,
-    WARN,
-    ERROR
 }
