@@ -21,14 +21,17 @@ package org.radarbase.upload.doa
 
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
-import org.hibernate.engine.jdbc.BlobProxy
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import org.mockito.Mock
+import org.mockito.Mockito
+import org.mockito.MockitoAnnotations
 import org.radarbase.upload.Config
+import org.radarbase.upload.api.ContentsDTO
+import org.radarbase.upload.api.RecordMetadataDTO
 import org.radarbase.upload.doa.entity.Record
-import org.radarbase.upload.doa.entity.RecordContent
 import org.radarbase.upload.doa.entity.RecordStatus
 import org.radarbase.upload.inject.DoaEntityManagerFactoryFactory
 import java.io.ByteArrayInputStream
@@ -38,11 +41,6 @@ import java.time.LocalDateTime
 import javax.persistence.EntityManager
 import javax.persistence.EntityManagerFactory
 import kotlin.text.Charsets.UTF_8
-import org.mockito.Mock
-import org.mockito.Mockito
-import org.mockito.MockitoAnnotations
-import org.radarbase.upload.api.ContentsDTO
-import org.radarbase.upload.api.RecordMetadataDTO
 
 internal class RecordRepositoryImplTest {
     private lateinit var repository: RecordRepository
@@ -85,9 +83,9 @@ internal class RecordRepositoryImplTest {
         assertThat(result.id, notNullValue())
         assertThat(result.id ?: 0L, greaterThan(0L))
         assertThat(result.contents, notNullValue())
-        val contents = repository.readFileContent(result.id!!, "Gibson.mp3")
+        val contents = repository.readFileContent(result.id!!, result.metadata.revision, "Gibson.mp3")
         assertThat(contents, notNullValue())
-        assertThat(contents?.toString(UTF_8), equalTo("test"))
+        assertThat(contents?.asString(), equalTo("test"))
         assertThat(result.metadata, notNullValue())
         result.metadata.run {
             assertThat(createdDate, greaterThanOrEqualTo(beforeTime))
@@ -146,14 +144,14 @@ internal class RecordRepositoryImplTest {
 
         result.contents?.find { it.fileName == "Gibson2.mp4" }?.let {
             assertThat(it.content, notNullValue())
-            assertThat(repository.readFileContent(record.id!!, it.fileName)?.toString(UTF_8), equalTo("test2"))
+            assertThat(repository.readFileContent(record.id!!, record.metadata.revision, it.fileName)?.asString(), equalTo("test2"))
             assertThat(it.fileName, equalTo("Gibson2.mp4"))
             assertThat(it.contentType, equalTo("audio/mp4"))
         }
 
         result.contents?.find { it.fileName == "Gibson.mp3" }?.let {
             assertThat(it.content, notNullValue())
-            assertThat(repository.readFileContent(record.id!!, it.fileName)?.toString(UTF_8), equalTo("test"))
+            assertThat(repository.readFileContent(record.id!!, record.metadata.revision, it.fileName)?.asString(), equalTo("test"))
             assertThat(it.fileName, equalTo("Gibson.mp3"))
             assertThat(it.contentType, equalTo("audio/mp3"))
         } ?: assert(false)
@@ -165,7 +163,7 @@ internal class RecordRepositoryImplTest {
 
         result.contents?.find { it.fileName == "Gibson.mp3" }?.let {
             assertThat(it.content, notNullValue())
-            assertThat(repository.readFileContent(record.id!!, it.fileName)?.toString(UTF_8), equalTo("test2"))
+            assertThat(repository.readFileContent(record.id!!, record.metadata.revision, it.fileName)?.asString(), equalTo("test2"))
             assertThat(it.fileName, equalTo("Gibson.mp3"))
             assertThat(it.contentType, equalTo("audio/mp4"))
         } ?: assert(false)
@@ -200,7 +198,7 @@ internal class RecordRepositoryImplTest {
         assertThat(result.contents, notNullValue())
         result.contents?.find { it.fileName == "Gibson2.mp4" }?.let {
             assertThat(it.content, notNullValue())
-            assertThat(repository.readFileContent(record.id!!, it.fileName)?.toString(UTF_8), equalTo("test2"))
+            assertThat(repository.readFileContent(record.id!!, record.metadata.revision, it.fileName)?.asString(), equalTo("test2"))
             assertThat(it.fileName, equalTo("Gibson2.mp4"))
             assertThat(it.contentType, equalTo("audio/mp4"))
         }
@@ -224,12 +222,7 @@ internal class RecordRepositoryImplTest {
 
         assertThat(result.contents, notNullValue())
         assertThat(result.contents, hasSize(1))
-        result.contents?.find { it.fileName == "Gibson2.mp4" }?.let {
-            assertThat(it.content, notNullValue())
-            assertThat(it.content.binaryStream?.readAllBytes()?.toString(UTF_8), equalTo("test2"))
-            assertThat(it.fileName, equalTo("Gibson2.mp4"))
-            assertThat(it.contentType, equalTo("audio/mp4"))
-        } ?: assert(false)
+        assertThat(repository.readFileContent(result.id!!, 1, "Gibson2.mp4")?.asString(), equalTo("test2"))
     }
 
     @Test
@@ -279,4 +272,6 @@ internal class RecordRepositoryImplTest {
     @Test
     fun close() {
     }
+
+    private fun RecordRepository.BlobReader.asString(): String = use { it.stream.readAllBytes().toString(UTF_8) }
 }

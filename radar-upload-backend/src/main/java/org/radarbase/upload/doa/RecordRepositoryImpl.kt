@@ -19,8 +19,6 @@
 
 package org.radarbase.upload.doa
 
-import org.hibernate.Hibernate
-import org.hibernate.Session
 import org.hibernate.engine.jdbc.BlobProxy
 import org.hibernate.engine.jdbc.ClobProxy
 import org.radarbase.upload.api.ContentsDTO
@@ -29,10 +27,11 @@ import org.radarbase.upload.doa.entity.*
 import org.radarbase.upload.exception.BadRequestException
 import org.radarbase.upload.exception.ConflictException
 import org.radarbase.upload.exception.NotFoundException
-import org.radarbase.upload.inject.session
+import org.radarbase.upload.inject.createTransaction
 import org.radarbase.upload.inject.transact
 import org.slf4j.LoggerFactory
 import java.io.InputStream
+import java.io.Reader
 import java.sql.Blob
 import java.time.Instant
 import java.util.*
@@ -102,8 +101,17 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
         find(RecordLogs::class.java, id)
     }
 
-    override fun readLogContents(id: Long): String? = em.get().transact {
-        find(RecordLogs::class.java, id)?.logs?.characterStream?.readText()
+    override fun readLogContents(id: Long): RecordRepository.ClobReader? = em.get().createTransaction { transaction ->
+        val logs = find(RecordLogs::class.java, id)?.logs ?: return@createTransaction null
+
+        object : RecordRepository.ClobReader {
+            override val stream: Reader = logs.characterStream
+
+            override fun close() {
+                logs.free()
+                transaction.close()
+            }
+        }
     }
 
     override fun updateContent(record: Record, fileName: String, contentType: String, stream: InputStream, length: Long): RecordContent = em.get().transact {
@@ -172,13 +180,30 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
                 .resultList.firstOrNull()
     }
 
-    override fun readFileContent(id: Long, fileName: String): ByteArray? = em.get().transact {
+    override fun readFileContent(id: Long, revision: Int, fileName: String, range: LongRange?): RecordRepository.BlobReader? = em.get().createTransaction { transaction ->
         val queryString = "SELECT rc.content from RecordContent rc WHERE rc.record.id = :id AND rc.fileName = :fileName"
 
-        createQuery(queryString, Blob::class.java)
+        val blob = createQuery(queryString, Blob::class.java)
                 .setParameter("fileName", fileName)
                 .setParameter("id", id)
-                .resultList.firstOrNull()?.binaryStream?.readAllBytes()
+                .resultList.firstOrNull() ?: return@createTransaction null
+
+        object : RecordRepository.BlobReader {
+            override val stream: InputStream = if (range == null
+                    || (range.first == 0L && range.count().toLong() == blob.length())) {
+                blob.binaryStream
+            } else {
+                val offset = range.first + 1
+                val limit = range.count().toLong()
+                logger.debug("Reading record $id file $fileName from offset $offset with length $limit")
+                blob.getBinaryStream(offset, limit)
+            }
+
+            override fun close() {
+                blob.free()
+                transaction.close()
+            }
+        }
     }
 
     override fun create(record: Record, metadata: RecordMetadata?, contents: Set<ContentsDTO>?): Record = em.get().transact {
