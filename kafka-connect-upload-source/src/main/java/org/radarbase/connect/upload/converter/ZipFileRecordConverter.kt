@@ -69,7 +69,7 @@ abstract class ZipFileRecordConverter(sourceType: String, listOfDataProcessors: 
     }
 
     private fun processContent(inputStream: InputStream, zipEntryName: String, recordId: Long, timeReceived: Double): List<TopicData> {
-        return getDataProcessor(zipEntryName, recordId).processData(inputStream, timeReceived)
+        return getDataProcessor(zipEntryName, recordId).processData(recordId, inputStream, timeReceived, logRepository)
     }
 
     private fun getDataProcessor(zipEntryName: String, recordId: Long): DataProcessor {
