@@ -146,10 +146,15 @@ class UploadSourceTask : SourceTask() {
     private fun updateRecordFailure(record: RecordDTO, reason: String? = "Could not convert this record. Please refer to the conversion logs for more details") {
         logger.info("Update record conversion failure")
         val metadata = uploadClient.retrieveRecordMetadata(record.id!!)
-        uploadClient.updateStatus(record.id!!, metadata.copy(
+        val updatedMetadata = uploadClient.updateStatus(record.id!!, metadata.copy(
             status = "FAILED",
             message = reason
         ))
+
+        if(updatedMetadata.status == "FAILED") {
+            logger.info("Uploading logs to backend")
+            logRepository.uploadLogs(record.id!!)
+        }
     }
 
     override fun commitRecord(record: SourceRecord?) {
