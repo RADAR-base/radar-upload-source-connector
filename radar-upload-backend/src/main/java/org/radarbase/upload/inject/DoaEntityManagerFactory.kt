@@ -20,13 +20,14 @@
 package org.radarbase.upload.inject
 
 import org.glassfish.jersey.internal.inject.DisposableSupplier
-import org.hibernate.Session
 import org.radarbase.upload.exception.InternalServerException
 import org.radarbase.upload.logger
 import org.slf4j.LoggerFactory
+import java.io.Closeable
 import java.lang.Exception
 import javax.persistence.EntityManager
 import javax.persistence.EntityManagerFactory
+import javax.persistence.EntityTransaction
 import javax.ws.rs.core.Context
 
 class DoaEntityManagerFactory(@Context private val emf: EntityManagerFactory) : DisposableSupplier<EntityManager> {
@@ -45,23 +46,45 @@ class DoaEntityManagerFactory(@Context private val emf: EntityManagerFactory) : 
     }
 }
 
-fun <T> EntityManager.transact(transactionOperation: EntityManager.() -> T): T {
+/**
+ * Run a transaction and commit it. If an exception occurs, the transaction is rolled back.
+ */
+fun <T> EntityManager.transact(transactionOperation: EntityManager.() -> T) = createTransaction {
+    it.use { transactionOperation() }
+}
+
+/**
+ * Start a transaction without committing it. If an exception occurs, the transaction is rolled back.
+ */
+fun <T> EntityManager.createTransaction(transactionOperation: EntityManager.(CloseableTransaction) -> T): T {
     val currentTransaction = transaction ?: throw InternalServerException("transaction_not_found", "Cannot find a transaction from EntityManager")
 
     currentTransaction.begin()
     try {
-        return transactionOperation()
-    } finally {
-        try {
-            currentTransaction.commit()
-        } catch (exe: Exception) {
-            logger.error("Rolling back operation: {}", exe)
-            if (currentTransaction.isActive) {
-                currentTransaction.rollback()
+        return transactionOperation(object : CloseableTransaction {
+            override val transaction: EntityTransaction = currentTransaction
+
+            override fun close() {
+                try {
+                    transaction.commit()
+                } catch (ex: Exception) {
+                    logger.error("Rolling back operation", ex)
+                    if (currentTransaction.isActive) {
+                        currentTransaction.rollback()
+                    }
+                }
             }
+        })
+    } catch (ex: Exception) {
+        logger.error("Rolling back operation", ex)
+        if (currentTransaction.isActive) {
+            currentTransaction.rollback()
         }
+        throw ex
     }
 }
 
-val EntityManager.session: Session
-    get() = unwrap(Session::class.java)
+interface CloseableTransaction: Closeable {
+    val transaction: EntityTransaction
+    override fun close()
+}

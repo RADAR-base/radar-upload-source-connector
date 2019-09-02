@@ -27,9 +27,11 @@ import org.radarbase.upload.doa.entity.*
 import org.radarbase.upload.exception.BadRequestException
 import org.radarbase.upload.exception.ConflictException
 import org.radarbase.upload.exception.NotFoundException
+import org.radarbase.upload.inject.createTransaction
 import org.radarbase.upload.inject.transact
 import org.slf4j.LoggerFactory
 import java.io.InputStream
+import java.io.Reader
 import java.sql.Blob
 import java.time.Instant
 import java.util.*
@@ -99,8 +101,17 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
         find(RecordLogs::class.java, id)
     }
 
-    override fun readLogContents(id: Long): String? = em.get().transact {
-        find(RecordLogs::class.java, id)?.logs?.characterStream?.readText()
+    override fun readLogContents(id: Long): RecordRepository.ClobReader? = em.get().createTransaction { transaction ->
+        val logs = find(RecordLogs::class.java, id)?.logs ?: return@createTransaction null
+
+        object : RecordRepository.ClobReader {
+            override val stream: Reader = logs.characterStream
+
+            override fun close() {
+                logs.free()
+                transaction.close()
+            }
+        }
     }
 
     override fun updateContent(record: Record, fileName: String, contentType: String, stream: InputStream, length: Long): RecordContent = em.get().transact {
@@ -169,27 +180,30 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
                 .resultList.firstOrNull()
     }
 
-    override fun readFileContent(id: Long, revision: Int, fileName: String, range: LongRange?): ByteArray? = em.get().transact {
+    override fun readFileContent(id: Long, revision: Int, fileName: String, range: LongRange?): RecordRepository.BlobReader? = em.get().createTransaction { transaction ->
         val queryString = "SELECT rc.content from RecordContent rc WHERE rc.record.id = :id AND rc.fileName = :fileName"
 
         val blob = createQuery(queryString, Blob::class.java)
                 .setParameter("fileName", fileName)
                 .setParameter("id", id)
-                .resultList.firstOrNull() ?: return@transact null
+                .resultList.firstOrNull() ?: return@createTransaction null
 
-        val bytes = if (range == null
-                || (range.first == 0L && range.count().toLong() == blob.length())) {
-            blob.binaryStream.readBytes()
-        } else {
-            val offset = range.first + 1
-            val limit = range.count().toLong()
-            logger.debug("Reading record $id file $fileName from offset $offset with length $limit")
-            blob.getBinaryStream(offset, limit)?.use {
-                it.readBytes()
+        object : RecordRepository.BlobReader {
+            override val stream: InputStream = if (range == null
+                    || (range.first == 0L && range.count().toLong() == blob.length())) {
+                blob.binaryStream
+            } else {
+                val offset = range.first + 1
+                val limit = range.count().toLong()
+                logger.debug("Reading record $id file $fileName from offset $offset with length $limit")
+                blob.getBinaryStream(offset, limit)
+            }
+
+            override fun close() {
+                blob.free()
+                transaction.close()
             }
         }
-        blob.free()
-        bytes
     }
 
     override fun create(record: Record, metadata: RecordMetadata?, contents: Set<ContentsDTO>?): Record = em.get().transact {
