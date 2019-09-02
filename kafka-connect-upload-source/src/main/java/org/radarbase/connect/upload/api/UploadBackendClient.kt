@@ -77,8 +77,7 @@ class UploadBackendClient(
                 .url("$uploadBackendBaseUrl/records/${record.id}/contents/$fileName")
                 .get()
                 .build()
-        val response = httpClient.executeRequest(request)
-        return response.body()
+        return httpClient.executeRequest(request).body()
     }
 
     fun updateStatus(recordId: Long, newStatus: RecordMetadataDTO): RecordMetadataDTO {

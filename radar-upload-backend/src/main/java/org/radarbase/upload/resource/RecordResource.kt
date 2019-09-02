@@ -29,9 +29,7 @@ import org.radarbase.upload.doa.SourceTypeRepository
 import org.radarbase.upload.doa.entity.Record
 import org.radarbase.upload.doa.entity.RecordStatus
 import org.radarbase.upload.dto.CallbackManager
-import org.radarbase.upload.exception.BadRequestException as RbBadRequestException
 import org.radarbase.upload.exception.ConflictException
-import org.radarbase.upload.exception.NotFoundException as RbNotFoundException
 import org.radarcns.auth.authorization.Permission
 import org.radarcns.auth.authorization.Permission.*
 import org.slf4j.LoggerFactory
@@ -42,6 +40,8 @@ import javax.ws.rs.*
 import javax.ws.rs.core.*
 import kotlin.math.max
 import kotlin.math.min
+import org.radarbase.upload.exception.BadRequestException as RbBadRequestException
+import org.radarbase.upload.exception.NotFoundException as RbNotFoundException
 
 @Path("records")
 @Produces(MediaType.APPLICATION_JSON)
@@ -213,17 +213,18 @@ class RecordResource {
             @PathParam("fileName") fileName: String,
             @PathParam("recordId") recordId: Long): Response {
 
-        ensureRecord(recordId)
+        val record = ensureRecord(recordId)
 
-        val recordContent = recordRepository.readRecordContent(recordId, fileName)
-                ?: throw RbNotFoundException("file_not_found", "Cannot find record content with record-id $recordId and fileName $fileName")
-
-        val content = recordRepository.readFileContent(recordId, fileName)
+        val recordContent = record.contents?.find { it.fileName == fileName }
                 ?: throw RbNotFoundException("file_not_found", "Cannot read content of file $fileName from record $recordId")
 
-        val streamingOutput = StreamingOutput {
-            content.inputStream().use { inStream -> inStream.copyTo(it) }
-            it.flush()
+        logger.debug("Reading record $recordId file $fileName of size ${recordContent.size}")
+
+        val streamingOutput = StreamingOutput { out ->
+            recordRepository.readFileContent(recordId, record.metadata.revision, recordContent.fileName).use {
+                it?.stream?.copyTo(out) ?: throw RbNotFoundException("file_not_found", "Cannot read content of file $fileName from record $recordId")
+            }
+            out.flush()
         }
 
         return Response
@@ -232,7 +233,6 @@ class RecordResource {
                 .header("Content-Length", recordContent.size)
                 .header("Last-Modified", recordContent.createdDate)
                 .build()
-
     }
 
     @POST
@@ -277,10 +277,22 @@ class RecordResource {
             @PathParam("recordId") recordId: Long): Response {
         val record = ensureRecord(recordId, SUBJECT_READ)
 
-        val log = recordRepository.readLogContents(recordId)
-                ?: throw RbNotFoundException("log_not_found", "Cannot find logs for record with record id $recordId")
+        val streamingOutput = StreamingOutput { out ->
+            recordRepository.readLogContents(recordId).use { clobReader ->
+                clobReader ?: throw RbNotFoundException("log_not_found", "Cannot find logs for record with record id $recordId")
 
-        return Response.ok(log, "text/plain")
+                clobReader.stream.use { reader ->
+                    val buffer = CharArray(LOG_BUFFER_SIZE)
+
+                    generateSequence { reader.read(buffer) }
+                            .takeWhile { n -> n != -1 }
+                            .forEach { n -> out.write(String(buffer, 0, n).toByteArray()) }
+                }
+            }
+            out.flush()
+        }
+
+        return Response.ok(streamingOutput, "text/plain")
                 .header("Last-Modified", record.metadata.modifiedDate)
                 .build()
     }
@@ -299,5 +311,7 @@ class RecordResource {
 
     companion object {
         private val logger = LoggerFactory.getLogger(RecordResource::class.java)
+
+        private const val LOG_BUFFER_SIZE = 65536
     }
 }
