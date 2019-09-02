@@ -25,6 +25,7 @@ import org.radarbase.upload.doa.entity.Record
 import org.radarbase.upload.doa.entity.RecordContent
 import org.radarbase.upload.doa.entity.RecordLogs
 import org.radarbase.upload.doa.entity.RecordMetadata
+import java.io.Closeable
 import java.io.InputStream
 import java.io.Reader
 
@@ -32,10 +33,10 @@ interface RecordRepository {
     fun create(record: Record, metadata: RecordMetadata? = null, contents: Set<ContentsDTO>? = null): Record
     fun read(id: Long): Record?
     fun readLogs(id: Long): RecordLogs?
-    fun readLogContents(id: Long): String?
+    fun readLogContents(id: Long): ClobReader?
     fun updateLogs(id: Long, logsData: String): RecordMetadata
     fun delete(record: Record, revision: Int)
-    fun readFileContent(id: Long, revision: Int, fileName: String, range: LongRange? = null): ByteArray?
+    fun readFileContent(id: Long, revision: Int, fileName: String, range: LongRange? = null): BlobReader?
     fun update(record: Record): Record
     fun updateMetadata(id: Long, metadata: RecordMetadataDTO): RecordMetadata
     fun updateContent(record: Record, fileName: String, contentType: String, stream: InputStream, length: Long): RecordContent
@@ -44,4 +45,14 @@ interface RecordRepository {
     fun poll(limit: Int): List<Record>
     fun readRecordContent(recordId: Long, fileName: String): RecordContent?
     fun deleteContents(record: Record, fileName: String)
+
+    interface BlobReader : Closeable {
+        val stream: InputStream
+        override fun close()
+    }
+
+    interface ClobReader : Closeable {
+        val stream: Reader
+        override fun close()
+    }
 }
