@@ -46,10 +46,9 @@ interface LogRepository {
 
 class ConverterLogRepository(
         val uploadClient: UploadBackendClient): LogRepository {
-    private val logContainer = mapOf<Long, MutableList<Log>>().withDefault { mutableListOf() }
+    private val logContainer = mutableMapOf<Long, MutableList<Log>>().withDefault { mutableListOf() }
 
     override fun info(logger: Logger, recordId: Long, logMessage: String) {
-        logger.info("IN log info")
         logContainer.getValue(recordId).add(Log(LogLevel.INFO, logMessage))
         logger.info(logMessage)
     }
@@ -71,12 +70,14 @@ class ConverterLogRepository(
 
     override fun uploadLogs(recordId: Long, isImmediate: Boolean?): RecordMetadataDTO {
         val listOfLogs = logContainer.getValue(recordId)
-        logger.debug("Sending record logs..")
+        logger.debug("Sending record $recordId logs...")
         val logs = LogsDto().apply {
             contents = UploadSourceConnectorConfig.mapper.writeValueAsString(listOfLogs)
         }
         logger.info(UploadSourceConnectorConfig.mapper.writeValueAsString(logs.contents))
-        return uploadClient.addLogs(recordId, logs)
+        val metadata = uploadClient.addLogs(recordId, logs)
+        logContainer[recordId] = mutableListOf()
+        return metadata
     }
 
     override fun uploadAllLogs() {
