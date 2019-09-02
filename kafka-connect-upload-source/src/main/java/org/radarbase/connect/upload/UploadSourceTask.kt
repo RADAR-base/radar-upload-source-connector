@@ -110,7 +110,10 @@ class UploadSourceTask : SourceTask() {
                             logger.error("Could not find converter ${record.sourceType} for record ${record.id}")
                             continue@records
                         } else {
-                            record.metadata = uploadClient.updateStatus(record.id!!, record.metadata!!.copy(status = "PROCESSING"))
+                            record.metadata = uploadClient.updateStatus(
+                                    record.id!!,
+                                    record.metadata!!.copy(status = "PROCESSING")
+                            )
                             logger.debug("Updated metadata ${record.id} to PROCESSING")
                         }
                     } catch (exe: Exception) {

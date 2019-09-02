@@ -103,7 +103,7 @@ abstract class RecordConverter(override val sourceType: String, val avroData: Av
                                 val valRecord = avroData.toConnectData(topicData.value.schema, topicData.value)
                                 val offset = mutableMapOf(
                                         END_OF_RECORD_KEY to topicData.endOfFileOffSet,
-                                        RECORD_ID_KEY to record.id,
+                                        RECORD_ID_KEY to recordId,
                                         REVISION_KEY to record.metadata?.revision
                                 )
                                 return@topicDataMap SourceRecord(getPartition(), offset, topicData.topic, key.schema(), key.value(), valRecord.schema(), valRecord.value())
@@ -112,8 +112,8 @@ abstract class RecordConverter(override val sourceType: String, val avroData: Av
             }
             return ConversionResult(record, sourceRecords.flatMap { it.toList() })
         } catch (exe: Exception){
-            logsRepository.error(logger, recordId, "Could not convert record ${recordId}", exe)
-            throw ConversionFailedException("Could not convert record ${recordId}",exe)
+            logsRepository.error(logger, recordId, "Could not convert record $recordId", exe)
+            throw ConversionFailedException("Could not convert record $recordId",exe)
         }
     }
 
