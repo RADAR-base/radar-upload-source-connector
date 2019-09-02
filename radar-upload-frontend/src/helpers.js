@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-export const getToken = async (authCode, clientId = 'radar_upload_frontend') => {
+export const getToken = async (authCode, clientId) => {
   const headers = {
     'Content-Type': 'application/x-www-form-urlencoded',
     auth: {
@@ -17,7 +17,7 @@ export const getToken = async (authCode, clientId = 'radar_upload_frontend') => 
   // eslint-disable-next-line camelcase
   const { access_token } = await axios.post(
     // eslint-disable-next-line no-undef
-    process.env.VUE_APP_AUTH_API || $VUE_APP_AUTH_API,
+    `${process.env.VUE_APP_AUTH_API}/token` || `${$VUE_APP_AUTH_API}/token`,
     params,
     headers,
   );

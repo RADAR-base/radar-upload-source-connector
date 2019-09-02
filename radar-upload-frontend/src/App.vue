@@ -64,7 +64,9 @@ export default {
     async getAuth() {
       if (window.location.href.includes('login?code=')) {
         const authCode = window.location.search.replace('?code=', '');
-        const returnedToken = await getToken(authCode).catch(() => null);
+        // eslint-disable-next-line no-undef
+        const clientId = process.env.VUE_APP_CLIENT_ID || $VUE_APP_CLIENT_ID;
+        const returnedToken = await getToken(authCode, clientId).catch(() => null);
         localStorage.setItem('token', returnedToken);
         window.close();
       }

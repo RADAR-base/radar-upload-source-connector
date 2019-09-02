@@ -56,6 +56,7 @@
 </template>
 
 <script>
+/* eslint-disable no-undef */
 import { clearInterval } from 'timers';
 
 export default {
@@ -64,7 +65,10 @@ export default {
   }),
   methods: {
     async redirectLogin() {
-      window.open('https://radar-test.thehyve.net/managementportal/oauth/authorize?client_id=radar_upload_frontend&response_type=code&redirect_uri=http://localhost:8080/login');
+      const url = process.env.VUE_APP_AUTH_API || $VUE_APP_AUTH_API;
+      const clientId = process.env.VUE_APP_CLIENT_ID || $VUE_APP_CLIENT_ID;
+      const authCallback = process.env.VUE_APP_AUTH_CALLBACK || $VUE_APP_AUTH_CALLBACK;
+      window.open(`${url}/authorize?client_id=${clientId}&response_type=code&redirect_uri=${authCallback}`);
       this.loading = true;
       // eslint-disable-next-line func-names
       this.checkToken = setInterval(() => {
