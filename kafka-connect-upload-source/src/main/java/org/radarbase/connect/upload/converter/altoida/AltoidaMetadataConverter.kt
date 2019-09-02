@@ -19,9 +19,12 @@
 
 package org.radarbase.connect.upload.converter.altoida
 
+import org.apache.commons.logging.LogFactory
 import org.radarbase.connect.upload.converter.DataProcessor
+import org.radarbase.connect.upload.converter.LogRepository
 import org.radarbase.connect.upload.converter.TopicData
 import org.radarcns.connector.upload.altoida.AltoidaMetadata
+import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.io.InputStream
 import java.time.LocalDateTime
@@ -31,7 +34,7 @@ class AltoidaMetadataDataProcessor(
         override val schemaType: String = "VERSION.csv",
         val topic: String = "connect_upload_altoida_metadata") : DataProcessor {
 
-    override fun processData(inputStream: InputStream, timeReceived: Double): List<TopicData> {
+    override fun processData(recordId: Long, inputStream: InputStream, timeReceived: Double, logRepository: LogRepository): List<TopicData> {
         val reader = inputStream.bufferedReader()
         try {
             val version = reader.readLine()
@@ -40,9 +43,9 @@ class AltoidaMetadataDataProcessor(
                 return listOf(convertedLine)
             }
         } catch (exe: IOException) {
-//            log(LogLevel.WARN,"Something went wrong while processing contents of file ${contents.fileName}: ${exe.message} ")
+            logRepository.warn(logger, recordId,"Something went wrong while processing contents of file $recordId: ${exe.message} ")
         } finally {
-//            log(LogLevel.INFO,"Closing resources of content ${contents.fileName}")
+            logRepository.info(logger, recordId,"Closing resources of content")
             inputStream.close()
         }
         return emptyList()
@@ -56,6 +59,10 @@ class AltoidaMetadataDataProcessor(
                 version
         )
         return TopicData(false, topic, metadata)
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(AltoidaMetadataDataProcessor::class.java)
     }
 }
 
