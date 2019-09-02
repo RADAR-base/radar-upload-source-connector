@@ -240,7 +240,7 @@ class UploadBackendClientIntegrationTest {
 
 
     companion object {
-        const val fileName = "TEST_ZIP.zip"
+        const val fileName = "TEST_ACC.zip"
         const val REST_UPLOAD_CLIENT = "radar_upload_backend"
         const val REST_UPLOAD_SECRET = "secret"
         const val USER = "sub-1"
@@ -255,7 +255,7 @@ class UploadBackendClientIntegrationTest {
                 .registerModule(JavaTimeModule())
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
         private const val baseUri = "http://0.0.0.0:8080/radar-upload"
-        private const val mySourceTypeName = "acceleration-zip"
+        private const val mySourceTypeName = "phone-acceleration"
         private const val BEARER = "Bearer "
         private val APPLICATION_JSON = "application/json; charset=utf-8".toMediaType()
         private val TEXT_CSV = "text/csv; charset=utf-8".toMediaType()
