@@ -20,7 +20,6 @@
 package org.radarbase.upload.doa
 
 import org.radarbase.upload.api.ContentsDTO
-import org.radarbase.upload.api.LogsDto
 import org.radarbase.upload.api.RecordMetadataDTO
 import org.radarbase.upload.doa.entity.Record
 import org.radarbase.upload.doa.entity.RecordContent
@@ -34,7 +33,7 @@ interface RecordRepository {
     fun read(id: Long): Record?
     fun readLogs(id: Long): RecordLogs?
     fun readLogContents(id: Long): String?
-    fun updateLogs(id: Long, logsData: LogsDto): RecordMetadata
+    fun updateLogs(id: Long, logsData: String): RecordMetadata
     fun readFileContent(id: Long, fileName: String): ByteArray?
     fun delete(record: Record, revision: Int)
     fun update(record: Record): Record
