@@ -21,6 +21,7 @@ package org.radarbase.connect.upload.converter
 
 import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
+import org.radarbase.connect.upload.exception.ConversionFailedException
 import org.radarbase.connect.upload.exception.DataProcessorNotFoundException
 import org.slf4j.LoggerFactory
 import java.io.FilterInputStream
@@ -43,6 +44,7 @@ abstract class ZipFileRecordConverter(sourceType: String, listOfDataProcessors: 
             val zippedInput = ZipInputStream(inputStream)
             zippedInput.use {
                 generateSequence { it.nextEntry }
+                        .ifEmpty { throw IOException("No zipped entry found from ${contents.fileName}") }
                         .forEach { zippedEntry ->
                             val entryName = zippedEntry.name.trim()
                             logger.debug("Processing entry $entryName from record ${record.id}")
@@ -55,6 +57,7 @@ abstract class ZipFileRecordConverter(sourceType: String, listOfDataProcessors: 
                             }, entryName, record.id!!, timeReceived))
                         }
             }
+
             convertedTopicData.last().endOfFileOffSet = true
         } catch (exe: IOException) {
             logRepository.error(logger, record.id!!,"Failed to process zipped input from record ${record.id}", exe)
