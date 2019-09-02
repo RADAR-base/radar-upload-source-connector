@@ -40,6 +40,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.radarbase.connect.upload.auth.ClientCredentialsAuthorizer
 import org.radarbase.connect.upload.converter.AccelerometerCsvRecordConverter
+import org.radarbase.connect.upload.converter.ConverterLogRepository
+import org.radarbase.connect.upload.converter.LogRepository
 import org.radarbase.upload.Config
 import org.radarbase.upload.GrizzlyServer
 import org.radarbase.upload.api.SourceTypeDTO
@@ -57,6 +59,8 @@ class UploadBackendClientIntegrationTest {
     private lateinit var httpClient: OkHttpClient
 
     private lateinit var uploadBackendClient: UploadBackendClient
+
+    private lateinit var logRepository: LogRepository
 
     private lateinit var server: GrizzlyServer
 
@@ -96,6 +100,7 @@ class UploadBackendClientIntegrationTest {
                 configuration = mutableMapOf("setting1" to "value1", "setting2" to "value2")
         )
         config.sourceTypes = listOf(sourceType)
+        logRepository = ConverterLogRepository(uploadBackendClient)
 
         server = GrizzlyServer(config)
         server.start()
@@ -168,7 +173,7 @@ class UploadBackendClientIntegrationTest {
         val sourceType = uploadBackendClient.requestConnectorConfig(mySourceTypeName)
 
         val converter = AccelerometerCsvRecordConverter()
-        converter.initialize(sourceType, uploadBackendClient, emptyMap())
+        converter.initialize(sourceType, uploadBackendClient, logRepository, emptyMap())
 
         val recordToProcess = records.records.first()
         record.metadata = uploadBackendClient.updateStatus(recordToProcess.id!!, recordToProcess.metadata!!.copy(status = "PROCESSING", message = "The record is being processed"))
@@ -235,7 +240,7 @@ class UploadBackendClientIntegrationTest {
 
 
     companion object {
-        const val fileName = "TEST_ACC.csv"
+        const val fileName = "TEST_ZIP.zip"
         const val REST_UPLOAD_CLIENT = "radar_upload_backend"
         const val REST_UPLOAD_SECRET = "secret"
         const val USER = "sub-1"
@@ -250,7 +255,7 @@ class UploadBackendClientIntegrationTest {
                 .registerModule(JavaTimeModule())
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
         private const val baseUri = "http://0.0.0.0:8080/radar-upload"
-        private const val mySourceTypeName = "phone-acceleration"
+        private const val mySourceTypeName = "acceleration-zip"
         private const val BEARER = "Bearer "
         private val APPLICATION_JSON = "application/json; charset=utf-8".toMediaType()
         private val TEXT_CSV = "text/csv; charset=utf-8".toMediaType()
