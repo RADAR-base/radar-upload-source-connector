@@ -29,8 +29,7 @@ import java.io.InputStream
 
 interface DataProcessor {
     val schemaType: String
-
-    fun processData(inputStream: InputStream, timeReceived: Double): List<TopicData>
+    fun processData(recordId: Long, inputStream: InputStream, timeReceived: Double, logRepository: LogRepository? = null): List<TopicData>
 }
 
 
@@ -42,10 +41,10 @@ interface CsvProcessor: DataProcessor {
 
 }
 
-abstract class AbstractCsvProcessor(override val schemaType: String): CsvProcessor {
+abstract class AbstractCsvProcessor(
+        override val schemaType: String): CsvProcessor {
 
-    //TODO pass the logrepository
-    override fun processData(inputStream: InputStream, timeReceived: Double): List<TopicData> {
+    override fun processData(recordId: Long, inputStream: InputStream, timeReceived: Double, logRepository: LogRepository?): List<TopicData> {
         val reader = CSVReaderBuilder(inputStream.bufferedReader())
                 .withCSVParser(CSVParserBuilder().withSeparator(',').build())
                 .build()
@@ -55,7 +54,7 @@ abstract class AbstractCsvProcessor(override val schemaType: String): CsvProcess
             if (validateHeaderSchema(header)) {
                 var line = reader.readNext()
                 while (line != null && line.isNotEmpty()) {
-                    val convertedLine = convertLineToRecord(header, line.asList(), timeReceived)
+                    val convertedLine = convertLineToRecord(recordId, header, line.asList(), timeReceived, logRepository)
                     if (convertedLine != null) {
                         convertedTopicData.add(convertedLine)
                     }
@@ -65,29 +64,29 @@ abstract class AbstractCsvProcessor(override val schemaType: String): CsvProcess
                 throw InvalidFormatException("Csv header does not match with expected converter format")
             }
         } catch (exe: IOException) {
-//            log(LogLevel.WARN,"Something went wrong while processing contents of file ${contents.fileName}: ${exe.message} ")
+            logRepository?.error(logger, recordId,"Something went wrong while processing a contents of record $recordId: ${exe.message} ")
             throw exe
         } finally {
-//            log(LogLevel.INFO,"Closing resources of content ${contents.fileName}")
+            logRepository?.info(logger, recordId,"Closing resources of content")
             inputStream.close()
         }
         return convertedTopicData
     }
 
-    private fun convertLineToRecord(header: List<String>, line: List<String>, timeReceived: Double): TopicData? {
+    private fun convertLineToRecord(recordId: Long, header: List<String>, line: List<String>, timeReceived: Double, logRepository: LogRepository?): TopicData? {
 
         if(line.isEmpty()) {
-//            log(LogLevel.WARN, "Empty line found ${line.toList()}")
+            logRepository?.warn( logger, recordId,"Empty line found ${line.toList()}")
             return null
         }
 
         if (header.size != line.size) {
-//            log(LogLevel.WARN, "Line size ${line.size} did not match with header size ${header.size}. Skipping this line")
+            logRepository?.warn(logger, recordId,"Line size ${line.size} did not match with header size ${header.size}. Skipping this line")
             return null
         }
 
         if (line.any { it.isEmpty()}) {
-//            log(LogLevel.WARN,"Line with empty values found. Skipping this line")
+            logRepository?.warn(logger, recordId, "Line with empty values found. Skipping this line")
             return null
         } else {
             return convertLineToRecord(header.zip(line).toMap(), timeReceived)
