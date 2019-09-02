@@ -22,9 +22,13 @@ package org.radarbase.upload.api
 import java.time.Instant
 import java.time.LocalDateTime
 
-data class LogsDto(
+data class LogDto(
         var url: String? = null,
-        var contents: String? = null)
+        var level: String? = null,
+        var content: String? = null)
+
+data class LogsDto(
+        var logs : List<LogDto>? = null)
 
 data class ContentsDTO(
         var url: String? = null,
@@ -50,7 +54,7 @@ data class RecordMetadataDTO(
         var createdDate: Instant? = null,
         var modifiedDate: Instant? = null,
         var committedDate: Instant? = null,
-        var logs: LogsDto? = null,
+        var logs: Set<LogDto>? = null,
         var callbackUrl: String? = null)
 
 data class RecordDTO(
