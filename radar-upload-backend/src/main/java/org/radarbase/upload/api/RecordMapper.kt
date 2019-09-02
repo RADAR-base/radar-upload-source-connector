@@ -21,6 +21,7 @@ package org.radarbase.upload.api
 
 import org.radarbase.upload.doa.entity.Record
 import org.radarbase.upload.doa.entity.RecordContent
+import org.radarbase.upload.doa.entity.RecordLogs
 import org.radarbase.upload.doa.entity.RecordMetadata
 
 interface RecordMapper {
@@ -28,6 +29,7 @@ interface RecordMapper {
     fun fromRecords(records: List<Record>, limit: Int): RecordContainerDTO
     fun fromMetadata(metadata: RecordMetadata): RecordMetadataDTO
     fun fromContent(content: RecordContent): ContentsDTO
+    fun fromLog(log: RecordLogs, metadata: RecordMetadata): LogDto
 
     fun toRecord(record: RecordDTO): Pair<Record, RecordMetadata>
 }

@@ -21,10 +21,7 @@ package org.radarbase.upload.api
 
 import org.radarbase.upload.Config
 import org.radarbase.upload.doa.SourceTypeRepository
-import org.radarbase.upload.doa.entity.Record
-import org.radarbase.upload.doa.entity.RecordContent
-import org.radarbase.upload.doa.entity.RecordMetadata
-import org.radarbase.upload.doa.entity.RecordStatus
+import org.radarbase.upload.doa.entity.*
 import java.lang.IllegalArgumentException
 import java.net.URLEncoder
 import java.time.Instant
@@ -108,8 +105,15 @@ class RecordMapperImpl(
             modifiedDate = metadata.modifiedDate,
             committedDate = metadata.committedDate,
             // use record.id, since metadata and record have one-to-one
-            logs = metadata.logs?.let {
-                LogsDto(url = "${cleanBaseUri}/records/${metadata.id}/logs")
-            }
+            logs = metadata.logs?.mapTo(HashSet(), {it -> this.fromLog(it, metadata)})
     )
+
+    override fun fromLog(log: RecordLogs, metadata: RecordMetadata): LogDto {
+        return LogDto(
+                url = "$cleanBaseUri/records/${metadata.id}/logs",
+                level = log.level?.name
+        // should we add contents here?
+        )
+    }
+
 }
