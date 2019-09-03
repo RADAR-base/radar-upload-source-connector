@@ -31,5 +31,7 @@ sourceTypes:
       - "application/zip"
     timeRequired: false
     sourceIdRequired: false
-
+enableCors: yes
+clientSecret: "secret"
+clientId: "radar_upload_backend"
 
