@@ -20,9 +20,9 @@
 package org.radarbase.connect.upload.converter
 
 import org.radarbase.connect.upload.api.ContentsDTO
-import org.radarbase.connect.upload.api.LogLevel
 import org.radarbase.connect.upload.api.RecordDTO
-import org.radarbase.connect.upload.exception.ProcessorNotFoundException
+import org.radarbase.connect.upload.exception.ConversionFailedException
+import org.radarbase.connect.upload.exception.DataProcessorNotFoundException
 import org.slf4j.LoggerFactory
 import java.io.FilterInputStream
 import java.io.IOException
@@ -38,12 +38,13 @@ abstract class ZipFileRecordConverter(sourceType: String, listOfDataProcessors: 
     private var processors: Map<String, DataProcessor> = listOfDataProcessors.map { it.schemaType to it }.toMap()
 
     override fun processData(contents: ContentsDTO, inputStream: InputStream, record: RecordDTO, timeReceived: Double): List<TopicData> {
-        log(LogLevel.INFO, "Retrieved file content from record id ${record.id} and filename ${contents.fileName}")
+        logRepository.info(logger, record.id!!, "Retrieved file content from record id ${record.id} and filename ${contents.fileName}")
         val convertedTopicData = mutableListOf<TopicData>()
         try {
             val zippedInput = ZipInputStream(inputStream)
             zippedInput.use {
                 generateSequence { it.nextEntry }
+                        .ifEmpty { throw IOException("No zipped entry found from ${contents.fileName}") }
                         .forEach { zippedEntry ->
                             val entryName = zippedEntry.name.trim()
                             logger.debug("Processing entry $entryName from record ${record.id}")
@@ -53,29 +54,32 @@ abstract class ZipFileRecordConverter(sourceType: String, listOfDataProcessors: 
                                     logger.debug("Closing entry $entryName")
                                     zippedInput.closeEntry()
                                 }
-                            }, entryName, timeReceived))
+                            }, entryName, record.id!!, timeReceived))
                         }
             }
+
             convertedTopicData.last().endOfFileOffSet = true
         } catch (exe: IOException) {
-            log(LogLevel.ERROR, "Failed to process zipped input from record ${record.id}", exe)
+            logRepository.error(logger, record.id!!,"Failed to process zipped input from record ${record.id}", exe)
+            throw exe
         } catch (exe: Exception) {
-            log(LogLevel.ERROR, "Could not process record ${record.id}", exe)
+            logRepository.error(logger, record.id!!,"Could not process record ${record.id}", exe)
+            throw exe
         }
 
         return convertedTopicData
     }
 
-    private fun processContent(inputStream: InputStream, zipEntryName: String, timeReceived: Double): List<TopicData> {
-        return getDataProcessor(zipEntryName).processData(inputStream, timeReceived)
+    private fun processContent(inputStream: InputStream, zipEntryName: String, recordId: Long, timeReceived: Double): List<TopicData> {
+        return getDataProcessor(zipEntryName, recordId).processData(recordId, inputStream, timeReceived, logRepository)
     }
 
-    private fun getDataProcessor(zipEntryName: String): DataProcessor {
+    private fun getDataProcessor(zipEntryName: String, recordId: Long): DataProcessor {
         val processorKey = processors.keys.find { zipEntryName.endsWith(it) }
-                ?: throw ProcessorNotFoundException("Could not find registered processor for zipped entry $zipEntryName")
-        logger.debug("Processing $zipEntryName with $processorKey processor")
+                ?: throw DataProcessorNotFoundException("Could not find registered processor for zipped entry $zipEntryName")
+        logRepository.debug(logger, recordId, "Processing $zipEntryName with $processorKey processor")
         return processors[processorKey]
-                ?: throw throw ProcessorNotFoundException("No processor found for key $processorKey")
+                ?: throw throw DataProcessorNotFoundException("No processor found for key $processorKey")
     }
 
     companion object {

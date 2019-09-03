@@ -32,7 +32,11 @@ import java.io.Closeable
 interface Converter : Closeable {
     val sourceType: String
 
-    fun initialize(connectorConfig: SourceTypeDTO, client: UploadBackendClient, settings: Map<String, String>)
+    fun initialize(
+            connectorConfig: SourceTypeDTO,
+            client: UploadBackendClient,
+            logRepository: LogRepository,
+            settings: Map<String, String>)
 
     // convert and add logs return result
     fun convert(record: RecordDTO): ConversionResult
