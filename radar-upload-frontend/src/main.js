@@ -9,9 +9,10 @@ import './plugins/vue-moment';
 import services from '@/axios/';
 import '@/assets/styles/main.scss';
 import Snackbar from './plugins/snackbar';
+import { baseURL } from '@/app.config';
 // init api services
 // eslint-disable-next-line no-undef
-services.init(process.env.VUE_APP_BASE_URL || $VUE_APP_BASE_URL, store, router);
+services.init(baseURL, store, router);
 
 Vue.config.productionTip = false;
 Vue.use(Snackbar, store);
