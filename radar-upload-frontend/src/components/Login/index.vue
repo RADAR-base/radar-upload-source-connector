@@ -58,6 +58,7 @@
 <script>
 /* eslint-disable no-undef */
 import { clearInterval } from 'timers';
+import { clientId, authCallback, authAPI } from '@/app.config';
 
 export default {
   data: () => ({
@@ -65,10 +66,7 @@ export default {
   }),
   methods: {
     async redirectLogin() {
-      const url = process.env.VUE_APP_AUTH_API || $VUE_APP_AUTH_API;
-      const clientId = process.env.VUE_APP_CLIENT_ID || $VUE_APP_CLIENT_ID;
-      const authCallback = process.env.VUE_APP_AUTH_CALLBACK || $VUE_APP_AUTH_CALLBACK;
-      window.open(`${url}/authorize?client_id=${clientId}&response_type=code&redirect_uri=${authCallback}`);
+      window.open(`${authAPI}/authorize?client_id=${clientId}&response_type=code&redirect_uri=${authCallback}`);
       this.loading = true;
       // eslint-disable-next-line func-names
       this.checkToken = setInterval(() => {
