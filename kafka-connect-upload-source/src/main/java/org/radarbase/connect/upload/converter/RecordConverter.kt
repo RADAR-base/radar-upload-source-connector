@@ -1,7 +1,25 @@
+/*
+ *
+ *  * Copyright 2019 The Hyve
+ *  *
+ *  * Licensed under the Apache License, Version 2.0 (the "License");
+ *  * you may not use this file except in compliance with the License.
+ *  * You may obtain a copy of the License at
+ *  *
+ *  *   http://www.apache.org/licenses/LICENSE-2.0
+ *  *
+ *  * Unless required by applicable law or agreed to in writing, software
+ *  * distributed under the License is distributed on an "AS IS" BASIS,
+ *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  * See the License for the specific language governing permissions and
+ *  * limitations under the License.
+ *  *
+ *
+ */
+
 package org.radarbase.connect.upload.converter
 
 import io.confluent.connect.avro.AvroData
-import okhttp3.ResponseBody
 import org.apache.kafka.connect.data.SchemaAndValue
 import org.apache.kafka.connect.source.SourceRecord
 import org.radarbase.connect.upload.UploadSourceConnectorConfig
@@ -9,10 +27,11 @@ import org.radarbase.connect.upload.api.*
 import org.radarbase.connect.upload.converter.Converter.Companion.END_OF_RECORD_KEY
 import org.radarbase.connect.upload.converter.Converter.Companion.RECORD_ID_KEY
 import org.radarbase.connect.upload.converter.Converter.Companion.REVISION_KEY
-import org.radarbase.connect.upload.api.LogLevel.*
+import org.radarbase.connect.upload.exception.ConversionFailedException
 import org.radarcns.kafka.ObservationKey
 import org.slf4j.LoggerFactory
-import java.io.IOException
+import java.io.InputStream
+import java.lang.Exception
 import java.time.Instant
 
 
@@ -22,8 +41,12 @@ abstract class RecordConverter(override val sourceType: String, val avroData: Av
     private lateinit var client: UploadBackendClient
     private lateinit var settings: Map<String, String>
     private lateinit var topic: String
-    private lateinit var logsRepository: MutableList<Log>
-    override fun initialize(connectorConfig: SourceTypeDTO, client: UploadBackendClient, settings: Map<String, String>) {
+    private lateinit var logsRepository: LogRepository
+    override fun initialize(
+            connectorConfig: SourceTypeDTO,
+            client: UploadBackendClient,
+            logRepository: LogRepository,
+            settings: Map<String, String>) {
         this.connectorConfig = connectorConfig
         this.client = client
         this.settings = settings
@@ -32,65 +55,78 @@ abstract class RecordConverter(override val sourceType: String, val avroData: Av
             this.topic = this.connectorConfig.topics?.first()!!
         }
 
-        logsRepository = mutableListOf()
+        this.logsRepository = logRepository
     }
 
     override fun close() {
-        this.client.close()
-    }
-
-    fun log(logLevel: LogLevel, logMessage: String) {
-        logsRepository.add(Log(logLevel, logMessage))
-
-        when (logLevel) {
-            INFO -> logger.info(logMessage)
-            WARN -> logger.warn(logMessage)
-            DEBUG -> logger.debug(logMessage)
-            ERROR -> logger.error(logMessage)
+        if (this::logsRepository.isInitialized) {
+            this.logsRepository.uploadAllLogs()
+        }
+        if (this::client.isInitialized) {
+            this.client.close()
         }
     }
 
+    val logRepository get() = this.logsRepository
+
     override fun convert(record: RecordDTO): ConversionResult {
-        log(INFO, "Converting record : record-id ${record.id}")
+        val recordId = record.id!!
+        logsRepository.info(logger, recordId,"Converting record : record-id $recordId")
 
-        record.validateRecord()
+        try {
+            record.validateRecord()
 
-        val key = record.computeObservationKey(avroData)
+            val key = record.computeObservationKey(avroData)
 
-        val contents = record.data!!.contents!!
+            val recordContents = record.data!!.contents!!
 
-        val sourceRecords = contents.asSequence().map contentMap@{
+            val sourceRecords = recordContents.map contentMap@{ content ->
 
-            val fileStream = client.retrieveFile(record, it.fileName)
-                    ?: throw IOException("Cannot retrieve file ${it.fileName} from record with id ${record.id}")
-            val timeReceived = Instant.now().epochSecond
+                val response = client.retrieveFile(record, content.fileName)
+                // if receiving a content fails, mark that record as READY and stop converting
+                if(response == null) {
+                    client.updateStatus(recordId, record.metadata!!.copy(
+                            status = "READY",
+                            message = "Could not retrieve file ${content.fileName} from record with id $recordId"
+                    ))
 
-            return@contentMap processData(it, fileStream, record, timeReceived.toDouble())
-                    .map topicDataMap@{
-                        val valRecord = avroData.toConnectData(it.value.schema, it.value)
-                        val offset = mutableMapOf(
-                                END_OF_RECORD_KEY to it.endOfFileOffSet,
-                                RECORD_ID_KEY to record.id,
-                                REVISION_KEY to record.metadata?.revision
-                        )
-                        // find the last record and set END_OF_RECORD_KEY to true, otherwise false
-                        return@topicDataMap SourceRecord(getPartition(), offset, it.topic, key.schema(), key.value(), valRecord.schema(), valRecord.value())
-                    }.toList()
-        }.toList()
-        commitLogs(record, client)
-        return ConversionResult(record, sourceRecords.flatMap { it.toList() })
+                    logsRepository.error(logger, recordId,"Could not retrieve file ${content.fileName} from record with id $recordId")
+                    return@convert ConversionResult(record, emptyList())
+                }
+
+                val timeReceived = Instant.now().epochSecond
+
+                response.use responseResource@{ res ->
+                    return@contentMap processData(content, res.byteStream(), record, timeReceived.toDouble())
+                            .map topicDataMap@{ topicData ->
+                                val valRecord = avroData.toConnectData(topicData.value.schema, topicData.value)
+                                val offset = mutableMapOf(
+                                        END_OF_RECORD_KEY to topicData.endOfFileOffSet,
+                                        RECORD_ID_KEY to recordId,
+                                        REVISION_KEY to record.metadata?.revision
+                                )
+                                return@topicDataMap SourceRecord(getPartition(), offset, topicData.topic, key.schema(), key.value(), valRecord.schema(), valRecord.value())
+                            }
+                }
+            }
+            return ConversionResult(record, sourceRecords.flatMap { it.toList() })
+        } catch (exe: Exception){
+            logsRepository.error(logger, recordId, "Could not convert record $recordId", exe)
+            throw ConversionFailedException("Could not convert record $recordId",exe)
+        }
     }
 
-    private fun commitLogs(record: RecordDTO, client: UploadBackendClient) {
+    private fun commitLogs(record: RecordDTO, client: UploadBackendClient): RecordMetadataDTO {
+        logger.debug("Sending record logs..")
         val logs = LogsDto().apply {
                 contents = UploadSourceConnectorConfig.mapper.writeValueAsString(logsRepository)
         }
         logger.info(UploadSourceConnectorConfig.mapper.writeValueAsString(logsRepository))
-        client.addLogs(record.id!!, logs)
+        return client.addLogs(record.id!!, logs)
     }
 
     /** process file content with the record data. The implementing method should close response-body. */
-    abstract fun processData(contents: ContentsDTO, responseBody: ResponseBody, record: RecordDTO, timeReceived: Double)
+    abstract fun processData(contents: ContentsDTO, inputStream: InputStream, record: RecordDTO, timeReceived: Double)
             : List<TopicData>
 
     override fun getPartition(): MutableMap<String, Any> = mutableMapOf("source-type" to sourceType)
@@ -103,8 +139,7 @@ abstract class RecordConverter(override val sourceType: String, val avroData: Av
     }
 
     private fun RecordDTO.computeObservationKey(avroData: AvroData): SchemaAndValue {
-        val data = this.data
-        data ?: throw IllegalStateException("Cannot process record without data")
+        val data = this.data ?: throw IllegalStateException("Cannot process record without data")
         return avroData.toConnectData(
                 ObservationKey.getClassSchema(),
                 ObservationKey(

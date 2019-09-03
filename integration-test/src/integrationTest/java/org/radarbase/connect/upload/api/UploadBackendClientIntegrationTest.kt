@@ -1,3 +1,22 @@
+/*
+ *
+ *  * Copyright 2019 The Hyve
+ *  *
+ *  * Licensed under the Apache License, Version 2.0 (the "License");
+ *  * you may not use this file except in compliance with the License.
+ *  * You may obtain a copy of the License at
+ *  *
+ *  *   http://www.apache.org/licenses/LICENSE-2.0
+ *  *
+ *  * Unless required by applicable law or agreed to in writing, software
+ *  * distributed under the License is distributed on an "AS IS" BASIS,
+ *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  * See the License for the specific language governing permissions and
+ *  * limitations under the License.
+ *  *
+ *
+ */
+
 package org.radarbase.connect.upload.api
 
 import com.fasterxml.jackson.core.JsonFactory
@@ -13,6 +32,7 @@ import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.hamcrest.CoreMatchers
 import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.greaterThan
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.*
@@ -21,6 +41,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.radarbase.connect.upload.auth.ClientCredentialsAuthorizer
 import org.radarbase.connect.upload.converter.AccelerometerCsvRecordConverter
+import org.radarbase.connect.upload.converter.ConverterLogRepository
+import org.radarbase.connect.upload.converter.LogRepository
 import org.radarbase.upload.Config
 import org.radarbase.upload.GrizzlyServer
 import org.radarbase.upload.api.SourceTypeDTO
@@ -38,6 +60,8 @@ class UploadBackendClientIntegrationTest {
     private lateinit var httpClient: OkHttpClient
 
     private lateinit var uploadBackendClient: UploadBackendClient
+
+    private lateinit var logRepository: LogRepository
 
     private lateinit var server: GrizzlyServer
 
@@ -77,6 +101,7 @@ class UploadBackendClientIntegrationTest {
                 configuration = mutableMapOf("setting1" to "value1", "setting2" to "value2")
         )
         config.sourceTypes = listOf(sourceType)
+        logRepository = ConverterLogRepository(uploadBackendClient)
 
         server = GrizzlyServer(config)
         server.start()
@@ -107,11 +132,9 @@ class UploadBackendClientIntegrationTest {
     fun testRecordCreationToConvertionWorkFlow() {
         val clientUserToken = call(httpClient, Response.Status.OK, "access_token") {
             it.url("${config.managementPortalUrl}/oauth/token")
-                    .addHeader("Authorization", Credentials.basic(REST_UPLOAD_CLIENT, REST_UPLOAD_SECRET))
+                    .addHeader("Authorization", Credentials.basic("radar_upload_connect", "upload_secret"))
                     .post(FormBody.Builder()
-                            .add("username", ADMIN_USER)
-                            .add("password", ADMIN_PASSWORD)
-                            .add("grant_type", "password")
+                            .add("grant_type", "client_credentials")
                             .build())
         }
 
@@ -122,14 +145,13 @@ class UploadBackendClientIntegrationTest {
                         userId = USER,
                         sourceId = SOURCE,
                         time = LocalDateTime.now()
-
                 ),
                 sourceType = mySourceTypeName,
                 metadata = null
         )
 
         val request = Request.Builder()
-                .url(baseUri.plus("records"))
+                .url("$baseUri/records")
                 .post(record.toJsonString().toRequestBody(APPLICATION_JSON))
                 .addHeader("Authorization", BEARER + clientUserToken)
                 .addHeader("Content-type", "application/json")
@@ -145,13 +167,15 @@ class UploadBackendClientIntegrationTest {
 
         //Test uploading request contentFile for created record
         uploadContent(recordCreated.id!!, clientUserToken)
+        markReady(recordCreated.id!!, clientUserToken)
+        retrieveFile(recordCreated)
 
         val records = pollRecords()
 
         val sourceType = uploadBackendClient.requestConnectorConfig(mySourceTypeName)
 
         val converter = AccelerometerCsvRecordConverter()
-        converter.initialize(sourceType, uploadBackendClient, emptyMap())
+        converter.initialize(sourceType, uploadBackendClient, logRepository, emptyMap())
 
         val recordToProcess = records.records.first()
         record.metadata = uploadBackendClient.updateStatus(recordToProcess.id!!, recordToProcess.metadata!!.copy(status = "PROCESSING", message = "The record is being processed"))
@@ -168,7 +192,7 @@ class UploadBackendClientIntegrationTest {
         val file = File(fileName)
 
         val requestToUploadFile = Request.Builder()
-                .url(baseUri.plus("records/$recordId/contents/$fileName"))
+                .url("$baseUri/records/$recordId/contents/$fileName")
                 .put(file.asRequestBody(TEXT_CSV))
                 .addHeader("Authorization", BEARER + clientUserToken)
                 .build()
@@ -179,6 +203,23 @@ class UploadBackendClientIntegrationTest {
         val content = mapper.readValue(uploadResponse.body?.string(), ContentsDTO::class.java)
         assertNotNull(content)
         assertEquals(fileName, content.fileName)
+    }
+
+
+    private fun markReady(recordId: Long, clientUserToken: String) {
+        //Test uploading request contentFile
+        val requestToUploadFile = Request.Builder()
+                .url("$baseUri/records/$recordId/metadata")
+                .post("{\"status\":\"READY\",\"revision\":1}".toRequestBody("application/json".toMediaType()))
+                .addHeader("Authorization", BEARER + clientUserToken)
+                .build()
+
+        val uploadResponse = httpClient.newCall(requestToUploadFile).execute()
+        assertTrue(uploadResponse.isSuccessful)
+
+        val metadata = mapper.readValue(uploadResponse.body?.string(), RecordMetadataDTO::class.java)
+        assertNotNull(metadata)
+        assertEquals("READY", metadata.status)
     }
 
     fun pollRecords(): RecordContainerDTO {
@@ -195,10 +236,13 @@ class UploadBackendClientIntegrationTest {
     }
 
     private fun retrieveFile(recordId: RecordDTO) {
-        val file = uploadBackendClient.retrieveFile(recordId, fileName)
-        assertNotNull(file)
+        uploadBackendClient.retrieveFile(recordId, fileName).use { response ->
+            assertNotNull(response)
+            val responseData = response!!.bytes()
+            assertThat(responseData.size.toLong(), equalTo(File(fileName).length()))
+            assertThat(responseData, equalTo(File(fileName).readBytes()))
+        }
     }
-
 
     companion object {
         const val fileName = "TEST_ACC.csv"
@@ -215,7 +259,7 @@ class UploadBackendClientIntegrationTest {
                 .registerModule(KotlinModule())
                 .registerModule(JavaTimeModule())
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-        private const val baseUri = "http://0.0.0.0:8080/radar-upload/"
+        private const val baseUri = "http://0.0.0.0:8080/radar-upload"
         private const val mySourceTypeName = "phone-acceleration"
         private const val BEARER = "Bearer "
         private val APPLICATION_JSON = "application/json; charset=utf-8".toMediaType()
