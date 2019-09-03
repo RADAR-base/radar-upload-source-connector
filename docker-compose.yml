@@ -149,6 +149,8 @@ services:
     image: radarbase/management-portal:0.5.6
     depends_on:
       - radarbase-postgresql
+    ports:
+      - "8090:8080"
     environment:
       SPRING_PROFILES_ACTIVE: prod
       SPRING_DATASOURCE_URL: jdbc:postgresql://radarbase-postgresql:5432/managementportal
@@ -218,6 +220,8 @@ services:
       context: .
       dockerfile: Dockerfile.backend
     image: radarbase/radar-upload-connect-backend:dev
+    ports:
+      - "8085:8085"
     depends_on:
       - managementportal-app
       - radarbase-postgresql
@@ -239,4 +243,9 @@ services:
       - radar-upload-connect-backend
       - managementportal-app
       - radarbase-postgresql
+    environment:
+      VUE_APP_BASE_URL: "http://localhost:8085/radar-upload"
+      VUE_APP_AUTH_API: "http://localhost:8090/managementportal/oauth"
+      VUE_APP_AUTH_CALLBACK: "http://localhost:8080/login"
+      VUE_APP_CLIENT_ID: "radar_upload_frontend"
 
