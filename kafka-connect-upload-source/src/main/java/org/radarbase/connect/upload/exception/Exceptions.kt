@@ -27,4 +27,6 @@ class ConflictException(message: String, cause: Throwable? = null) : RuntimeExce
 
 class InvalidFormatException(message: String) : RuntimeException(message)
 
-class ProcessorNotFoundException(message: String) : RuntimeException(message)
+class DataProcessorNotFoundException(message: String) : RuntimeException(message)
+
+class ConversionFailedException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)

@@ -28,7 +28,10 @@ import org.radarbase.connect.upload.converter.Converter
 import org.radarbase.connect.upload.converter.Converter.Companion.END_OF_RECORD_KEY
 import org.radarbase.connect.upload.converter.Converter.Companion.RECORD_ID_KEY
 import org.radarbase.connect.upload.converter.Converter.Companion.REVISION_KEY
+import org.radarbase.connect.upload.converter.ConverterLogRepository
+import org.radarbase.connect.upload.converter.LogRepository
 import org.radarbase.connect.upload.exception.ConflictException
+import org.radarbase.connect.upload.exception.ConversionFailedException
 import org.radarbase.connect.upload.util.VersionUtil
 import org.slf4j.LoggerFactory
 
@@ -36,6 +39,7 @@ class UploadSourceTask : SourceTask() {
     private var pollInterval: Long = 60_000L
     private lateinit var uploadClient: UploadBackendClient
     private lateinit var converters: List<Converter>
+    private lateinit var logRepository: LogRepository
 
     override fun start(props: Map<String, String>?) {
         val connectConfig = UploadSourceConnectorConfig(props!!)
@@ -62,10 +66,14 @@ class UploadSourceTask : SourceTask() {
 
         pollInterval = connectConfig.getLong(SOURCE_POLL_INTERVAL_CONFIG)
 
+        logRepository = ConverterLogRepository(uploadClient)
+
         for (converter in converters) {
             val config = uploadClient.requestConnectorConfig(converter.sourceType)
-            converter.initialize(config, uploadClient, props)
+            converter.initialize(config, uploadClient, logRepository, props)
         }
+
+
         logger.info("Poll with interval $pollInterval milliseconds")
         logger.info("Initialized ${converters.size} converters...")
     }
@@ -93,12 +101,20 @@ class UploadSourceTask : SourceTask() {
                     val converter = converters.find { it.sourceType == record.sourceType }
                     try {
                         if (converter == null) {
-                            uploadClient.updateStatus(record.id!!, record.metadata!!.copy(status = "FAILED", message = "Converter for Source type ${record.sourceType} not found."))
-                            logger.debug("Could not find converter $converter for record ${record.id}")
-                            continue
+                            uploadClient.updateStatus(
+                                    record.id!!,
+                                    record.metadata!!.copy(
+                                            status = "FAILED",
+                                            message = "No registered converter found for ${record.sourceType}.")
+                            )
+                            logger.error("Could not find converter ${record.sourceType} for record ${record.id}")
+                            continue@records
                         } else {
-                            record.metadata = uploadClient.updateStatus(record.id!!, record.metadata!!.copy(status = "PROCESSING"))
-                            logger.debug("updated metadata ${record.metadata}")
+                            record.metadata = uploadClient.updateStatus(
+                                    record.id!!,
+                                    record.metadata!!.copy(status = "PROCESSING")
+                            )
+                            logger.debug("Updated metadata ${record.id} to PROCESSING")
                         }
                     } catch (exe: Exception) {
                         when(exe) {
@@ -110,14 +126,34 @@ class UploadSourceTask : SourceTask() {
                         }
                     }
 
-                    val result = converter.convert(record)
-                    result.result?.takeIf(List<*>::isNotEmpty)?.let {
-                        return@poll it
+                    try {
+                        val result = converter.convert(record)
+                        result.result?.takeIf(List<*>::isNotEmpty)?.let {
+                            return@poll it
+                        }
+                    } catch (exe: ConversionFailedException) {
+                        logger.error("Could not convert record ${record.id}", exe)
+                        updateRecordFailure(record)
                     }
+
                 }
             }
 
             Thread.sleep(pollInterval)
+        }
+    }
+
+    private fun updateRecordFailure(record: RecordDTO, reason: String? = "Could not convert this record. Please refer to the conversion logs for more details") {
+        logger.info("Update record conversion failure")
+        val metadata = uploadClient.retrieveRecordMetadata(record.id!!)
+        val updatedMetadata = uploadClient.updateStatus(record.id!!, metadata.copy(
+            status = "FAILED",
+            message = reason
+        ))
+
+        if(updatedMetadata.status == "FAILED") {
+            logger.info("Uploading logs to backend")
+            logRepository.uploadLogs(record.id!!)
         }
     }
 
@@ -132,7 +168,12 @@ class UploadSourceTask : SourceTask() {
 
         if (endOfRecord) {
             logger.info("Committing last record of Record $recordId, with Revision $revision")
-            uploadClient.updateStatus(recordId.toLong(), RecordMetadataDTO(revision = revision.toInt(), status = "SUCCEEDED", message = "Record has been processed successfully"))
+            val updatedMetadata = uploadClient.updateStatus(recordId.toLong(), RecordMetadataDTO(revision = revision.toInt(), status = "SUCCEEDED", message = "Record has been processed successfully"))
+
+            if(updatedMetadata.status == "SUCCEEDED") {
+                logger.info("Uploading logs to backend")
+                logRepository.uploadLogs(recordId.toLong())
+            }
         }
     }
 
