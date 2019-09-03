@@ -1,6 +1,7 @@
 import axios from 'axios';
 import uuidv1 from 'uuid/v1';
 import { downLoadFile } from '@/helpers';
+import { baseURL } from '@/app.config';
 
 export default {
   /** response
@@ -100,7 +101,7 @@ export default {
   },
 
   async download({ recordId, fileName }) {
-    const url = `${process.env.VUE_APP_BASE_URL}/records/${recordId}/contents/${fileName}`;
+    const url = `${baseURL}/records/${recordId}/contents/${fileName}`;
     await axios.get(url);
     downLoadFile(fileName, url);
   },

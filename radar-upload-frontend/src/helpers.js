@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { authCallback, authAPI } from '@/app.config';
 
 export const getToken = async (authCode, clientId) => {
   const headers = {
@@ -12,12 +13,12 @@ export const getToken = async (authCode, clientId) => {
   params.append('code', authCode);
   params.append('grant_type', 'authorization_code');
   // eslint-disable-next-line no-undef
-  params.append('redirect_uri', process.env.VUE_APP_AUTH_CALLBACK || $VUE_APP_AUTH_CALLBACK);
+  params.append('redirect_uri', authCallback);
 
   // eslint-disable-next-line camelcase
   const { access_token } = await axios.post(
     // eslint-disable-next-line no-undef
-    `${process.env.VUE_APP_AUTH_API}/token` || `${$VUE_APP_AUTH_API}/token`,
+    `${authAPI}/token`,
     params,
     headers,
   );
