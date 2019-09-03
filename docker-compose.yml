@@ -194,7 +194,7 @@ services:
       - kafka-2
       - kafka-3
       - schema-registry-1
-      - radar-connect-upload-backend
+      - radar-upload-connect-backend
     environment:
       CONNECT_BOOTSTRAP_SERVERS: PLAINTEXT://kafka-1:9092,PLAINTEXT://kafka-2:9092,PLAINTEXT://kafka-3:9092
       CONNECT_REST_PORT: 8083
@@ -216,15 +216,27 @@ services:
       KAFKA_BROKERS: 3
       CONNECT_LOG4J_LOGGERS: "org.reflections=ERROR"
 
-  radar-connect-upload-backend:
+  radar-upload-connect-backend:
     build:
       context: .
       dockerfile: Dockerfile.backend
-    image: radarbase/radar-connect-upload-backend:dev
+    image: radarbase/radar-upload-connect-backend:dev
     depends_on:
       - managementportal-app
       - radarbase-postgresql
     volumes:
       - ./docker/upload.yml:/etc/upload-backend/upload.yml
     command: ["radar-upload-backend", "/etc/upload-backend/upload.yml"]
+
+  radar-upload-connect-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    image: radarbase/radar-upload-connect-frontend:dev
+    ports:
+      - "8080:80"
+    depends_on:
+      - radar-upload-connect-backend
+      - managementportal-app
+      - radarbase-postgresql
 
