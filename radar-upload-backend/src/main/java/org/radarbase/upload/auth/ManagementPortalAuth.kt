@@ -23,6 +23,7 @@ import org.radarcns.auth.authorization.AuthoritiesConstants.SYS_ADMIN
 import org.radarcns.auth.authorization.Permission
 import org.radarcns.auth.authorization.Permission.MEASUREMENT_CREATE
 import org.radarcns.auth.token.RadarToken
+import java.time.Instant
 import javax.ws.rs.BadRequestException
 import javax.ws.rs.ForbiddenException
 
@@ -35,6 +36,8 @@ class ManagementPortalAuth(private val token: RadarToken) : Auth {
     override val userId: String? = token.subject.takeUnless { it.isEmpty() }
 
     override val bearerToken: String? = token.token
+
+    override val expiresAt: Instant? = token.expiresAt.toInstant()
 
     override fun checkSourcePermission(permission: Permission, projectId: String?, userId: String?, sourceId: String?) {
         if (!token.hasPermissionOnSource(permission,

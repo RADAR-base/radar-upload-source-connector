@@ -4,16 +4,19 @@ import org.radarbase.upload.Config
 import org.radarbase.upload.auth.Auth
 import org.radarbase.upload.auth.Authenticated
 import java.net.URI
+import java.time.Duration
+import java.time.Instant
 import javax.annotation.Resource
 import javax.ws.rs.*
 import javax.ws.rs.core.*
 
-@Authenticated
-@Path("/login")
+@Path("/")
 @Resource
+@Produces("application/json")
 class LoginResource {
     @GET
-    @Produces("application/json")
+    @Path("login")
+    @Authenticated
     fun login(@QueryParam("redirect") redirect: String?, @Context auth: Auth, @Context config: Config, @Context uri: UriInfo): Response {
         val token = auth.bearerToken
                 ?: throw BadRequestException("Cannot log in without bearer token")
@@ -23,8 +26,25 @@ class LoginResource {
         val responseBuilder = redirect?.let { Response.temporaryRedirect(URI.create(it)) }
                 ?: Response.ok().entity(mapOf("authorizationBearer" to token))
 
+        val age = auth.expiresAt?.let { expiry ->
+            Duration.between(Instant.now(), expiry).toSeconds().toInt()
+        }?.coerceAtLeast(0) ?: -1
+
         return responseBuilder
-                .cookie(NewCookie("authorizationBearer", token, myUri.path, myUri.host, null, -1, true, true))
+                .cookie(NewCookie("authorizationBearer", token, myUri.path, myUri.host, null, age, true, true))
+                .build()
+    }
+
+    @GET
+    @Path("logout")
+    fun logout(@QueryParam("redirect") redirect: String?, @Context config: Config, @Context uri: UriInfo): Response {
+        val myUri = config.advertisedBaseUri ?: uri.baseUri
+
+        val responseBuilder = redirect?.let { Response.temporaryRedirect(URI.create(it)) }
+                ?: Response.ok().entity(mapOf("authorizationBearer" to null))
+
+        return responseBuilder
+                .cookie(NewCookie("authorizationBearer", "", myUri.path, myUri.host, null, 0, true, true))
                 .build()
     }
 }
