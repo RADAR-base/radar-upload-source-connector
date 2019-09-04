@@ -149,6 +149,8 @@ services:
     image: radarbase/management-portal:0.5.6
     depends_on:
       - radarbase-postgresql
+    ports:
+      - "8090:8080"
     environment:
       SPRING_PROFILES_ACTIVE: prod
       SPRING_DATASOURCE_URL: jdbc:postgresql://radarbase-postgresql:5432/managementportal
@@ -191,7 +193,7 @@ services:
       - kafka-2
       - kafka-3
       - schema-registry-1
-      - radar-connect-upload-backend
+      - radar-upload-connect-backend
     environment:
       CONNECT_BOOTSTRAP_SERVERS: PLAINTEXT://kafka-1:9092,PLAINTEXT://kafka-2:9092,PLAINTEXT://kafka-3:9092
       CONNECT_REST_PORT: 8083
@@ -213,11 +215,13 @@ services:
       KAFKA_BROKERS: 3
       CONNECT_LOG4J_LOGGERS: "org.reflections=ERROR"
 
-  radar-connect-upload-backend:
+  radar-upload-connect-backend:
     build:
       context: .
       dockerfile: Dockerfile.backend
-    image: radarbase/radar-connect-upload-backend:dev
+    image: radarbase/radar-upload-connect-backend:dev
+    ports:
+      - "8085:8085"
     depends_on:
       - managementportal-app
       - radarbase-postgresql
@@ -227,4 +231,21 @@ services:
     environment:
       JAVA_OPTS: "-Dlogback.configurationFile=/etc/upload-backend/logback.xml"
     command: ["radar-upload-backend", "/etc/upload-backend/upload.yml"]
+
+  radar-upload-connect-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    image: radarbase/radar-upload-connect-frontend:dev
+    ports:
+      - "8080:80"
+    depends_on:
+      - radar-upload-connect-backend
+      - managementportal-app
+      - radarbase-postgresql
+    environment:
+      VUE_APP_BASE_URL: "http://localhost:8085/radar-upload"
+      VUE_APP_AUTH_API: "http://localhost:8090/managementportal/oauth"
+      VUE_APP_AUTH_CALLBACK: "http://localhost:8080/login"
+      VUE_APP_CLIENT_ID: "radar_upload_frontend"
 
