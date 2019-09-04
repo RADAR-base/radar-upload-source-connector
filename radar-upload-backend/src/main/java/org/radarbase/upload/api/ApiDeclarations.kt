@@ -61,7 +61,8 @@ data class RecordDTO(
 
 data class RecordContainerDTO(
         var limit: Int? = null,
-        var records: List<RecordDTO>)
+        var records: List<RecordDTO>,
+        var lastId: Long = -1L)
 
 data class SourceTypeDTO(
         var name: String,
