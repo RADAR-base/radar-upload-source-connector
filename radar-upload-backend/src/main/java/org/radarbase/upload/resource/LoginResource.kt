@@ -4,6 +4,8 @@ import org.radarbase.upload.Config
 import org.radarbase.upload.auth.Auth
 import org.radarbase.upload.auth.Authenticated
 import java.net.URI
+import java.time.Duration
+import java.time.Instant
 import javax.annotation.Resource
 import javax.ws.rs.*
 import javax.ws.rs.core.*
@@ -24,8 +26,12 @@ class LoginResource {
         val responseBuilder = redirect?.let { Response.temporaryRedirect(URI.create(it)) }
                 ?: Response.ok().entity(mapOf("authorizationBearer" to token))
 
+        val age = auth.expiresAt?.let { expiry ->
+            Duration.between(Instant.now(), expiry).toSeconds().toInt()
+        }?.coerceAtLeast(0) ?: -1
+
         return responseBuilder
-                .cookie(NewCookie("authorizationBearer", token, myUri.path, myUri.host, null, -1, true, true))
+                .cookie(NewCookie("authorizationBearer", token, myUri.path, myUri.host, null, age, true, true))
                 .build()
     }
 
