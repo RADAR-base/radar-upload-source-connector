@@ -19,18 +19,13 @@
 
 package org.radarbase.connect.upload.api
 
-import com.fasterxml.jackson.core.JsonFactory
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.KotlinModule
-import okhttp3.*
+import okhttp3.Credentials
+import okhttp3.FormBody
 import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
-import org.hamcrest.CoreMatchers
+import okhttp3.RequestBody.Companion.asRequestBody
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.greaterThan
@@ -43,6 +38,17 @@ import org.radarbase.connect.upload.auth.ClientCredentialsAuthorizer
 import org.radarbase.connect.upload.converter.AccelerometerCsvRecordConverter
 import org.radarbase.connect.upload.converter.ConverterLogRepository
 import org.radarbase.connect.upload.converter.LogRepository
+import org.radarbase.connect.upload.util.TestUtils
+import org.radarbase.connect.upload.util.TestUtils.Companion.APPLICATION_JSON
+import org.radarbase.connect.upload.util.TestUtils.Companion.BEARER
+import org.radarbase.connect.upload.util.TestUtils.Companion.PROJECT
+import org.radarbase.connect.upload.util.TestUtils.Companion.SOURCE
+import org.radarbase.connect.upload.util.TestUtils.Companion.TEXT_CSV
+import org.radarbase.connect.upload.util.TestUtils.Companion.USER
+import org.radarbase.connect.upload.util.TestUtils.Companion.call
+import org.radarbase.connect.upload.util.TestUtils.Companion.fileName
+import org.radarbase.connect.upload.util.TestUtils.Companion.mapper
+import org.radarbase.connect.upload.util.TestUtils.Companion.toJsonString
 import org.radarbase.upload.Config
 import org.radarbase.upload.GrizzlyServer
 import org.radarbase.upload.api.SourceTypeDTO
@@ -66,6 +72,10 @@ class UploadBackendClientIntegrationTest {
     private lateinit var server: GrizzlyServer
 
     private lateinit var config: Config
+
+    private val baseUri = TestUtils.baseUri
+
+    private val mySourceTypeName = TestUtils.mySourceTypeName
 
     @BeforeAll
     fun setUp() {
@@ -160,7 +170,7 @@ class UploadBackendClientIntegrationTest {
         val response = httpClient.newCall(request).execute()
         assertTrue(response.isSuccessful)
 
-        val recordCreated =  mapper.readValue(response.body?.string(), RecordDTO::class.java)
+        val recordCreated = mapper.readValue(response.body?.string(), RecordDTO::class.java)
         assertNotNull(recordCreated)
         assertNotNull(recordCreated.id)
         assertThat(recordCreated?.id!!, greaterThan(0L))
@@ -244,58 +254,4 @@ class UploadBackendClientIntegrationTest {
         }
     }
 
-    companion object {
-        const val fileName = "TEST_ACC.csv"
-        const val REST_UPLOAD_CLIENT = "radar_upload_backend"
-        const val REST_UPLOAD_SECRET = "secret"
-        const val USER = "sub-1"
-        const val PROJECT = "radar"
-        const val SOURCE = "03d28e5c-e005-46d4-a9b3-279c27fbbc83"
-        const val ADMIN_USER = "admin"
-        const val ADMIN_PASSWORD = "admin"
-        private val factory = JsonFactory()
-        private val mapper = ObjectMapper(factory)
-                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-                .registerModule(KotlinModule())
-                .registerModule(JavaTimeModule())
-                .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-        private const val baseUri = "http://0.0.0.0:8080/radar-upload"
-        private const val mySourceTypeName = "phone-acceleration"
-        private const val BEARER = "Bearer "
-        private val APPLICATION_JSON = "application/json; charset=utf-8".toMediaType()
-        private val TEXT_CSV = "text/csv; charset=utf-8".toMediaType()
-
-        fun call(httpClient: OkHttpClient, expectedStatus: Response.Status, request: Request): ResponseBody? {
-            println(request.url)
-            return httpClient.newCall(request).execute().use { response ->
-                assertThat(response.code, CoreMatchers.`is`(expectedStatus.statusCode))
-                response.body
-            }
-        }
-
-        fun call(httpClient: OkHttpClient, expectedStatus: Int, requestSupplier: (Request.Builder) -> Request.Builder): JsonNode? {
-            val request = requestSupplier(Request.Builder()).build()
-            println(request.url)
-            return httpClient.newCall(request).execute().use { response ->
-                val body = response.body?.let {
-                    val tree = mapper.readTree(it.byteStream())
-                    println(tree)
-                    tree
-                }
-                assertThat(response.code, CoreMatchers.`is`(expectedStatus))
-                body
-            }
-        }
-
-        private fun Any.toJsonString(): String = mapper.writeValueAsString(this)
-
-        fun call(httpClient: OkHttpClient, expectedStatus: Response.Status, requestSupplier: (Request.Builder) -> Request.Builder): JsonNode? {
-            return call(httpClient, expectedStatus.statusCode, requestSupplier)
-        }
-
-        fun call(httpClient: OkHttpClient, expectedStatus: Response.Status, stringProperty: String, requestSupplier: (Request.Builder) -> Request.Builder): String {
-            return call(httpClient, expectedStatus, requestSupplier)?.get(stringProperty)?.asText()
-                    ?: throw AssertionError("String property $stringProperty not found")
-        }
-    }
 }
