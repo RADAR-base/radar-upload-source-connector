@@ -20,11 +20,13 @@
 package org.radarbase.upload.auth
 
 import org.radarcns.auth.authorization.Permission
+import java.time.Instant
 
 interface Auth {
     val defaultProject: String?
     val userId: String?
     val bearerToken: String?
+    val expiresAt: Instant?
 
     fun checkSourcePermission(permission: Permission, projectId: String?, userId: String?, sourceId: String?)
     fun checkUserPermission(permission: Permission, projectId: String?, userId: String?)
