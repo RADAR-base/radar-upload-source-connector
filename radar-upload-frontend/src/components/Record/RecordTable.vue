@@ -32,7 +32,7 @@ export default {
         { text: 'Record ID', value: 'id' },
         { text: 'Status', value: 'status' },
         { text: 'Source type', value: 'sourceType' },
-        { text: 'User', value: 'userId' },
+        { text: 'Participant ID', value: 'userId' },
         { text: 'Last modified', value: 'modifiedDate' },
       ],
       recordList: [
