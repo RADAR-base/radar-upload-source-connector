@@ -25,14 +25,14 @@
             <v-icon class="pr-2">
               mdi-account-box-multiple
             </v-icon>
-            Patients
+            Participants
           </v-tab>
 
           <v-tab>
             <v-icon class="pr-2">
               mdi-file-multiple
             </v-icon>
-            Files
+            Records
           </v-tab>
         </v-tabs>
       </template>

@@ -108,6 +108,18 @@ describe('axios/file', () => {
       });
   });
 
+  it('markRecord', () => {
+    const recordId = 'id';
+    const body = {
+      status: 'READY',
+      revision: 1,
+    };
+    axios.post.mockResolvedValue();
+    return fileAPI.markRecord({ recordId }).then(() => {
+      expect(axios.post).toBeCalledWith(`/records/${recordId}/metadata`, body);
+    });
+  });
+
   it('fileterRecords', async () => {
     const params1 = {
       projectId: 12,
