@@ -26,16 +26,24 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.ResponseBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.hamcrest.CoreMatchers
 import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers
+import org.junit.jupiter.api.Assertions
+import org.radarbase.connect.upload.api.ContentsDTO
+import org.radarbase.connect.upload.api.RecordDTO
+import org.radarbase.connect.upload.api.RecordDataDTO
+import org.radarbase.connect.upload.api.RecordMetadataDTO
 import org.radarbase.connect.upload.auth.ClientCredentialsAuthorizer
 import org.radarbase.upload.Config
 import org.radarbase.upload.api.SourceTypeDTO
+import java.io.File
 import java.net.URI
+import java.time.LocalDateTime
 import javax.ws.rs.core.Response
 
 class TestBase {
@@ -152,5 +160,84 @@ class TestBase {
             return call(httpClient, expectedStatus, requestSupplier)?.get(stringProperty)?.asText()
                     ?: throw AssertionError("String property $stringProperty not found")
         }
+
+
+        fun createRecordAndUploadContent(sourceType: String, fileName: String) : RecordDTO {
+            val clientUserToken = call(httpClient, Response.Status.OK, "access_token") {
+                it.url(tokenUrl)
+                        .addHeader("Authorization", Credentials.basic("radar_upload_test_client", "test"))
+                        .post(FormBody.Builder()
+                                .add("grant_type", "client_credentials")
+                                .build())
+            }
+
+            val record = RecordDTO(
+                    id = null,
+                    data = RecordDataDTO(
+                            projectId = PROJECT,
+                            userId = USER,
+                            sourceId = SOURCE,
+                            time = LocalDateTime.now()
+                    ),
+                    sourceType = sourceType,
+                    metadata = null
+            )
+
+            val request = Request.Builder()
+                    .url("$baseUri/records")
+                    .post(record.toJsonString().toRequestBody(APPLICATION_JSON))
+                    .addHeader("Authorization", BEARER + clientUserToken)
+                    .addHeader("Content-type", "application/json")
+                    .build()
+
+            val response = httpClient.newCall(request).execute()
+            Assertions.assertTrue(response.isSuccessful)
+
+            val recordCreated = mapper.readValue(response.body?.string(), RecordDTO::class.java)
+            Assertions.assertNotNull(recordCreated)
+            Assertions.assertNotNull(recordCreated.id)
+            assertThat(recordCreated?.id!!, Matchers.greaterThan(0L))
+
+            //Test uploading request contentFile for created record
+            uploadContent(recordCreated.id!!, fileName, clientUserToken)
+            markReady(recordCreated.id!!, clientUserToken)
+            return recordCreated
+        }
+
+        private fun uploadContent(recordId: Long, fileName: String, clientUserToken: String) {
+            //Test uploading request contentFile
+            val file = File(fileName)
+
+            val requestToUploadFile = Request.Builder()
+                    .url("$baseUri/records/$recordId/contents/$fileName")
+                    .put(file.asRequestBody(TEXT_CSV))
+                    .addHeader("Authorization", BEARER + clientUserToken)
+                    .build()
+
+            val uploadResponse = httpClient.newCall(requestToUploadFile).execute()
+            Assertions.assertTrue(uploadResponse.isSuccessful)
+
+            val content = mapper.readValue(uploadResponse.body?.string(), ContentsDTO::class.java)
+            Assertions.assertNotNull(content)
+            Assertions.assertEquals(fileName, content.fileName)
+        }
+
+
+        private fun markReady(recordId: Long, clientUserToken: String) {
+            //Test uploading request contentFile
+            val requestToUploadFile = Request.Builder()
+                    .url("$baseUri/records/$recordId/metadata")
+                    .post("{\"status\":\"READY\",\"revision\":1}".toRequestBody("application/json".toMediaType()))
+                    .addHeader("Authorization", BEARER + clientUserToken)
+                    .build()
+
+            val uploadResponse = httpClient.newCall(requestToUploadFile).execute()
+            Assertions.assertTrue(uploadResponse.isSuccessful)
+
+            val metadata = mapper.readValue(uploadResponse.body?.string(), RecordMetadataDTO::class.java)
+            Assertions.assertNotNull(metadata)
+            Assertions.assertEquals("READY", metadata.status)
+        }
+
     }
 }
