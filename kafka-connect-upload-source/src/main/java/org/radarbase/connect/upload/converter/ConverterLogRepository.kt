@@ -40,7 +40,7 @@ interface LogRepository {
     fun debug(logger: Logger, recordId: Long, logMessage: String)
     fun warn(logger: Logger, recordId: Long, logMessage: String)
     fun error(logger: Logger, recordId: Long, logMessage: String, exe: Exception? = null)
-    fun uploadLogs(recordId: Long, isImmediate: Boolean? = false)
+    fun uploadLogs(recordId: Long)
     fun uploadAllLogs()
 }
 
@@ -68,7 +68,7 @@ class ConverterLogRepository(
         logger.error(logMessage, exe)
     }
 
-    override fun uploadLogs(recordId: Long, isImmediate: Boolean?) {
+    override fun uploadLogs(recordId: Long) {
         val listOfLogs = logContainer.getValue(recordId)
         if(listOfLogs.isNotEmpty()) {
             logger.debug("Sending record $recordId logs...")

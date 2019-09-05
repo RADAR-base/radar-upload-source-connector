@@ -19,40 +19,27 @@
 
 package org.radarbase.connect.upload.api
 
-import okhttp3.Credentials
-import okhttp3.FormBody
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
-import okhttp3.RequestBody.Companion.asRequestBody
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.greaterThan
-import org.junit.jupiter.api.*
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import org.radarbase.connect.upload.converter.AccelerometerCsvRecordConverter
 import org.radarbase.connect.upload.converter.ConverterLogRepository
 import org.radarbase.connect.upload.converter.LogRepository
-import org.radarbase.connect.upload.util.TestBase.Companion.APPLICATION_JSON
-import org.radarbase.connect.upload.util.TestBase.Companion.BEARER
-import org.radarbase.connect.upload.util.TestBase.Companion.PROJECT
-import org.radarbase.connect.upload.util.TestBase.Companion.SOURCE
-import org.radarbase.connect.upload.util.TestBase.Companion.TEXT_CSV
-import org.radarbase.connect.upload.util.TestBase.Companion.USER
 import org.radarbase.connect.upload.util.TestBase.Companion.baseUri
-import org.radarbase.connect.upload.util.TestBase.Companion.call
 import org.radarbase.connect.upload.util.TestBase.Companion.clientCredentialsAuthorizer
+import org.radarbase.connect.upload.util.TestBase.Companion.createRecordAndUploadContent
 import org.radarbase.connect.upload.util.TestBase.Companion.httpClient
-import org.radarbase.connect.upload.util.TestBase.Companion.mapper
 import org.radarbase.connect.upload.util.TestBase.Companion.sourceTypeName
-import org.radarbase.connect.upload.util.TestBase.Companion.toJsonString
 import org.radarbase.connect.upload.util.TestBase.Companion.uploadBackendConfig
 import org.radarbase.upload.Config
 import org.radarbase.upload.GrizzlyServer
 import org.radarbase.upload.doa.entity.RecordStatus
 import java.io.File
-import java.time.LocalDateTime
-import javax.ws.rs.core.Response
 
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -111,45 +98,8 @@ class UploadBackendClientIntegrationTest {
 
     @Test
     fun testRecordCreationToConversionWorkFlow() {
-        val clientUserToken = call(httpClient, Response.Status.OK, "access_token") {
-            it.url("${config.managementPortalUrl}/oauth/token")
-                    .addHeader("Authorization", Credentials.basic("radar_upload_test_client", "test"))
-                    .post(FormBody.Builder()
-                            .add("grant_type", "client_credentials")
-                            .build())
-        }
-
-        val record = RecordDTO(
-                id = null,
-                data = RecordDataDTO(
-                        projectId = PROJECT,
-                        userId = USER,
-                        sourceId = SOURCE,
-                        time = LocalDateTime.now()
-                ),
-                sourceType = sourceType,
-                metadata = null
-        )
-
-        val request = Request.Builder()
-                .url("$baseUri/records")
-                .post(record.toJsonString().toRequestBody(APPLICATION_JSON))
-                .addHeader("Authorization", BEARER + clientUserToken)
-                .addHeader("Content-type", "application/json")
-                .build()
-
-        val response = httpClient.newCall(request).execute()
-        assertTrue(response.isSuccessful)
-
-        val recordCreated = mapper.readValue(response.body?.string(), RecordDTO::class.java)
-        assertNotNull(recordCreated)
-        assertNotNull(recordCreated.id)
-        assertThat(recordCreated?.id!!, greaterThan(0L))
-
-        //Test uploading request contentFile for created record
-        uploadContent(recordCreated.id!!, clientUserToken)
-        markReady(recordCreated.id!!, clientUserToken)
-        retrieveFile(recordCreated)
+        val createdRecord = createRecordAndUploadContent(sourceType, fileName)
+        retrieveFile(createdRecord)
 
         val records = pollRecords()
 
@@ -159,7 +109,7 @@ class UploadBackendClientIntegrationTest {
         converter.initialize(sourceType, uploadBackendClient, logRepository, emptyMap())
 
         val recordToProcess = records.records.first()
-        record.metadata = uploadBackendClient.updateStatus(recordToProcess.id!!, recordToProcess.metadata!!.copy(status = "PROCESSING", message = "The record is being processed"))
+        createdRecord.metadata = uploadBackendClient.updateStatus(recordToProcess.id!!, recordToProcess.metadata!!.copy(status = "PROCESSING", message = "The record is being processed"))
         val convertedRecords = converter.convert(records.records.first())
         assertNotNull(convertedRecords)
         assertNotNull(convertedRecords.result)
@@ -168,42 +118,7 @@ class UploadBackendClientIntegrationTest {
         assertEquals(convertedRecords.record.id, recordToProcess.id!!)
     }
 
-    private fun uploadContent(recordId: Long, clientUserToken: String) {
-        //Test uploading request contentFile
-        val file = File(fileName)
-
-        val requestToUploadFile = Request.Builder()
-                .url("$baseUri/records/$recordId/contents/$fileName")
-                .put(file.asRequestBody(TEXT_CSV))
-                .addHeader("Authorization", BEARER + clientUserToken)
-                .build()
-
-        val uploadResponse = httpClient.newCall(requestToUploadFile).execute()
-        assertTrue(uploadResponse.isSuccessful)
-
-        val content = mapper.readValue(uploadResponse.body?.string(), ContentsDTO::class.java)
-        assertNotNull(content)
-        assertEquals(fileName, content.fileName)
-    }
-
-
-    private fun markReady(recordId: Long, clientUserToken: String) {
-        //Test uploading request contentFile
-        val requestToUploadFile = Request.Builder()
-                .url("$baseUri/records/$recordId/metadata")
-                .post("{\"status\":\"READY\",\"revision\":1}".toRequestBody("application/json".toMediaType()))
-                .addHeader("Authorization", BEARER + clientUserToken)
-                .build()
-
-        val uploadResponse = httpClient.newCall(requestToUploadFile).execute()
-        assertTrue(uploadResponse.isSuccessful)
-
-        val metadata = mapper.readValue(uploadResponse.body?.string(), RecordMetadataDTO::class.java)
-        assertNotNull(metadata)
-        assertEquals("READY", metadata.status)
-    }
-
-    fun pollRecords(): RecordContainerDTO {
+    private fun pollRecords(): RecordContainerDTO {
         val pollConfig = PollDTO(
                 limit = 10,
                 supportedConverters = emptyList()
