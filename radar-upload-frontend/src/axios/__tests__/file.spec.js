@@ -2,6 +2,7 @@
 import axios from 'axios';
 import fileAPI from '../file';
 import { downLoadFile } from '@/helpers';
+import { baseURL } from '@/app.config';
 
 jest.mock('axios');
 jest.mock('@/helpers', () => ({
@@ -110,13 +111,13 @@ describe('axios/file', () => {
 
   it('markRecord', () => {
     const recordId = 'id';
+    const revision = 'revision';
     const body = {
       status: 'READY',
-      revision: 1,
     };
     axios.post.mockResolvedValue();
-    return fileAPI.markRecord({ recordId }).then(() => {
-      expect(axios.post).toBeCalledWith(`/records/${recordId}/metadata`, body);
+    return fileAPI.markRecord({ recordId, revision }).then(() => {
+      expect(axios.post).toBeCalledWith(`/records/${recordId}/metadata`, { ...body, revision });
     });
   });
 
@@ -203,7 +204,7 @@ describe('axios/file', () => {
     const recordId = 'id';
     const fileName = 'name';
     await fileAPI.download({ recordId, fileName });
-    const url = `https://radar-test.thehyve.net/upload/records/${recordId}/contents/${fileName}`;
+    const url = `${baseURL}/records/${recordId}/contents/${fileName}`;
     expect(downLoadFile).toBeCalledWith(fileName, url);
   });
 });

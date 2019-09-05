@@ -69,10 +69,10 @@ export default {
     return axios.put(`/records/${id}/contents/${fileName}`, file, { headers });
   },
 
-  markRecord({ recordId }) {
+  markRecord({ recordId, revision }) {
     return axios.post(`/records/${recordId}/metadata`, {
       status: 'READY',
-      revision: 1,
+      revision,
     });
   },
 
