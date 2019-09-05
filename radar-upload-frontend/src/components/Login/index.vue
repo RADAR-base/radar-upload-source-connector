@@ -8,48 +8,27 @@
       sm="8"
       md="4"
     >
-      <v-card class="elevation-12">
-        <v-toolbar
-          color="primary"
-          dark
-          flat
-        >
-          <v-toolbar-title>Login form</v-toolbar-title>
-        </v-toolbar>
-        <v-card-text>
-          <v-form :disabled="loading">
-            <v-text-field
-              label="Login"
-              name="login"
-              prepend-icon="mdi-account"
-              type="text"
-            />
-
-            <v-text-field
-              id="password"
-              label="Password"
-              name="password"
-              prepend-icon="mdi-lock"
-              type="password"
-            />
-          </v-form>
-        </v-card-text>
-        <v-card-actions>
-          <div class="flex-grow-1 text-align-center" />
-          <div
-            class="title pr-2"
-            style="color: grey"
+      <v-card
+        class="elevation-12"
+        max-height="200"
+      >
+        <v-card-title>
+          Login
+        </v-card-title>
+        <v-divider />
+        <v-row>
+          <v-col
+            align="center"
           >
-            OR
-          </div>
-          <v-btn
-            :loading="loading"
-            color="primary"
-            @click="redirectLogin"
-          >
-            Login by management portal
-          </v-btn>
-        </v-card-actions>
+            <v-btn
+              :loading="loading"
+              color="primary"
+              @click="redirectLogin"
+            >
+              With Management Portal
+            </v-btn>
+          </v-col>
+        </v-row>
       </v-card>
     </v-col>
   </v-row>
