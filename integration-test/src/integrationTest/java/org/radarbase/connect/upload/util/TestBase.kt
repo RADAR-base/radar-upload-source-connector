@@ -26,49 +26,81 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinModule
-import okhttp3.OkHttpClient
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.ResponseBody
 import org.hamcrest.CoreMatchers
 import org.hamcrest.MatcherAssert.assertThat
 import org.radarbase.connect.upload.auth.ClientCredentialsAuthorizer
+import org.radarbase.upload.Config
+import org.radarbase.upload.api.SourceTypeDTO
+import java.net.URI
 import javax.ws.rs.core.Response
 
-class TestUtils {
+class TestBase {
     companion object {
         val fileAndSourceTypeStore = mapOf(
                 "TEST_ACC.csv" to "phone-acceleration",
                 "TEST_ACC.zip" to "acceleration-zip",
                 "TEST_ZIP.zip" to "altoida-zip"
         )
-        const val fileName = "TEST_ACC.csv"
-        const val REST_UPLOAD_CLIENT = "radar_upload_backend"
-        const val REST_UPLOAD_SECRET = "secret"
+
+        const val baseUri = "http://0.0.0.0:8080/radar-upload"
+
+        const val tokenUrl = "http://localhost:8090/managementportal/oauth/token"
+
+        const val sourceTypeName = "phone-acceleration"
+
+        const val uploadConnectClient = "radar_upload_connect"
+
+        const val uploadConnectSecret = "upload_secret"
+
+        const val BEARER = "Bearer "
+
         const val USER = "sub-1"
+
         const val PROJECT = "radar"
+
         const val SOURCE = "03d28e5c-e005-46d4-a9b3-279c27fbbc83"
-        const val ADMIN_USER = "admin"
-        const val ADMIN_PASSWORD = "admin"
+
+        val APPLICATION_JSON = "application/json; charset=utf-8".toMediaType()
+
+        val TEXT_CSV = "text/csv; charset=utf-8".toMediaType()
+
+        val httpClient = OkHttpClient()
+
+
+        val sourceType = SourceTypeDTO(
+                name = sourceTypeName,
+                topics = mutableSetOf("test_topic"),
+                contentTypes = mutableSetOf("application/text"),
+                timeRequired = false,
+                sourceIdRequired = false,
+                configuration = mutableMapOf("setting1" to "value1", "setting2" to "value2")
+        )
+
+        val uploadBackendConfig = Config(
+                managementPortalUrl = "http://localhost:8090/managementportal",
+                baseUri = URI.create(baseUri),
+                jdbcDriver = "org.postgresql.Driver",
+                jdbcUrl = "jdbc:postgresql://localhost:5434/uploadconnector",
+                jdbcUser = "radarcns",
+                jdbcPassword = "radarcns",
+                sourceTypes = listOf(sourceType)
+        )
+
         val mapper = ObjectMapper(JsonFactory())
                 .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
                 .registerModule(KotlinModule())
                 .registerModule(JavaTimeModule())
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-        const val baseUri = "http://0.0.0.0:8080/radar-upload"
-        const val mySourceTypeName = "phone-acceleration"
-        const val BEARER = "Bearer "
-        val APPLICATION_JSON = "application/json; charset=utf-8".toMediaType()
-        val TEXT_CSV = "text/csv; charset=utf-8".toMediaType()
-
-        val httpClient = OkHttpClient()
 
         val clientCredentialsAuthorizer = ClientCredentialsAuthorizer(
                 httpClient,
-                "radar_upload_connect",
-                "upload_secret",
-                "http://localhost:8090/managementportal/oauth/token",
-                emptySet()
+                uploadConnectClient,
+                uploadConnectSecret,
+                tokenUrl
         )
 
         fun call(
