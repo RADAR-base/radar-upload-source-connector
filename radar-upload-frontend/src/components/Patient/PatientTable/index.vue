@@ -74,7 +74,7 @@ export default {
       ],
       headers: [
         { text: 'Paticipant ID', value: 'patientId' },
-        { text: 'Participant name', value: 'patientName' },
+        { text: 'External identifier', value: 'patientName' },
         { text: 'Status', value: 'status' },
       ],
     };
