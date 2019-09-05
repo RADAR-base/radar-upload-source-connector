@@ -53,6 +53,8 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:5.4.2")
     testImplementation("org.hamcrest:hamcrest-all:1.3")
     testImplementation("org.apache.kafka:connect-api:${project.extra["kafkaVersion"]}")
+    testImplementation("org.mockito:mockito-core:2.21.0")
+    testImplementation ("org.mockito:mockito-inline:2.21.0")
 }
 
 // config JVM target to 1.8 for kotlin compilation tasks
