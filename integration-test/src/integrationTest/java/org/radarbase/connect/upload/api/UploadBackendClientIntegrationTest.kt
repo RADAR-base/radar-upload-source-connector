@@ -33,6 +33,7 @@ import org.radarbase.connect.upload.converter.LogRepository
 import org.radarbase.connect.upload.util.TestBase.Companion.baseUri
 import org.radarbase.connect.upload.util.TestBase.Companion.clientCredentialsAuthorizer
 import org.radarbase.connect.upload.util.TestBase.Companion.createRecordAndUploadContent
+import org.radarbase.connect.upload.util.TestBase.Companion.getAccessToken
 import org.radarbase.connect.upload.util.TestBase.Companion.httpClient
 import org.radarbase.connect.upload.util.TestBase.Companion.sourceTypeName
 import org.radarbase.connect.upload.util.TestBase.Companion.uploadBackendConfig
@@ -54,6 +55,8 @@ class UploadBackendClientIntegrationTest {
 
     private lateinit var server: GrizzlyServer
 
+    private lateinit var accessToken: String
+
     private val sourceType = sourceTypeName
 
     private val fileName = "TEST_ACC.csv"
@@ -68,6 +71,8 @@ class UploadBackendClientIntegrationTest {
         )
 
         logRepository = ConverterLogRepository(uploadBackendClient)
+
+        accessToken = getAccessToken()
 
         config = uploadBackendConfig
 
@@ -98,7 +103,7 @@ class UploadBackendClientIntegrationTest {
 
     @Test
     fun testRecordCreationToConversionWorkFlow() {
-        val createdRecord = createRecordAndUploadContent(sourceType, fileName)
+        val createdRecord = createRecordAndUploadContent(accessToken, sourceType, fileName)
         retrieveFile(createdRecord)
 
         val records = pollRecords()
@@ -108,7 +113,7 @@ class UploadBackendClientIntegrationTest {
         val converter = AccelerometerCsvRecordConverter()
         converter.initialize(sourceType, uploadBackendClient, logRepository, emptyMap())
 
-        val recordToProcess = records.records.first()
+        val recordToProcess = records.records.filter { recordDTO -> recordDTO.sourceType == sourceTypeName }.first()
         createdRecord.metadata = uploadBackendClient.updateStatus(recordToProcess.id!!, recordToProcess.metadata!!.copy(status = "PROCESSING", message = "The record is being processed"))
         val convertedRecords = converter.convert(records.records.first())
         assertNotNull(convertedRecords)

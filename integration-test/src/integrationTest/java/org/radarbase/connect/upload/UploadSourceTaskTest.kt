@@ -20,7 +20,11 @@
 package org.radarbase.connect.upload
 
 import org.junit.jupiter.api.*
+import org.junit.jupiter.api.Assertions.*
 import org.radarbase.connect.upload.util.TestBase.Companion.baseUri
+import org.radarbase.connect.upload.util.TestBase.Companion.createRecordAndUploadContent
+import org.radarbase.connect.upload.util.TestBase.Companion.getAccessToken
+import org.radarbase.connect.upload.util.TestBase.Companion.retrieveRecordMetadata
 import org.radarbase.connect.upload.util.TestBase.Companion.tokenUrl
 import org.radarbase.connect.upload.util.TestBase.Companion.uploadBackendConfig
 import org.radarbase.connect.upload.util.TestBase.Companion.uploadConnectClient
@@ -37,38 +41,61 @@ class UploadSourceTaskTest {
 
     private lateinit var server: GrizzlyServer
 
+    private lateinit var accessToken: String
+
     @BeforeAll
     fun setUp() {
         sourceTask = UploadSourceTask()
 
         config = uploadBackendConfig
 
+        accessToken = getAccessToken()
+
         server = GrizzlyServer(config)
         server.start()
-
-    }
-
-    @AfterAll
-    fun cleanUp() {
-        server.shutdown()
-    }
-
-    @Test
-    @DisplayName("Should be able initialize all converters when starting")
-    fun testSourceTaskStart() {
 
         val settings = mapOf(
                 "upload.source.client.id" to uploadConnectClient,
                 "upload.source.client.secret" to uploadConnectSecret,
                 "upload.source.client.tokenUrl" to tokenUrl,
                 "upload.source.backend.baseUrl" to baseUri,
-                "upload.source.poll.interval.ms" to "3600000",
+                "upload.source.poll.interval.ms" to "30000",
                 "upload.source.record.converter.classes" to
-                        "org.radarbase.connect.upload.converter.AccelerometerCsvRecordConverter"
+                        "org.radarbase.connect.upload.converter.AccelerometerCsvRecordConverter,org.radarbase.connect.upload.converter.altoida.AltoidaZipFileRecordConverter"
 
         )
 
         sourceTask.start(settings)
+    }
 
+    @AfterAll
+    fun cleanUp() {
+        server.shutdown()
+        sourceTask.stop()
+    }
+
+
+    @Test
+    @DisplayName("Should be able to convert a record with ZIP file")
+    fun successfulZipFileConversion() {
+
+        val sourceType = "altoida-zip"
+        val fileName = "TEST_ZIP.zip"
+        val createdRecord = createRecordAndUploadContent(accessToken, sourceType, fileName)
+        assertNotNull(createdRecord)
+        assertNotNull(createdRecord.id)
+
+        val sourceRecords = sourceTask.poll()
+        assertNotNull(sourceRecords)
+
+        val metadata = retrieveRecordMetadata(accessToken, createdRecord.id!!)
+        assertNotNull(metadata)
+        assertEquals("PROCESSING", metadata.status)
+
+        sourceRecords.forEach { sourceTask.commitRecord(it) }
+
+        val metadataAfterCommit = retrieveRecordMetadata(accessToken, createdRecord.id!!)
+        assertNotNull(metadataAfterCommit)
+        assertEquals("SUCCEEDED", metadataAfterCommit.status)
     }
 }
