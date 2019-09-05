@@ -22,8 +22,8 @@
       <v-list-item>
         <v-file-input
           label="Select a file"
-          clear-icon
           clearable
+          small-chips
           append-icon="mdi-paperclip"
           :prepend-icon="''"
           v-model="file"
