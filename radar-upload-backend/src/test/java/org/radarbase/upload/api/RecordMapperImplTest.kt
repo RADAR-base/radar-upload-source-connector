@@ -12,10 +12,7 @@ import org.radarbase.upload.doa.entity.Record
 import org.radarbase.upload.doa.entity.RecordContent
 import java.net.URI
 import java.time.Instant
-import javax.ws.rs.core.MultivaluedMap
-import javax.ws.rs.core.PathSegment
-import javax.ws.rs.core.UriBuilder
-import javax.ws.rs.core.UriInfo
+
 
 internal class RecordMapperImplTest {
 
