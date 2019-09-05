@@ -47,19 +47,16 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
             authorizer = ClientCredentialsAuthorizer(OkHttpClient(),
                     oauthClientId,
                     oauthClientSecret,
-                    tokenRequestUrl,
-                    oauthClientScopes)
+                    tokenRequestUrl)
         }
         return authorizer
     }
 
-    constructor(parsedConfig: Map<String, String>) : this(conf(), parsedConfig) {}
+    constructor(parsedConfig: Map<String, String>) : this(conf(), parsedConfig)
 
     val oauthClientId: String = getString(UPLOAD_SOURCE_CLIENT_CONFIG)
 
     val oauthClientSecret: String = getString(UPLOAD_SOURCE_MP_SECRET_CONFIG)
-
-    val oauthClientScopes: Set<String> = getList(UPLOAD_SOURCE_CLIENT_SCOPE_CONFIG).toSet()
 
     val tokenRequestUrl: String = getString(UPLOAD_SOURCE_CLIENT_TOKEN_URL_CONFIG)
 
@@ -86,7 +83,7 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
         const val UPLOAD_SOURCE_CLIENT_SCOPE_CONFIG = "upload.source.client.scopes"
         private const val UPLOAD_SOURCE_CLIENT_SCOPE_DOC = "List of scopes of the upload connector client"
         private const val UPLOAD_SOURCE_CLIENT_SCOPE_DISPLAY = "Scopes of upload connector"
-        private const val UPLOAD_SOURCE_CLIENT_SCOPE_DEFAULT = "MEASUREMENT.CREATE"
+        private const val UPLOAD_SOURCE_CLIENT_SCOPE_DEFAULT = ""
 
         const val UPLOAD_SOURCE_CLIENT_TOKEN_URL_CONFIG = "upload.source.client.tokenUrl"
         private const val UPLOAD_SOURCE_CLIENT_TOKEN_URL_DOC = "Complete Token URL to get access token"
@@ -164,16 +161,6 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
                             ++orderInGroup,
                             ConfigDef.Width.SHORT,
                             UPLOAD_SOURCE_SERVER_BASE_URL_DISPLAY)
-
-                    .define(UPLOAD_SOURCE_CLIENT_SCOPE_CONFIG,
-                            ConfigDef.Type.LIST,
-                            UPLOAD_SOURCE_CLIENT_SCOPE_DEFAULT,
-                            ConfigDef.Importance.HIGH,
-                            UPLOAD_SOURCE_CLIENT_SCOPE_DOC,
-                            groupName,
-                            ++orderInGroup,
-                            ConfigDef.Width.SHORT,
-                            UPLOAD_SOURCE_CLIENT_SCOPE_DISPLAY)
 
                     .define(UPLOAD_SOURCE_CLIENT_TOKEN_URL_CONFIG,
                             ConfigDef.Type.STRING,

@@ -32,8 +32,7 @@ class ClientCredentialsAuthorizer(
         private val httpClient: OkHttpClient,
         private val clientId: String,
         private val clientSecret: String,
-        private val tokenUrl: String,
-        private val scopes: Set<String>?) : Authenticator {
+        private val tokenUrl: String) : Authenticator {
 
     lateinit var token: OauthToken
 
@@ -74,11 +73,9 @@ class ClientCredentialsAuthorizer(
     private fun requestAccessToken(): OauthToken {
         val form = FormBody.Builder()
                 .add("grant_type", "client_credentials")
-                .add("scope", scopes?.joinToString { " " } ?: "")
                 .build()
 
         val request = Request.Builder()
-                .addHeader("Accept", "application/json")
                 .addHeader("Authorization", Credentials.basic(clientId.trim(), clientSecret.trim()))
                 .url(tokenUrl)
                 .post(form)
