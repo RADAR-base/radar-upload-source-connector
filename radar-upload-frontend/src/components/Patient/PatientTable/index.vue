@@ -6,8 +6,7 @@
     :expanded.sync="expandedItems"
     show-expand
     :headers="headers"
-    hide-default-header
-    item-key="sequence"
+    item-key="patientId"
     :loading="loading"
     loading-text="Downloading patients info, please wait"
     @item-expanded="getPatientRecords"
@@ -74,8 +73,8 @@ export default {
       patientRecords: [
       ],
       headers: [
-        { text: '#', value: 'sequence' },
-        { text: 'Patient name', value: 'patientName' },
+        { text: 'Paticipant ID', value: 'patientId' },
+        { text: 'External identifier', value: 'patientName' },
         { text: 'Status', value: 'status' },
       ],
     };
