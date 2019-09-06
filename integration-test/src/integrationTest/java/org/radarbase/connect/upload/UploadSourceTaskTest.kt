@@ -59,7 +59,7 @@ class UploadSourceTaskTest {
                 "upload.source.client.secret" to uploadConnectSecret,
                 "upload.source.client.tokenUrl" to tokenUrl,
                 "upload.source.backend.baseUrl" to baseUri,
-                "upload.source.poll.interval.ms" to "30000",
+                "upload.source.poll.interval.ms" to "10000",
                 "upload.source.record.converter.classes" to
                         "org.radarbase.connect.upload.converter.AccelerometerCsvRecordConverter,org.radarbase.connect.upload.converter.altoida.AltoidaZipFileRecordConverter"
 
@@ -97,5 +97,45 @@ class UploadSourceTaskTest {
         val metadataAfterCommit = retrieveRecordMetadata(accessToken, createdRecord.id!!)
         assertNotNull(metadataAfterCommit)
         assertEquals("SUCCEEDED", metadataAfterCommit.status)
+    }
+
+    @Test
+    @DisplayName("Should be able to convert a record with ZIP file")
+    fun noConverterFound() {
+
+        val sourceType = "acceleration-zip"
+        val fileName = "TEST_ACC.zip"
+        val createdRecord = createRecordAndUploadContent(accessToken, sourceType, fileName)
+        assertNotNull(createdRecord)
+        assertNotNull(createdRecord.id)
+
+        val sourceRecords = sourceTask.poll()
+        assertNotNull(sourceRecords)
+        assertTrue(sourceRecords.isEmpty())
+
+        val metadata = retrieveRecordMetadata(accessToken, createdRecord.id!!)
+        assertNotNull(metadata)
+        assertEquals("FAILED", metadata.status)
+
+    }
+
+    @Test
+    @DisplayName("Should be able to convert a record with ZIP file")
+    fun incorrectSourceTypeForRecord() {
+
+        val sourceType = "phone-acceleration"
+        val fileName = "TEST_ACC.zip"
+        val createdRecord = createRecordAndUploadContent(accessToken, sourceType, fileName)
+        assertNotNull(createdRecord)
+        assertNotNull(createdRecord.id)
+
+        val sourceRecords = sourceTask.poll()
+        assertNotNull(sourceRecords)
+        assertTrue(sourceRecords.isEmpty())
+
+        val metadata = retrieveRecordMetadata(accessToken, createdRecord.id!!)
+        assertNotNull(metadata)
+        assertEquals("FAILED", metadata.status)
+
     }
 }
