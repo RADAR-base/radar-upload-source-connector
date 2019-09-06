@@ -100,7 +100,7 @@ class UploadSourceTaskTest {
     }
 
     @Test
-    @DisplayName("Should be able to convert a record with ZIP file")
+    @DisplayName("Should mark FAILED if no suitable converters found")
     fun noConverterFound() {
 
         val sourceType = "acceleration-zip"
@@ -120,7 +120,7 @@ class UploadSourceTaskTest {
     }
 
     @Test
-    @DisplayName("Should be able to convert a record with ZIP file")
+    @DisplayName("Should mark FAILED if the record data does not match the source-type")
     fun incorrectSourceTypeForRecord() {
 
         val sourceType = "phone-acceleration"
