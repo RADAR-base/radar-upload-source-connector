@@ -69,6 +69,13 @@ export default {
     return axios.put(`/records/${id}/contents/${fileName}`, file, { headers });
   },
 
+  markRecord({ recordId, revision }) {
+    return axios.post(`/records/${recordId}/metadata`, {
+      status: 'READY',
+      revision,
+    });
+  },
+
   async filterRecords({
     projectId, status, userId, getRecordOnly = false,
   }) {
