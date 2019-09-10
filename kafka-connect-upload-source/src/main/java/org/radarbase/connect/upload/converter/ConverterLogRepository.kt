@@ -21,7 +21,6 @@ package org.radarbase.connect.upload.converter
 
 import org.radarbase.connect.upload.UploadSourceConnectorConfig
 import org.radarbase.connect.upload.api.LogsDto
-import org.radarbase.connect.upload.api.RecordMetadataDTO
 import org.radarbase.connect.upload.api.UploadBackendClient
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -45,33 +44,38 @@ interface LogRepository {
 }
 
 class ConverterLogRepository(
-        val uploadClient: UploadBackendClient): LogRepository {
+        val uploadClient: UploadBackendClient) : LogRepository {
     private val logContainer = mutableMapOf<Long, MutableList<Log>>().withDefault { mutableListOf() }
 
+    private fun get(recordId: Long): MutableList<Log> =
+            logContainer.getOrPut(recordId, { mutableListOf() })
+
+
     override fun info(logger: Logger, recordId: Long, logMessage: String) {
-        logContainer.getValue(recordId).add(Log(LogLevel.INFO, logMessage))
+        get(recordId).add(Log(LogLevel.INFO, logMessage))
         logger.info(logMessage)
     }
 
     override fun debug(logger: Logger, recordId: Long, logMessage: String) {
-        logContainer.getValue(recordId).add(Log(LogLevel.DEBUG, logMessage))
+        get(recordId).add(Log(LogLevel.DEBUG, logMessage))
         logger.debug(logMessage)
     }
 
     override fun warn(logger: Logger, recordId: Long, logMessage: String) {
-        logContainer.getValue(recordId).add(Log(LogLevel.WARN, logMessage))
+        get(recordId).add(Log(LogLevel.WARN, logMessage))
         logger.warn(logMessage)
     }
 
     override fun error(logger: Logger, recordId: Long, logMessage: String, exe: Exception?) {
-        logContainer.getValue(recordId).add(Log(LogLevel.ERROR, "$logMessage: ${exe?.stackTrace?.toString()}"))
+        get(recordId).add(Log(LogLevel.ERROR, "$logMessage: ${exe?.stackTrace?.toString()}"))
         logger.error(logMessage, exe)
     }
 
     override fun uploadLogs(recordId: Long) {
         val listOfLogs = logContainer.getValue(recordId)
-        if(listOfLogs.isNotEmpty()) {
-            logger.debug("Sending record $recordId logs...")
+
+        if (listOfLogs.isNotEmpty()) {
+            logger.info("Sending record $recordId logs...")
             val logs = LogsDto().apply {
                 contents = UploadSourceConnectorConfig.mapper.writeValueAsString(listOfLogs)
             }
