@@ -110,6 +110,10 @@ export default {
             throw new Error();
           });
         this.$emit('finishUpload', uploadingFile);
+        await fileAPI.markRecord({
+          recordId: returnedRecord.id,
+          revision: returnedRecord.revision,
+        });
       } catch (error) {
         this.$error('Upload fails, please try again later');
       }

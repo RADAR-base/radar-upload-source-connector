@@ -88,6 +88,8 @@ describe('UploadForm', () => {
     const putRecordPayload = { id: postReturnVal.id, file, fileName: file.name };
     const putReturnVal = { id: 'id1' };
     fileAPI.putRecords = jest.fn().mockResolvedValue(putReturnVal);
+    // mock markRecord
+    fileAPI.markRecord = jest.fn().mockResolvedValue();
     // file uploaded
     const files = [];
     files.push({ fileName: file.name, uploading: true, uploadFailed: false });
@@ -104,6 +106,7 @@ describe('UploadForm', () => {
     // putRecords
     expect(fileAPI.putRecords).toBeCalledWith(putRecordPayload);
     expect(wrapper.emitted().finishUpload[0][0]).toEqual(putReturnVal);
+    expect(fileAPI.markRecord).toBeCalled();
     expect(removeData).toBeCalled();
 
     fileAPI.postRecords.mockClear();
