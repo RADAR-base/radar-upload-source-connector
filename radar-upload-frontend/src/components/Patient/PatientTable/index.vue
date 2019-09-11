@@ -9,7 +9,7 @@
     item-key="patientId"
     :loading="loading"
     loading-text="Downloading patients info, please wait"
-    @item-expanded="getPatientRecords"
+    @click:row="expandRow"
   >
     <template #item.updatedAt="{item}">
       <td class="pl-0">
@@ -146,6 +146,14 @@ export default {
       const failedRecordIndex = this.patientRecords.findIndex(record => record.id === recordId);
       this.patientRecords[failedRecordIndex].files
         .splice(0, 1, { fileName, uploading, uploadFailed });
+    },
+    async expandRow(row) {
+      if (this.expandedItems[0] && (this.expandedItems[0].patientId === row.patientId)) {
+        this.expandedItems = [];
+      } else {
+        await this.getPatientRecords({ item: row });
+        this.expandedItems.splice(0, 1, row);
+      }
     },
   },
 };
