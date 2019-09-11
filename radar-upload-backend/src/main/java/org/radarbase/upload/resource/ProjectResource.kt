@@ -23,8 +23,8 @@ import org.radarbase.upload.auth.Auth
 import org.radarbase.upload.auth.Authenticated
 import org.radarbase.upload.auth.NeedsPermission
 import org.radarbase.upload.auth.NeedsPermissionOnProject
+import org.radarbase.upload.dto.Project
 import org.radarbase.upload.dto.ProjectList
-import org.radarbase.upload.dto.User
 import org.radarbase.upload.dto.UserList
 import org.radarbase.upload.service.MPService
 import org.radarcns.auth.authorization.Permission
@@ -51,5 +51,12 @@ class ProjectResource(
     @NeedsPermissionOnProject(Permission.Entity.PROJECT, Permission.Operation.READ, "projectId")
     fun users(@PathParam("projectId") projectId: String): UserList {
         return UserList(mpService.projectUsers(projectId))
+    }
+
+    @GET
+    @Path("{projectId}")
+    @NeedsPermissionOnProject(Permission.Entity.PROJECT, Permission.Operation.READ, "projectId")
+    fun project(@PathParam("projectId") projectId: String): Project {
+        return mpService.project(projectId)
     }
 }
