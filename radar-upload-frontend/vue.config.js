@@ -1,10 +1,8 @@
 // vue.config.js
-
+var webpack = require('webpack')
 module.exports = {
 
-  publicPath: process.env.NODE_ENV === 'production'
-          ? '/uploader/'
-          : '/',
+  publicPath: '/uploader/',
   css: {
     loaderOptions: {
       sass: {
