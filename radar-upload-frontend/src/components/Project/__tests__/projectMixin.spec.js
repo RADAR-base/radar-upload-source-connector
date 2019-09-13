@@ -51,14 +51,10 @@ describe('projectMixin', () => {
   });
 
   it('selectProject', async () => {
-    const selectProject = jest.spyOn(wrapper.vm, 'selectProject');
-
-    selectProject('project');
-    expect($store.commit).toBeCalledWith('project/setCurrentProject', 'project');
-    expect(wrapper.vm.$router.push).not.toBeCalled();
-
-    wrapper.vm.$route.path = '/';
-    selectProject('project');
-    expect(wrapper.vm.$router.push).toBeCalledWith('/projects');
+    // const selectProject = jest.spyOn(wrapper.vm, 'selectProject');
+    const project = { value: 1 };
+    wrapper.vm.selectProject(project);
+    expect($store.commit).toBeCalledWith('project/setCurrentProject', project);
+    expect(wrapper.vm.$router.push).toBeCalledWith(`/projects/${project.value}`);
   });
 });
