@@ -129,4 +129,18 @@ describe('index', () => {
     wrapper.vm.addUploadingFile(file);
     expect(wrapper.vm.patientRecords[0].files[0]).toBe(file);
   });
+
+  it('expandRow', async () => {
+    const getPatientRecords = jest.spyOn(wrapper.vm, 'getPatientRecords');
+    const patientId = 'patientId';
+    const clickedRow = { patientId };
+    wrapper.setData({ expandedItems: [{ patientId }] });
+
+    wrapper.vm.expandRow(clickedRow);
+    expect(wrapper.vm.expandedItems).toEqual([]);
+
+    await wrapper.vm.expandRow(clickedRow);
+    expect(getPatientRecords).toBeCalledWith({ item: clickedRow });
+    expect(wrapper.vm.expandedItems).toEqual([clickedRow]);
+  });
 });
