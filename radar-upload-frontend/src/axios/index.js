@@ -15,10 +15,7 @@ const ApiService = {
       async (error) => {
         switch (error.response.status) {
           case 401:
-            localStorage.removeItem('token');
-            // eslint-disable-next-line no-case-declarations
-            router.replace('/login');
-            store.commit('openSnackbar', { type: 'error', text: 'Please login to continue' });
+            this.redirectToLogin(store, router);
             return;
           default:
             break;
