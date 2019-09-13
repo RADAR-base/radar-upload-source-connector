@@ -1,5 +1,4 @@
 // vue.config.js
-var webpack = require('webpack')
 module.exports = {
 
   publicPath: '/uploader/',
