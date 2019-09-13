@@ -1,6 +1,5 @@
 /* eslint-disable no-undef */
 import { shallowMount } from '@vue/test-utils';
-import flushPromises from 'flush-promises';
 import { Store } from 'vuex-mock-store';
 import PatientFileTabs from '../PatientFileTabs.vue';
 

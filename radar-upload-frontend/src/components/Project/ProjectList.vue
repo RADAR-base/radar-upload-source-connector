@@ -46,6 +46,44 @@ import projectMixin from './projectMixin.js';
 
 export default {
   mixins: [projectMixin],
+  methods: {
+    selectProjectFromRoute() {
+      const { projectId } = this.$route.params;
+      if (projectId) {
+        const selectedProject = this.projects.find(project => project.value === projectId);
+        if (selectedProject) {
+          this.selectProject(selectedProject);
+          return;
+        }
+        this.$error('Selected project not found, please select a project to continue');
+        this.$router.push('/projects');
+      } else {
+        this.$router.push('/projects');
+      }
+    },
+  },
+  watch: {
+    projects: {
+      // right after projects list is loaded, check if a project is selected
+      handler(projects) {
+        if (projects.length > 0 && !this.selectedProject) {
+          this.selectProjectFromRoute();
+        }
+      },
+      immediate: true,
+    },
+    $route: {
+      // after component is rendered
+      // in case route (projectId in route) is modified manually
+      deep: true,
+      handler({ params }) {
+        const { projectId } = params;
+        if (projectId && (projectId !== this.selectedProject)) {
+          this.selectProjectFromRoute();
+        }
+      },
+    },
+  },
 };
 </script>
 
