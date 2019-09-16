@@ -72,13 +72,16 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
         modifyNow(metadataToSave)
     }
 
-    override fun query(limit: Int, lastId: Long, projectId: String, userId: String?, status: String?): List<Record> {
+    override fun query(limit: Int, lastId: Long, projectId: String, userId: String?, status: String?, sourceType: String?): List<Record> {
         var queryString = "SELECT r FROM Record r WHERE r.projectId = :projectId AND r.id > :lastId"
         userId?.let {
             queryString += " AND r.userId = :userId"
         }
         status?.let {
             queryString += " AND r.metadata.status = :status"
+        }
+        sourceType?.let {
+            queryString += " AND r.sourceType.name = :sourceType"
         }
         queryString += " ORDER BY r.id"
 
@@ -92,6 +95,9 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
             }
             status?.let {
                 query.setParameter("status", it)
+            }
+            sourceType?.let {
+                query.setParameter("sourceType", it)
             }
             query.resultList
         }
@@ -152,9 +158,13 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
         merge(record)
     }
 
-    override fun poll(limit: Int): List<Record> = em.get().transact {
+    override fun poll(limit: Int, supportedConverters: List<String>): List<Record> = em.get().transact {
         setProperty("javax.persistence.lock.scope", PessimisticLockScope.EXTENDED)
-        createQuery("SELECT r FROM Record r WHERE r.metadata.status = :status ORDER BY r.metadata.modifiedDate", Record::class.java)
+        var queryString = "SELECT r FROM Record r WHERE r.metadata.status = :status ORDER BY r.metadata.modifiedDate"
+        if (supportedConverters.isNotEmpty()) {
+            queryString += " AND r.sourceType.name in :sourceType"
+        }
+        createQuery(queryString, Record::class.java)
                 .setParameter("status", RecordStatus.valueOf("READY"))
                 .setMaxResults(limit)
                 .setLockMode(LockModeType.PESSIMISTIC_WRITE)
