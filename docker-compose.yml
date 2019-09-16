@@ -168,6 +168,8 @@ services:
 
   radarbase-postgresql:
     image: radarbase/radarbase-postgres:latest
+    ports:
+      - "5434:5432"
     environment:
       - POSTGRES_USER=radarcns
       - POSTGRES_PASSWORD=radarcns
