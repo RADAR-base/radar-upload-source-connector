@@ -54,7 +54,7 @@ class TestBase {
                 "TEST_ZIP.zip" to "altoida-zip"
         )
 
-        const val baseUri = "http://0.0.0.0:8080/radar-upload"
+        const val baseUri = "http://0.0.0.0:8085/radar-upload"
 
         const val tokenUrl = "http://localhost:8090/managementportal/oauth/token"
 
