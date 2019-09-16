@@ -23,7 +23,10 @@ import org.apache.kafka.connect.errors.ConnectException
 import org.apache.kafka.connect.source.SourceRecord
 import org.apache.kafka.connect.source.SourceTask
 import org.radarbase.connect.upload.UploadSourceConnectorConfig.Companion.SOURCE_POLL_INTERVAL_CONFIG
-import org.radarbase.connect.upload.api.*
+import org.radarbase.connect.upload.api.PollDTO
+import org.radarbase.connect.upload.api.RecordDTO
+import org.radarbase.connect.upload.api.RecordMetadataDTO
+import org.radarbase.connect.upload.api.UploadBackendClient
 import org.radarbase.connect.upload.converter.Converter
 import org.radarbase.connect.upload.converter.Converter.Companion.END_OF_RECORD_KEY
 import org.radarbase.connect.upload.converter.Converter.Companion.RECORD_ID_KEY
@@ -34,6 +37,9 @@ import org.radarbase.connect.upload.exception.ConflictException
 import org.radarbase.connect.upload.exception.ConversionFailedException
 import org.radarbase.connect.upload.util.VersionUtil
 import org.slf4j.LoggerFactory
+import java.time.Duration
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 class UploadSourceTask : SourceTask() {
     private var pollInterval: Long = 60_000L
@@ -41,10 +47,12 @@ class UploadSourceTask : SourceTask() {
     private lateinit var converters: List<Converter>
     private lateinit var logRepository: LogRepository
 
+    private lateinit var lastPooledAt: Instant
+
     override fun start(props: Map<String, String>?) {
         val connectConfig = UploadSourceConnectorConfig(props!!)
         val httpClient = connectConfig.httpClient
-
+        lastPooledAt = Instant.EPOCH
         uploadClient = UploadBackendClient(
                 connectConfig.getAuthenticator(),
                 httpClient,
@@ -87,71 +95,89 @@ class UploadSourceTask : SourceTask() {
     override fun version(): String = VersionUtil.getVersion()
 
     override fun poll(): List<SourceRecord> {
-        logger.info("Polling new records...")
         while (true) {
-            var records: List<RecordDTO>? = null
-            try {
-                records = uploadClient.pollRecords(PollDTO(1, converters.map { it.sourceType })).records
-                logger.info("Received ${records.size} records")
-            } catch (exe: Exception) {
-                logger.info("Could not successfully poll records. Waiting for next polling...")
-            }
-            if(records != null) {
-                records@ for (record in records) {
-                    val converter = converters.find { it.sourceType == record.sourceType }
-                    try {
-                        if (converter == null) {
-                            uploadClient.updateStatus(
-                                    record.id!!,
-                                    record.metadata!!.copy(
-                                            status = "FAILED",
-                                            message = "No registered converter found for ${record.sourceType}.")
-                            )
-                            logger.error("Could not find converter ${record.sourceType} for record ${record.id}")
-                            continue@records
-                        } else {
-                            record.metadata = uploadClient.updateStatus(
-                                    record.id!!,
-                                    record.metadata!!.copy(status = "PROCESSING")
-                            )
-                            logger.debug("Updated metadata ${record.id} to PROCESSING")
-                        }
-                    } catch (exe: Exception) {
-                        when(exe) {
-                            is ConflictException -> {
-                                logger.warn("Conflicting request was made. Skipping this record")
-                                continue@records
-                            }
-                            else -> throw exe
-                        }
-                    }
-
-                    try {
-                        val result = converter.convert(record)
-                        result.result?.takeIf(List<*>::isNotEmpty)?.let {
-                            return@poll it
-                        }
-                    } catch (exe: ConversionFailedException) {
-                        logger.error("Could not convert record ${record.id}", exe)
-                        updateRecordFailure(record)
-                    }
-
-                }
+            val timeout = ChronoUnit.MILLIS.between(Instant.now(), getNextPollingTime())
+            if (timeout > 0) {
+                logger.info("Waiting {} milliseconds for next polling time", timeout)
+                Thread.sleep(timeout)
             }
 
-            Thread.sleep(pollInterval)
+            return pollRecords()
+
         }
+
+    }
+
+    private fun getNextPollingTime(): Instant {
+        return lastPooledAt.plus(Duration.of(pollInterval, ChronoUnit.MILLIS))
+    }
+
+    private fun pollRecords(): List<SourceRecord> {
+        logger.info("Polling new records...")
+        val sourceRecords = mutableListOf<SourceRecord>()
+        var records: List<RecordDTO>? = null
+        try {
+            records = uploadClient.pollRecords(PollDTO(1, converters.map { it.sourceType })).records
+
+            lastPooledAt = Instant.now()
+            logger.info("Received ${records.size} records at $lastPooledAt")
+        } catch (exe: Exception) {
+            logger.info("Could not successfully poll records. Waiting for next polling...")
+        }
+        if (records != null) {
+            records@ for (record in records) {
+                val converter = converters.find { it.sourceType == record.sourceType }
+                try {
+                    if (converter == null) {
+                        uploadClient.updateStatus(
+                                record.id!!,
+                                record.metadata!!.copy(
+                                        status = "FAILED",
+                                        message = "No registered converter found for ${record.sourceType}.")
+                        )
+                        logger.error("Could not find converter ${record.sourceType} for record ${record.id}")
+                        continue@records
+                    } else {
+                        record.metadata = uploadClient.updateStatus(
+                                record.id!!,
+                                record.metadata!!.copy(status = "PROCESSING")
+                        )
+                        logger.debug("Updated metadata ${record.id} to PROCESSING")
+                    }
+                } catch (exe: Exception) {
+                    when (exe) {
+                        is ConflictException -> {
+                            logger.warn("Conflicting request was made. Skipping this record")
+                            continue@records
+                        }
+                        else -> throw exe
+                    }
+                }
+
+                try {
+                    val result = converter.convert(record)
+                    result.result?.takeIf(List<*>::isNotEmpty)?.let {
+                        sourceRecords.addAll(it)
+                    }
+                } catch (exe: ConversionFailedException) {
+                    logger.error("Could not convert record ${record.id}", exe)
+                    updateRecordFailure(record)
+                }
+
+            }
+        }
+        return sourceRecords
     }
 
     private fun updateRecordFailure(record: RecordDTO, reason: String? = "Could not convert this record. Please refer to the conversion logs for more details") {
         logger.info("Update record conversion failure")
         val metadata = uploadClient.retrieveRecordMetadata(record.id!!)
         val updatedMetadata = uploadClient.updateStatus(record.id!!, metadata.copy(
-            status = "FAILED",
-            message = reason
+                status = "FAILED",
+                message = reason
         ))
 
-        if(updatedMetadata.status == "FAILED") {
+        if (updatedMetadata.status == "FAILED") {
             logger.info("Uploading logs to backend")
             logRepository.uploadLogs(record.id!!)
         }
@@ -170,7 +196,7 @@ class UploadSourceTask : SourceTask() {
             logger.info("Committing last record of Record $recordId, with Revision $revision")
             val updatedMetadata = uploadClient.updateStatus(recordId.toLong(), RecordMetadataDTO(revision = revision.toInt(), status = "SUCCEEDED", message = "Record has been processed successfully"))
 
-            if(updatedMetadata.status == "SUCCEEDED") {
+            if (updatedMetadata.status == "SUCCEEDED") {
                 logger.info("Uploading logs to backend")
                 logRepository.uploadLogs(recordId.toLong())
             }

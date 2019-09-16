@@ -83,14 +83,6 @@ export default {
       || this.$store.state.project.currentProject.value;
     },
   },
-  watch: {
-    currentProject: {
-      handler(val) {
-        if (!val) this.$router.push('/');
-      },
-      immediate: true,
-    },
-  },
 };
 </script>
 
