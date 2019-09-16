@@ -10,21 +10,19 @@ export default new Router({
   routes: [
     {
       path: '/projects',
+      alias: '/',
+      component: ProjectListCard,
+      name: 'ProjectListCard',
+    },
+    {
+      path: '/projects/:projectId',
       component: PatientFileTabs,
       name: 'Patients and Files',
     },
     {
       path: '/login',
-      components: {
-        login: Login,
-      },
+      component: Login,
       name: 'Login',
-
-    },
-    {
-      path: '/',
-      component: ProjectListCard,
-      name: 'ProjectListCard',
     },
   ],
 });
