@@ -1,7 +1,9 @@
 // vue.config.js
 module.exports = {
 
-  publicPath: '/uploader/',
+  publicPath: process.env.NODE_ENV === 'development'
+    ? '/'
+    : '/uploader',
   css: {
     loaderOptions: {
       sass: {
