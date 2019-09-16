@@ -44,8 +44,8 @@ interface LogRepository {
 }
 
 class ConverterLogRepository(
-        val uploadClient: UploadBackendClient) : LogRepository {
-    private val logContainer = mutableMapOf<Long, MutableList<Log>>().withDefault { mutableListOf() }
+        val uploadClient: UploadBackendClient): LogRepository {
+    private val logContainer = mutableMapOf<Long, MutableList<Log>>()
 
     private fun get(recordId: Long): MutableList<Log> =
             logContainer.getOrPut(recordId, { mutableListOf() })
