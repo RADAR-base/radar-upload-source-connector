@@ -21,7 +21,7 @@ WORKDIR /usr/share/nginx/html
 
 COPY --from=builder /app/dist/ .
 
-COPY ./docker/frontend-entrypoint /entrypoint.sh
+COPY ./docker/frontend-entrypoint.sh /entrypoint.sh
 
 # expose internal port:80 and run init.sh
 EXPOSE 80

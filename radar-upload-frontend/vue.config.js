@@ -1,6 +1,7 @@
 // vue.config.js
-
 module.exports = {
+
+  publicPath: '/uploader/',
   css: {
     loaderOptions: {
       sass: {
