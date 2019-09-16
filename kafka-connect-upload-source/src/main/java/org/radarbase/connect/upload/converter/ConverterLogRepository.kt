@@ -24,6 +24,8 @@ import org.radarbase.connect.upload.api.LogsDto
 import org.radarbase.connect.upload.api.UploadBackendClient
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentLinkedQueue
 
 enum class LogLevel {
     INFO, DEBUG, WARN, ERROR
@@ -44,11 +46,11 @@ interface LogRepository {
 }
 
 class ConverterLogRepository(
-        val uploadClient: UploadBackendClient) : LogRepository {
-    private val logContainer = mutableMapOf<Long, MutableList<Log>>().withDefault { mutableListOf() }
+        val uploadClient: UploadBackendClient): LogRepository {
+    private val logContainer = ConcurrentHashMap<Long, ConcurrentLinkedQueue<Log>>()
 
-    private fun get(recordId: Long): MutableList<Log> =
-            logContainer.getOrPut(recordId, { mutableListOf() })
+    private fun get(recordId: Long): ConcurrentLinkedQueue<Log> =
+            logContainer.getOrPut(recordId, { ConcurrentLinkedQueue() })
 
 
     override fun info(logger: Logger, recordId: Long, logMessage: String) {
