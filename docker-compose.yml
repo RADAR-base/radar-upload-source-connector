@@ -246,6 +246,7 @@ services:
       - managementportal-app
       - radarbase-postgresql
     environment:
+      VUE_APP_BASE_URL: ""
       VUE_APP_API_BASE_URL: "http://localhost:8085/radar-upload"
       VUE_APP_AUTH_API: "http://localhost:8090/managementportal/oauth"
       VUE_APP_AUTH_CALLBACK: "http://localhost:8080/login"
