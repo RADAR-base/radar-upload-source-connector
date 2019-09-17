@@ -1,7 +1,8 @@
 /integration-test
 /docs
-/build
-/out
+**/build
+**/out
 /.git
 /.gradle
 /.idea
+**/node_modules
