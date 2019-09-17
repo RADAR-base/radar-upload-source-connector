@@ -160,15 +160,24 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
 
     override fun poll(limit: Int, supportedConverters: List<String>): List<Record> = em.get().transact {
         setProperty("javax.persistence.lock.scope", PessimisticLockScope.EXTENDED)
-        var queryString = "SELECT r FROM Record r WHERE r.metadata.status = :status ORDER BY r.metadata.modifiedDate"
+
+        var queryString = "SELECT r FROM Record r WHERE r.metadata.status = :status "
+
         if (supportedConverters.isNotEmpty()) {
-            queryString += " AND r.sourceType.name in :sourceType"
+            queryString += " AND r.sourceType.name in :sourceTypes"
         }
-        createQuery(queryString, Record::class.java)
+
+        queryString += " ORDER BY r.metadata.modifiedDate"
+        val query = createQuery(queryString, Record::class.java)
                 .setParameter("status", RecordStatus.valueOf("READY"))
                 .setMaxResults(limit)
                 .setLockMode(LockModeType.PESSIMISTIC_WRITE)
-                .resultStream
+
+        if (supportedConverters.isNotEmpty()) {
+            query.setParameter("sourceTypes",supportedConverters)
+        }
+
+        query.resultStream
                 .peek {
                     it.metadata.apply {
                         status = RecordStatus.QUEUED
