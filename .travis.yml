@@ -23,5 +23,7 @@ before_install:
 
 script:
   - ./gradlew check --stacktrace
+  - cd radar-upload-frontend/ && npm run test:unit
+  - cd ../
   - sudo docker-compose -f $DOCKER_COMPOSE_FILE up -d && sleep 90 && ./gradlew integrationTest --stacktrace
   - sudo docker-compose -f $DOCKER_COMPOSE_FILE down
