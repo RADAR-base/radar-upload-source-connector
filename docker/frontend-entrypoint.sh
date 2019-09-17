@@ -15,5 +15,5 @@ do
   sed -i 's|VUE_APP_CLIENT_ID|'${VUE_APP_CLIENT_ID}'|g' $file
 done
 
-echo "Starting Nginx"
-nginx -g 'daemon off;'
+echo "Static files ready"
+exec "$@"
