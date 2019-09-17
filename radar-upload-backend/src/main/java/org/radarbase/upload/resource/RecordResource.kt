@@ -74,6 +74,7 @@ class RecordResource {
             @QueryParam("userId") userId: String?,
             @DefaultValue("10") @QueryParam("limit") limit: Int,
             @QueryParam("lastId") lastId: Long?,
+            @QueryParam("sourceType") sourceType: String?,
             @QueryParam("status") status: String?): RecordContainerDTO {
         projectId ?: throw RbBadRequestException("missing_project", "Required project ID not provided.")
 
@@ -84,7 +85,7 @@ class RecordResource {
         }
 
         val imposedLimit = min(max(limit, 1), 100)
-        val records = recordRepository.query(imposedLimit, lastId ?: -1L, projectId, userId, status)
+        val records = recordRepository.query(imposedLimit, lastId ?: -1L, projectId, userId, status, sourceType)
 
         return recordMapper.fromRecords(records, imposedLimit)
     }
@@ -242,7 +243,7 @@ class RecordResource {
             val imposedLimit = pollDTO.limit
                     .coerceAtLeast(1)
                     .coerceAtMost(100)
-            val records = recordRepository.poll(imposedLimit)
+            val records = recordRepository.poll(imposedLimit, pollDTO.supportedConverters)
             return recordMapper.fromRecords(records, imposedLimit)
         } else {
             throw NotAuthorizedException("Client is not authorized to poll records")

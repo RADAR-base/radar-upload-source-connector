@@ -103,7 +103,7 @@ class MPClient(@Context config: Config, @Context private val auth: Auth) {
                        ?: throw BadGatewayException("ManagementPortal did not provide a result")
             } else {
                 logger.error("Cannot connect to managementportal ", response.code)
-                throw BadGatewayException("Cannot connect to managementportal")
+                throw BadGatewayException("Cannot connect to managementportal : Response-code ${response.code}")
             }
         }
     }

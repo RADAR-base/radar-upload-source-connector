@@ -1,7 +1,6 @@
 // vue.config.js
 module.exports = {
-
-  publicPath: '/uploader/',
+  publicPath: process.env.VUE_APP_BASE_URL || "VUE_APP_BASE_URL",
   css: {
     loaderOptions: {
       sass: {
@@ -20,6 +19,6 @@ module.exports = {
     });
   },
   devServer: {
-    https: true,
+    https: false,
   },
 };

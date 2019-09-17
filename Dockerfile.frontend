@@ -26,4 +26,5 @@ COPY ./docker/frontend-entrypoint.sh /entrypoint.sh
 # expose internal port:80 and run init.sh
 EXPOSE 80
 
-CMD ["/entrypoint.sh"]
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["nginx", "-g", "daemon off;"]

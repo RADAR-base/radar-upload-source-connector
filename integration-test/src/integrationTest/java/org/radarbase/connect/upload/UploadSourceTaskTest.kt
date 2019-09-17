@@ -100,7 +100,7 @@ class UploadSourceTaskTest {
     }
 
     @Test
-    @DisplayName("Should mark FAILED if no suitable converters found")
+    @DisplayName("Records of no registered converters should not be polled")
     fun noConverterFound() {
 
         val sourceType = "acceleration-zip"
@@ -115,7 +115,7 @@ class UploadSourceTaskTest {
 
         val metadata = retrieveRecordMetadata(accessToken, createdRecord.id!!)
         assertNotNull(metadata)
-        assertEquals("FAILED", metadata.status)
+        assertEquals("READY", metadata.status)
 
     }
 
