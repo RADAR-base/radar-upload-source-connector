@@ -18,12 +18,14 @@ cache:
     - $HOME/.gradle/caches/modules-2/files-2.1/
     - $HOME/.gradle/native
     - $HOME/.gradle/wrapper
+    - $HOME/build/RADAR-base/radar-upload-source-connector/radar-upload-frontend/node_modules/
 
 before_install:
   - docker-compose --version
 
 install:
   - cd radar-upload-frontend/ && npm install && cd ..
+  - ./gradlew assemble
 
 script:
   - ./gradlew check --stacktrace
