@@ -298,7 +298,7 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
 
                 status = RecordStatus.valueOf(newStatus)
             }
-            message = metadata.message
+            message = metadata.message ?: defaultStatusMessage.get(status)
         }.update()
 
         merge<RecordMetadata>(existingMetadata)
@@ -339,6 +339,15 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
             this[RecordStatus.PROCESSING] = setOf(RecordStatus.READY, RecordStatus.SUCCEEDED, RecordStatus.FAILED)
             this[RecordStatus.FAILED] = setOf()
             this[RecordStatus.SUCCEEDED] = setOf()
+        }
+
+        private val defaultStatusMessage: Map<RecordStatus, String> = EnumMap<RecordStatus, String>(RecordStatus::class.java).apply {
+            this[RecordStatus.INCOMPLETE] = "The record has been created. The data must be uploaded"
+            this[RecordStatus.READY] = "The record is ready for processing"
+            this[RecordStatus.QUEUED] = "The record has been queued for processing"
+            this[RecordStatus.PROCESSING] = "The record is being processed"
+            this[RecordStatus.FAILED] = "The record processing has been failed. Please check the logs for more information"
+            this[RecordStatus.SUCCEEDED] = "The record has been processed successfully"
         }
 
     }
