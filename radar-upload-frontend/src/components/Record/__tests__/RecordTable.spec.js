@@ -39,7 +39,7 @@ describe('RecordTable', () => {
     expect(wrapper.vm.currentProject).toBe(projectID);
   });
 
-  it('call api to get file list if it is active tab and a project is selected', async () => {
+  it('get record and file list if it is active tab and a project is selected', async () => {
     const resolvedValue = [{ name: 'name' }];
     fileAPI.filterRecords = jest.fn().mockResolvedValue(resolvedValue);
     wrapper.setProps({ isActive: true });
@@ -47,7 +47,7 @@ describe('RecordTable', () => {
 
     expect(wrapper.vm.loading).toBe(true);
     await flushPromises();
-    expect(fileAPI.filterRecords).toBeCalledWith({ projectId: 'watchingProject', getRecordOnly: true });
+    expect(fileAPI.filterRecords).toBeCalledWith({ projectId: 'watchingProject' });
     expect(wrapper.vm.recordList).toEqual(resolvedValue);
     expect(wrapper.vm.loading).toBe(false);
   });
@@ -68,5 +68,21 @@ describe('RecordTable', () => {
     await flushPromises();
     expect(wrapper.vm.recordList).toEqual([]);
     expect(wrapper.vm.loading).toBe(false);
+  });
+
+  it('downloadFile', () => {
+    fileAPI.download = jest.fn();
+    wrapper.vm.downloadFile('id', 'filename');
+    expect(fileAPI.download).toBeCalledWith({ recordId: 'id', fileName: 'filename' });
+  });
+  it('expandRow', async () => {
+    const clickedRow = { };
+    wrapper.setData({ expandedItems: [{ }] });
+
+    wrapper.vm.expandRow(clickedRow);
+    expect(wrapper.vm.expandedItems).toEqual([]);
+
+    await wrapper.vm.expandRow(clickedRow);
+    expect(wrapper.vm.expandedItems).toEqual([clickedRow]);
   });
 });
