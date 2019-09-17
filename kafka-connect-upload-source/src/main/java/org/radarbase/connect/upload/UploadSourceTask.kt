@@ -129,12 +129,8 @@ class UploadSourceTask : SourceTask() {
                 val converter = converters.find { it.sourceType == record.sourceType }
                 try {
                     if (converter == null) {
-                        uploadClient.updateStatus(
-                                record.id!!,
-                                record.metadata!!.copy(
-                                        status = "FAILED",
-                                        message = "No registered converter found for ${record.sourceType}.")
-                        )
+                        // technically this should not happen, since we query only for supported converters.
+                        // I am just leaving this check, just to be sure, that we don't have any corner case.
                         logger.error("Could not find converter ${record.sourceType} for record ${record.id}")
                         continue@records
                     } else {

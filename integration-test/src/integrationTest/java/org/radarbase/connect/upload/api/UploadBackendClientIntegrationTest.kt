@@ -126,7 +126,7 @@ class UploadBackendClientIntegrationTest {
     private fun pollRecords(): RecordContainerDTO {
         val pollConfig = PollDTO(
                 limit = 10,
-                supportedConverters = emptyList()
+                supportedConverters = listOf(sourceType)
         )
         val records = uploadBackendClient.pollRecords(pollConfig)
         assertNotNull(records)
