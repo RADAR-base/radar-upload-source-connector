@@ -1,6 +1,7 @@
 language: java
 jdk:
   - oraclejdk11
+node_js: "10.16.3"
 sudo: false
 
 services:
@@ -20,6 +21,9 @@ cache:
 
 before_install:
   - docker-compose --version
+
+install:
+  - cd radar-upload-frontend/ && npm install && cd ..
 
 script:
   - ./gradlew check --stacktrace
