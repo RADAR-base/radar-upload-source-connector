@@ -51,6 +51,9 @@ class MPService(@Context private val mpClient: MPClient) {
                 .filter { auth.hasPermissionOnProject(Permission.PROJECT_READ, it.id) }
     }
 
+    fun project(name: String) : Project = projects.find { it.id == name } ?:
+            throw NotFoundException("project_not_found", "Project $name not found.")
+
     fun projectUsers(projectId: String): List<User> {
         val projectParticipants = participants.computeIfAbsent(projectId) {
             CachedSet(Duration.ofMinutes(30), Duration.ofMinutes(1)) {
