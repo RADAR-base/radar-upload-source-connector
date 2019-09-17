@@ -206,7 +206,11 @@ export default {
     },
     async viewLogs(url) {
       this.loadingLog = true;
-      const recordLogs = await fileAPI.getRecordLog(url);
+      const recordLogs = await fileAPI.getRecordLog(url).catch(() => {
+        this.$error('Cannot download logs, please try again later');
+        this.dialog = false;
+        return '';
+      });
       this.recordLogs = recordLogs;
       this.loadingLog = false;
     },

@@ -27,6 +27,7 @@ describe('RecordTable', () => {
     },
     mocks: {
       $store,
+      $error: jest.fn(),
     },
     filter: {
       moment: () => jest.fn(),
@@ -84,5 +85,27 @@ describe('RecordTable', () => {
 
     await wrapper.vm.expandRow(clickedRow);
     expect(wrapper.vm.expandedItems).toEqual([clickedRow]);
+  });
+
+  it('viewlogs', async () => {
+    const url = 'logs url';
+    const logs = 'logs';
+    fileAPI.getRecordLog = jest.fn().mockResolvedValue(logs);
+    wrapper.vm.viewLogs(url);
+    expect(wrapper.vm.loadingLog).toBe(true);
+    await flushPromises();
+    expect(fileAPI.getRecordLog).toBeCalledWith(url);
+    expect(wrapper.vm.recordLogs).toBe(logs);
+    expect(wrapper.vm.loadingLog).toBe(false);
+
+
+    // fail case;
+    fileAPI.getRecordLog.mockClear();
+    fileAPI.getRecordLog = jest.fn().mockRejectedValue('');
+    wrapper.vm.viewLogs(url);
+    await flushPromises();
+    expect(wrapper.vm.$error).toBeCalled();
+    expect(wrapper.vm.recordLogs).toBe('');
+    expect(wrapper.vm.dialog).toBe(false);
   });
 });

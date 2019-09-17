@@ -18,6 +18,48 @@
       </td>
     </template>
 
+    <template #item.logs="{item}">
+      <td
+        class="pl-0 pb-0"
+        style="cursor: pointer;"
+      >
+        <v-dialog
+          v-model="dialog"
+          max-width="700"
+        >
+          <template #activator="{ on }">
+            <v-icon
+              v-if="item.logs"
+              v-on="on"
+              @click="viewLogs(item.logs.url)"
+            >
+              mdi-folder-open-outline
+            </v-icon>
+          </template>
+          <v-card>
+            <v-card-title v-show="!loadingLog">
+              Record ID: {{ item.id }}
+            </v-card-title>
+
+            <v-card-text
+              color="black"
+              v-show="!loadingLog"
+            >
+              {{ recordLogs }}
+            </v-card-text>
+
+            <v-card-text v-show="loadingLog">
+              Loading logs...
+              <v-progress-circular
+                indeterminate
+                color="white"
+                class="mb-0"
+              />
+            </v-card-text>
+          </v-card>
+        </v-dialog>
+      </td>
+    </template>
     <!-- file list -->
     <template #expanded-item="{item}">
       <td
@@ -93,10 +135,14 @@ export default {
         { text: 'Source type', value: 'sourceType' },
         { text: 'Participant ID', value: 'userId' },
         { text: 'Last modified', value: 'modifiedDate' },
+        { text: 'Logs', value: 'logs' },
       ],
       recordList: [
       ],
       expandedItems: [],
+      loadingLog: false,
+      recordLogs: '',
+      dialog: false,
     };
   },
   computed: {
@@ -143,6 +189,16 @@ export default {
     },
     downloadFile(recordId, fileName) {
       fileAPI.download({ recordId, fileName });
+    },
+    async viewLogs(url) {
+      this.loadingLog = true;
+      const recordLogs = await fileAPI.getRecordLog(url).catch(() => {
+        this.$error('Cannot download logs, please try again later');
+        this.dialog = false;
+        return '';
+      });
+      this.recordLogs = recordLogs;
+      this.loadingLog = false;
     },
   },
 
