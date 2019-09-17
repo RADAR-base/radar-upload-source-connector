@@ -94,7 +94,7 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
                 query.setParameter("userId", it)
             }
             status?.let {
-                query.setParameter("status", it)
+                query.setParameter("status", RecordStatus.valueOf(it))
             }
             sourceType?.let {
                 query.setParameter("sourceType", it)
