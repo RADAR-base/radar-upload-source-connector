@@ -74,7 +74,6 @@ class RecordResource {
             @QueryParam("userId") userId: String?,
             @DefaultValue("10") @QueryParam("limit") limit: Int,
             @DefaultValue("1") @QueryParam("page") page: Int,
-            @QueryParam("lastId") lastId: Long?,
             @QueryParam("sourceType") sourceType: String?,
             @QueryParam("status") status: String?): RecordContainerDTO {
         projectId ?: throw RbBadRequestException("missing_project", "Required project ID not provided.")

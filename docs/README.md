@@ -155,12 +155,10 @@ Content-Length: 23011
 
 ```json
 {
-  "page": 
-  {
-    "pageNumber": 1,
-    "limit": 5,
-    "count": 5
-  },
+  
+  "pageNumber": 1,
+  "limit": 5,
+  "count": 5,
   "records": [
     {
       "id": 12,
