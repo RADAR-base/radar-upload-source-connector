@@ -57,7 +57,6 @@ describe('index', () => {
 
   it('getPatientList', async () => {
     const projectId = 'projectId';
-    // const getPatientList = jest.spyOn(wrapper.vm, 'getPatientList');
     const patientList = [{
       sequence: 1,
       patientName: 'alex',
