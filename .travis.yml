@@ -9,7 +9,6 @@ services:
 
 env:
   - DOCKER_COMPOSE_FILE=docker/docker-compose.yml
-  - NODE_VERSION="10.16.1"
 
 cache:
   directories:
@@ -23,7 +22,7 @@ cache:
 
 before_install:
   - docker-compose --version
-  - nvm install $NODE_VERSION
+  - nvm use
 
 install:
   - cd radar-upload-frontend/ && npm install && cd ..
