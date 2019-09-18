@@ -22,7 +22,7 @@ cache:
 
 before_install:
   - docker-compose --version
-  - nvm use
+  - nvm install
 
 install:
   - cd radar-upload-frontend/ && npm install && cd ..
