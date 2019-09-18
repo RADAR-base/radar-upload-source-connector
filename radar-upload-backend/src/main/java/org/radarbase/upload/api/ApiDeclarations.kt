@@ -85,5 +85,5 @@ data class PollDTO(
 data class Page(
         var pageNumber: Int? = 1,
         var limit:  Int? = null,
-        var count: Int? = null
+        var count: Long? = null
 )
