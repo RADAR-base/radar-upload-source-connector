@@ -60,11 +60,8 @@ data class RecordDTO(
         var metadata: RecordMetadataDTO?)
 
 data class RecordContainerDTO(
-//        var limit: Int? = null,
         var records: List<RecordDTO>,
         var page: Page?)
-//        var page: Int? = null,
-//        var count: Int? = null)
 
 data class SourceTypeDTO(
         var name: String,
