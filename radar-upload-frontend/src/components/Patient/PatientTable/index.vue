@@ -10,6 +10,7 @@
     :loading="loading"
     loading-text="Downloading patients info, please wait"
     @click:row="expandRow"
+    @item-expanded="({item}) =>expandRow(item)"
   >
     <template #item.updatedAt="{item}">
       <td class="pl-0">
