@@ -73,6 +73,7 @@ class RecordResource {
             @QueryParam("projectId") projectId: String?,
             @QueryParam("userId") userId: String?,
             @DefaultValue("10") @QueryParam("limit") limit: Int,
+            @DefaultValue("1") @QueryParam("page") page: Int,
             @QueryParam("lastId") lastId: Long?,
             @QueryParam("sourceType") sourceType: String?,
             @QueryParam("status") status: String?): RecordContainerDTO {
@@ -85,9 +86,9 @@ class RecordResource {
         }
 
         val imposedLimit = min(max(limit, 1), 100)
-        val records = recordRepository.query(imposedLimit, lastId ?: -1L, projectId, userId, status, sourceType)
+        val records = recordRepository.query(Page(pageNumber = page, limit = imposedLimit), projectId, userId, status, sourceType)
 
-        return recordMapper.fromRecords(records, imposedLimit)
+        return recordMapper.fromRecords(records, Page(pageNumber = page, limit = imposedLimit))
     }
 
     @POST
@@ -244,7 +245,7 @@ class RecordResource {
                     .coerceAtLeast(1)
                     .coerceAtMost(100)
             val records = recordRepository.poll(imposedLimit, pollDTO.supportedConverters)
-            return recordMapper.fromRecords(records, imposedLimit)
+            return recordMapper.fromRecords(records, page = Page(limit = imposedLimit))
         } else {
             throw NotAuthorizedException("Client is not authorized to poll records")
         }

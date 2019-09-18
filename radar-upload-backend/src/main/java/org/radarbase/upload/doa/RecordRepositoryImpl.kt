@@ -22,6 +22,7 @@ package org.radarbase.upload.doa
 import org.hibernate.engine.jdbc.BlobProxy
 import org.hibernate.engine.jdbc.ClobProxy
 import org.radarbase.upload.api.ContentsDTO
+import org.radarbase.upload.api.Page
 import org.radarbase.upload.api.RecordMetadataDTO
 import org.radarbase.upload.doa.entity.*
 import org.radarbase.upload.exception.BadRequestException
@@ -72,8 +73,8 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
         modifyNow(metadataToSave)
     }
 
-    override fun query(limit: Int, lastId: Long, projectId: String, userId: String?, status: String?, sourceType: String?): List<Record> {
-        var queryString = "SELECT r FROM Record r WHERE r.projectId = :projectId AND r.id > :lastId"
+    override fun query(page: Page, projectId: String, userId: String?, status: String?, sourceType: String?): List<Record> {
+        var queryString = "SELECT r FROM Record r WHERE r.projectId = :projectId "
         userId?.let {
             queryString += " AND r.userId = :userId"
         }
@@ -87,9 +88,9 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
 
         return em.get().transact {
             val query = createQuery(queryString, Record::class.java)
-                    .setParameter("lastId", lastId)
                     .setParameter("projectId", projectId)
-                    .setMaxResults(limit)
+                    .setFirstResult(page.lastId())
+                    .setMaxResults(page.limit!!)
             userId?.let {
                 query.setParameter("userId", it)
             }
@@ -102,6 +103,8 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
             query.resultList
         }
     }
+
+    private fun Page.lastId() : Int = (this.pageNumber!! - 1) * this.limit!!
 
     override fun readLogs(id: Long): RecordLogs? = em.get().transact {
         find(RecordLogs::class.java, id)
