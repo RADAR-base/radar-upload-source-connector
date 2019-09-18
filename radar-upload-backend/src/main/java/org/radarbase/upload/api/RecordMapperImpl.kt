@@ -83,10 +83,10 @@ class RecordMapperImpl(
                     contents = record.contents?.mapTo(HashSet(), this::fromContent)
             ))
 
-    override fun fromRecords(records: List<Record>, limit: Int) = RecordContainerDTO(
-            limit = limit,
+    override fun fromRecords(records: List<Record>, page: Page?) = RecordContainerDTO(
             records = records.map(::fromRecord),
-            lastId = records.maxBy { record ->  record.id!! }?.id)
+            page = page
+    )
 
     override fun fromContent(content: RecordContent): ContentsDTO {
         val cleanedFileName = URLEncoder.encode(content.fileName, "UTF-8")
