@@ -9,25 +9,27 @@ import fileAPI from '@/axios/file';
 describe.only('index', () => {
   // call this api when component is created
   const PROJECT_ID = '';
-  const $store = new Store({
-    state: {
-      project: {
-        currentProject: { value: PROJECT_ID },
+  let wrapper ;
+  beforeEach(() => {
+    const $store = new Store({
+      state: {
+        project: {
+          currentProject: { value: PROJECT_ID },
+        },
+        patient: {
+          searchText: '',
+        },
       },
-      patient: {
-        searchText: '',
+    });
+    wrapper = shallowMount(index, {
+      propsData: {
+        isActive: false,
       },
-    },
-  });
-
-  const wrapper = shallowMount(index, {
-    propsData: {
-      isActive: false,
-    },
-    mocks: {
-      $store,
-    },
-    stubs: ['v-data-table'],
+      mocks: {
+        $store,
+      },
+      stubs: ['v-data-table'],
+    });
   });
 
   it('not show the table if no project is selected', () => {
@@ -48,7 +50,7 @@ describe.only('index', () => {
 
   it('watch:isActive, if true & currentProject, getPatientList', () => {
     const getPatientList = jest.spyOn(wrapper.vm, 'getPatientList');
-
+    wrapper.vm.$store.state.project.currentProject.value = 'original';
     wrapper.setProps({ isActive: false });
     wrapper.setProps({ isActive: true });
     expect(wrapper.vm.items).toEqual([]);
@@ -57,7 +59,6 @@ describe.only('index', () => {
 
   it('getPatientList', async () => {
     const projectId = 'projectId';
-    const getPatientList = jest.spyOn(wrapper.vm, 'getPatientList');
     const patientList = [{
       sequence: 1,
       patientName: 'alex',
@@ -65,12 +66,13 @@ describe.only('index', () => {
       patientId: 'xxxx',
     }];
     patientAPI.filteredPatients = jest.fn().mockResolvedValue(patientList);
-    getPatientList(projectId);
+    wrapper.vm.getPatientList(projectId);
     expect(wrapper.vm.loading).toEqual(true);
 
     await flushPromises();
     expect(wrapper.vm.loading).toEqual(false);
     expect(wrapper.vm.items).toEqual(patientList);
+    patientAPI.filteredPatients.mockClear();
   });
 
   it('load file list of a patient when open the dropdown:SUCCESS CASE', async () => {
