@@ -39,10 +39,7 @@
 <script>
 import { mapState } from 'vuex';
 import LeftDrawer from '@/views/layouts/LeftDrawer';
-// import Footer from '@/views/layouts/Footer';
 import AppBar from '@/views/layouts/AppBar';
-import { getToken } from '@/helpers';
-import { clientId } from '@/app.config';
 
 export default {
   components: {
@@ -60,20 +57,6 @@ export default {
     ...mapState({
       message: state => state.message,
     }),
-  },
-  methods: {
-    async getAuth() {
-      if (window.location.href.includes('login?code=')) {
-        const authCode = window.location.search.replace('?code=', '');
-        // eslint-disable-next-line no-undef
-        const returnedToken = await getToken(authCode, clientId).catch(() => null);
-        localStorage.setItem('token', returnedToken);
-        window.close();
-      }
-    },
-  },
-  created() {
-    this.getAuth();
   },
 };
 
