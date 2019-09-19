@@ -61,8 +61,8 @@ data class RecordDTO(
 
 data class RecordContainerDTO(
         var records: List<RecordDTO>,
-        var pageNumber: Int? = 1,
-        var limit:  Int? = null,
+        var page: Int? = 1,
+        var size:  Int? = null,
         var count: Long? = null)
 
 data class SourceTypeDTO(
