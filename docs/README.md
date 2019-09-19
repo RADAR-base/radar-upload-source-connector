@@ -151,13 +151,13 @@ Content-Length: 23011
 
 **Get records for given filters**<br>
 `GET /records`<br>
-`GET /records?projectId=radar-test&userId=testUser&sourceType=Mp3Audio&status=READY&limit=5&page=1`
+`GET /records?projectId=radar-test&userId=testUser&sourceType=Mp3Audio&status=READY&size=5&page=1`
 
 ```json
 {
   
-  "pageNumber": 1,
-  "limit": 5,
+  "page": 1,
+  "size": 5,
   "count": 5,
   "records": [
     {

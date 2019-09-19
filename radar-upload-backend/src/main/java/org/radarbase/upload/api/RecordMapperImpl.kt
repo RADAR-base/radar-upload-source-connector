@@ -85,9 +85,9 @@ class RecordMapperImpl(
 
     override fun fromRecords(records: List<Record>, page: Page?) = RecordContainerDTO(
             records = records.map(::fromRecord),
-            limit = page?.pageSize,
+            size = page?.pageSize,
             count = page?.count,
-            pageNumber = page?.pageNumber
+            page = page?.pageNumber
     )
 
     override fun fromContent(content: RecordContent): ContentsDTO {
