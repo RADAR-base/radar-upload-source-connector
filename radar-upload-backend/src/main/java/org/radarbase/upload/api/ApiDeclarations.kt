@@ -60,9 +60,10 @@ data class RecordDTO(
         var metadata: RecordMetadataDTO?)
 
 data class RecordContainerDTO(
-        var limit: Int? = null,
         var records: List<RecordDTO>,
-        var lastId: Long? = null)
+        var page: Int? = 1,
+        var size:  Int? = null,
+        var totalElements: Long? = null)
 
 data class SourceTypeDTO(
         var name: String,
@@ -79,3 +80,9 @@ data class SourceTypeContainerDTO(
 data class PollDTO(
         var limit: Int = 10,
         var supportedConverters: List<String>)
+
+data class Page(
+        var pageNumber: Int? = 1,
+        var pageSize:  Int? = null,
+        var totalElements: Long? = null
+)

@@ -22,6 +22,7 @@ package org.radarbase.upload.doa
 import org.hibernate.engine.jdbc.BlobProxy
 import org.hibernate.engine.jdbc.ClobProxy
 import org.radarbase.upload.api.ContentsDTO
+import org.radarbase.upload.api.Page
 import org.radarbase.upload.api.RecordMetadataDTO
 import org.radarbase.upload.doa.entity.*
 import org.radarbase.upload.exception.BadRequestException
@@ -72,36 +73,52 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
         modifyNow(metadataToSave)
     }
 
-    override fun query(limit: Int, lastId: Long, projectId: String, userId: String?, status: String?, sourceType: String?): List<Record> {
-        var queryString = "SELECT r FROM Record r WHERE r.projectId = :projectId AND r.id > :lastId"
+    override fun query(page: Page, projectId: String, userId: String?, status: String?, sourceType: String?): Pair<List<Record>, Long> {
+        var queryString = "SELECT r FROM Record r WHERE r.projectId = :projectId "
+        var countQueryString = "SELECT count(r) FROM Record r WHERE r.projectId = :projectId "
         userId?.let {
             queryString += " AND r.userId = :userId"
+            countQueryString += " AND r.userId = :userId"
         }
         status?.let {
             queryString += " AND r.metadata.status = :status"
+            countQueryString += " AND r.metadata.status = :status"
         }
         sourceType?.let {
             queryString += " AND r.sourceType.name = :sourceType"
+            countQueryString += " AND r.sourceType.name = :sourceType"
         }
         queryString += " ORDER BY r.id"
 
         return em.get().transact {
             val query = createQuery(queryString, Record::class.java)
-                    .setParameter("lastId", lastId)
                     .setParameter("projectId", projectId)
-                    .setMaxResults(limit)
+                    .setFirstResult(page.lastId())
+                    .setMaxResults(page.pageSize!!)
+
+            val countQuery = createQuery(countQueryString)
+                    .setParameter("projectId", projectId)
+
             userId?.let {
                 query.setParameter("userId", it)
+                countQuery.setParameter("userId", it)
             }
             status?.let {
                 query.setParameter("status", RecordStatus.valueOf(it))
+                countQuery.setParameter("status", RecordStatus.valueOf(it))
             }
             sourceType?.let {
                 query.setParameter("sourceType", it)
+                countQuery.setParameter("sourceType", it)
             }
-            query.resultList
+            val records = query.resultList
+            val count = countQuery.singleResult as Long
+
+            Pair(records, count)
         }
     }
+
+    private fun Page.lastId() : Int = (this.pageNumber!! - 1) * this.pageSize!!
 
     override fun readLogs(id: Long): RecordLogs? = em.get().transact {
         find(RecordLogs::class.java, id)
