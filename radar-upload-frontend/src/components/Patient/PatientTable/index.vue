@@ -8,7 +8,7 @@
     :headers="headers"
     item-key="patientId"
     :loading="loading"
-    loading-text="Downloading patients info, please wait"
+    loading-text="Retrieving participants info, please wait"
     @click:row="expandRow"
   >
     <template #item.updatedAt="{item}">
