@@ -47,6 +47,7 @@ describe('QuickUpload', () => {
     expect(wrapper.vm.patientList)
       .toEqual(resolvedValue
         .map(patient => ({ text: patient.patientName, value: patient.patientId })));
+    patientAPI.filteredPatients.mockClear();
   });
 
   it('getPatientList: ERROR', async () => {
