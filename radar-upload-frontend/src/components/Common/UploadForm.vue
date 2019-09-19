@@ -93,27 +93,38 @@ export default {
       const { sourceType } = this;
       const postPayload = { userId, projectId, sourceType };
       const files = [];
-      files.push({ fileName: this.file.name, uploading: true, uploadFailed: false });
+      files.push({
+        fileName: this.file.name,
+        uploading: true,
+        uploadFailed: false,
+      });
       try {
         this.$emit('creatingRecord');
         const returnedRecord = await fileAPI.postRecords(postPayload);
-        this.$emit('startUploading', { ...returnedRecord, files, active: true });
-        const putPayload = { file: this.file, fileName: this.file.name, id: returnedRecord.id };
-        const uploadingFile = await fileAPI.putRecords(putPayload)
-          .catch(() => {
-            this.$emit('uploadFailed', {
-              fileName: this.file.name,
-              uploading: false,
-              uploadFailed: true,
-              recordId: returnedRecord.id,
-            });
-            throw new Error();
+        this.$emit('startUploading', {
+          ...returnedRecord,
+          files,
+          active: true,
+        });
+        const putPayload = {
+          file: this.file,
+          fileName: this.file.name,
+          id: returnedRecord.id,
+        };
+        const uploadingFile = await fileAPI.putRecords(putPayload).catch(() => {
+          this.$emit('uploadFailed', {
+            fileName: this.file.name,
+            uploading: false,
+            uploadFailed: true,
+            recordId: returnedRecord.id,
           });
-        this.$emit('finishUpload', uploadingFile);
-        await fileAPI.markRecord({
+          throw new Error();
+        });
+        const recordMetadata = await fileAPI.markRecord({
           recordId: returnedRecord.id,
           revision: returnedRecord.revision,
         });
+        this.$emit('finishUpload', { uploadingFile, recordMetadata });
       } catch (error) {
         this.$error('Upload fails, please try again later');
       }
@@ -127,5 +138,4 @@ export default {
 </script>
 
 <style>
-
 </style>
