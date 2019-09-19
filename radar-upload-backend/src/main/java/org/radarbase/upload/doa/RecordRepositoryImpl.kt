@@ -94,7 +94,7 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
             val query = createQuery(queryString, Record::class.java)
                     .setParameter("projectId", projectId)
                     .setFirstResult(page.lastId())
-                    .setMaxResults(page.limit!!)
+                    .setMaxResults(page.pageSize!!)
 
             val countQuery = createQuery(countQueryString)
                     .setParameter("projectId", projectId)
@@ -118,7 +118,7 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
         }
     }
 
-    private fun Page.lastId() : Int = (this.pageNumber!! - 1) * this.limit!!
+    private fun Page.lastId() : Int = (this.pageNumber!! - 1) * this.pageSize!!
 
     override fun readLogs(id: Long): RecordLogs? = em.get().transact {
         find(RecordLogs::class.java, id)

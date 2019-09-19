@@ -83,6 +83,6 @@ data class PollDTO(
 
 data class Page(
         var pageNumber: Int? = 1,
-        var limit:  Int? = null,
+        var pageSize:  Int? = null,
         var count: Long? = null
 )
