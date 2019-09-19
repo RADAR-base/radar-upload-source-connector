@@ -57,9 +57,9 @@ export default {
     };
   },
   methods: {
-    finishUpload(file) {
+    finishUpload({ uploadingFile, recordMetadata }) {
       this.loading = false;
-      this.$emit('addUploadingFile', file);
+      this.$emit('addUploadingFile', { uploadingFile, recordMetadata });
       this.menu = false;
     },
     startUploading(payload) {

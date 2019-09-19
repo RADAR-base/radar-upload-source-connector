@@ -33,6 +33,7 @@ import org.radarbase.upload.exception.ConflictException
 import org.radarcns.auth.authorization.Permission
 import org.radarcns.auth.authorization.Permission.*
 import org.slf4j.LoggerFactory
+import java.io.IOException
 import java.io.InputStream
 import java.net.URI
 import javax.annotation.Resource
@@ -222,10 +223,16 @@ class RecordResource {
         logger.debug("Reading record $recordId file $fileName of size ${recordContent.size}")
 
         val streamingOutput = StreamingOutput { out ->
-            recordRepository.readFileContent(recordId, record.metadata.revision, recordContent.fileName).use {
-                it?.stream?.copyTo(out) ?: throw RbNotFoundException("file_not_found", "Cannot read content of file $fileName from record $recordId")
+            try {
+                recordRepository.readFileContent(recordId, record.metadata.revision, recordContent.fileName).use {
+                    it?.stream?.copyTo(out)
+                            ?: throw RbNotFoundException("file_not_found", "Cannot read content of file $fileName from record $recordId")
+                }
+                out.flush()
+            } catch (ex: IOException) {
+                logger.error("Failed to respond with file contents: {}. Caused by?: {}",
+                        ex.toString(), ex.cause?.toString())
             }
-            out.flush()
         }
 
         return Response
@@ -277,20 +284,28 @@ class RecordResource {
     fun getRecordLogs(
             @PathParam("recordId") recordId: Long): Response {
         val record = ensureRecord(recordId, SUBJECT_READ)
+        recordRepository.readLogs(recordId)
+                ?: throw RbNotFoundException("log_not_found", "Cannot find logs for record with record id $recordId")
 
         val streamingOutput = StreamingOutput { out ->
-            recordRepository.readLogContents(recordId).use { clobReader ->
-                clobReader ?: throw RbNotFoundException("log_not_found", "Cannot find logs for record with record id $recordId")
+            try {
+                recordRepository.readLogContents(recordId).use { clobReader ->
+                    clobReader
+                            ?: throw RbNotFoundException("log_not_found", "Cannot find logs for record with record id $recordId")
 
-                clobReader.stream.use { reader ->
-                    val buffer = CharArray(LOG_BUFFER_SIZE)
+                    clobReader.stream.use { reader ->
+                        val buffer = CharArray(LOG_BUFFER_SIZE)
 
-                    generateSequence { reader.read(buffer) }
-                            .takeWhile { n -> n != -1 }
-                            .forEach { n -> out.write(String(buffer, 0, n).toByteArray()) }
+                        generateSequence { reader.read(buffer) }
+                                .takeWhile { n -> n != -1 }
+                                .forEach { n -> out.write(String(buffer, 0, n).toByteArray()) }
+                    }
                 }
+                out.flush()
+            } catch (ex: IOException) {
+                logger.error("Failed to respond with log contents: {}. Caused by?: {}",
+                        ex.toString(), ex.cause?.toString())
             }
-            out.flush()
         }
 
         return Response.ok(streamingOutput, "text/plain")

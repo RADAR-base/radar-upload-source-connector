@@ -6,7 +6,7 @@ import index from '../index.vue';
 import patientAPI from '@/axios/patient';
 import fileAPI from '@/axios/file';
 
-describe('index', () => {
+describe.only('index', () => {
   // call this api when component is created
   const PROJECT_ID = '';
   let wrapper ;
@@ -125,11 +125,14 @@ describe('index', () => {
   });
 
   it('addUploadingFile', () => {
-    const file = 'file 0';
-    const patientRecords = [{ files: ['file 1', 'file 2'] }];
+    const uploadingFile = 'file 0';
+    const recordMetadata = { status: 'updated status', message: 'updated message' };
+    const patientRecords = [{ files: ['file 1', 'file 2'], status: 'status', message: '' }];
     wrapper.setData({ patientRecords });
-    wrapper.vm.addUploadingFile(file);
-    expect(wrapper.vm.patientRecords[0].files[0]).toBe(file);
+    wrapper.vm.addUploadingFile({ uploadingFile, recordMetadata });
+    expect(wrapper.vm.patientRecords[0].files[0]).toBe(uploadingFile);
+    expect(wrapper.vm.patientRecords[0].status).toBe(recordMetadata.status);
+    expect(wrapper.vm.patientRecords[0].message).toBe(recordMetadata.message);
   });
 
   it('expandRow', async () => {

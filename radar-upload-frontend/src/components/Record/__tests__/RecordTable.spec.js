@@ -27,6 +27,7 @@ describe('RecordTable', () => {
     },
     mocks: {
       $store,
+      $error: jest.fn(),
     },
     filter: {
       moment: () => jest.fn(),
@@ -39,7 +40,7 @@ describe('RecordTable', () => {
     expect(wrapper.vm.currentProject).toBe(projectID);
   });
 
-  it('call api to get file list if it is active tab and a project is selected', async () => {
+  it('get record and file list if it is active tab and a project is selected', async () => {
     const resolvedValue = [{ name: 'name' }];
     fileAPI.filterRecords = jest.fn().mockResolvedValue(resolvedValue);
     wrapper.setProps({ isActive: true });
@@ -47,7 +48,7 @@ describe('RecordTable', () => {
 
     expect(wrapper.vm.loading).toBe(true);
     await flushPromises();
-    expect(fileAPI.filterRecords).toBeCalledWith({ projectId: 'watchingProject', getRecordOnly: true });
+    expect(fileAPI.filterRecords).toBeCalledWith({ projectId: 'watchingProject' });
     expect(wrapper.vm.recordList).toEqual(resolvedValue);
     expect(wrapper.vm.loading).toBe(false);
   });
@@ -68,5 +69,43 @@ describe('RecordTable', () => {
     await flushPromises();
     expect(wrapper.vm.recordList).toEqual([]);
     expect(wrapper.vm.loading).toBe(false);
+  });
+
+  it('downloadFile', () => {
+    fileAPI.download = jest.fn();
+    wrapper.vm.downloadFile('id', 'filename');
+    expect(fileAPI.download).toBeCalledWith({ recordId: 'id', fileName: 'filename' });
+  });
+  it('expandRow', async () => {
+    const clickedRow = { };
+    wrapper.setData({ expandedItems: [{ }] });
+
+    wrapper.vm.expandRow(clickedRow);
+    expect(wrapper.vm.expandedItems).toEqual([]);
+
+    await wrapper.vm.expandRow(clickedRow);
+    expect(wrapper.vm.expandedItems).toEqual([clickedRow]);
+  });
+
+  it('viewlogs', async () => {
+    const url = 'logs url';
+    const logs = 'logs';
+    fileAPI.getRecordLog = jest.fn().mockResolvedValue(logs);
+    wrapper.vm.viewLogs(url);
+    expect(wrapper.vm.loadingLog).toBe(true);
+    await flushPromises();
+    expect(fileAPI.getRecordLog).toBeCalledWith(url);
+    expect(wrapper.vm.recordLogs).toBe(logs);
+    expect(wrapper.vm.loadingLog).toBe(false);
+
+
+    // fail case;
+    fileAPI.getRecordLog.mockClear();
+    fileAPI.getRecordLog = jest.fn().mockRejectedValue('');
+    wrapper.vm.viewLogs(url);
+    await flushPromises();
+    expect(wrapper.vm.$error).toBeCalled();
+    expect(wrapper.vm.recordLogs).toBe('');
+    expect(wrapper.vm.dialog).toBe(false);
   });
 });
