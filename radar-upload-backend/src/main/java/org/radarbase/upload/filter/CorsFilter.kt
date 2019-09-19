@@ -38,8 +38,8 @@ class CorsFilter: ContainerResponseFilter {
     override fun filter(request: ContainerRequestContext,
                response: ContainerResponseContext) {
         if (config.enableCors!!) {
-
-            response.headers.add("Access-Control-Allow-Origin", "*")
+            response.headers.add("Access-Control-Allow-Origin",
+                    request.getHeaderString("Origin") ?: "*")
             response.headers.add("Access-Control-Allow-Headers",
                     "origin, content-type, accept, authorization")
             response.headers.add("Access-Control-Allow-Credentials", "true")

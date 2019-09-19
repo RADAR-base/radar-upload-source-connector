@@ -1,12 +1,12 @@
 /* eslint-disable no-undef */
 import axios from 'axios';
 import fileAPI from '../file';
-import { downLoadFile } from '@/helpers';
+import { downloadFile } from '@/helpers';
 import { baseURL } from '@/app.config';
 
 jest.mock('axios');
 jest.mock('@/helpers', () => ({
-  downLoadFile: jest.fn(),
+  downloadFile: jest.fn(),
 }));
 
 function expected(expectedValue, service) {
@@ -205,6 +205,6 @@ describe('axios/file', () => {
     const fileName = 'name';
     await fileAPI.download({ recordId, fileName });
     const url = `${baseURL}/records/${recordId}/contents/${fileName}`;
-    expect(downLoadFile).toBeCalledWith(fileName, url);
+    expect(downloadFile).toBeCalledWith(fileName, url);
   });
 });

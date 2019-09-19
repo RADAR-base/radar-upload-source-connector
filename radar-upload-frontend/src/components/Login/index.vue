@@ -36,30 +36,37 @@
 
 <script>
 /* eslint-disable no-undef */
-import { clearInterval } from 'timers';
-import { clientId, authCallback, authAPI } from '@/app.config';
-import auth from '@/axios/auth';
+import appConfig from '@/app.config';
+import auth from '../../axios/auth';
+import services from '../../axios';
 
 export default {
   data: () => ({
     loading: false,
   }),
   methods: {
-    async redirectLogin() {
-      window.open(`${authAPI}/authorize?client_id=${clientId}&response_type=code&redirect_uri=${authCallback}`);
+    redirectLogin() {
       this.loading = true;
-      // eslint-disable-next-line func-names
-      this.checkToken = setInterval(() => {
-        if (localStorage.getItem('token')) {
-          window.location.replace('');
-          auth.login();
-        }
-      }, 500);
+      auth.authorize(appConfig);
     },
   },
-  beforeDestroy() {
-    this.loading = false;
-    clearInterval(this.checkToken);
+  beforeMount() {
+    const { code } = this.$route.query;
+    if (code) {
+      this.loading = true;
+      console.log(`Loading with code ${code}`);
+      auth.processLogin(code, appConfig)
+        .then((nextRoute) => {
+          console.log('Processed login');
+          services.authInit(this.$store, this.$router);
+          this.$router.replace(nextRoute);
+        })
+        .catch((e) => {
+          console.log('Failed to log in', e);
+          this.$store.commit('openSnackbar', { type: 'error', text: 'Login failed' });
+          this.loading = false;
+        });
+    }
   },
 };
 </script>
