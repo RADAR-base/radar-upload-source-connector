@@ -73,7 +73,7 @@ describe.only('index', () => {
     expect(wrapper.vm.loading).toEqual(false);
     expect(wrapper.vm.items).toEqual(patientList);
     patientAPI.filteredPatients.mockClear();
-  }, 1000);
+  });
 
   it('load file list of a patient when open the dropdown:SUCCESS CASE', async () => {
     const patientId = 'patientID';
