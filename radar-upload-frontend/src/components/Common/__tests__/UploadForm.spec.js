@@ -12,12 +12,10 @@ const sourceTypeList = [
   },
 ];
 
-
 const postRecordBody = {
   projectId: 'radar-test',
   userId: 'testUser',
 };
-
 
 describe('UploadForm', () => {
   // call this api when component is created
@@ -32,7 +30,8 @@ describe('UploadForm', () => {
       $success: jest.fn(),
       $error: jest.fn(),
     },
-    stubs: ['v-btn',
+    stubs: [
+      'v-btn',
       'v-icon',
       'v-card',
       'v-list',
@@ -43,7 +42,8 @@ describe('UploadForm', () => {
       'v-card-text',
       'v-list-item',
       'v-select',
-      'v-file-input'],
+      'v-file-input',
+    ],
   });
 
   beforeEach(() => {
@@ -89,11 +89,11 @@ describe('UploadForm', () => {
     const putReturnVal = { id: 'id1' };
     fileAPI.putRecords = jest.fn().mockResolvedValue(putReturnVal);
     // mock markRecord
-    fileAPI.markRecord = jest.fn().mockResolvedValue();
+    const markRecordReturn = 'markRecordReturn';
+    fileAPI.markRecord = jest.fn().mockResolvedValue(markRecordReturn);
     // file uploaded
     const files = [];
     files.push({ fileName: file.name, uploading: true, uploadFailed: false });
-
 
     wrapper.vm.uploadFile();
     expect(wrapper.emitted().creatingRecord).toBeTruthy();
@@ -101,12 +101,19 @@ describe('UploadForm', () => {
     // postRecords
     expect(fileAPI.postRecords).toBeCalledWith(postRecordPayload);
     // eslint-disable-next-line max-len
-    expect(wrapper.emitted().startUploading[0][0]).toEqual({ ...postReturnVal, files, active: true });
+    expect(wrapper.emitted().startUploading[0][0]).toEqual({
+      ...postReturnVal,
+      files,
+      active: true,
+    });
 
     // putRecords
     expect(fileAPI.putRecords).toBeCalledWith(putRecordPayload);
-    expect(wrapper.emitted().finishUpload[0][0]).toEqual(putReturnVal);
     expect(fileAPI.markRecord).toBeCalled();
+    expect(wrapper.emitted().finishUpload[0][0]).toEqual({
+      uploadingFile: putReturnVal,
+      recordMetadata: markRecordReturn,
+    });
     expect(removeData).toBeCalled();
 
     fileAPI.postRecords.mockClear();
@@ -121,7 +128,6 @@ describe('UploadForm', () => {
     expect(wrapper.vm.$error).toBeCalled();
     expect(removeData).toBeCalled();
   });
-
 
   it('uploadfile: PUT error', async () => {
     fileAPI.postRecords = jest.fn().mockResolvedValue({ id: 'id1', createdDate: '2019-10-10' });

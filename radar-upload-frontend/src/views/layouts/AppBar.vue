@@ -8,15 +8,26 @@
     <v-app-bar-nav-icon @click.stop="$emit('ToggleLeftDrawer')" />
     <v-toolbar-title>Upload</v-toolbar-title>
     <v-spacer />
+    <div
+      @click="logout"
+      style="cursor: pointer"
+    >
+      <v-icon>mdi-logout</v-icon>
+      Log out
+    </div>
   </v-app-bar>
 </template>
 
 <script>
-export default {
+import auth from '@/axios/auth';
 
+export default {
+  methods: {
+    logout() {
+      localStorage.removeItem('token');
+      this.$router.replace('/login');
+      auth.logout();
+    },
+  },
 };
 </script>
-
-<style>
-
-</style>

@@ -8,8 +8,9 @@
     :headers="headers"
     item-key="patientId"
     :loading="loading"
-    loading-text="Downloading patients info, please wait"
+    loading-text="Retrieving participants info, please wait"
     @click:row="expandRow"
+    @item-expanded="({item}) =>expandRow(item)"
   >
     <template #item.updatedAt="{item}">
       <td class="pl-0">
@@ -137,8 +138,10 @@ export default {
     startUploading(record) {
       this.patientRecords.unshift(record);
     },
-    addUploadingFile(file) {
-      this.patientRecords[0].files.splice(0, 1, file);
+    addUploadingFile({ uploadingFile, recordMetadata }) {
+      this.patientRecords[0].files.splice(0, 1, uploadingFile);
+      this.patientRecords[0].status = recordMetadata.status;
+      this.patientRecords[0].message = recordMetadata.message;
     },
     uploadFailed({
       recordId, fileName, uploading, uploadFailed,

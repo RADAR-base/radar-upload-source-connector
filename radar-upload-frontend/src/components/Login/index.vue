@@ -38,6 +38,7 @@
 /* eslint-disable no-undef */
 import { clearInterval } from 'timers';
 import { clientId, authCallback, authAPI } from '@/app.config';
+import auth from '@/axios/auth';
 
 export default {
   data: () => ({
@@ -51,6 +52,7 @@ export default {
       this.checkToken = setInterval(() => {
         if (localStorage.getItem('token')) {
           window.location.replace('');
+          auth.login();
         }
       }, 500);
     },
