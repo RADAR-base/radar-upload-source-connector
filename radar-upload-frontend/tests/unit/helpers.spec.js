@@ -27,7 +27,7 @@ describe('helpers function', () => {
 
     const token = await getToken(authCode, clientId);
     expect(axios.post)
-      .toBeCalledWith('https://radar-test.thehyve.net/managementportal/oauth/token',
+      .toBeCalledWith('http://localhost:8090/managementportal/oauth/token',
         params, headers);
     expect(token).toEqual(postReturnValue.access_token);
   });
