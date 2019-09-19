@@ -87,7 +87,7 @@ class RecordResource {
         val imposedLimit = min(max(size, 1), 100)
         val (records, count) = recordRepository.query(Page(pageNumber = page, pageSize = imposedLimit), projectId, userId, status, sourceType)
 
-        return recordMapper.fromRecords(records, Page(pageNumber = page, pageSize = imposedLimit, count = count))
+        return recordMapper.fromRecords(records, Page(pageNumber = page, pageSize = imposedLimit, totalElements = count))
     }
 
     @POST

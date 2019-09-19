@@ -158,7 +158,7 @@ Content-Length: 23011
   
   "page": 1,
   "size": 5,
-  "count": 5,
+  "totalElements": 5,
   "records": [
     {
       "id": 12,

@@ -63,7 +63,7 @@ data class RecordContainerDTO(
         var records: List<RecordDTO>,
         var page: Int? = 1,
         var size:  Int? = null,
-        var count: Long? = null)
+        var totalElements: Long? = null)
 
 data class SourceTypeDTO(
         var name: String,
@@ -84,5 +84,5 @@ data class PollDTO(
 data class Page(
         var pageNumber: Int? = 1,
         var pageSize:  Int? = null,
-        var count: Long? = null
+        var totalElements: Long? = null
 )
