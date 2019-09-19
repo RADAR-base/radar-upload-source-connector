@@ -73,8 +73,8 @@ class RecordResource {
     fun query(
             @QueryParam("projectId") projectId: String?,
             @QueryParam("userId") userId: String?,
-            @DefaultValue("10") @QueryParam("limit") limit: Int,
-            @QueryParam("lastId") lastId: Long?,
+            @DefaultValue("10") @QueryParam("size") size: Int,
+            @DefaultValue("1") @QueryParam("page") page: Int,
             @QueryParam("sourceType") sourceType: String?,
             @QueryParam("status") status: String?): RecordContainerDTO {
         projectId ?: throw RbBadRequestException("missing_project", "Required project ID not provided.")
@@ -85,10 +85,10 @@ class RecordResource {
             auth.checkProjectPermission(PROJECT_READ, projectId)
         }
 
-        val imposedLimit = min(max(limit, 1), 100)
-        val records = recordRepository.query(imposedLimit, lastId ?: -1L, projectId, userId, status, sourceType)
+        val imposedLimit = min(max(size, 1), 100)
+        val (records, count) = recordRepository.query(Page(pageNumber = page, pageSize = imposedLimit), projectId, userId, status, sourceType)
 
-        return recordMapper.fromRecords(records, imposedLimit)
+        return recordMapper.fromRecords(records, Page(pageNumber = page, pageSize = imposedLimit, totalElements = count))
     }
 
     @POST
@@ -251,7 +251,7 @@ class RecordResource {
                     .coerceAtLeast(1)
                     .coerceAtMost(100)
             val records = recordRepository.poll(imposedLimit, pollDTO.supportedConverters)
-            return recordMapper.fromRecords(records, imposedLimit)
+            return recordMapper.fromRecords(records, page = Page(pageSize = imposedLimit))
         } else {
             throw NotAuthorizedException("Client is not authorized to poll records")
         }
