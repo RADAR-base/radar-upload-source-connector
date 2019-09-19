@@ -34,20 +34,6 @@
       no-action
     >
       <template #activator>
-        <v-list-item-avatar>
-          <!-- <v-progress-circular
-            v-if="record.status!=='READY'"
-            indeterminate
-            color="primary"
-          /> -->
-          <v-icon
-            color="info"
-            v-if="record.status==='READY'"
-          >
-            mdi-checkbox-marked-circle
-          </v-icon>
-        </v-list-item-avatar>
-
         <v-list-item-content>
           <v-list-item-title>
             Records ID:
@@ -206,7 +192,11 @@ export default {
     },
     async viewLogs(url) {
       this.loadingLog = true;
-      const recordLogs = await fileAPI.getRecordLog(url);
+      const recordLogs = await fileAPI.getRecordLog(url).catch(() => {
+        this.$error('Cannot download logs, please try again later');
+        this.dialog = false;
+        return '';
+      });
       this.recordLogs = recordLogs;
       this.loadingLog = false;
     },
