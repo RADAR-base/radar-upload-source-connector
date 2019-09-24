@@ -13,13 +13,14 @@ project.extra.apply {
     set("jacksonDataVersion", "2.9.9")
     set("openCsvVersion", "4.6")
     set("confluentVersion", "5.3.0")
-    set("radarSchemaVersion", "0.5.1")
+    set("radarSchemaVersion", "0.5.2-SNAPSHOT")
 }
 
 repositories {
     jcenter()
     maven(url = "http://packages.confluent.io/maven/")
     maven(url = "https://dl.bintray.com/radar-cns/org.radarcns")
+    maven(url = "http://oss.jfrog.org/artifactory/oss-snapshot-local/")
 }
 
 sourceSets {
@@ -52,6 +53,8 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:5.4.2")
     testImplementation("org.hamcrest:hamcrest-all:1.3")
     testImplementation("org.apache.kafka:connect-api:${project.extra["kafkaVersion"]}")
+    testImplementation("org.mockito:mockito-core:2.21.0")
+    testImplementation ("org.mockito:mockito-inline:2.21.0")
 }
 
 // config JVM target to 1.8 for kotlin compilation tasks

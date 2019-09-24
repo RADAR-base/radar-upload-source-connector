@@ -1,35 +1,62 @@
+/*
+ *
+ *  * Copyright 2019 The Hyve
+ *  *
+ *  * Licensed under the Apache License, Version 2.0 (the "License");
+ *  * you may not use this file except in compliance with the License.
+ *  * You may obtain a copy of the License at
+ *  *
+ *  *   http://www.apache.org/licenses/LICENSE-2.0
+ *  *
+ *  * Unless required by applicable law or agreed to in writing, software
+ *  * distributed under the License is distributed on an "AS IS" BASIS,
+ *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  * See the License for the specific language governing permissions and
+ *  * limitations under the License.
+ *  *
+ *
+ */
+
 package org.radarbase.upload.doa
 
-import org.hibernate.Hibernate
-import org.hibernate.Session
+import org.hibernate.engine.jdbc.BlobProxy
+import org.hibernate.engine.jdbc.ClobProxy
+import org.radarbase.upload.api.ContentsDTO
+import org.radarbase.upload.api.Page
 import org.radarbase.upload.api.RecordMetadataDTO
 import org.radarbase.upload.doa.entity.*
+import org.radarbase.upload.exception.BadRequestException
 import org.radarbase.upload.exception.ConflictException
-import org.radarbase.upload.inject.session
+import org.radarbase.upload.exception.NotFoundException
+import org.radarbase.upload.inject.createTransaction
 import org.radarbase.upload.inject.transact
+import org.slf4j.LoggerFactory
 import java.io.InputStream
+import java.io.Reader
 import java.sql.Blob
 import java.time.Instant
+import java.util.*
 import javax.persistence.EntityManager
-import javax.ws.rs.BadRequestException
-import javax.ws.rs.NotFoundException
+import javax.persistence.LockModeType
+import javax.persistence.PessimisticLockScope
 import javax.ws.rs.core.Context
+import kotlin.collections.HashSet
 import kotlin.streams.toList
 
 
-class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepository {
+class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<EntityManager>) : RecordRepository {
 
-    override fun updateLogs(id: Long, logsData: String): RecordMetadata = em.transact {
+    override fun updateLogs(id: Long, logsData: String): RecordMetadata = em.get().transact {
         val logs = find(RecordLogs::class.java, id)
         val metadataToSave = if (logs == null) {
             val metadataFromDb = find(RecordMetadata::class.java, id)
-                    ?: throw NotFoundException("RecordMetadata with ID $id does not exist")
+                    ?: throw NotFoundException("record_not_found", "RecordMetadata with ID $id does not exist")
             refresh(metadataFromDb)
             metadataFromDb.logs = RecordLogs().apply {
                 this.metadata = metadataFromDb
                 this.modifiedDate = Instant.now()
                 this.size = logsData.length.toLong()
-                this.logs = Hibernate.getLobCreator(em.session).createClob(logsData)
+                this.logs = ClobProxy.generateProxy(logsData)
             }.also {
                 persist(it)
             }
@@ -37,7 +64,7 @@ class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepos
         } else {
             logs.apply {
                 this.modifiedDate = Instant.now()
-                this.logs = Hibernate.getLobCreator(em.session).createClob(logsData)
+                this.logs = ClobProxy.generateProxy(logsData)
             }
             merge(logs)
             logs.metadata
@@ -46,49 +73,84 @@ class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepos
         modifyNow(metadataToSave)
     }
 
-    override fun query(limit: Int, lastId: Long, projectId: String, userId: String?, status: String?): List<Record> {
-        var queryString = "SELECT r FROM Record r WHERE r.projectId = :projectId AND r.id > :lastId"
+    override fun query(page: Page, projectId: String, userId: String?, status: String?, sourceType: String?): Pair<List<Record>, Long> {
+        var queryString = "SELECT r FROM Record r WHERE r.projectId = :projectId "
+        var countQueryString = "SELECT count(r) FROM Record r WHERE r.projectId = :projectId "
         userId?.let {
             queryString += " AND r.userId = :userId"
+            countQueryString += " AND r.userId = :userId"
         }
         status?.let {
             queryString += " AND r.metadata.status = :status"
+            countQueryString += " AND r.metadata.status = :status"
+        }
+        sourceType?.let {
+            queryString += " AND r.sourceType.name = :sourceType"
+            countQueryString += " AND r.sourceType.name = :sourceType"
         }
         queryString += " ORDER BY r.id"
 
-        return em.transact {
+        return em.get().transact {
             val query = createQuery(queryString, Record::class.java)
-                    .setParameter("lastId", lastId)
                     .setParameter("projectId", projectId)
-                    .setMaxResults(limit)
+                    .setFirstResult(page.lastId())
+                    .setMaxResults(page.pageSize!!)
+
+            val countQuery = createQuery(countQueryString)
+                    .setParameter("projectId", projectId)
+
             userId?.let {
                 query.setParameter("userId", it)
+                countQuery.setParameter("userId", it)
             }
             status?.let {
-                query.setParameter("status", it)
+                query.setParameter("status", RecordStatus.valueOf(it))
+                countQuery.setParameter("status", RecordStatus.valueOf(it))
             }
-            query.resultList
+            sourceType?.let {
+                query.setParameter("sourceType", it)
+                countQuery.setParameter("sourceType", it)
+            }
+            val records = query.resultList
+            val count = countQuery.singleResult as Long
+
+            Pair(records, count)
         }
     }
 
-    override fun readLogs(id: Long): RecordLogs? = em.transact {
+    private fun Page.lastId() : Int = (this.pageNumber!! - 1) * this.pageSize!!
+
+    override fun readLogs(id: Long): RecordLogs? = em.get().transact {
         find(RecordLogs::class.java, id)
     }
 
-    override fun updateContent(record: Record, fileName: String, contentType: String, stream: InputStream, length: Long): RecordContent = em.transact {
+    override fun readLogContents(id: Long): RecordRepository.ClobReader? = em.get().createTransaction { transaction ->
+        val logs = find(RecordLogs::class.java, id)?.logs ?: return@createTransaction null
+
+        object : RecordRepository.ClobReader {
+            override val stream: Reader = logs.characterStream
+
+            override fun close() {
+                logs.free()
+                transaction.close()
+            }
+        }
+    }
+
+    override fun updateContent(record: Record, fileName: String, contentType: String, stream: InputStream, length: Long): RecordContent = em.get().transact {
         val existingContent = record.contents?.find { it.fileName == fileName }
 
         val result = existingContent?.apply {
             this.createdDate = Instant.now()
             this.contentType = contentType
-            this.content = Hibernate.getLobCreator(em.unwrap(Session::class.java)).createBlob(stream, length)
+            this.content = BlobProxy.generateProxy(stream, length)
         } ?: RecordContent().apply {
             this.record = record
             this.fileName = fileName
             this.createdDate = Instant.now()
             this.contentType = contentType
             this.size = length
-            this.content = Hibernate.getLobCreator(em.unwrap(Session::class.java)).createBlob(stream, length)
+            this.content = BlobProxy.generateProxy(stream, length)
         }.also {
             if (record.contents != null) {
                 record.contents?.add(it)
@@ -97,30 +159,55 @@ class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepos
             }
         }
 
-        record.metadata.apply {
-            status = RecordStatus.READY
-            message = "Data successfully uploaded, ready for processing."
-            update()
-        }
-
         merge(record)
-        return@transact result
+        result
     }
 
-    override fun poll(limit: Int): List<Record> = em.transact {
-        createQuery("SELECT r FROM Record r WHERE r.metadata.status = :status ORDER BY r.metadata.modifiedDate", Record::class.java)
+
+    override fun deleteContents(record: Record, fileName: String): Unit = em.get().transact {
+        refresh(record)
+        if (record.metadata.status != RecordStatus.INCOMPLETE) {
+            throw ConflictException("incompatible_status", "Cannot delete file contents from record ${record.id} that is already saved with status ${record.metadata.status}.")
+        }
+        val existingContent = record.contents?.find { it.fileName == fileName } ?: throw NotFoundException("file_not_found", "Cannot file $fileName in record ${record.id}")
+        record.contents?.remove(existingContent)
+        remove(existingContent)
+        merge(record)
+    }
+
+    override fun poll(limit: Int, supportedConverters: List<String>): List<Record> = em.get().transact {
+        setProperty("javax.persistence.lock.scope", PessimisticLockScope.EXTENDED)
+
+        var queryString = "SELECT r FROM Record r WHERE r.metadata.status = :status "
+
+        if (supportedConverters.isNotEmpty()) {
+            queryString += " AND r.sourceType.name in :sourceTypes"
+        }
+
+        queryString += " ORDER BY r.metadata.modifiedDate"
+        val query = createQuery(queryString, Record::class.java)
                 .setParameter("status", RecordStatus.valueOf("READY"))
                 .setMaxResults(limit)
-                .resultStream
+                .setLockMode(LockModeType.PESSIMISTIC_WRITE)
+
+        if (supportedConverters.isNotEmpty()) {
+            query.setParameter("sourceTypes",supportedConverters)
+        }
+
+        query.resultStream
                 .peek {
-                    it.metadata.status = RecordStatus.QUEUED
-                    it.metadata.message = "Record is queued for processing"
-                    modifyNow(it.metadata)
+                    it.metadata.apply {
+                        status = RecordStatus.QUEUED
+                        message = "Record is queued for processing"
+                        revision += 1
+                        modifiedDate = Instant.now()
+                        merge(this)
+                    }
                 }
                 .toList()
     }
 
-    override fun readRecordContent(recordId: Long, fileName: String): RecordContent? = em.transact {
+    override fun readRecordContent(recordId: Long, fileName: String): RecordContent? = em.get().transact {
         val queryString = "SELECT rc from RecordContent rc WHERE rc.record.id = :id AND rc.fileName = :fileName"
 
         createQuery(queryString, RecordContent::class.java)
@@ -129,43 +216,72 @@ class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepos
                 .resultList.firstOrNull()
     }
 
-    override fun readFileContent(id: Long, fileName: String): ByteArray? = em.transact {
+    override fun readFileContent(id: Long, revision: Int, fileName: String, range: LongRange?): RecordRepository.BlobReader? = em.get().createTransaction { transaction ->
         val queryString = "SELECT rc.content from RecordContent rc WHERE rc.record.id = :id AND rc.fileName = :fileName"
 
-        createQuery(queryString, Blob::class.java)
+        val blob = createQuery(queryString, Blob::class.java)
                 .setParameter("fileName", fileName)
                 .setParameter("id", id)
-                .resultList.firstOrNull()?.binaryStream?.readAllBytes()
-    }
+                .resultList.firstOrNull() ?: return@createTransaction null
 
-    override fun create(record: Record): Record = em.transact {
-        val tmpContent = record.contents?.also { record.contents = null }
-
-        persist(record)
-
-        record.apply {
-            contents = tmpContent?.mapTo(HashSet()) {
-                it.record = record
-                it.createdDate = Instant.now()
-                persist(it)
-                it
+        object : RecordRepository.BlobReader {
+            override val stream: InputStream = if (range == null
+                    || (range.first == 0L && range.count().toLong() == blob.length())) {
+                blob.binaryStream
+            } else {
+                val offset = range.first + 1
+                val limit = range.count().toLong()
+                logger.debug("Reading record $id file $fileName from offset $offset with length $limit")
+                blob.getBinaryStream(offset, limit)
             }
 
-            metadata = RecordMetadata().apply {
-                this.record = record
-                status = if (tmpContent == null) RecordStatus.INCOMPLETE else RecordStatus.READY
-                message = if (tmpContent == null) "No data uploaded yet" else "Data successfully uploaded, ready for processing."
-                createdDate = Instant.now()
-                modifiedDate = Instant.now()
-                revision = 1
-                persist(this)
+            override fun close() {
+                blob.free()
+                transaction.close()
             }
         }
     }
 
-    override fun read(id: Long): Record? = em.transact { find(Record::class.java, id) }
+    override fun create(record: Record, metadata: RecordMetadata?, contents: Set<ContentsDTO>?): Record = em.get().transact {
+        persist(record)
 
-    override fun update(record: Record): Record = em.transact {
+        record.contents = contents
+                ?.filter { it.text != null }
+                ?.takeIf { it.isNotEmpty() }
+                ?.mapTo(HashSet()) { content ->
+                    RecordContent().apply {
+                        this.record = record
+                        this.fileName = content.fileName
+                        this.createdDate = Instant.now()
+                        this.contentType = content.contentType
+                        this.size = content.text!!.length.toLong()
+                        this.content = BlobProxy.generateProxy(content.text!!.toByteArray(Charsets.UTF_8))
+                    }
+                }
+                ?.onEach { persist(it) }
+
+        record.metadata = RecordMetadata().apply {
+            this.record = record
+            if (metadata?.status == RecordStatus.READY && record.contents != null) {
+                status = RecordStatus.READY
+                message = metadata.message ?: "Data had been uploaded and ready for processing"
+            } else {
+                status = RecordStatus.INCOMPLETE
+                message = metadata?.message ?: "Record has been created. Data must be uploaded"
+            }
+            createdDate = Instant.now()
+            modifiedDate = Instant.now()
+            revision = 1
+            callbackUrl = metadata?.callbackUrl
+            persist(this)
+        }
+
+        record
+    }
+
+    override fun read(id: Long): Record? = em.get().transact { find(Record::class.java, id) }
+
+    override fun update(record: Record): Record = em.get().transact {
         record.metadata.update()
         merge<Record>(record)
     }
@@ -177,39 +293,79 @@ class RecordRepositoryImpl(@Context private var em: EntityManager) : RecordRepos
 
     private fun modifyNow(metadata: RecordMetadata): RecordMetadata {
         metadata.update()
-        return em.merge<RecordMetadata>(metadata)
+        return em.get().merge<RecordMetadata>(metadata)
     }
 
-    override fun updateMetadata(id: Long, metadata: RecordMetadataDTO): RecordMetadata = em.transact {
-        val existingMetadata = find(RecordMetadata::class.java, id)
-                ?: throw NotFoundException("RecordMetadata with ID $id does not exist")
+    override fun updateMetadata(id: Long, metadata: RecordMetadataDTO): RecordMetadata = em.get().transact {
+        val existingMetadata = find(RecordMetadata::class.java, id,  LockModeType.PESSIMISTIC_WRITE,
+                mapOf("javax.persistence.lock.scope" to PessimisticLockScope.EXTENDED))
+                ?: throw NotFoundException("record_not_found", "RecordMetadata with ID $id does not exist")
 
         if (existingMetadata.revision != metadata.revision)
-            throw BadRequestException("Requested meta data revision ${metadata.revision} " +
+            throw ConflictException("incompatible_revision", "Requested meta data revision ${metadata.revision} " +
                     "should match the latest existing revision ${existingMetadata.revision}")
 
-        if (metadata.status == RecordStatus.PROCESSING.toString()
-                && existingMetadata.status != RecordStatus.QUEUED) {
-            throw ConflictException("incompatible_status", "Record cannot be updated: Conflict in record meta-data status. " +
-                    "Found ${existingMetadata.status}, expected ${RecordStatus.QUEUED}")
-        }
-
-        if (metadata.status == RecordStatus.SUCCEEDED.toString()
-                || metadata.status == RecordStatus.FAILED.toString()
-                && existingMetadata.status != RecordStatus.PROCESSING) {
-            throw ConflictException("incompatible_status", "Record cannot be updated: Conflict in record meta-data status. " +
-                    "Found ${existingMetadata.status}, expected ${RecordStatus.QUEUED}")
-        }
-
+        logger.debug("Updating record $id status from ${existingMetadata.status} to ${metadata.status}")
         existingMetadata.apply {
-            status = RecordStatus.valueOf(metadata.status)
-            message = metadata.message
-        }
+            metadata.status?.let { newStatus ->
+                if (!allowedStateTransition(existingMetadata.status, newStatus)) {
+                    throw ConflictException("incompatible_status", "Record cannot be updated: Conflict in record meta-data status. " +
+                            "Cannot transition from state ${existingMetadata.status} to ${metadata.status}")
+                }
 
-        modifyNow(existingMetadata)
+                status = RecordStatus.valueOf(newStatus)
+            }
+            message = metadata.message ?: defaultStatusMessage.get(status)
+        }.update()
+
+        merge<RecordMetadata>(existingMetadata)
     }
 
-    override fun delete(record: Record) = em.transact { remove(record) }
+    override fun delete(record: Record, revision: Int) = em.get().transact {
+        refresh(record)
+        if (record.metadata.revision != revision) {
+            throw ConflictException("incompatible_revision", "Revision in metadata ${record.metadata.revision} does not match provided revision $revision")
+        }
+        if (record.metadata.status == RecordStatus.PROCESSING) {
+            throw ConflictException("incompatible_status", "Cannot delete record ${record.id}: it is currently being processed.")
+        }
+        remove(record)
+    }
 
-    override fun readMetadata(id: Long): RecordMetadata? = em.transact { find(RecordMetadata::class.java, id) }
+    override fun readMetadata(id: Long): RecordMetadata? = em.get().transact { find(RecordMetadata::class.java, id) }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(RecordRepositoryImpl::class.java)
+
+        private fun allowedStateTransition(from: RecordStatus, to: String): Boolean {
+            val toStatus = try {
+                RecordStatus.valueOf(to)
+            } catch (ex: IllegalArgumentException) {
+                throw BadRequestException("unknown_status", "Record status $to is not a known status. Use one of: ${RecordStatus.values().joinToString()}.")
+            }
+
+            return toStatus == from
+                    || toStatus in allowedStateTransitions[from]
+                    ?: throw BadRequestException("unknown_status", "Record status $from is not a known status. Use one of: ${RecordStatus.values().joinToString()}.")
+        }
+
+        private val allowedStateTransitions: Map<RecordStatus, Set<RecordStatus>> = EnumMap<RecordStatus, Set<RecordStatus>>(RecordStatus::class.java).apply {
+            this[RecordStatus.INCOMPLETE] = setOf(RecordStatus.READY, RecordStatus.FAILED)
+            this[RecordStatus.READY] = setOf(RecordStatus.QUEUED, RecordStatus.FAILED)
+            this[RecordStatus.QUEUED] = setOf(RecordStatus.PROCESSING, RecordStatus.READY, RecordStatus.FAILED)
+            this[RecordStatus.PROCESSING] = setOf(RecordStatus.READY, RecordStatus.SUCCEEDED, RecordStatus.FAILED)
+            this[RecordStatus.FAILED] = setOf()
+            this[RecordStatus.SUCCEEDED] = setOf()
+        }
+
+        private val defaultStatusMessage: Map<RecordStatus, String> = EnumMap<RecordStatus, String>(RecordStatus::class.java).apply {
+            this[RecordStatus.INCOMPLETE] = "The record has been created. The data must be uploaded"
+            this[RecordStatus.READY] = "The record is ready for processing"
+            this[RecordStatus.QUEUED] = "The record has been queued for processing"
+            this[RecordStatus.PROCESSING] = "The record is being processed"
+            this[RecordStatus.FAILED] = "The record processing has been failed. Please check the logs for more information"
+            this[RecordStatus.SUCCEEDED] = "The record has been processed successfully"
+        }
+
+    }
 }

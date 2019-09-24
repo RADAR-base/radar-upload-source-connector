@@ -1,67 +1,90 @@
+/*
+ *
+ *  * Copyright 2019 The Hyve
+ *  *
+ *  * Licensed under the Apache License, Version 2.0 (the "License");
+ *  * you may not use this file except in compliance with the License.
+ *  * You may obtain a copy of the License at
+ *  *
+ *  *   http://www.apache.org/licenses/LICENSE-2.0
+ *  *
+ *  * Unless required by applicable law or agreed to in writing, software
+ *  * distributed under the License is distributed on an "AS IS" BASIS,
+ *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  * See the License for the specific language governing permissions and
+ *  * limitations under the License.
+ *  *
+ *
+ */
+
 package org.radarbase.upload.inject
 
-import liquibase.Liquibase
-import liquibase.database.DatabaseFactory
-import liquibase.database.jvm.JdbcConnection
-import liquibase.exception.LiquibaseException
-import liquibase.resource.ClassLoaderResourceAccessor
 import org.glassfish.jersey.internal.inject.DisposableSupplier
-import org.hibernate.Session
-import org.hibernate.internal.SessionImpl
-import org.radarbase.upload.Config
+import org.radarbase.upload.exception.InternalServerException
+import org.radarbase.upload.logger
+import org.slf4j.LoggerFactory
+import java.io.Closeable
+import java.lang.Exception
 import javax.persistence.EntityManager
-import javax.persistence.Persistence
+import javax.persistence.EntityManagerFactory
+import javax.persistence.EntityTransaction
 import javax.ws.rs.core.Context
 
-class DoaEntityManagerFactory(@Context config: Config) : DisposableSupplier<EntityManager> {
-    private val configMap: Map<String, String>
-
-    init {
-        configMap = HashMap()
-        config.jdbcDriver?.let {
-            configMap["javax.persistence.jdbc.driver"] = it
-        }
-        config.jdbcUrl?.let {
-            configMap["javax.persistence.jdbc.url"] = it
-        }
-        config.jdbcUser?.let {
-            configMap["javax.persistence.jdbc.user"] = it
-        }
-        config.jdbcPassword?.let {
-            configMap["javax.persistence.jdbc.password"] = it
-        }
-    }
-
+class DoaEntityManagerFactory(@Context private val emf: EntityManagerFactory) : DisposableSupplier<EntityManager> {
     override fun get(): EntityManager {
-        val emf = Persistence.createEntityManagerFactory("org.radarbase.upload.doa", configMap)
-        val em = emf.createEntityManager()
-
-        val connection = em.unwrap(SessionImpl::class.java).connection()
-
-        try {
-            val database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(JdbcConnection(connection))
-            val liquibase = Liquibase("dbChangelog.xml", ClassLoaderResourceAccessor(), database)
-            liquibase.update("test")
-        } catch (e: LiquibaseException) {
-            e.printStackTrace()
-        }
-
-        return em
+        logger.debug("Creating EntityManager...")
+        return emf.createEntityManager()
     }
 
     override fun dispose(instance: EntityManager?) {
-        instance?.entityManagerFactory?.close()
+        logger.debug("Disposing  EntityManager")
+        instance?.close()
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(DoaEntityManagerFactory::class.java)
     }
 }
 
-fun <T> EntityManager.transact(transaction: EntityManager.() -> T): T {
-    getTransaction().begin()
+/**
+ * Run a transaction and commit it. If an exception occurs, the transaction is rolled back.
+ */
+fun <T> EntityManager.transact(transactionOperation: EntityManager.() -> T) = createTransaction {
+    it.use { transactionOperation() }
+}
+
+/**
+ * Start a transaction without committing it. If an exception occurs, the transaction is rolled back.
+ */
+fun <T> EntityManager.createTransaction(transactionOperation: EntityManager.(CloseableTransaction) -> T): T {
+    val currentTransaction = transaction ?: throw InternalServerException("transaction_not_found", "Cannot find a transaction from EntityManager")
+
+    currentTransaction.begin()
     try {
-        return transaction()
-    } finally {
-        getTransaction().commit()
+        return transactionOperation(object : CloseableTransaction {
+            override val transaction: EntityTransaction = currentTransaction
+
+            override fun close() {
+                try {
+                    transaction.commit()
+                } catch (ex: Exception) {
+                    logger.error("Rolling back operation", ex)
+                    if (currentTransaction.isActive) {
+                        currentTransaction.rollback()
+                    }
+                }
+            }
+        })
+    } catch (ex: Exception) {
+        logger.error("Rolling back operation", ex)
+        if (currentTransaction.isActive) {
+            currentTransaction.rollback()
+        }
+        throw ex
     }
 }
 
-val EntityManager.session: Session
-    get() = unwrap(Session::class.java)
+interface CloseableTransaction: Closeable {
+    val transaction: EntityTransaction
+    override fun close()
+}
