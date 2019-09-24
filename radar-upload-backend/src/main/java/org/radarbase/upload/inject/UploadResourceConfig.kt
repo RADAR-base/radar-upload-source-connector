@@ -1,11 +1,32 @@
+/*
+ *
+ *  * Copyright 2019 The Hyve
+ *  *
+ *  * Licensed under the Apache License, Version 2.0 (the "License");
+ *  * you may not use this file except in compliance with the License.
+ *  * You may obtain a copy of the License at
+ *  *
+ *  *   http://www.apache.org/licenses/LICENSE-2.0
+ *  *
+ *  * Unless required by applicable law or agreed to in writing, software
+ *  * distributed under the License is distributed on an "AS IS" BASIS,
+ *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  * See the License for the specific language governing permissions and
+ *  * limitations under the License.
+ *  *
+ *
+ */
+
 package org.radarbase.upload.inject
 
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import okhttp3.OkHttpClient
 import org.glassfish.jersey.internal.inject.AbstractBinder
+import org.glassfish.jersey.process.internal.RequestScoped
 import org.glassfish.jersey.server.ResourceConfig
 import org.radarbase.upload.Config
 import org.radarbase.upload.api.RecordMapper
@@ -30,23 +51,14 @@ abstract class UploadResourceConfig {
             .readTimeout(30, TimeUnit.SECONDS)
             .build()
 
-    private val OBJECT_MAPPER = ObjectMapper()
-            .registerModule(JavaTimeModule())
-            .registerModule(KotlinModule())
-            .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-
-    fun resources(config: Config): ResourceConfig {
-        val resources = ResourceConfig().apply {
-            packages(
-                    "org.radarbase.upload.auth",
-                    "org.radarbase.upload.exception",
-                    "org.radarbase.upload.filter",
-                    "org.radarbase.upload.resource")
-            register(binder(this, config))
-            register(ContextResolver<ObjectMapper> {OBJECT_MAPPER})
-            property("jersey.config.server.wadl.disableWadl", true)
-        }
-        return resources
+    fun resources(config: Config) = ResourceConfig().apply {
+        packages(
+                "org.radarbase.upload.exception",
+                "org.radarbase.upload.filter",
+                "org.radarbase.upload.resource")
+        register(binder(this, config))
+        register(ContextResolver { OBJECT_MAPPER })
+        property("jersey.config.server.wadl.disableWadl", true)
     }
 
     abstract fun registerAuthentication(resources: ResourceConfig, binder: AbstractBinder, config: Config)
@@ -70,21 +82,33 @@ abstract class UploadResourceConfig {
             // Bind factories.
             bindFactory(DoaEntityManagerFactory::class.java)
                     .to(EntityManager::class.java)
-                    .`in`(Singleton::class.java)
+                    .`in`(RequestScoped::class.java)
 
             bind(RecordMapperImpl::class.java)
                     .to(RecordMapper::class.java)
+                    .`in`(Singleton::class.java)
 
             bind(SourceTypeMapperImpl::class.java)
                     .to(SourceTypeMapper::class.java)
+                    .`in`(Singleton::class.java)
 
             bind(RecordRepositoryImpl::class.java)
                     .to(RecordRepository::class.java)
+                    .`in`(Singleton::class.java)
 
             bind(SourceTypeRepositoryImpl::class.java)
                     .to(SourceTypeRepository::class.java)
+                    .`in`(Singleton::class.java)
 
             registerAuthentication(resourceConfig, this, config)
         }
+    }
+
+    companion object {
+        private val OBJECT_MAPPER = ObjectMapper()
+                .setSerializationInclusion(JsonInclude.Include.NON_NULL)
+                .registerModule(JavaTimeModule())
+                .registerModule(KotlinModule())
+                .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
     }
 }

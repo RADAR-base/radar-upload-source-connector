@@ -18,6 +18,7 @@ repositories {
     mavenLocal()
     maven(url = "http://packages.confluent.io/maven/")
     maven(url = "https://dl.bintray.com/radar-cns/org.radarcns")
+    maven(url = "http://oss.jfrog.org/artifactory/oss-snapshot-local/")
 }
 
 sourceSets {

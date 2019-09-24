@@ -1,7 +1,26 @@
+/*
+ *
+ *  * Copyright 2019 The Hyve
+ *  *
+ *  * Licensed under the Apache License, Version 2.0 (the "License");
+ *  * you may not use this file except in compliance with the License.
+ *  * You may obtain a copy of the License at
+ *  *
+ *  *   http://www.apache.org/licenses/LICENSE-2.0
+ *  *
+ *  * Unless required by applicable law or agreed to in writing, software
+ *  * distributed under the License is distributed on an "AS IS" BASIS,
+ *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  * See the License for the specific language governing permissions and
+ *  * limitations under the License.
+ *  *
+ *
+ */
+
 package org.radarbase.upload.service.managementportal
 
-import org.radarbase.appconfig.util.CachedSet
 import org.radarbase.auth.jersey.Auth
+import org.radarbase.upload.util.CachedSet
 import org.radarbase.upload.dto.Project
 import org.radarbase.upload.dto.User
 import org.radarbase.upload.exception.NotFoundException
@@ -31,6 +50,9 @@ class MPProjectService(@Context private val mpClient: MPClient): UploadProjectSe
         return projects.get()
                 .filter { auth.token.hasPermissionOnProject(Permission.PROJECT_READ, it.id) }
     }
+
+    fun project(name: String) : Project = projects.find { it.id == name } ?:
+        throw NotFoundException("project_not_found", "Project $name not found.")
 
     override fun projectUsers(projectId: String): List<User> {
         val projectParticipants = participants.computeIfAbsent(projectId) {

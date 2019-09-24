@@ -1,3 +1,22 @@
+/*
+ *
+ *  * Copyright 2019 The Hyve
+ *  *
+ *  * Licensed under the Apache License, Version 2.0 (the "License");
+ *  * you may not use this file except in compliance with the License.
+ *  * You may obtain a copy of the License at
+ *  *
+ *  *   http://www.apache.org/licenses/LICENSE-2.0
+ *  *
+ *  * Unless required by applicable law or agreed to in writing, software
+ *  * distributed under the License is distributed on an "AS IS" BASIS,
+ *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  * See the License for the specific language governing permissions and
+ *  * limitations under the License.
+ *  *
+ *
+ */
+
 package org.radarbase.connect.upload.api
 
 import com.fasterxml.jackson.databind.DeserializationFeature
@@ -6,33 +25,29 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import okhttp3.*
-import org.radarbase.connect.upload.auth.Authorizer
 import org.radarbase.connect.upload.exception.BadGatewayException
+import org.radarbase.connect.upload.exception.ConflictException
 import org.radarbase.connect.upload.exception.NotAuthorizedException
 import org.slf4j.LoggerFactory
 import java.io.Closeable
 
 class UploadBackendClient(
-        private val auth: Authorizer,
+        auth: Authenticator,
         private var httpClient: OkHttpClient,
         private var uploadBackendBaseUrl: String) : Closeable {
 
     init {
-        httpClient = httpClient.newBuilder().authenticator { _, response ->
-            response.request()
-                    .newBuilder()
-                    .header("Authorization", "Bearer ${auth.accessToken()}")
-                    .build()
-        }.build()
+        httpClient = httpClient
+                .newBuilder()
+                .authenticator(auth)
+                .build()
 
-        if (!this.uploadBackendBaseUrl.endsWith("/")) {
-            this.uploadBackendBaseUrl += "/"
-        }
+        uploadBackendBaseUrl = uploadBackendBaseUrl.trimEnd('/')
     }
 
     fun pollRecords(configuration: PollDTO): RecordContainerDTO {
         val request = Request.Builder()
-                .url(uploadBackendBaseUrl.plus("records/poll"))
+                .url("$uploadBackendBaseUrl/records/poll")
                 .post(RequestBody.create(APPLICATION_JSON, configuration.toJsonString()))
                 .build()
         val response = httpClient.executeRequest(request)
@@ -41,7 +56,7 @@ class UploadBackendClient(
 
     fun requestConnectorConfig(name: String): SourceTypeDTO {
         val request = Request.Builder()
-                .url(uploadBackendBaseUrl.plus("source-types/").plus(name))
+                .url("$uploadBackendBaseUrl/source-types/${name}/")
                 .get()
                 .build()
         val response = httpClient.executeRequest(request)
@@ -50,7 +65,7 @@ class UploadBackendClient(
 
     fun requestAllConnectors(): SourceTypeContainerDTO {
         val request = Request.Builder()
-                .url(uploadBackendBaseUrl.plus("source-types"))
+                .url("$uploadBackendBaseUrl/source-types")
                 .get()
                 .build()
         val response = httpClient.executeRequest(request)
@@ -59,16 +74,24 @@ class UploadBackendClient(
 
     fun retrieveFile(record: RecordDTO, fileName: String): ResponseBody? {
         val request = Request.Builder()
-                .url(uploadBackendBaseUrl.plus("records/${record.id}/contents/${fileName}"))
+                .url("$uploadBackendBaseUrl/records/${record.id}/contents/$fileName")
+                .get()
+                .build()
+        return httpClient.executeRequest(request).body()
+    }
+
+    fun retrieveRecordMetadata(recordId: Long): RecordMetadataDTO {
+        val request = Request.Builder()
+                .url("$uploadBackendBaseUrl/records/$recordId/metadata")
                 .get()
                 .build()
         val response = httpClient.executeRequest(request)
-        return response.body()
+        return mapper.readValue(response.body()?.string(), RecordMetadataDTO::class.java)
     }
 
     fun updateStatus(recordId: Long, newStatus: RecordMetadataDTO): RecordMetadataDTO {
         val request = Request.Builder()
-                .url(uploadBackendBaseUrl.plus("records/$recordId/metadata"))
+                .url("$uploadBackendBaseUrl/records/$recordId/metadata")
                 .post(RequestBody.create(APPLICATION_JSON, newStatus.toJsonString()))
                 .build()
         val response = httpClient.executeRequest(request)
@@ -77,8 +100,8 @@ class UploadBackendClient(
 
     fun addLogs(recordId: Long, status: LogsDto): RecordMetadataDTO {
         val request = Request.Builder()
-                .url(uploadBackendBaseUrl.plus("records/$recordId/logs"))
-                .post(RequestBody.create(APPLICATION_JSON, status.toJsonString()))
+                .url("$uploadBackendBaseUrl/records/$recordId/logs")
+                .put(RequestBody.create(TEXT_PLAIN, status.toJsonString()))
                 .build()
         val response = httpClient.executeRequest(request)
         return mapper.readValue(response.body()?.charStream(), RecordMetadataDTO::class.java)
@@ -97,6 +120,7 @@ class UploadBackendClient(
             when (response.code()) {
                 401 -> throw NotAuthorizedException("access token is not provided or is invalid : ${response.message()}")
                 403 -> throw NotAuthorizedException("access token is not authorized to perform this request")
+                409 -> throw ConflictException("Conflicting request exception: ${response.message()}")
             }
             throw BadGatewayException("Failed to make request to ${request.url()}: Error code ${response.code()}:  ${response.body()?.string()}")
         }
@@ -108,6 +132,7 @@ class UploadBackendClient(
     companion object {
         private val logger = LoggerFactory.getLogger(UploadBackendClient::class.java)
         private val APPLICATION_JSON = MediaType.parse("application/json; charset=utf-8")
+        private val TEXT_PLAIN = MediaType.parse("text/plain; charset=utf-8")
         private var mapper: ObjectMapper = ObjectMapper()
                 .registerModule(KotlinModule())
                 .registerModule(JavaTimeModule())
