@@ -51,8 +51,8 @@ class MPProjectService(@Context private val mpClient: MPClient): UploadProjectSe
                 .filter { auth.token.hasPermissionOnProject(Permission.PROJECT_READ, it.id) }
     }
 
-    fun project(name: String) : Project = projects.find { it.id == name } ?:
-        throw NotFoundException("project_not_found", "Project $name not found.")
+    override fun project(projectId: String) : Project = projects.find { it.id == projectId } ?:
+        throw NotFoundException("project_not_found", "Project $projectId not found.")
 
     override fun projectUsers(projectId: String): List<User> {
         val projectParticipants = participants.computeIfAbsent(projectId) {

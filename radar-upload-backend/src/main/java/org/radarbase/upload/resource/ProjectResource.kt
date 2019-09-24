@@ -26,7 +26,6 @@ import org.radarbase.upload.dto.Project
 import org.radarbase.upload.dto.ProjectList
 import org.radarbase.upload.dto.UserList
 import org.radarbase.upload.service.UploadProjectService
-import org.radarbase.upload.service.managementportal.MPProjectService
 import org.radarcns.auth.authorization.Permission
 import javax.annotation.Resource
 import javax.ws.rs.*
@@ -40,8 +39,7 @@ import javax.ws.rs.core.MediaType
 @Resource
 class ProjectResource(
         @Context private val projectService: UploadProjectService,
-        @Context private val auth: Auth,
-        @Context private val mpService: MPProjectService) {
+        @Context private val auth: Auth) {
 
     @GET
     @NeedsPermission(Permission.Entity.PROJECT, Permission.Operation.READ)
@@ -58,6 +56,6 @@ class ProjectResource(
     @Path("{projectId}")
     @NeedsPermission(Permission.Entity.PROJECT, Permission.Operation.READ, "projectId")
     fun project(@PathParam("projectId") projectId: String): Project {
-        return mpService.project(projectId)
+        return projectService.project(projectId)
     }
 }
