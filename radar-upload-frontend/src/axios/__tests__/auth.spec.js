@@ -11,7 +11,7 @@ describe('axios/projects', () => {
     const now = new Date(Date.now());
     const localStoreSetToken = jest.spyOn(sessionStorage.__proto__, 'setItem');
     const token = {token: tokenVal, expirationDate: now};
-    await auth.login(token);
+    auth.login(token);
     expect(localStoreSetToken).toBeCalledWith('token', tokenVal);
     expect(localStoreSetToken).toBeCalledWith('tokenExpiration', now.toISOString());
 
@@ -19,9 +19,26 @@ describe('axios/projects', () => {
 
   it('logout', async () => {
     const localStoreRemoveToken = jest.spyOn(sessionStorage.__proto__, 'removeItem');
-    await auth.logout();
+    auth.logout();
     expect(localStoreRemoveToken).toBeCalledWith('token');
     expect(localStoreRemoveToken).toBeCalledWith('tokenExpiration');
+  });
+
+  it('getToken', async () => {
+    const oldGetItem = sessionStorage.__proto__.getItem;
+    sessionStorage.__proto__.getItem = jest.fn().mockReturnValueOnce(null);
+    expect(auth.getToken()).toBeNull();
+
+    sessionStorage.__proto__.getItem = jest.fn()
+            .mockReturnValueOnce(new Date(Date.now() - 60).toISOString());
+    expect(auth.getToken()).toBeNull();
+
+    sessionStorage.__proto__.getItem = jest.fn()
+            .mockReturnValueOnce(new Date(Date.now() + 60).toISOString())
+            .mockReturnValueOnce('test');
+    expect(auth.getToken()).toEqual('test');
+
+    sessionStorage.__proto__.getItem = oldGetItem;
   });
 
   it('fetchToken', async () => {

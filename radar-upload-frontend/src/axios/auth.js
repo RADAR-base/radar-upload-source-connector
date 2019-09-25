@@ -1,12 +1,12 @@
 import axios from 'axios';
 
 export default {
-  async logout() {
+  logout() {
     sessionStorage.removeItem('token');
     sessionStorage.removeItem('tokenExpiration');
     document.cookie = 'authorizationBearer=;Max-Age=0';
   },
-  async login(token) {
+  login(token) {
     sessionStorage.setItem('token', token.token);
     sessionStorage.setItem('tokenExpiration', token.expirationDate.toISOString());
     const age = (token.expirationDate.getTime() - Date.now()) / 1000;
@@ -15,13 +15,12 @@ export default {
   async processLogin(authCode, appConfig) {
     // eslint-disable-next-line no-undef
     const tokenResponse = await this.fetchToken(authCode, appConfig);
-    await this.login(tokenResponse);
+    this.login(tokenResponse);
 
     let redirectTo = sessionStorage.getItem('lastAuthorizedPath');
     if (redirectTo) {
       sessionStorage.removeItem('lastAuthorizedPath');
-    }
-    if (!redirectTo) {
+    } else {
       redirectTo = '/';
     }
 
