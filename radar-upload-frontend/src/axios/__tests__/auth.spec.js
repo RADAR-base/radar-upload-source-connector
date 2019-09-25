@@ -6,17 +6,24 @@ jest.mock('axios');
 
 describe('axios/projects', () => {
   it('login', async () => {
-    axios.get.mockResolvedValue('');
-    await auth.login();
-    expect(axios.get).toBeCalledWith('/login');
-    axios.get.mockClear();
+
+    const tokenVal = 'here is the token';
+    const now = new Date(Date.now());
+    const localStoreSetToken = jest.spyOn(sessionStorage.__proto__, 'setItem');
+    const token = {token: tokenVal, expirationDate: now};
+    await auth.login(token);
+    expect(localStoreSetToken).toBeCalledWith('token', tokenVal);
+    expect(localStoreSetToken).toBeCalledWith('tokenExpiration', now.toISOString());
+
   });
 
   it('logout', async () => {
-    axios.get.mockResolvedValue('');
+    const localStoreRemoveToken = jest.spyOn(sessionStorage.__proto__, 'removeItem');
     await auth.logout();
-    expect(axios.get).toBeCalledWith('/logout');
+    expect(localStoreRemoveToken).toBeCalledWith('token');
+    expect(localStoreRemoveToken).toBeCalledWith('tokenExpiration');
   });
+
   it('fetchToken', async () => {
     const authCode = 'authCode';
     const clientId = 'clientId';
@@ -39,12 +46,12 @@ describe('axios/projects', () => {
     };
 
     const now = new Date().getTime();
-    const token = await auth.fetchToken(authCode, { clientId, authCallback: callback });
+    const token = await auth.fetchToken(authCode, { clientId, authCallback: callback , authAPI: 'http://localhost:8090/managementportal/oauth' });
     expect(axios.post)
-            .toBeCalledWith('https://radar-test.thehyve.net/managementportal/oauth/token',
+            .toBeCalledWith('http://localhost:8090/managementportal/oauth/token',
                     params, config);
     expect(token.token).toEqual(postReturnValue.access_token);
     expect(token.expirationDate.getTime()).toBeGreaterThanOrEqual(now + postReturnValue.expires_in);
-    expect(token.expirationDate.getTime()).toBeLessThanOrEqual(now + postReturnValue.expires_in + 5);
+
   });
 });
