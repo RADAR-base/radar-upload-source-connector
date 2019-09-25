@@ -64,12 +64,12 @@ export default {
     };
   },
 
-  async authorizationFailed(store, router) {
-    sessionStorage.removeItem('token');
-    sessionStorage.removeItem('tokenExpiration');
+  authorizationFailed(store, router) {
+    this.logout();
 
     if (!window.location.href.includes('/login')) {
-      sessionStorage.setItem('lastAuthorizedPath', router.currentRoute.path);
+      const route = window.location.href.split('#').slice(1).join('#') || '/';
+      sessionStorage.setItem('lastAuthorizedPath', route);
       // eslint-disable-next-line no-case-declarations
       router.replace({ name: 'Login' });
       store.commit('openSnackbar', { type: 'error', text: 'Please login to continue' });
