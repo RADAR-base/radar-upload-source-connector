@@ -142,8 +142,8 @@
                 shaped
               >
                 <v-list-item-group color="primary lighten-2">
-                  <v-list-item @click="downloadFile(record.id, file.fileName, file.url)">
-                    Download
+                  <v-list-item>
+                    <a v-bind:href="file.url" download target="_blank">Download</a>
                   </v-list-item>
                 </v-list-item-group>
               </v-list>
@@ -187,9 +187,6 @@ export default {
     },
   },
   methods: {
-    async downloadFile(recordId, fileName, url) {
-      await fileAPI.download({ recordId, fileName, url });
-    },
     async viewLogs(url) {
       this.loadingLog = true;
       this.recordLogs = await fileAPI.getRecordLog(url).catch(() => {

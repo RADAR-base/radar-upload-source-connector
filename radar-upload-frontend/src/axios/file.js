@@ -1,6 +1,5 @@
 import axios from 'axios';
 import uuidv1 from 'uuid/v1';
-import { downloadFile } from '@/helpers';
 import { baseURL } from '@/app.config';
 
 export default {
@@ -105,12 +104,6 @@ export default {
           userId: record.data.userId,
         }))
         .reverse());
-  },
-
-  async download({ recordId, fileName, url }) {
-    const fileUrl = url || `${baseURL}/records/${recordId}/contents/${fileName}`;
-    await axios.get(fileUrl);
-    downloadFile(fileName, fileUrl);
   },
 
   async getRecordLog(url) {

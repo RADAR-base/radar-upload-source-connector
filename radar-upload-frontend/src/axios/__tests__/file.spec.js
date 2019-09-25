@@ -1,13 +1,8 @@
 /* eslint-disable no-undef */
 import axios from 'axios';
 import fileAPI from '../file';
-import { downloadFile } from '@/helpers';
-import { baseURL } from '@/app.config';
 
 jest.mock('axios');
-jest.mock('@/helpers', () => ({
-  downloadFile: jest.fn(),
-}));
 
 function expected(expectedValue, service) {
   return fileAPI[service]()
@@ -198,13 +193,5 @@ describe('axios/file', () => {
         expect(data).toEqual(expectedVal2);
         // expect(axios.get).toBeCalledWith(endpoint);
       });
-  });
-
-  it('download', async () => {
-    const recordId = 'id';
-    const fileName = 'name';
-    await fileAPI.download({ recordId, fileName });
-    const url = `${baseURL}/records/${recordId}/contents/${fileName}`;
-    expect(downloadFile).toBeCalledWith(fileName, url);
   });
 });
