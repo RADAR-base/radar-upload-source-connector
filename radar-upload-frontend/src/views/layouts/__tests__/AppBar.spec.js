@@ -21,10 +21,8 @@ describe('AppBar', () => {
   it('logout', () => {
     auth.logout = jest.fn();
     // eslint-disable-next-line no-proto
-    const localStoreRemoveToken = jest.spyOn(localStorage.__proto__, 'removeItem');
     wrapper.vm.logout();
-    expect(localStoreRemoveToken).toBeCalledWith('token');
-    expect(wrapper.vm.$router.replace).toBeCalledWith('/login');
+    expect(wrapper.vm.$router.replace).toBeCalledWith({name: 'Login'});
     expect(auth.logout).toBeCalled();
   });
 });

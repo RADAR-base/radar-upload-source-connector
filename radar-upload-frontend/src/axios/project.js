@@ -1,12 +1,12 @@
 import axios from 'axios';
 
 export default {
-  getProjects() {
-    return axios.get('/projects')
-      .then(res => res.projects.map(el => ({
-        text: el.name || el.id,
-        value: el.id,
-        ...el,
-      })));
+  async getProjects() {
+    const result = await axios.get('projects');
+    return result.projects.map(el => ({
+      text: el.name || el.id,
+      value: el.id,
+      ...el,
+    }));
   },
 };

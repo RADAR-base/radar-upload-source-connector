@@ -23,7 +23,7 @@
       <span v-show="!loading">
         <slot name="fileListSubHeader" />
       </span>
-      <span v-show="!loading&&patientRecords.length==0">
+      <span v-show="!loading && patientRecords.length === 0 && !error">
         This patient does not have any records
       </span>
     </v-subheader>
@@ -142,8 +142,8 @@
                 shaped
               >
                 <v-list-item-group color="primary lighten-2">
-                  <v-list-item @click="downloadFile(record.id, file.fileName)">
-                    Download
+                  <v-list-item>
+                    <a v-bind:href="file.url" download target="_blank">Download</a>
                   </v-list-item>
                 </v-list-item-group>
               </v-list>
@@ -187,17 +187,13 @@ export default {
     },
   },
   methods: {
-    async downloadFile(recordId, fileName) {
-      await fileAPI.download({ recordId, fileName });
-    },
     async viewLogs(url) {
       this.loadingLog = true;
-      const recordLogs = await fileAPI.getRecordLog(url).catch(() => {
+      this.recordLogs = await fileAPI.getRecordLog(url).catch(() => {
         this.$error('Cannot download logs, please try again later');
         this.dialog = false;
         return '';
       });
-      this.recordLogs = recordLogs;
       this.loadingLog = false;
     },
   },

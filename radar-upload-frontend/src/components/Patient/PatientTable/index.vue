@@ -112,20 +112,22 @@ export default {
     async getPatientList(projectId) {
       this.items = [];
       this.loading = true;
-      const patientList = await patientAPI.filteredPatients(projectId).catch(() => ([]));
-      this.items = patientList;
+      this.items = await patientAPI.filteredPatients(projectId).catch(() => ([]));
       this.loading = false;
     },
     async getPatientRecords({ item }) {
       this.patientRecords = [];
       this.fileLoading = true;
-      const records = await fileAPI
-        .filterRecords({ userId: item.patientId, projectId: this.currentProject })
-        .catch((error) => {
-          this.fileLoadingError = error;
-          return [];
-        });
-      this.patientRecords = records;
+      try {
+        this.patientRecords = await fileAPI
+          .filterRecords({
+            userId: item.patientId,
+            projectId: this.currentProject,
+          });
+      } catch (error) {
+        this.fileLoadingError = error || 'Failed to load patient records';
+        this.patientRecords = [];
+      }
       this.fileLoading = false;
     },
     resetData() {

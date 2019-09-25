@@ -1,13 +1,8 @@
 /* eslint-disable no-undef */
 import axios from 'axios';
 import fileAPI from '../file';
-import { downLoadFile } from '@/helpers';
-import { baseURL } from '@/app.config';
 
 jest.mock('axios');
-jest.mock('@/helpers', () => ({
-  downLoadFile: jest.fn(),
-}));
 
 function expected(expectedValue, service) {
   return fileAPI[service]()
@@ -60,7 +55,7 @@ describe('axios/file', () => {
     axios.put.mockResolvedValue();
     return fileAPI.putRecords({ id, fileName, file })
       .then(() => {
-        expect(axios.put).toBeCalledWith(`/records/${id}/contents/${fileName}`, file, { headers });
+        expect(axios.put).toBeCalledWith(`records/${id}/contents/${fileName}`, file, { headers });
       });
   });
 
@@ -105,7 +100,7 @@ describe('axios/file', () => {
     return fileAPI.postRecords(params)
       .then((data) => {
         expect(data).toEqual(expectedVal);
-        expect(axios.post).toBeCalledWith('/records', payload);
+        expect(axios.post).toBeCalledWith('records', payload);
       });
   });
 
@@ -117,7 +112,7 @@ describe('axios/file', () => {
     };
     axios.post.mockResolvedValue();
     return fileAPI.markRecord({ recordId, revision }).then(() => {
-      expect(axios.post).toBeCalledWith(`/records/${recordId}/metadata`, { ...body, revision });
+      expect(axios.post).toBeCalledWith(`records/${recordId}/metadata`, { ...body, revision });
     });
   });
 
@@ -180,7 +175,7 @@ describe('axios/file', () => {
       id: response.records[0].id,
     }];
 
-    let endpoint = `/records?projectId=${params1.projectId}`;
+    let endpoint = `records?projectId=${params1.projectId}`;
     endpoint = params1.status ? endpoint += `&&status=${params1.status}` : endpoint;
     endpoint = params1.userId ? endpoint += `&&userId=${params1.userId}` : endpoint;
 
@@ -198,13 +193,5 @@ describe('axios/file', () => {
         expect(data).toEqual(expectedVal2);
         // expect(axios.get).toBeCalledWith(endpoint);
       });
-  });
-
-  it('download', async () => {
-    const recordId = 'id';
-    const fileName = 'name';
-    await fileAPI.download({ recordId, fileName });
-    const url = `${baseURL}/records/${recordId}/contents/${fileName}`;
-    expect(downLoadFile).toBeCalledWith(fileName, url);
   });
 });

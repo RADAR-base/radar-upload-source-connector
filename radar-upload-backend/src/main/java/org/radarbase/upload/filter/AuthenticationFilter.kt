@@ -57,7 +57,7 @@ class AuthenticationFilter : ContainerRequestFilter {
                             .build())
             null
         }
-        logger.debug("Verified token : $radarToken for request ${requestContext.uriInfo.path}" )
+        logger.debug("Verified token: $radarToken for request ${requestContext.uriInfo.path}" )
         if (radarToken == null) {
             logger.debug("[401] {}: Could not find a valid token in the header",
                     requestContext.uriInfo.path)
