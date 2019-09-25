@@ -57,7 +57,6 @@ export default {
       console.log(`Loading with code ${code}`);
       auth.processLogin(code, appConfig)
         .then((nextRoute) => {
-          console.log('Processed login');
           services.authInit(this.$store, this.$router);
           this.$router.replace(nextRoute);
         })
