@@ -45,7 +45,7 @@ describe('projectMixin', () => {
     expect(wrapper.vm.loading).toBe(true);
 
     await flushPromise();
-    expect(wrapper.vm.errorMessage).toBe('Loading project fails, please try again later');
+    expect(wrapper.vm.errorMessage).toBe('Loading project failed, please try again later');
     expect(wrapper.vm.loading).toBe(false);
     expect(wrapper.vm.projects).toEqual([]);
   });

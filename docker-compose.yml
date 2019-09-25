@@ -239,16 +239,23 @@ services:
       context: .
       dockerfile: Dockerfile.frontend
     image: radarbase/radar-upload-connect-frontend:dev
-    ports:
-      - "8080:80"
     depends_on:
       - radar-upload-connect-backend
       - managementportal-app
-      - radarbase-postgresql
     environment:
-      VUE_APP_BASE_URL: ""
-      VUE_APP_API_BASE_URL: "http://localhost:8085/radar-upload"
-      VUE_APP_AUTH_API: "http://localhost:8090/managementportal/oauth"
-      VUE_APP_AUTH_CALLBACK: "http://localhost:8080/login"
+      VUE_APP_BASE_URL: "/upload"
+      VUE_APP_API_BASE_URL: "http://localhost:8080/upload/api/"
+      VUE_APP_AUTH_API: "http://localhost:8080/managementportal/oauth"
+      VUE_APP_AUTH_CALLBACK: "http://localhost:8080/upload/login"
       VUE_APP_CLIENT_ID: "radar_upload_frontend"
 
+  webserver:
+    image: nginx:1.17.3-alpine
+    ports:
+      - "8080:8080"
+    depends_on:
+      - radar-upload-connect-backend
+      - managementportal-app
+      - radar-upload-connect-frontend
+    volumes:
+      - "./docker/nginx-proxy.conf:/etc/nginx/nginx.conf"
