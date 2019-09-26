@@ -6,7 +6,15 @@
     :search="searchText"
     single-expand
     item-key="id"
+    disable-sort
+    :options.sync="options"
     :expanded.sync="expandedItems"
+    @update:options="updateOptions"
+    :server-items-length="serverItemsLength"
+    :footer-props="{
+      itemsPerPageOptions:[10,20,30],
+      showCurrentPage: true
+    }"
     show-expand
     @click:row="expandRow"
   >
@@ -143,6 +151,8 @@ export default {
       loadingLog: false,
       recordLogs: '',
       dialog: false,
+      options: {},
+      serverItemsLength: 0,
     };
   },
   computed: {
@@ -153,32 +163,21 @@ export default {
       return this.$store.state.file.searchText;
     },
   },
-  watch: {
-    currentProject: {
-      handler(projectId) {
-        if (projectId && this.isActive) {
-          this.getRecordList(projectId);
-        }
-      },
-      immediate: true,
-    },
-    isActive: {
-      handler(val) {
-        if (val && this.currentProject) {
-          this.getRecordList(this.currentProject);
-        }
-      },
-      immediate: true,
-    },
-  },
   methods: {
-    async getRecordList(projectId) {
+    async updateOptions(option) {
+      const { page, itemsPerPage } = option;
+      // console.log('update page, itemsPerPage ', page, itemsPerPage);
+      const projectId = this.currentProject;
+      this.getRecordList({ page, size: itemsPerPage, projectId });
+    },
+    async getRecordList({ projectId, page, size }) {
       this.recordList = [];
       this.loading = true;
-      const recordList = await fileAPI.filterRecords({ projectId })
-        .catch(() => []);
+      const { totalElements, tableData } = await fileAPI.filterRecords({ projectId, page, size })
+        .catch(() => ({ tableData: [], totalElements: 0 }));
       this.loading = false;
-      this.recordList = recordList;
+      this.serverItemsLength = totalElements;
+      this.recordList = tableData;
     },
     async expandRow(row) {
       if (this.expandedItems[0] && (this.expandedItems[0].id === row.id)) {
