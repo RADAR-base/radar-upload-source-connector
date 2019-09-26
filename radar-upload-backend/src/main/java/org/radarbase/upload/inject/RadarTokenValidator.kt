@@ -48,7 +48,7 @@ class RadarTokenValidator constructor(@Context config: Config) : AuthValidator {
             this.tokenValidator.refresh()
             logger.info("Refreshed Token Validator")
         } catch (ex: Exception) {
-            logger.error("Failed to immediatly initialize token validator, will try again later: {}",
+            logger.error("Failed to immediately initialize token validator, will try again later: {}",
                     ex.toString())
         }
     }
