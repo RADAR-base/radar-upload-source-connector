@@ -1,9 +1,29 @@
+/*
+ *
+ *  * Copyright 2019 The Hyve
+ *  *
+ *  * Licensed under the Apache License, Version 2.0 (the "License");
+ *  * you may not use this file except in compliance with the License.
+ *  * You may obtain a copy of the License at
+ *  *
+ *  *   http://www.apache.org/licenses/LICENSE-2.0
+ *  *
+ *  * Unless required by applicable law or agreed to in writing, software
+ *  * distributed under the License is distributed on an "AS IS" BASIS,
+ *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  * See the License for the specific language governing permissions and
+ *  * limitations under the License.
+ *  *
+ *
+ */
+
 package org.radarbase.upload.auth
 
-import org.radarcns.auth.authorization.AuthoritiesConstants.*
+import org.radarcns.auth.authorization.AuthoritiesConstants.SYS_ADMIN
 import org.radarcns.auth.authorization.Permission
 import org.radarcns.auth.authorization.Permission.MEASUREMENT_CREATE
 import org.radarcns.auth.token.RadarToken
+import java.time.Instant
 import javax.ws.rs.BadRequestException
 import javax.ws.rs.ForbiddenException
 
@@ -14,6 +34,10 @@ class ManagementPortalAuth(private val token: RadarToken) : Auth {
     override val defaultProject = token.roles.keys
             .firstOrNull { token.hasPermissionOnProject(MEASUREMENT_CREATE, it) }
     override val userId: String? = token.subject.takeUnless { it.isEmpty() }
+
+    override val bearerToken: String? = token.token
+
+    override val expiresAt: Instant? = token.expiresAt.toInstant()
 
     override fun checkSourcePermission(permission: Permission, projectId: String?, userId: String?, sourceId: String?) {
         if (!token.hasPermissionOnSource(permission,
@@ -53,9 +77,17 @@ class ManagementPortalAuth(private val token: RadarToken) : Auth {
 
     override fun hasPermission(permission: Permission) = token.hasPermission(permission)
 
+    override fun hasPermissionOnProject(permission: Permission, projectId: String): Boolean {
+        return token.hasPermissionOnProject(permission, projectId)
+    }
+
+    override fun hasPermissionOnSubject(permission: Permission, projectId: String, userId: String): Boolean {
+        return token.hasPermissionOnSubject(permission, projectId, userId)
+    }
+
     override fun authorizedProjects(permission: Permission): AccessRestriction {
-        if (token.authorities.contains(SYS_ADMIN) && permission.isAuthorityAllowed(SYS_ADMIN)
-                || ("client_credentials" == token.grantType && (permission.scopeName() in token.scopes))) {
+        if (((token.authorities.contains(SYS_ADMIN) && permission.isAuthorityAllowed(SYS_ADMIN))
+                        || isClientCredentials) && permission.scopeName() in token.scopes) {
             return AllAccess
         }
 
@@ -63,4 +95,7 @@ class ManagementPortalAuth(private val token: RadarToken) : Auth {
             project.value.any { permission.isAuthorityAllowed(it) }
         }.keys)
     }
+
+    override val isClientCredentials
+        get() = "client_credentials" == token.grantType
 }

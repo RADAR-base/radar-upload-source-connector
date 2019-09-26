@@ -1,0 +1,261 @@
+---
+version: '3.2'
+
+services:
+
+  #---------------------------------------------------------------------------#
+  # Zookeeper Cluster                                                         #
+  #---------------------------------------------------------------------------#
+  zookeeper-1:
+    image: confluentinc/cp-zookeeper:5.3.0
+    environment:
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 1000
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+      ZOOKEEPER_SERVERS: zookeeper-1:2888:3888;zookeeper-2:2888:3888;zookeeper-3:2888:3888
+
+  zookeeper-2:
+    image: confluentinc/cp-zookeeper:5.3.0
+    environment:
+      ZOOKEEPER_SERVER_ID: 2
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 1000
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+      ZOOKEEPER_SERVERS: zookeeper-1:2888:3888;zookeeper-2:2888:3888;zookeeper-3:2888:3888
+
+  zookeeper-3:
+    image: confluentinc/cp-zookeeper:5.3.0
+    environment:
+      ZOOKEEPER_SERVER_ID: 3
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 1000
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+      ZOOKEEPER_SERVERS: zookeeper-1:2888:3888;zookeeper-2:2888:3888;zookeeper-3:2888:3888
+
+  #---------------------------------------------------------------------------#
+  # Kafka Cluster                                                             #
+  #---------------------------------------------------------------------------#
+  kafka-1:
+    image: confluentinc/cp-kafka:5.3.0
+    depends_on:
+      - zookeeper-1
+      - zookeeper-2
+      - zookeeper-3
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-1:9092
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:2181,zookeeper-2:2181,zookeeper-3:2181
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_GROUP_MIN_SESSION_TIMEOUT_MS: 5000
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_LOG4J_LOGGERS: kafka.producer.async.DefaultEventHandler=INFO,kafka.controller=INFO,state.change.logger=INFO
+      KAFKA_COMPRESSION_TYPE: lz4
+      KAFKA_INTER_BROKER_PROTOCOL_VERSION: "2.0"
+      KAFKA_LOG_MESSAGE_FORMAT_VERSION: "2.0"
+      KAFKA_CONFLUENT_SUPPORT_METRICS_ENABLE: "false"
+
+  kafka-2:
+    image: confluentinc/cp-kafka:5.3.0
+    depends_on:
+      - zookeeper-1
+      - zookeeper-2
+      - zookeeper-3
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-2:9092
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:2181,zookeeper-2:2181,zookeeper-3:2181
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_GROUP_MIN_SESSION_TIMEOUT_MS: 5000
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_LOG4J_LOGGERS: kafka.producer.async.DefaultEventHandler=INFO,kafka.controller=INFO,state.change.logger=INFO
+      KAFKA_COMPRESSION_TYPE: lz4
+      KAFKA_INTER_BROKER_PROTOCOL_VERSION: "2.0"
+      KAFKA_LOG_MESSAGE_FORMAT_VERSION: "2.0"
+      KAFKA_CONFLUENT_SUPPORT_METRICS_ENABLE: "false"
+
+  kafka-3:
+    image: confluentinc/cp-kafka:5.3.0
+    depends_on:
+      - zookeeper-1
+      - zookeeper-2
+      - zookeeper-3
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-3:9092
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:2181,zookeeper-2:2181,zookeeper-3:2181
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_GROUP_MIN_SESSION_TIMEOUT_MS: 5000
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_LOG4J_LOGGERS: kafka.producer.async.DefaultEventHandler=INFO,kafka.controller=INFO,state.change.logger=INFO
+      KAFKA_COMPRESSION_TYPE: lz4
+      KAFKA_INTER_BROKER_PROTOCOL_VERSION: "2.0"
+      KAFKA_LOG_MESSAGE_FORMAT_VERSION: "2.0"
+      KAFKA_CONFLUENT_SUPPORT_METRICS_ENABLE: "false"
+
+  #---------------------------------------------------------------------------#
+  # Schema Registry                                                           #
+  #---------------------------------------------------------------------------#
+  schema-registry-1:
+    image: confluentinc/cp-schema-registry:5.3.0
+    depends_on:
+      - zookeeper-1
+      - zookeeper-2
+      - zookeeper-3
+      - kafka-1
+      - kafka-2
+      - kafka-3
+    restart: always
+    ports:
+      - "8081:8081"
+    environment:
+      SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: zookeeper-1:2181,zookeeper-2:2181,zookeeper-3:2181
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry-1
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+      SCHEMA_REGISTRY_AVRO_COMPATIBILITY_LEVEL: none
+      KAFKA_GROUP_MIN_SESSION_TIMEOUT_MS: 5000
+
+  #---------------------------------------------------------------------------#
+  # REST proxy                                                                #
+  #---------------------------------------------------------------------------#
+  rest-proxy-1:
+    image: confluentinc/cp-kafka-rest:5.3.0
+    depends_on:
+      - zookeeper-1
+      - zookeeper-2
+      - zookeeper-3
+      - kafka-1
+      - kafka-2
+      - kafka-3
+      - schema-registry-1
+    ports:
+      - "8082:8082"
+    environment:
+      KAFKA_REST_ZOOKEEPER_CONNECT: zookeeper-1:2181,zookeeper-2:2181,zookeeper-3:2181
+      KAFKA_REST_LISTENERS: http://0.0.0.0:8082
+      KAFKA_REST_SCHEMA_REGISTRY_URL: http://schema-registry-1:8081
+      KAFKA_REST_HOST_NAME: rest-proxy-1
+      KAFKA_GROUP_MIN_SESSION_TIMEOUT_MS: 5000
+      KAFKA_AUTO_COMMIT_INTERVAL_MS: 300
+      KAFKA_REST_COMPRESSION_TYPE: lz4
+
+  #---------------------------------------------------------------------------#
+  # Management Portal                                                         #
+  #---------------------------------------------------------------------------#
+  managementportal-app:
+    image: radarbase/management-portal:0.5.6
+    depends_on:
+      - radarbase-postgresql
+    ports:
+      - "8090:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:postgresql://radarbase-postgresql:5432/managementportal
+      SPRING_DATASOURCE_USERNAME: radarcns
+      SPRING_DATASOURCE_PASSWORD: radarcns
+      MANAGEMENTPORTAL_FRONTEND_CLIENT_SECRET: "testMe"
+      MANAGEMENTPORTAL_COMMON_BASE_URL: http://localhost:8080/managementportal
+      MANAGEMENTPORTAL_COMMON_MANAGEMENT_PORTAL_BASE_URL: http://localhost:8080/managementportal
+      MANAGEMENTPORTAL_OAUTH_CLIENTS_FILE: /mp-includes/config/oauth_client_details.csv
+      MANAGEMENTPORTAL_CATALOGUE_SERVER_ENABLE_AUTO_IMPORT: 'false'
+      MANAGEMENTPORTAL_OAUTH_SIGNING_KEY_ALIAS: 'radarbase-managementportal-ec'
+      JAVA_OPTS: -Xmx256m  # maximum heap size for the JVM running ManagementPortal, increase this as necessary
+    volumes:
+      - ./docker/mp-config/:/mp-includes/config
+
+  radarbase-postgresql:
+    image: radarbase/radarbase-postgres:latest
+    ports:
+      - "5434:5432"
+    environment:
+      - POSTGRES_USER=radarcns
+      - POSTGRES_PASSWORD=radarcns
+      - POSTGRES_MULTIPLE_DATABASES=managementportal,uploadconnector
+
+  #---------------------------------------------------------------------------#
+  # RADAR Upload Source connector                                             #
+  #---------------------------------------------------------------------------#
+  radar-upload-source-connector:
+    build:
+      context: .
+      dockerfile: Dockerfile.connector
+    image: radarbase/radar-connect-upload-source:dev
+    restart: on-failure
+    volumes:
+      - ./docker/source-upload.properties:/etc/kafka-connect/source-upload.properties
+      - ./docker/kafka-wait:/usr/bin/kafka-wait
+    depends_on:
+      - zookeeper-1
+      - zookeeper-2
+      - zookeeper-3
+      - kafka-1
+      - kafka-2
+      - kafka-3
+      - schema-registry-1
+      - radar-upload-connect-backend
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: PLAINTEXT://kafka-1:9092,PLAINTEXT://kafka-2:9092,PLAINTEXT://kafka-3:9092
+      CONNECT_REST_PORT: 8083
+      CONNECT_GROUP_ID: "default"
+      CONNECT_CONFIG_STORAGE_TOPIC: "default.config"
+      CONNECT_OFFSET_STORAGE_TOPIC: "default.offsets"
+      CONNECT_STATUS_STORAGE_TOPIC: "default.status"
+      CONNECT_KEY_CONVERTER: "io.confluent.connect.avro.AvroConverter"
+      CONNECT_VALUE_CONVERTER: "io.confluent.connect.avro.AvroConverter"
+      CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: "http://schema-registry-1:8081"
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: "http://schema-registry-1:8081"
+      CONNECT_INTERNAL_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_INTERNAL_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_OFFSET_STORAGE_FILE_FILENAME: "/var/lib/kafka-connect-upload-source/logs/connect.offsets"
+      CONNECT_REST_ADVERTISED_HOST_NAME: "radar-upload-source-connector"
+      CONNECT_ZOOKEEPER_CONNECT: zookeeper-1:2181,zookeeper-2:2181,zookeeper-3:2181
+      CONNECTOR_PROPERTY_FILE_PREFIX: "source-upload"
+      KAFKA_HEAP_OPTS: "-Xms256m -Xmx768m"
+      KAFKA_BROKERS: 3
+      CONNECT_LOG4J_LOGGERS: "org.reflections=ERROR"
+
+  radar-upload-connect-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    image: radarbase/radar-upload-connect-backend:dev
+    ports:
+      - "8085:8085"
+    depends_on:
+      - managementportal-app
+      - radarbase-postgresql
+    volumes:
+      - ./docker/upload.yml:/etc/upload-backend/upload.yml
+      - ./docker/logback.xml:/etc/upload-backend/logback.xml
+    environment:
+      JAVA_OPTS: "-Dlogback.configurationFile=/etc/upload-backend/logback.xml"
+    command: ["radar-upload-backend", "/etc/upload-backend/upload.yml"]
+
+  radar-upload-connect-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    image: radarbase/radar-upload-connect-frontend:dev
+    depends_on:
+      - radar-upload-connect-backend
+      - managementportal-app
+    environment:
+      VUE_APP_BASE_URL: "/upload"
+      VUE_APP_API_BASE_URL: "http://localhost:8080/upload/api/"
+      VUE_APP_AUTH_API: "http://localhost:8080/managementportal/oauth"
+      VUE_APP_AUTH_CALLBACK: "http://localhost:8080/upload/login"
+      VUE_APP_CLIENT_ID: "radar_upload_frontend"
+
+  webserver:
+    image: nginx:1.17.3-alpine
+    ports:
+      - "8080:8080"
+    depends_on:
+      - radar-upload-connect-backend
+      - managementportal-app
+      - radar-upload-connect-frontend
+    volumes:
+      - "./docker/nginx-proxy.conf:/etc/nginx/nginx.conf"

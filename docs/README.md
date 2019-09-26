@@ -17,8 +17,10 @@ It will use approximately the following architecture:
 
 The backend should have the following API calls
 
+### Source types
+
 **Get converter types**
-`GET /sourceTypes`
+`GET /source-types`
 
 ```json
 {
@@ -43,7 +45,7 @@ The backend should have the following API calls
 ```
 
 **Get converter configuration**
-`GET /sourceTypes/{name}`
+`GET /source-types/{name}`
 
 ```json
 {
@@ -67,7 +69,12 @@ The backend should have the following API calls
 }
 ```
 
-**Create a new data point**
+### Records
+
+All uploads are stored in so-called records. A record may contain one or more files that should be processed. To track the status of a record, use the `metadata.status` field. This field follows the state transitions as outlined below.
+![State transitions](state-transitions.png)
+
+**Create a new record**
 `POST /records` 
 
 ```json
@@ -79,7 +86,7 @@ The backend should have the following API calls
     "time": "2019-03-04T00:00:00",
     "timeZoneOffset": 0
   },
-  "sourceType": "Mp3Audio", 
+  "sourceType": "Mp3Audio" 
 }
 ```
 Returns
@@ -109,7 +116,6 @@ Returns
 
 **PUT record data**
 `PUT /records/{id}/contents/{fileName}` <br>
-X-Progress-ID: \<random-UUID\>
 
 returns `HTTP 200` or `HTTP 201` if existing and the state is incomplete, with body
 
@@ -123,12 +129,6 @@ returns `HTTP 200` or `HTTP 201` if existing and the state is incomplete, with b
 }
 ```
 
-**Get progress for a record** GET /progress<br>
-X-Progress-ID: \<random-UUID\>
-
-See <https://www.nginx.com/resources/wiki/modules/upload_progress/> for result values.
-
-
 **Mark record ready for processing** `POST /records/{id}/metadata`
 
 ```json
@@ -141,18 +141,24 @@ See <https://www.nginx.com/resources/wiki/modules/upload_progress/> for result v
 **Get the logs**
 `GET /records/{id}/logs`
 ```
+Content-Type: text/plain
+Content-Length: 23011
+
 ...
 ```
 
-**Reset a record to initial state to allow reprocessing** POST /records/{id}/reset with empty body.
+**Reset a record to initial state to allow reprocessing** `POST /records/{id}/reset with empty body.`
 
 **Get records for given filters**<br>
 `GET /records`<br>
-`GET /records?projectId=radar-test&userId=testUser&status=ready&limit=10&lastId=11`
+`GET /records?projectId=radar-test&userId=testUser&sourceType=Mp3Audio&status=READY&size=5&page=1`
 
 ```json
 {
-  "limit": 10,
+  
+  "page": 1,
+  "size": 5,
+  "totalElements": 5,
   "records": [
     {
       "id": 12,
@@ -223,7 +229,7 @@ Returns
         "modifiedDate": "2019-03-04T01:23:45Z",
         "status": "QUEUED",
         "message": "Data has been queued for processing.",
-        "revision": 3,
+        "revision": 3
       }
     }
   ]
@@ -253,7 +259,7 @@ HTTP 200
   "id": 12,
   "revision": 4,
   "status": "PROCESSING",
-  "message": "Data is being processed.",
+  "message": "Data is being processed."
 }
 ```
 
@@ -270,7 +276,8 @@ or HTTP 409 Conflict if the revision does not match (i.e. another process is pro
   "status": "FAILED | SUCCEEDED",
   "message": "Cannot process data: ... | Data was successfully committed.",
   "logs": {
-    "text": "..."
+    "contentType": "application/json",
+    "contents": "..."
   }
 }
 ```
