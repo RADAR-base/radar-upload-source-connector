@@ -78,11 +78,6 @@ describe('RecordTable', () => {
     expect(wrapper.vm.loading).toBe(false);
   });
 
-  it('downloadFile', () => {
-    fileAPI.download = jest.fn();
-    wrapper.vm.downloadFile('id', 'filename');
-    expect(fileAPI.download).toBeCalledWith({ recordId: 'id', fileName: 'filename' });
-  });
   it('expandRow', async () => {
     const clickedRow = { };
     wrapper.setData({ expandedItems: [{ }] });

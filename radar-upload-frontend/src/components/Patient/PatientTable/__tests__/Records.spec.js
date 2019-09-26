@@ -78,16 +78,6 @@ describe('Records', () => {
     expect(wrapper.find('v-alert-stub').isVisible()).toBe(true);
   });
 
-  it('downloadFile', async () => {
-    fileAPI.download = jest.fn().mockResolvedValue();
-    const downloadFile = jest.spyOn(wrapper.vm, 'downloadFile');
-    const fileName = 'name';
-    const recordId = 'id';
-    downloadFile(recordId, fileName);
-    await flushPromises();
-    expect(fileAPI.download).toBeCalledWith({ recordId, fileName });
-  });
-
   it('viewlogs', async () => {
     const url = 'logs url';
     const logs = 'logs';

@@ -24,9 +24,8 @@ import auth from '@/axios/auth';
 export default {
   methods: {
     logout() {
-      localStorage.removeItem('token');
-      this.$router.replace('/login');
       auth.logout();
+      this.$router.replace({ name: 'Login' });
     },
   },
 };
