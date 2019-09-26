@@ -1,6 +1,5 @@
 import axios from 'axios';
 import uuidv1 from 'uuid/v1';
-import { baseURL } from '@/app.config';
 
 export default {
   /** response
