@@ -67,6 +67,7 @@ describe('RecordTable', () => {
   });
 
   it('getRecordList: CASE ERROR', async () => {
+    fileAPI.filterRecords.mockClear();
     const projectId = 'project id';
     fileAPI.filterRecords = jest.fn().mockRejectedValue('rejectedValue');
     wrapper.vm.getRecordList({ projectId });
