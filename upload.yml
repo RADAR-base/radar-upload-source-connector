@@ -1,1 +1,34 @@
-
+baseUri: "http://0.0.0.0:8085/radar-upload/"
+managementPortalUrl: "http://localhost:8090/managementportal/"
+jdbcDriver: "org.postgresql.Driver"
+jdbcUrl: "jdbc:postgresql://localhost:5434/uploadconnector"
+jdbcUser: "radarcns"
+jdbcPassword: "radarcns"
+sourceTypes:
+  - name: "phone-acceleration"
+    topics:
+      - "android_phone_acceleration"
+    contentTypes:
+      - "text/csv"
+    timeRequired: false
+    sourceIdRequired: false
+    configuration:
+      "setting1": "value1"
+      "setting2": "value2"
+  - name: "acceleration-zip"
+    topics:
+      - "android_phone_acceleration"
+    contentTypes:
+      - "application/zip"
+    timeRequired: false
+    sourceIdRequired: false
+  - name: "altoida-zip"
+    topics:
+      - "connect_upload_altoida_acceleration"
+    contentTypes:
+      - "application/zip"
+    timeRequired: false
+    sourceIdRequired: false
+enableCors: yes
+clientSecret: "secret"
+clientId: "radar_upload_backend"

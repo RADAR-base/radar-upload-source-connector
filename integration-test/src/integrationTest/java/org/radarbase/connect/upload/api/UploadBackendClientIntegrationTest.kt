@@ -1,0 +1,148 @@
+/*
+ *
+ *  * Copyright 2019 The Hyve
+ *  *
+ *  * Licensed under the Apache License, Version 2.0 (the "License");
+ *  * you may not use this file except in compliance with the License.
+ *  * You may obtain a copy of the License at
+ *  *
+ *  *   http://www.apache.org/licenses/LICENSE-2.0
+ *  *
+ *  * Unless required by applicable law or agreed to in writing, software
+ *  * distributed under the License is distributed on an "AS IS" BASIS,
+ *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  * See the License for the specific language governing permissions and
+ *  * limitations under the License.
+ *  *
+ *
+ */
+
+package org.radarbase.connect.upload.api
+
+import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers.equalTo
+import org.hamcrest.Matchers.greaterThan
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.radarbase.connect.upload.converter.AccelerometerCsvRecordConverter
+import org.radarbase.connect.upload.converter.ConverterLogRepository
+import org.radarbase.connect.upload.converter.LogRepository
+import org.radarbase.connect.upload.util.TestBase.Companion.baseUri
+import org.radarbase.connect.upload.util.TestBase.Companion.clientCredentialsAuthorizer
+import org.radarbase.connect.upload.util.TestBase.Companion.createRecordAndUploadContent
+import org.radarbase.connect.upload.util.TestBase.Companion.getAccessToken
+import org.radarbase.connect.upload.util.TestBase.Companion.httpClient
+import org.radarbase.connect.upload.util.TestBase.Companion.sourceTypeName
+import org.radarbase.connect.upload.util.TestBase.Companion.uploadBackendConfig
+import org.radarbase.upload.Config
+import org.radarbase.upload.GrizzlyServer
+import org.radarbase.upload.doa.entity.RecordStatus
+import java.io.File
+
+
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class UploadBackendClientIntegrationTest {
+
+
+    private lateinit var uploadBackendClient: UploadBackendClient
+
+    private lateinit var logRepository: LogRepository
+
+    private lateinit var config: Config
+
+    private lateinit var server: GrizzlyServer
+
+    private lateinit var accessToken: String
+
+    private val sourceType = sourceTypeName
+
+    private val fileName = "TEST_ACC.csv"
+
+
+    @BeforeAll
+    fun setUp() {
+        uploadBackendClient = UploadBackendClient(
+                clientCredentialsAuthorizer,
+                httpClient,
+                baseUri
+        )
+
+        logRepository = ConverterLogRepository(uploadBackendClient)
+
+        accessToken = getAccessToken()
+
+        config = uploadBackendConfig
+
+        server = GrizzlyServer(config)
+        server.start()
+
+    }
+
+    @AfterAll
+    fun cleanUp() {
+        server.shutdown()
+    }
+
+    @Test
+    fun requestAllConnectors() {
+        val connectors = uploadBackendClient.requestAllConnectors()
+        assertNotNull(connectors)
+        assertTrue(!connectors.sourceTypes.isEmpty())
+        assertNotNull(connectors.sourceTypes.find { it.name == sourceType })
+    }
+
+    @Test
+    fun requestConnectorConfigurations() {
+        val connectors = uploadBackendClient.requestConnectorConfig(sourceType)
+        assertNotNull(connectors)
+        assertEquals(sourceType, connectors.name)
+    }
+
+    @Test
+    fun testRecordCreationToConversionWorkFlow() {
+        val createdRecord = createRecordAndUploadContent(accessToken, sourceType, fileName)
+        retrieveFile(createdRecord)
+
+        val records = pollRecords()
+
+        val sourceType = uploadBackendClient.requestConnectorConfig(sourceType)
+
+        val converter = AccelerometerCsvRecordConverter()
+        converter.initialize(sourceType, uploadBackendClient, logRepository, emptyMap())
+
+        val recordToProcess = records.records.filter { recordDTO -> recordDTO.sourceType == sourceTypeName }.first()
+        createdRecord.metadata = uploadBackendClient.updateStatus(recordToProcess.id!!, recordToProcess.metadata!!.copy(status = "PROCESSING", message = "The record is being processed"))
+        val convertedRecords = converter.convert(records.records.first())
+        assertNotNull(convertedRecords)
+        assertNotNull(convertedRecords.result)
+        assertTrue(convertedRecords.result?.isNotEmpty()!!)
+        assertNotNull(convertedRecords.record)
+        assertEquals(convertedRecords.record.id, recordToProcess.id!!)
+    }
+
+    private fun pollRecords(): RecordContainerDTO {
+        val pollConfig = PollDTO(
+                limit = 10,
+                supportedConverters = listOf(sourceType)
+        )
+        val records = uploadBackendClient.pollRecords(pollConfig)
+        assertNotNull(records)
+        assertThat(records.records.size, greaterThan(0))
+        records.records.map { recordDTO -> assertEquals(RecordStatus.QUEUED.toString(), recordDTO.metadata?.status) }
+        println("Polled ${records.records.size} records")
+        return records
+    }
+
+    private fun retrieveFile(recordId: RecordDTO) {
+        uploadBackendClient.retrieveFile(recordId, fileName).use { response ->
+            assertNotNull(response)
+            val responseData = response!!.bytes()
+            assertThat(responseData.size.toLong(), equalTo(File(fileName).length()))
+            assertThat(responseData, equalTo(File(fileName).readBytes()))
+        }
+    }
+
+}

@@ -1,3 +1,22 @@
+/*
+ *
+ *  * Copyright 2019 The Hyve
+ *  *
+ *  * Licensed under the Apache License, Version 2.0 (the "License");
+ *  * you may not use this file except in compliance with the License.
+ *  * You may obtain a copy of the License at
+ *  *
+ *  *   http://www.apache.org/licenses/LICENSE-2.0
+ *  *
+ *  * Unless required by applicable law or agreed to in writing, software
+ *  * distributed under the License is distributed on an "AS IS" BASIS,
+ *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  * See the License for the specific language governing permissions and
+ *  * limitations under the License.
+ *  *
+ *
+ */
+
 package org.radarbase.upload.filter
 
 import org.radarbase.upload.auth.AuthValidator
@@ -38,9 +57,9 @@ class AuthenticationFilter : ContainerRequestFilter {
                             .build())
             null
         }
-
+        logger.debug("Verified token: $radarToken for request ${requestContext.uriInfo.path}" )
         if (radarToken == null) {
-            logger.warn("[401] {}: No token bearer header provided in the request",
+            logger.debug("[401] {}: Could not find a valid token in the header",
                     requestContext.uriInfo.path)
             requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED)
                     .header("WWW-Authenticate", BEARER_REALM)
@@ -53,7 +72,7 @@ class AuthenticationFilter : ContainerRequestFilter {
     companion object {
         private val logger = LoggerFactory.getLogger(AuthenticationFilter::class.java)
 
-        const val BEARER_REALM: String = "Bearer realm=\"Kafka REST Proxy\""
+        const val BEARER_REALM: String = "Bearer realm=\"Upload server\""
         const val BEARER: String = "Bearer "
     }
 }
