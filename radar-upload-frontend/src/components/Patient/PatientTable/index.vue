@@ -11,6 +11,10 @@
     loading-text="Retrieving participants info, please wait"
     @click:row="expandRow"
     @item-expanded="({item}) =>expandRow(item)"
+    :footer-props="{
+      itemsPerPageOptions:[10,20,30],
+      showCurrentPage: true
+    }"
   >
     <template #item.updatedAt="{item}">
       <td class="pl-0">
