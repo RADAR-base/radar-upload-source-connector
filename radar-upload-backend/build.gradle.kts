@@ -14,16 +14,17 @@ application {
 }
 
 project.extra.apply {
-    set("okhttpVersion", "4.0.1")
+    set("okhttpVersion", "4.2.0")
     set("radarMpVersion", "0.5.7-SNAPSHOT")
     set("radarCommonsVersion", "0.12.2")
-    set("radarSchemasVersion", "0.5.1")
-    set("jacksonVersion", "2.9.9.1")
+    set("radarSchemasVersion", "0.5.2")
+    set("jacksonVersion", "2.9.9.2")
     set("jacksonDataVersion", "2.9.9")
     set("slf4jVersion", "1.7.27")
     set("logbackVersion", "1.2.3")
     set("grizzlyVersion", "2.4.4")
-    set("jerseyVersion", "2.28")
+    set("jerseyVersion", "2.29.1")
+    // skip 5.4.5: https://hibernate.atlassian.net/browse/HHH-13625
     set("hibernateVersion", "5.4.4.Final")
 }
 

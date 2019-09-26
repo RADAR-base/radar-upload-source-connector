@@ -273,5 +273,5 @@ internal class RecordRepositoryImplTest {
     fun close() {
     }
 
-    private fun RecordRepository.BlobReader.asString(): String = use { it.stream.readAllBytes().toString(UTF_8) }
+    private fun RecordRepository.BlobReader.asString(): String = use { it.stream.readBytes().toString(UTF_8) }
 }
