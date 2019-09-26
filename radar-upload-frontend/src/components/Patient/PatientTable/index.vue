@@ -16,6 +16,23 @@
       showCurrentPage: true
     }"
   >
+    <template #top>
+      <v-row
+        class="mx-2 py-0"
+        align="end"
+      >
+        <v-col
+          cols="12"
+          sm="3"
+          order="last"
+        >
+          <v-text-field
+            label="Enter a participant to search"
+            v-model="searchText"
+          />
+        </v-col>
+      </v-row>
+    </template>
     <template #item.updatedAt="{item}">
       <td class="pl-0">
         {{ item.updatedAt | localTime }}
@@ -82,14 +99,12 @@ export default {
         { text: 'External identifier', value: 'patientName' },
         { text: 'Status', value: 'status' },
       ],
+      searchText: '',
     };
   },
   computed: {
     ...mapState('project', {
       currentProject: state => state.currentProject.value,
-    }),
-    ...mapState('patient', {
-      searchText: state => state.searchText,
     }),
   },
   watch: {
