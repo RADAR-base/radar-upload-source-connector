@@ -3,13 +3,13 @@
     :headers="headers"
     :items="recordList"
     :loading="loading"
-    :search="searchText"
     single-expand
     item-key="id"
     disable-sort
-    :options.sync="options"
+    :page.sync="options.page"
+    :items-per-page.sync="options.itemsPerPage"
     :expanded.sync="expandedItems"
-    @update:options="updateOptions"
+    @update:options="$nextTick(getRecordList)"
     :server-items-length="serverItemsLength"
     :footer-props="{
       itemsPerPageOptions:[10,20,30],
@@ -18,6 +18,61 @@
     show-expand
     @click:row="expandRow"
   >
+    <template v-slot:top>
+      <!-- filter slot -->
+      <v-row
+        wrap
+        row
+        class="mx-2"
+      >
+        <v-col
+          cols="12"
+          sm="3"
+        >
+          <v-select
+            v-model="status"
+            :items="statusList"
+            label="Select a status"
+            clearable
+          />
+        </v-col>
+        <v-col
+          cols="12"
+          sm="3"
+        >
+          <v-select
+            v-model="sourceType"
+            :items="sourceTypeList"
+            label="Select a source type"
+            clearable
+          />
+        </v-col>
+        <v-col
+          cols="12"
+          sm="3"
+        >
+          <v-text-field
+            label="Enter participant ID"
+            v-model="participantId"
+            clearable
+          />
+        </v-col>
+        <v-col
+          cols="12"
+          sm="3"
+          class="mb-0 pb-0 pt-4 mt-2"
+        >
+          <v-btn
+            color="primary lighten-1"
+            :disabled="loading"
+            @click="filterRecordList"
+          >
+            Search records
+          </v-btn>
+        </v-col>
+      </v-row>
+    </template>
+
     <template #item.uploadedAt="{item}">
       <td
         class="pl-0 pb-0"
@@ -128,12 +183,6 @@
 import fileAPI from '@/axios/file';
 
 export default {
-  props: {
-    isActive: {
-      type: Boolean,
-      default: false,
-    },
-  },
   data() {
     return {
       loading: false,
@@ -151,29 +200,44 @@ export default {
       loadingLog: false,
       recordLogs: '',
       dialog: false,
-      options: {},
+      options: {
+        itemsPerPage: 10,
+        page: 1,
+      },
       serverItemsLength: 0,
+      participantId: '',
+      status: '',
+      sourceType: '',
+      statusList: ['INCOMPLETE', 'READY', 'QUEUED', 'PROCESSING', 'SUCCEEDED', 'FAILED'],
+      sourceTypeList: [],
     };
   },
   computed: {
     currentProject() {
       return this.$store.state.project.currentProject.value;
     },
-    searchText() {
-      return this.$store.state.file.searchText;
-    },
   },
   methods: {
-    async updateOptions(option) {
-      const { page, itemsPerPage } = option;
-      // console.log('update page, itemsPerPage ', page, itemsPerPage);
-      const projectId = this.currentProject;
-      this.getRecordList({ page, size: itemsPerPage, projectId });
+    filterRecordList() {
+      this.options.page = 1;
+      this.getRecordList();
     },
-    async getRecordList({ projectId, page, size }) {
+    async getRecordList() {
       this.recordList = [];
       this.loading = true;
-      const { totalElements, tableData } = await fileAPI.filterRecords({ projectId, page, size })
+      const {
+        status, sourceType, participantId, currentProject,
+      } = this;
+
+      const { page, itemsPerPage } = this.options;
+      const { totalElements, tableData } = await fileAPI.filterRecords({
+        projectId: currentProject,
+        page,
+        size: itemsPerPage,
+        status,
+        sourceType,
+        userId: participantId,
+      })
         .catch(() => ({ tableData: [], totalElements: 0 }));
       this.loading = false;
       this.serverItemsLength = totalElements;
@@ -199,8 +263,14 @@ export default {
       this.recordLogs = recordLogs;
       this.loadingLog = false;
     },
+    async getsourceTypeList() {
+      const res = await fileAPI.getSourceTypes();
+      this.sourceTypeList = res.map(el => el.name);
+    },
   },
-
+  created() {
+    this.getsourceTypeList();
+  },
 };
 </script>
 

@@ -2,7 +2,6 @@
 import { shallowMount } from '@vue/test-utils';
 import flushPromises from 'flush-promises';
 import { Store } from 'vuex-mock-store';
-import { wrap } from 'module';
 import RecordTable from '../RecordTable.vue';
 import fileAPI from '@/axios/file';
 
@@ -25,10 +24,6 @@ describe('RecordTable', () => {
     jest.clearAllMocks();
   });
   const wrapper = shallowMount(RecordTable, {
-    propsData: {
-      isActive: false,
-      currentProject: projectID,
-    },
     mocks: {
       $store,
       $error: jest.fn(),
@@ -38,36 +33,34 @@ describe('RecordTable', () => {
     },
     stubs: ['v-data-table'],
   });
-
-  it('has isActive props', () => {
-    expect(wrapper.vm.isActive).toBe(false);
-    expect(wrapper.vm.currentProject).toBe(projectID);
-  });
-
-  it('updateOptions', () => {
+  it('filterRecordList', () => {
     const getRecordList = jest.spyOn(wrapper.vm, 'getRecordList');
-    const option = { itemsPerPage: 10, page: 10 };
-    const projectId = wrapper.vm.currentProject;
-    wrapper.vm.updateOptions(option);
-    expect(getRecordList).toBeCalledWith({
-      page: option.page,
-      size: option.itemsPerPage,
-      projectId,
-    });
+    wrapper.vm.filterRecordList();
+    expect(wrapper.vm.options.page).toBe(1);
+    expect(getRecordList).toBeCalled();
   });
 
   it('getRecordList: CASE SUCCESS', async () => {
-    const projectId = 'projectId';
-    const page = 10;
-    const size = 100;
     const tableData = ['record List'];
     const totalElements = 10;
+    const {
+      status, sourceType, participantId, currentProject,
+    } = wrapper.vm;
+    const { page, itemsPerPage } = wrapper.vm.options;
+
     fileAPI.filterRecords = jest.fn().mockResolvedValue({ tableData, totalElements });
-    wrapper.vm.getRecordList({ projectId, page, size });
+    wrapper.vm.getRecordList();
     expect(wrapper.vm.recordList).toEqual([]);
     expect(wrapper.vm.loading).toBe(true);
     await flushPromises();
-    expect(fileAPI.filterRecords).toBeCalledWith({ projectId, page, size });
+    expect(fileAPI.filterRecords).toBeCalledWith({
+      projectId: currentProject,
+      page,
+      size: itemsPerPage,
+      status,
+      sourceType,
+      userId: participantId,
+    });
     expect(wrapper.vm.loading).toBe(false);
     expect(wrapper.vm.recordList).toEqual(tableData);
     expect(wrapper.vm.serverItemsLength).toBe(totalElements);
@@ -111,7 +104,6 @@ describe('RecordTable', () => {
     expect(fileAPI.getRecordLog).toBeCalledWith(url);
     expect(wrapper.vm.recordLogs).toBe(logs);
     expect(wrapper.vm.loadingLog).toBe(false);
-
 
     // fail case;
     fileAPI.getRecordLog.mockClear();
