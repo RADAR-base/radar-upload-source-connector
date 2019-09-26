@@ -178,7 +178,7 @@ services:
   #---------------------------------------------------------------------------#
   # RADAR Upload Source connector                                             #
   #---------------------------------------------------------------------------#
-  radar-upload-source-connector:
+  radar-upload-connector:
     build:
       context: .
       dockerfile: kafka-connect-upload-source/Dockerfile
@@ -216,11 +216,11 @@ services:
       KAFKA_BROKERS: 3
       CONNECT_LOG4J_LOGGERS: "org.reflections=ERROR"
 
-  radar-upload-connect-backend:
+  radar-upload-backend:
     build:
       context: .
       dockerfile: radar-upload-backend/Dockerfile
-    image: radarbase/radar-upload-connect-backend:dev
+    image: radarbase/radar-upload-backend:dev
     ports:
       - "8085:8085"
     depends_on:
@@ -233,11 +233,11 @@ services:
       JAVA_OPTS: "-Dlogback.configurationFile=/etc/upload-backend/logback.xml"
     command: ["radar-upload-backend", "/etc/upload-backend/upload.yml"]
 
-  radar-upload-connect-frontend:
+  radar-upload-frontend:
     build:
       context: radar-upload-frontend
       dockerfile: Dockerfile
-    image: radarbase/radar-upload-connect-frontend:dev
+    image: radarbase/radar-upload-frontend:dev
     depends_on:
       - radar-upload-connect-backend
       - managementportal-app
