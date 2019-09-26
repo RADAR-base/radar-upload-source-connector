@@ -2,6 +2,7 @@
 import { shallowMount } from '@vue/test-utils';
 import flushPromises from 'flush-promises';
 import { Store } from 'vuex-mock-store';
+import { wrap } from 'module';
 import RecordTable from '../RecordTable.vue';
 import fileAPI from '@/axios/file';
 
@@ -19,6 +20,9 @@ describe('RecordTable', () => {
         searchText: 'search text',
       },
     },
+  });
+  afterEach(() => {
+    jest.clearAllMocks();
   });
   const wrapper = shallowMount(RecordTable, {
     propsData: {
@@ -40,34 +44,44 @@ describe('RecordTable', () => {
     expect(wrapper.vm.currentProject).toBe(projectID);
   });
 
-  it('get record and file list if it is active tab and a project is selected', async () => {
-    const resolvedValue = [{ name: 'name' }];
-    fileAPI.filterRecords = jest.fn().mockResolvedValue(resolvedValue);
-    wrapper.setProps({ isActive: true });
-    wrapper.vm.$store.state.project.currentProject.value = 'watchingProject';
-
-    expect(wrapper.vm.loading).toBe(true);
-    await flushPromises();
-    expect(fileAPI.filterRecords).toBeCalledWith({ projectId: 'watchingProject' });
-    expect(wrapper.vm.recordList).toEqual(resolvedValue);
-    expect(wrapper.vm.loading).toBe(false);
+  it('updateOptions', () => {
+    const getRecordList = jest.spyOn(wrapper.vm, 'getRecordList');
+    const option = { itemsPerPage: 10, page: 10 };
+    const projectId = wrapper.vm.currentProject;
+    wrapper.vm.updateOptions(option);
+    expect(getRecordList).toBeCalledWith({
+      page: option.page,
+      size: option.itemsPerPage,
+      projectId,
+    });
   });
 
-  it('watch isActive = true', () => {
-    const getRecordList = jest.spyOn(wrapper.vm, 'getRecordList');
-    wrapper.setProps({ isActive: false });
-    wrapper.setProps({ isActive: true });
-    expect(getRecordList).toBeCalledWith(wrapper.vm.currentProject);
+  it('getRecordList: CASE SUCCESS', async () => {
+    const projectId = 'projectId';
+    const page = 10;
+    const size = 100;
+    const tableData = ['record List'];
+    const totalElements = 10;
+    fileAPI.filterRecords = jest.fn().mockResolvedValue({ tableData, totalElements });
+    wrapper.vm.getRecordList({ projectId, page, size });
+    expect(wrapper.vm.recordList).toEqual([]);
+    expect(wrapper.vm.loading).toBe(true);
+    await flushPromises();
+    expect(fileAPI.filterRecords).toBeCalledWith({ projectId, page, size });
+    expect(wrapper.vm.loading).toBe(false);
+    expect(wrapper.vm.recordList).toEqual(tableData);
+    expect(wrapper.vm.serverItemsLength).toBe(totalElements);
   });
 
   it('getRecordList: CASE ERROR', async () => {
     const projectId = 'project id';
     fileAPI.filterRecords = jest.fn().mockRejectedValue('rejectedValue');
-    wrapper.vm.getRecordList(projectId);
+    wrapper.vm.getRecordList({ projectId });
     expect(wrapper.vm.loading).toBe(true);
     expect(wrapper.vm.recordList).toEqual([]);
     await flushPromises();
     expect(wrapper.vm.recordList).toEqual([]);
+    expect(wrapper.vm.serverItemsLength).toBe(0);
     expect(wrapper.vm.loading).toBe(false);
   });
 
