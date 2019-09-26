@@ -164,7 +164,7 @@ services:
       MANAGEMENTPORTAL_OAUTH_SIGNING_KEY_ALIAS: 'radarbase-managementportal-ec'
       JAVA_OPTS: -Xmx256m  # maximum heap size for the JVM running ManagementPortal, increase this as necessary
     volumes:
-      - ./docker/mp-config/:/mp-includes/config
+      - ./etc/mp-config/:/mp-includes/config
 
   radarbase-postgresql:
     image: radarbase/radarbase-postgres:latest
@@ -181,12 +181,11 @@ services:
   radar-upload-source-connector:
     build:
       context: .
-      dockerfile: Dockerfile.connector
+      dockerfile: kafka-connect-upload-source/Dockerfile
     image: radarbase/radar-connect-upload-source:dev
     restart: on-failure
     volumes:
-      - ./docker/source-upload.properties:/etc/kafka-connect/source-upload.properties
-      - ./docker/kafka-wait:/usr/bin/kafka-wait
+      - ./etc/source-upload.properties:/etc/kafka-connect/source-upload.properties
     depends_on:
       - zookeeper-1
       - zookeeper-2
@@ -220,7 +219,7 @@ services:
   radar-upload-connect-backend:
     build:
       context: .
-      dockerfile: Dockerfile.backend
+      dockerfile: radar-upload-backend/Dockerfile
     image: radarbase/radar-upload-connect-backend:dev
     ports:
       - "8085:8085"
@@ -228,16 +227,16 @@ services:
       - managementportal-app
       - radarbase-postgresql
     volumes:
-      - ./docker/upload.yml:/etc/upload-backend/upload.yml
-      - ./docker/logback.xml:/etc/upload-backend/logback.xml
+      - ./etc/upload.yml:/etc/upload-backend/upload.yml
+      - ./etc/logback.xml:/etc/upload-backend/logback.xml
     environment:
       JAVA_OPTS: "-Dlogback.configurationFile=/etc/upload-backend/logback.xml"
     command: ["radar-upload-backend", "/etc/upload-backend/upload.yml"]
 
   radar-upload-connect-frontend:
     build:
-      context: .
-      dockerfile: Dockerfile.frontend
+      context: radar-upload-frontend
+      dockerfile: Dockerfile
     image: radarbase/radar-upload-connect-frontend:dev
     depends_on:
       - radar-upload-connect-backend
@@ -258,4 +257,4 @@ services:
       - managementportal-app
       - radar-upload-connect-frontend
     volumes:
-      - "./docker/nginx-proxy.conf:/etc/nginx/nginx.conf"
+      - ./etc/nginx-proxy.conf:/etc/nginx/nginx.conf
