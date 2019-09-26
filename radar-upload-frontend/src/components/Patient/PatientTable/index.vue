@@ -123,13 +123,15 @@ export default {
     async getPatientRecords({ item }) {
       this.patientRecords = [];
       this.fileLoading = true;
-      const records = await fileAPI
-        .filterRecords({ userId: item.patientId, projectId: this.currentProject })
+      const { tableData } = await fileAPI
+        .filterRecords({
+          userId: item.patientId, projectId: this.currentProject, page: 1, size: 10,
+        })
         .catch((error) => {
           this.fileLoadingError = error;
-          return [];
+          return { tableData: [] };
         });
-      this.patientRecords = records;
+      this.patientRecords = tableData;
       this.fileLoading = false;
     },
     resetData() {
