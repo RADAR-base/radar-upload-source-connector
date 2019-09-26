@@ -1,6 +1,5 @@
 import axios from 'axios';
 import uuidv1 from 'uuid/v1';
-import { downLoadFile } from '@/helpers';
 import { baseURL } from '@/app.config';
 
 export default {
@@ -26,7 +25,7 @@ export default {
   }
    */
   getSourceTypes() {
-    return axios.get('/source-types').then(res => res.sourceTypes.map(el => ({
+    return axios.get('source-types').then(res => res.sourceTypes.map(el => ({
       name: el.name,
       contentTypes: el.contentTypes,
     })));
@@ -52,7 +51,7 @@ export default {
       },
       sourceType,
     };
-    return axios.post('/records', payload)
+    return axios.post('records', payload)
       .then(record => ({
         ...record.metadata,
         files: record.data.contents,
@@ -66,11 +65,11 @@ export default {
       'content-type': file.type,
     };
     // eslint-disable-next-line func-names
-    return axios.put(`/records/${id}/contents/${fileName}`, file, { headers });
+    return axios.put(`records/${id}/contents/${fileName}`, file, { headers });
   },
 
   markRecord({ recordId, revision }) {
-    return axios.post(`/records/${recordId}/metadata`, {
+    return axios.post(`records/${recordId}/metadata`, {
       status: 'READY',
       revision,
     });
@@ -98,14 +97,7 @@ export default {
     return { totalElements, tableData };
   },
 
-  async download({ recordId, fileName }) {
-    const url = `${baseURL}/records/${recordId}/contents/${fileName}`;
-    await axios.get(url);
-    downLoadFile(fileName, url);
-  },
-
   async getRecordLog(url) {
-    const logs = await axios.get(url);
-    return logs;
+    return axios.get(url);
   },
 };

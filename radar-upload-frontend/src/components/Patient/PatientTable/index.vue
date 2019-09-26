@@ -131,8 +131,7 @@ export default {
     async getPatientList(projectId) {
       this.items = [];
       this.loading = true;
-      const patientList = await patientAPI.filteredPatients(projectId).catch(() => ([]));
-      this.items = patientList;
+      this.items = await patientAPI.filteredPatients(projectId).catch(() => ([]));
       this.loading = false;
     },
     async getPatientRecords({ item }) {
