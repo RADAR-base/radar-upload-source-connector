@@ -32,8 +32,8 @@ project.extra.apply {
 repositories {
     jcenter()
     maven(url = "https://dl.bintray.com/radar-cns/org.radarcns")
+    maven(url = "https://dl.bintray.com/radar-base/org.radarbase")
     maven(url = "https://repo.thehyve.nl/content/repositories/snapshots")
-    maven(url = "https://repo.thehyve.nl/content/repositories/releases")
 }
 
 dependencies {
