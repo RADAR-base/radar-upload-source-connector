@@ -5,7 +5,7 @@
     "eslint.validate": [
         {
           "language": "vue",
-          "autoFix": true,
+          "autoFix": true
         },
         {
           "language": "html",
