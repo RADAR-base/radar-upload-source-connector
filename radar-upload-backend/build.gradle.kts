@@ -14,16 +14,16 @@ application {
 }
 
 project.extra.apply {
-    set("okhttpVersion", "4.0.1")
-    set("radarMpVersion", "0.5.4")
-    set("radarCommonsVersion", "0.11.3")
-    set("radarSchemasVersion", "0.4.3")
-    set("jacksonVersion", "2.9.9.1")
+    set("okhttpVersion", "4.2.0")
+    set("radarMpVersion", "0.5.7")
+    set("radarCommonsVersion", "0.12.2")
+    set("radarSchemasVersion", "0.5.2")
+    set("jacksonVersion", "2.9.9.2")
     set("jacksonDataVersion", "2.9.9")
-    set("slf4jVersion", "1.7.25")
+    set("slf4jVersion", "1.7.26")
     set("logbackVersion", "1.2.3")
     set("grizzlyVersion", "2.4.4")
-    set("jerseyVersion", "2.28")
+    set("jerseyVersion", "2.29.1")
     set("hibernateVersion", "5.4.4.Final")
 }
 
