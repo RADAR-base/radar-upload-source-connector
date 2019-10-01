@@ -28,6 +28,8 @@ import okhttp3.OkHttpClient
 import org.glassfish.jersey.internal.inject.AbstractBinder
 import org.glassfish.jersey.process.internal.RequestScoped
 import org.glassfish.jersey.server.ResourceConfig
+import org.radarbase.auth.jersey.JerseyResourceEnhancer
+import org.radarbase.auth.jersey.RadarJerseyResourceEnhancer
 import org.radarbase.upload.Config
 import org.radarbase.upload.api.RecordMapper
 import org.radarbase.upload.api.RecordMapperImpl
@@ -52,18 +54,22 @@ abstract class UploadResourceConfig {
             .build()
 
     fun resources(config: Config) = ResourceConfig().apply {
+        val enhancers = createEnhancers(config)
         packages(
                 "org.radarbase.upload.exception",
                 "org.radarbase.upload.filter",
                 "org.radarbase.upload.resource")
-        register(binder(this, config))
+        enhancers.forEach { packages(*it.packages) }
+        register(binder(config, enhancers))
         register(ContextResolver { OBJECT_MAPPER })
         property("jersey.config.server.wadl.disableWadl", true)
     }
 
-    abstract fun registerAuthentication(resources: ResourceConfig, binder: AbstractBinder, config: Config)
+    abstract fun createEnhancers(config: Config): List<JerseyResourceEnhancer>
 
-    private fun binder(resourceConfig: ResourceConfig, config: Config) = object : AbstractBinder() {
+    abstract fun registerAuthentication(binder: AbstractBinder, config: Config)
+
+    private fun binder(config: Config, enhancers: List<JerseyResourceEnhancer>) = object : AbstractBinder() {
         override fun configure() {
             // Bind instances. These cannot use any injects themselves
             bind(config)
@@ -100,7 +106,9 @@ abstract class UploadResourceConfig {
                     .to(SourceTypeRepository::class.java)
                     .`in`(Singleton::class.java)
 
-            registerAuthentication(resourceConfig, this, config)
+            enhancers.forEach { it.enhance(this) }
+
+            registerAuthentication(this, config)
         }
     }
 

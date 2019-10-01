@@ -246,7 +246,7 @@ class RecordResource {
     @POST
     @Path("poll")
     fun poll(pollDTO: PollDTO): RecordContainerDTO {
-        if (auth.token.isClientCredentials) {
+        if (auth.token.grantType.equals("client_credentials", ignoreCase = true)) {
             val imposedLimit = pollDTO.limit
                     .coerceAtLeast(1)
                     .coerceAtMost(100)
