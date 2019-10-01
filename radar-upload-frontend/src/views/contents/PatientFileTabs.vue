@@ -10,8 +10,6 @@
       <v-spacer />
 
       <QuickUpload />
-      <PatientFilter v-show="tab==0" />
-      <RecordFilter v-show="tab==1" />
 
       <template #extension>
         <v-tabs
@@ -58,9 +56,7 @@
 
 <script>
 import PatientTable from '@/components/Patient/PatientTable';
-import PatientFilter from '@/components/Patient/PatientFilter';
 import RecordTable from '@/components/Record/RecordTable';
-import RecordFilter from '@/components/Record/RecordFilter';
 import QuickUpload from '@/components/QuickUpload';
 
 export default {
@@ -68,13 +64,12 @@ export default {
   components: {
     RecordTable,
     PatientTable,
-    RecordFilter,
-    PatientFilter,
     QuickUpload,
   },
   data() {
     return {
       tab: 0,
+      sourceTypeList: [],
     };
   },
   computed: {

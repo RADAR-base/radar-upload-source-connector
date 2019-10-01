@@ -9,7 +9,7 @@ import fileAPI from '@/axios/file';
 describe.only('index', () => {
   // call this api when component is created
   const PROJECT_ID = '';
-  let wrapper ;
+  let wrapper;
   beforeEach(() => {
     const $store = new Store({
       state: {
@@ -75,28 +75,28 @@ describe.only('index', () => {
     patientAPI.filteredPatients.mockClear();
   });
 
-  it('load file list of a patient when open the dropdown:SUCCESS CASE', async () => {
+  it('getPatientRecords:SUCCESS CASE', async () => {
     const patientId = 'patientID';
     const item = { patientId, projectId: wrapper.vm.currentProject };
-    const records = [{
+    const tableData = [{
       sequence: 1,
       fileName: 'Audio1',
       fileType: 'mp3',
       status: 'Incomplete',
       uploadedAt: '12-12-2019',
     }];
-    fileAPI.filterRecords = jest.fn().mockResolvedValue(records);
+    fileAPI.filterRecords = jest.fn().mockResolvedValue({ tableData });
 
     wrapper.vm.getPatientRecords({ item });
     expect(wrapper.vm.fileLoading).toBe(true);
     expect(wrapper.vm.patientRecords).toEqual([]);
     await flushPromises();
     expect(wrapper.vm.fileLoading).toBe(false);
-    expect(wrapper.vm.patientRecords).toEqual(records);
+    expect(wrapper.vm.patientRecords).toEqual(tableData);
     fileAPI.filterRecords.mockClear();
   });
 
-  it('load file list of a patient when open the dropdown:ERROR CASE', async () => {
+  it('getPatientRecords:ERROR CASE', async () => {
     fileAPI.filterRecords = jest.fn().mockRejectedValue('error');
     wrapper.vm.getPatientRecords({ item: { patientId: 'xx', projectId: 'xx' } });
 
