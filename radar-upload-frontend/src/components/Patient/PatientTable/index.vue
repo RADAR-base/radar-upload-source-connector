@@ -11,7 +11,28 @@
     loading-text="Retrieving participants info, please wait"
     @click:row="expandRow"
     @item-expanded="({item}) =>expandRow(item)"
+    :footer-props="{
+      itemsPerPageOptions:[10,20,30],
+      showCurrentPage: true
+    }"
   >
+    <template #top>
+      <v-row
+        class="mx-2 py-0"
+        align="end"
+      >
+        <v-col
+          cols="12"
+          sm="3"
+          order="last"
+        >
+          <v-text-field
+            label="Enter a participant to search"
+            v-model="searchText"
+          />
+        </v-col>
+      </v-row>
+    </template>
     <template #item.updatedAt="{item}">
       <td class="pl-0">
         {{ item.updatedAt | localTime }}
@@ -78,14 +99,12 @@ export default {
         { text: 'External identifier', value: 'patientName' },
         { text: 'Status', value: 'status' },
       ],
+      searchText: '',
     };
   },
   computed: {
     ...mapState('project', {
       currentProject: state => state.currentProject.value,
-    }),
-    ...mapState('patient', {
-      searchText: state => state.searchText,
     }),
   },
   watch: {
@@ -118,16 +137,15 @@ export default {
     async getPatientRecords({ item }) {
       this.patientRecords = [];
       this.fileLoading = true;
-      try {
-        this.patientRecords = await fileAPI
-          .filterRecords({
-            userId: item.patientId,
-            projectId: this.currentProject,
-          });
-      } catch (error) {
-        this.fileLoadingError = error || 'Failed to load patient records';
-        this.patientRecords = [];
-      }
+      const { tableData } = await fileAPI
+        .filterRecords({
+          userId: item.patientId, projectId: this.currentProject, page: 1, size: 10,
+        })
+        .catch((error) => {
+          this.fileLoadingError = error;
+          return { tableData: [] };
+        });
+      this.patientRecords = tableData;
       this.fileLoading = false;
     },
     resetData() {

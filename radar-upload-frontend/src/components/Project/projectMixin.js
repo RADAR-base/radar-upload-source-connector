@@ -14,7 +14,6 @@ export default {
       this.loading = true;
       const projects = await api.getProjects().catch((e) => {
         this.errorMessage = 'Loading project failed, please try again later';
-        console.log(this.errorMessage, e);
         return [];
       });
       this.loading = false;
