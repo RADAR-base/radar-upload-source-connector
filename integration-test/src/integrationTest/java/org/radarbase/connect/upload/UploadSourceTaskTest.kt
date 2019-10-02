@@ -60,9 +60,10 @@ class UploadSourceTaskTest {
                 "upload.source.client.tokenUrl" to tokenUrl,
                 "upload.source.backend.baseUrl" to baseUri,
                 "upload.source.poll.interval.ms" to "10000",
-                "upload.source.record.converter.classes" to
-                        "org.radarbase.connect.upload.converter.AccelerometerCsvRecordConverter,org.radarbase.connect.upload.converter.altoida.AltoidaZipFileRecordConverter"
-
+                "upload.source.record.converter.classes" to listOf(
+                        "org.radarbase.connect.upload.converter.AccelerometerCsvRecordConverter",
+                        "org.radarbase.connect.upload.converter.altoida.AltoidaZipFileRecordConverter"
+                ).joinToString(separator=",")
         )
 
         sourceTask.start(settings)
@@ -102,7 +103,6 @@ class UploadSourceTaskTest {
     @Test
     @DisplayName("Records of no registered converters should not be polled")
     fun noConverterFound() {
-
         val sourceType = "acceleration-zip"
         val fileName = "TEST_ACC.zip"
         val createdRecord = createRecordAndUploadContent(accessToken, sourceType, fileName)
@@ -116,17 +116,14 @@ class UploadSourceTaskTest {
         val metadata = retrieveRecordMetadata(accessToken, createdRecord.id!!)
         assertNotNull(metadata)
         assertEquals("READY", metadata.status)
-
     }
 
     @Test
     @DisplayName("Should mark FAILED if the record data does not match the source-type")
     fun incorrectSourceTypeForRecord() {
-
         val sourceType = "phone-acceleration"
         val fileName = "TEST_ACC.zip"
         val createdRecord = createRecordAndUploadContent(accessToken, sourceType, fileName)
-        assertNotNull(createdRecord)
         assertNotNull(createdRecord.id)
 
         val sourceRecords = sourceTask.poll()
@@ -136,6 +133,5 @@ class UploadSourceTaskTest {
         val metadata = retrieveRecordMetadata(accessToken, createdRecord.id!!)
         assertNotNull(metadata)
         assertEquals("FAILED", metadata.status)
-
     }
 }

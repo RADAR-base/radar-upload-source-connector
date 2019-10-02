@@ -37,22 +37,21 @@ class ClientCredentialsAuthorizer(
     lateinit var token: OauthToken
 
     override fun authenticate(route: Route?, response: Response): Request? {
-        if (response.code() != 401) {
-            logger.debug("Received ${response.code()} at the authenticator. Skipping this request...")
+        if (response.code != 401) {
+            logger.debug("Received ${response.code} at the authenticator. Skipping this request...")
             return null
         }
 
         var accessToken = accessToken()
-        if (response.code() == 401
-                && "Bearer $accessToken" == response.request().header("Authorization")) {
+        if ("Bearer $accessToken" == response.request.header("Authorization")) {
             logger.debug("Request failed with token existing token. Requesting new token")
             Thread.sleep(60000L)
             accessToken = accessToken(true)
         }
-        logger.debug("Response request ${response.request()} and code ${response.code()}")
+        logger.debug("Response request ${response.request} and code ${response.code}")
 
         try {
-            return response.request().newBuilder()
+            return response.request.newBuilder()
                     .header("Authorization", "Bearer $accessToken")
                     .build()
         } catch (exe: Exception) {
@@ -81,16 +80,17 @@ class ClientCredentialsAuthorizer(
                 .post(form)
                 .build()
 
-        val response = httpClient.newCall(request).execute()
-        if (response.isSuccessful) {
-            logger.info("Request to get access token was SUCCESSFUL")
-            try {
-                return UploadSourceConnectorConfig.mapper.readValue(response.body()?.charStream(), OauthToken::class.java)
-            } catch (exe: IOException) {
-                throw NotAuthorizedException("Could not convert response into a valid access token ${exe.message}")
+        return httpClient.newCall(request).execute().use { response ->
+            if (response.isSuccessful) {
+                logger.info("Request to get access token was SUCCESSFUL")
+                try {
+                    UploadSourceConnectorConfig.mapper.readValue(response.body?.charStream(), OauthToken::class.java)
+                } catch (exe: IOException) {
+                    throw NotAuthorizedException("Could not convert response into a valid access token ${exe.message}")
+                }
+            } else {
+                throw NotAuthorizedException("Request to get access token failed with response code ${response.code} and  ${response.body?.string()}")
             }
-        } else {
-            throw NotAuthorizedException("Request to get access token failed with response code ${response.code()} and  ${response.body()?.string()}")
         }
     }
 

@@ -37,8 +37,10 @@ class DoaEntityManagerFactory(@Context private val emf: EntityManagerFactory) : 
     }
 
     override fun dispose(instance: EntityManager?) {
-        logger.debug("Disposing  EntityManager")
-        instance?.close()
+        instance?.let {
+            logger.debug("Disposing  EntityManager")
+            it.close()
+        }
     }
 
     companion object {
