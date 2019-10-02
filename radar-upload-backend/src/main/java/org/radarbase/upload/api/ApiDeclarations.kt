@@ -91,7 +91,8 @@ data class Page(
     fun createValid(maximum: Int? = null): Page {
         val imposedNumber = pageNumber.coerceAtLeast(1)
 
-        val imposedSize = if (maximum != null && maximum >= 1) {
+        val imposedSize = if (maximum != null) {
+            require(maximum >= 1) { "Maximum page size should be at least 1" }
             pageSize?.coerceAtLeast(1)?.coerceAtMost(maximum) ?: maximum
         } else {
             pageSize?.coerceAtLeast(1)
