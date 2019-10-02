@@ -29,7 +29,6 @@ import org.glassfish.jersey.internal.inject.AbstractBinder
 import org.glassfish.jersey.process.internal.RequestScoped
 import org.glassfish.jersey.server.ResourceConfig
 import org.radarbase.auth.jersey.JerseyResourceEnhancer
-import org.radarbase.auth.jersey.RadarJerseyResourceEnhancer
 import org.radarbase.upload.Config
 import org.radarbase.upload.api.RecordMapper
 import org.radarbase.upload.api.RecordMapperImpl
@@ -44,6 +43,7 @@ import org.radarbase.upload.dto.QueuedCallbackManager
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 import javax.persistence.EntityManager
+import javax.persistence.EntityManagerFactory
 import javax.ws.rs.ext.ContextResolver
 
 abstract class UploadResourceConfig {
@@ -67,7 +67,7 @@ abstract class UploadResourceConfig {
 
     abstract fun createEnhancers(config: Config): List<JerseyResourceEnhancer>
 
-    abstract fun registerAuthentication(binder: AbstractBinder, config: Config)
+    abstract fun registerAuthentication(binder: AbstractBinder)
 
     private fun binder(config: Config, enhancers: List<JerseyResourceEnhancer>) = object : AbstractBinder() {
         override fun configure() {
@@ -86,6 +86,10 @@ abstract class UploadResourceConfig {
                     .`in`(Singleton::class.java)
 
             // Bind factories.
+            bindFactory(DoaEntityManagerFactoryFactory::class.java)
+                    .to(EntityManagerFactory::class.java)
+                    .`in`(Singleton::class.java)
+
             bindFactory(DoaEntityManagerFactory::class.java)
                     .to(EntityManager::class.java)
                     .`in`(RequestScoped::class.java)
@@ -108,12 +112,12 @@ abstract class UploadResourceConfig {
 
             enhancers.forEach { it.enhance(this) }
 
-            registerAuthentication(this, config)
+            registerAuthentication(this)
         }
     }
 
     companion object {
-        private val OBJECT_MAPPER = ObjectMapper()
+        private val OBJECT_MAPPER: ObjectMapper = ObjectMapper()
                 .setSerializationInclusion(JsonInclude.Include.NON_NULL)
                 .registerModule(JavaTimeModule())
                 .registerModule(KotlinModule())

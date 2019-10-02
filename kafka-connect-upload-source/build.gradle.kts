@@ -8,9 +8,9 @@ plugins {
 
 project.extra.apply {
     set("kafkaVersion", "2.3.0")
-    set("okhttpVersion", "3.14.2")
-    set("jacksonVersion", "2.9.9.1")
-    set("jacksonDataVersion", "2.9.9")
+    set("okhttpVersion", "4.2.0")
+    set("jacksonVersion", "2.9.10")
+    set("jacksonDataVersion", "2.9.10")
     set("openCsvVersion", "4.6")
     set("confluentVersion", "5.3.0")
     set("radarSchemaVersion", "0.5.2-SNAPSHOT")
@@ -44,11 +44,9 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:${project.extra["jacksonDataVersion"]}")
     implementation("com.opencsv:opencsv:${project.extra["openCsvVersion"]}")
 
-
     // Included in connector runtime
     compileOnly("org.apache.kafka:connect-api:${project.extra["kafkaVersion"]}")
     implementation(kotlin("stdlib-jdk8"))
-
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.4.2")
     testImplementation("org.hamcrest:hamcrest-all:1.3")

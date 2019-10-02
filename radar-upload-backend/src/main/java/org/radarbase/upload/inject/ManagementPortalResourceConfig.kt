@@ -30,13 +30,13 @@ import javax.inject.Singleton
 
 /** This binder needs to register all non-Jersey classes, otherwise initialization fails. */
 class ManagementPortalResourceConfig : UploadResourceConfig() {
-    override fun createEnhancers(config: Config): List<JerseyResourceEnhancer> {
-        return listOf(RadarJerseyResourceEnhancer(AuthConfig(
-                managementPortalUrl = config.managementPortalUrl,
-                jwtResourceName = "res_upload")), ManagementPortalResourceEnhancer())
-    }
+    override fun createEnhancers(config: Config): List<JerseyResourceEnhancer> = listOf(
+            RadarJerseyResourceEnhancer(AuthConfig(
+                    managementPortalUrl = config.managementPortalUrl,
+                    jwtResourceName = "res_upload")),
+            ManagementPortalResourceEnhancer())
 
-    override fun registerAuthentication(binder: AbstractBinder, config: Config) {
+    override fun registerAuthentication(binder: AbstractBinder) {
         binder.apply {
             bind(MPClient::class.java)
                     .to(MPClient::class.java)

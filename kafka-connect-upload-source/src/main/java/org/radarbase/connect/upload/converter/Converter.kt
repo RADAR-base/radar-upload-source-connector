@@ -52,7 +52,6 @@ interface Converter : Closeable {
 
 data class ConversionResult(val record: RecordDTO, val result: List<SourceRecord>?)
 
-
 data class TopicData(
         var endOfFileOffSet: Boolean,
         val topic: String,
