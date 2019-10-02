@@ -21,18 +21,36 @@ package org.radarbase.upload.inject
 
 import org.glassfish.jersey.internal.inject.AbstractBinder
 import org.glassfish.jersey.server.ResourceConfig
-import org.radarbase.upload.auth.AuthValidator
+import org.radarbase.auth.jersey.*
+import org.radarbase.upload.Config
+import org.radarbase.upload.service.managementportal.MPClient
+import org.radarbase.upload.service.managementportal.MPProjectService
+import org.radarbase.upload.service.UploadProjectService
 import javax.inject.Singleton
 
 /** This binder needs to register all non-Jersey classes, otherwise initialization fails. */
 class ManagementPortalResourceConfig : UploadResourceConfig() {
-    override fun registerAuthentication(resources: ResourceConfig) {
-        // none needed
-    }
+    override fun createEnhancers(config: Config): List<JerseyResourceEnhancer> = listOf(
+            RadarJerseyResourceEnhancer(AuthConfig(
+                    managementPortalUrl = config.managementPortalUrl,
+                    jwtResourceName = "res_upload")),
+            ManagementPortalResourceEnhancer())
 
-    override fun registerAuthenticationUtilities(binder: AbstractBinder) {
-        binder.bind(RadarTokenValidator::class.java)
-                .to(AuthValidator::class.java)
-                .`in`(Singleton::class.java)
+    override fun registerAuthentication(binder: AbstractBinder) {
+        binder.apply {
+            bind(MPClient::class.java)
+                    .to(MPClient::class.java)
+                    .`in`(Singleton::class.java)
+
+            bind(MPProjectService::class.java)
+                    .to(UploadProjectService::class.java)
+                    .`in`(Singleton::class.java)
+
+            bind(MPProjectService::class.java)
+                    .to(ProjectService::class.java)
+                    .`in`(Singleton::class.java)
+
+        }
+
     }
 }

@@ -7,16 +7,19 @@ plugins {
 }
 
 project.extra.apply {
-    set("okhttpVersion", "4.0.1")
+    set("okhttpVersion", "4.2.0")
     set("kafkaVersion", "2.3.0")
-    set("jacksonVersion", "2.9.9.1")
-    set("jacksonDataVersion", "2.9.9")
+    set("jacksonVersion", "2.9.10")
+    set("jacksonDataVersion", "2.9.10")
 }
 
 repositories {
     jcenter()
+    mavenLocal()
     maven(url = "http://packages.confluent.io/maven/")
     maven(url = "https://dl.bintray.com/radar-cns/org.radarcns")
+    maven(url = "https://dl.bintray.com/radar-base/org.radarbase")
+    maven(url = "https://repo.thehyve.nl/content/repositories/snapshots")
     maven(url = "http://oss.jfrog.org/artifactory/oss-snapshot-local/")
 }
 

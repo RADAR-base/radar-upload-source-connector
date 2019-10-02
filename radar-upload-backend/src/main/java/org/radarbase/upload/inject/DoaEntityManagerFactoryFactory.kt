@@ -76,5 +76,4 @@ class DoaEntityManagerFactoryFactory(@Context config: Config) : DisposableSuppli
     companion object {
         private val logger = LoggerFactory.getLogger(DoaEntityManagerFactoryFactory::class.java)
     }
-
 }

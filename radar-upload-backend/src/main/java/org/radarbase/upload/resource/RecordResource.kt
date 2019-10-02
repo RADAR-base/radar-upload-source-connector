@@ -20,10 +20,10 @@
 package org.radarbase.upload.resource
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.radarbase.auth.jersey.Auth
+import org.radarbase.auth.jersey.Authenticated
+import org.radarbase.auth.jersey.NeedsPermission
 import org.radarbase.upload.api.*
-import org.radarbase.upload.auth.Auth
-import org.radarbase.upload.auth.Authenticated
-import org.radarbase.upload.auth.NeedsPermission
 import org.radarbase.upload.doa.RecordRepository
 import org.radarbase.upload.doa.SourceTypeRepository
 import org.radarbase.upload.doa.entity.Record
@@ -37,6 +37,8 @@ import java.io.IOException
 import java.io.InputStream
 import java.net.URI
 import javax.annotation.Resource
+import javax.inject.Provider
+import javax.inject.Singleton
 import javax.ws.rs.*
 import javax.ws.rs.core.*
 import kotlin.math.max
@@ -49,6 +51,7 @@ import org.radarbase.upload.exception.NotFoundException as RbNotFoundException
 @Consumes(MediaType.APPLICATION_JSON)
 @Resource
 @Authenticated
+@Singleton
 class RecordResource {
 
     @Context
@@ -64,7 +67,7 @@ class RecordResource {
     lateinit var uri: UriInfo
 
     @Context
-    lateinit var auth: Auth
+    lateinit var auth: Provider<Auth>
 
     @Context
     lateinit var sourceTypeRepository: SourceTypeRepository
@@ -80,9 +83,9 @@ class RecordResource {
         projectId ?: throw RbBadRequestException("missing_project", "Required project ID not provided.")
 
         if (userId != null) {
-            auth.checkUserPermission(SUBJECT_READ, projectId, userId)
+            auth.get().checkPermissionOnSubject(SUBJECT_READ, projectId, userId)
         } else {
-            auth.checkProjectPermission(PROJECT_READ, projectId)
+            auth.get().checkPermissionOnProject(PROJECT_READ, projectId)
         }
 
         val imposedLimit = min(max(size, 1), 100)
@@ -94,7 +97,7 @@ class RecordResource {
     @POST
     @NeedsPermission(Entity.MEASUREMENT, Operation.CREATE)
     fun create(record: RecordDTO): Response {
-        validateNewRecord(record, auth)
+        validateNewRecord(record, auth.get())
 
         val (doaRecord, metadata) = recordMapper.toRecord(record)
         val result = recordRepository.create(doaRecord, metadata, record.data?.contents)
@@ -149,7 +152,7 @@ class RecordResource {
         data.projectId ?: throw RbBadRequestException("project_missing", "Record needs a project ID")
         data.userId ?: throw RbBadRequestException("user_missing", "Record needs a user ID")
 
-        auth.checkUserPermission(MEASUREMENT_CREATE, data.projectId, data.userId)
+        auth.checkPermissionOnSubject(MEASUREMENT_CREATE, data.projectId, data.userId)
 
         data.contents?.forEach {
             it.text ?: throw RbBadRequestException("field_missing", "Contents need explicit text value set in UTF-8 encoding.")
@@ -202,8 +205,8 @@ class RecordResource {
         val record = recordRepository.read(recordId)
                 ?: throw RbNotFoundException("record_not_found", "Record with ID $recordId does not exist")
 
-        permission?.let {
-            auth.checkUserPermission(it, record.projectId, record.userId)
+        if (permission != null) {
+            auth.get().checkPermissionOnSubject(permission, record.projectId, record.userId)
         }
 
         return record
@@ -246,14 +249,14 @@ class RecordResource {
     @POST
     @Path("poll")
     fun poll(pollDTO: PollDTO): RecordContainerDTO {
-        if (auth.isClientCredentials) {
+        if (auth.get().token.grantType.equals("client_credentials", ignoreCase = true)) {
             val imposedLimit = pollDTO.limit
                     .coerceAtLeast(1)
                     .coerceAtMost(100)
             val records = recordRepository.poll(imposedLimit, pollDTO.supportedConverters)
             return recordMapper.fromRecords(records, page = Page(pageSize = imposedLimit))
         } else {
-            throw NotAuthorizedException("Client is not authorized to poll records")
+            throw NotAuthorizedException("Only for internal use")
         }
     }
 

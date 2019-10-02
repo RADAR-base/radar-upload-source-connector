@@ -25,11 +25,16 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.toRequestBody
+import okio.BufferedSink
+import org.radarbase.connect.upload.converter.Log
 import org.radarbase.connect.upload.exception.BadGatewayException
 import org.radarbase.connect.upload.exception.ConflictException
 import org.radarbase.connect.upload.exception.NotAuthorizedException
 import org.slf4j.LoggerFactory
 import java.io.Closeable
+import java.io.IOException
 
 class UploadBackendClient(
         auth: Authenticator,
@@ -45,99 +50,84 @@ class UploadBackendClient(
         uploadBackendBaseUrl = uploadBackendBaseUrl.trimEnd('/')
     }
 
-    fun pollRecords(configuration: PollDTO): RecordContainerDTO {
-        val request = Request.Builder()
-                .url("$uploadBackendBaseUrl/records/poll")
-                .post(RequestBody.create(APPLICATION_JSON, configuration.toJsonString()))
-                .build()
-        val response = httpClient.executeRequest(request)
-        return mapper.readValue(response.body()?.string(), RecordContainerDTO::class.java)
+    fun pollRecords(configuration: PollDTO): RecordContainerDTO = httpClient.executeRequest {
+        url("$uploadBackendBaseUrl/records/poll")
+        post(configuration.toJsonBody())
     }
 
-    fun requestConnectorConfig(name: String): SourceTypeDTO {
-        val request = Request.Builder()
-                .url("$uploadBackendBaseUrl/source-types/${name}/")
-                .get()
-                .build()
-        val response = httpClient.executeRequest(request)
-        return mapper.readValue(response.body()?.string(), SourceTypeDTO::class.java)
+    fun requestConnectorConfig(name: String): SourceTypeDTO = httpClient.executeRequest {
+        url("$uploadBackendBaseUrl/source-types/${name}/")
     }
 
-    fun requestAllConnectors(): SourceTypeContainerDTO {
-        val request = Request.Builder()
-                .url("$uploadBackendBaseUrl/source-types")
-                .get()
-                .build()
-        val response = httpClient.executeRequest(request)
-        return mapper.readValue(response.body()?.string(), SourceTypeContainerDTO::class.java)
+    fun requestAllConnectors(): SourceTypeContainerDTO = httpClient.executeRequest {
+        url("$uploadBackendBaseUrl/source-types")
     }
 
-    fun retrieveFile(record: RecordDTO, fileName: String): ResponseBody? {
-        val request = Request.Builder()
-                .url("$uploadBackendBaseUrl/records/${record.id}/contents/$fileName")
-                .get()
-                .build()
-        return httpClient.executeRequest(request).body()
+    fun <T> retrieveFile(record: RecordDTO, fileName: String, handling: (ResponseBody) -> T): T {
+        return httpClient.executeRequest({
+            url("$uploadBackendBaseUrl/records/${record.id}/contents/$fileName")
+        }) {
+            handling(it.body ?: throw IOException("No file content response body"))
+        }
     }
 
-    fun retrieveRecordMetadata(recordId: Long): RecordMetadataDTO {
-        val request = Request.Builder()
-                .url("$uploadBackendBaseUrl/records/$recordId/metadata")
-                .get()
-                .build()
-        val response = httpClient.executeRequest(request)
-        return mapper.readValue(response.body()?.string(), RecordMetadataDTO::class.java)
+    fun retrieveRecordMetadata(recordId: Long): RecordMetadataDTO = httpClient.executeRequest {
+        url("$uploadBackendBaseUrl/records/$recordId/metadata")
     }
 
-    fun updateStatus(recordId: Long, newStatus: RecordMetadataDTO): RecordMetadataDTO {
-        val request = Request.Builder()
-                .url("$uploadBackendBaseUrl/records/$recordId/metadata")
-                .post(RequestBody.create(APPLICATION_JSON, newStatus.toJsonString()))
-                .build()
-        val response = httpClient.executeRequest(request)
-        return mapper.readValue(response.body()?.string(), RecordMetadataDTO::class.java)
+    fun updateStatus(recordId: Long, newStatus: RecordMetadataDTO): RecordMetadataDTO = httpClient.executeRequest {
+        url("$uploadBackendBaseUrl/records/$recordId/metadata")
+        post(newStatus.toJsonBody())
     }
 
-    fun addLogs(recordId: Long, status: LogsDto): RecordMetadataDTO {
-        val request = Request.Builder()
-                .url("$uploadBackendBaseUrl/records/$recordId/logs")
-                .put(RequestBody.create(TEXT_PLAIN, status.toJsonString()))
-                .build()
-        val response = httpClient.executeRequest(request)
-        return mapper.readValue(response.body()?.charStream(), RecordMetadataDTO::class.java)
+    fun addLogs(log: Log): RecordMetadataDTO = httpClient.executeRequest {
+        url("$uploadBackendBaseUrl/records/${log.recordId}/logs")
+        put(object : RequestBody() {
+            override fun contentType() = TEXT_PLAIN
+
+            override fun writeTo(sink: BufferedSink) = log.asString(sink)
+        })
     }
 
     override fun close() {
     }
 
-    private fun OkHttpClient.executeRequest(request: Request): Response {
-        val response = this.newCall(request).execute()
-        if (response.isSuccessful) {
-            logger.info("Request to ${request.url()} is SUCCESSFUL")
-            return response
-        } else {
-            logger.info("Request to ${request.url()} has FAILED with response-code ${response.code()}")
-            when (response.code()) {
-                401 -> throw NotAuthorizedException("access token is not provided or is invalid : ${response.message()}")
-                403 -> throw NotAuthorizedException("access token is not authorized to perform this request")
-                409 -> throw ConflictException("Conflicting request exception: ${response.message()}")
-            }
-            throw BadGatewayException("Failed to make request to ${request.url()}: Error code ${response.code()}:  ${response.body()?.string()}")
-        }
-
+    private inline fun <reified T: Any> OkHttpClient.executeRequest(
+            noinline requestBuilder: Request.Builder.() -> Request.Builder): T = executeRequest(requestBuilder) { response ->
+        mapper.readValue(response.body?.byteStream(), T::class.java)
+                ?: throw IOException("Received invalid response")
     }
 
-    private fun Any.toJsonString(): String = mapper.writeValueAsString(this)
+    private fun <T> OkHttpClient.executeRequest(requestBuilder: Request.Builder.() -> Request.Builder, handling: (Response) -> T): T {
+        val request = Request.Builder().requestBuilder().build()
+        return this.newCall(request).execute().use { response ->
+            if (response.isSuccessful) {
+                logger.info("Request to ${request.url} is SUCCESSFUL")
+                return handling(response)
+            } else {
+                logger.info("Request to ${request.url} has FAILED with response-code ${response.code}")
+                when (response.code) {
+                    401 -> throw NotAuthorizedException("access token is not provided or is invalid : ${response.message}")
+                    403 -> throw NotAuthorizedException("access token is not authorized to perform this request")
+                    409 -> throw ConflictException("Conflicting request exception: ${response.message}")
+                }
+                throw BadGatewayException("Failed to make request to ${request.url}: Error code ${response.code}:  ${response.body?.string()}")
+            }
+        }
+    }
+
+    private fun Any.toJsonBody(mediaType: MediaType = APPLICATION_JSON): RequestBody = mapper
+            .writeValueAsString(this)
+            .toRequestBody(mediaType)
 
     companion object {
         private val logger = LoggerFactory.getLogger(UploadBackendClient::class.java)
-        private val APPLICATION_JSON = MediaType.parse("application/json; charset=utf-8")
-        private val TEXT_PLAIN = MediaType.parse("text/plain; charset=utf-8")
+        private val APPLICATION_JSON = "application/json; charset=utf-8".toMediaType()
+        private val TEXT_PLAIN = "text/plain; charset=utf-8".toMediaType()
         private var mapper: ObjectMapper = ObjectMapper()
                 .registerModule(KotlinModule())
                 .registerModule(JavaTimeModule())
                 .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
                 .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
     }
-
 }

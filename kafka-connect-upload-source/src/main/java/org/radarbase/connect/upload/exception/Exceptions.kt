@@ -30,3 +30,5 @@ class InvalidFormatException(message: String) : RuntimeException(message)
 class DataProcessorNotFoundException(message: String) : RuntimeException(message)
 
 class ConversionFailedException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
+
+class ConversionTemporarilyFailedException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
