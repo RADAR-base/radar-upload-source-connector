@@ -82,7 +82,24 @@ data class PollDTO(
         var supportedConverters: List<String>)
 
 data class Page(
-        var pageNumber: Int? = 1,
-        var pageSize:  Int? = null,
-        var totalElements: Long? = null
-)
+        val pageNumber: Int = 1,
+        val pageSize:  Int? = null,
+        val totalElements: Long? = null) {
+    val offset: Int
+        get() = (this.pageNumber - 1) * this.pageSize!!
+
+    fun createValid(maximum: Int? = null): Page {
+        val imposedNumber = pageNumber.coerceAtLeast(1)
+
+        val imposedSize = if (maximum != null && maximum >= 1) {
+            pageSize?.coerceAtLeast(1)?.coerceAtMost(maximum) ?: maximum
+        } else {
+            pageSize?.coerceAtLeast(1)
+        }
+        return if (imposedNumber == pageNumber && imposedSize == pageSize) {
+            this
+        } else {
+            copy(pageNumber = imposedNumber, pageSize = imposedSize)
+        }
+    }
+}

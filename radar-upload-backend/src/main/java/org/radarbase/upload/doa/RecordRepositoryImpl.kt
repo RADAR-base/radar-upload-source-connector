@@ -73,7 +73,7 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
         modifyNow(metadataToSave)
     }
 
-    override fun query(page: Page, projectId: String, userId: String?, status: String?, sourceType: String?): Pair<List<Record>, Long> {
+    override fun query(page: Page, projectId: String, userId: String?, status: String?, sourceType: String?): Pair<List<Record>, Page> {
         var queryString = "SELECT r FROM Record r WHERE r.projectId = :projectId "
         var countQueryString = "SELECT count(r) FROM Record r WHERE r.projectId = :projectId "
         userId?.let {
@@ -88,13 +88,15 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
             queryString += " AND r.sourceType.name = :sourceType"
             countQueryString += " AND r.sourceType.name = :sourceType"
         }
-        queryString += " ORDER BY r.id"
+        queryString += " ORDER BY r.id DESC"
+
+        val actualPage = page.createValid(maximum = 100)
 
         return em.get().transact {
             val query = createQuery(queryString, Record::class.java)
                     .setParameter("projectId", projectId)
-                    .setFirstResult(page.lastId())
-                    .setMaxResults(page.pageSize!!)
+                    .setFirstResult(actualPage.offset)
+                    .setMaxResults(actualPage.pageSize!!)
 
             val countQuery = createQuery(countQueryString)
                     .setParameter("projectId", projectId)
@@ -114,11 +116,9 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
             val records = query.resultList
             val count = countQuery.singleResult as Long
 
-            Pair(records, count)
+            Pair(records, actualPage.copy(totalElements = count))
         }
     }
-
-    private fun Page.lastId() : Int = (this.pageNumber!! - 1) * this.pageSize!!
 
     override fun readLogs(id: Long): RecordLogs? = em.get().transact {
         find(RecordLogs::class.java, id)
