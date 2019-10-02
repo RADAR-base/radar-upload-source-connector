@@ -28,6 +28,7 @@ import org.radarbase.upload.dto.UserList
 import org.radarbase.upload.service.UploadProjectService
 import org.radarcns.auth.authorization.Permission
 import javax.annotation.Resource
+import javax.inject.Singleton
 import javax.ws.rs.*
 import javax.ws.rs.core.Context
 import javax.ws.rs.core.MediaType
@@ -37,6 +38,7 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Resource
+@Singleton
 class ProjectResource(
         @Context private val projectService: UploadProjectService,
         @Context private val auth: Auth) {

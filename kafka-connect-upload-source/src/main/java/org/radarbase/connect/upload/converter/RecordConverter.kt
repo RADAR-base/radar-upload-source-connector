@@ -28,15 +28,16 @@ import org.radarbase.connect.upload.converter.Converter.Companion.END_OF_RECORD_
 import org.radarbase.connect.upload.converter.Converter.Companion.RECORD_ID_KEY
 import org.radarbase.connect.upload.converter.Converter.Companion.REVISION_KEY
 import org.radarbase.connect.upload.exception.ConversionFailedException
+import org.radarbase.connect.upload.exception.ConversionTemporarilyFailedException
 import org.radarcns.kafka.ObservationKey
 import org.slf4j.LoggerFactory
+import java.io.IOException
 import java.io.InputStream
 import java.lang.Exception
 import java.time.Instant
 
 
-abstract class RecordConverter(override val sourceType: String, val avroData: AvroData = AvroData(20)) : Converter {
-
+abstract class RecordConverter(override val sourceType: String, private val avroData: AvroData = AvroData(20)) : Converter {
     private lateinit var connectorConfig: SourceTypeDTO
     private lateinit var client: UploadBackendClient
     private lateinit var settings: Map<String, String>
@@ -59,9 +60,6 @@ abstract class RecordConverter(override val sourceType: String, val avroData: Av
     }
 
     override fun close() {
-        if (this::logsRepository.isInitialized) {
-            this.logsRepository.uploadAllLogs()
-        }
         if (this::client.isInitialized) {
             this.client.close()
         }
@@ -70,59 +68,42 @@ abstract class RecordConverter(override val sourceType: String, val avroData: Av
     val logRepository get() = this.logsRepository
 
     override fun convert(record: RecordDTO): ConversionResult {
-        val recordId = record.id!!
-        logsRepository.info(logger, recordId,"Converting record : record-id $recordId")
+        val recordId = checkNotNull(record.id)
+        logsRepository.info(logger, recordId,"Converting record: record-id $recordId")
 
         try {
-            record.validateRecord()
+            val recordData = checkNotNull(record.data) { "Record data cannot be null" }
+            val recordContents = checkNotNull(recordData.contents) { "Record data has empty content" }
+            val recordMetadata = checkNotNull(record.metadata) { "Record meta-data cannot be null" }
 
-            val key = record.computeObservationKey(avroData)
+            val key = recordData.computeObservationKey(avroData)
 
-            val recordContents = record.data!!.contents!!
+            val sourceRecords: List<SourceRecord> = recordContents
+                    .flatMap { content ->
+                        try {
+                            client.retrieveFile(record, content.fileName) { body ->
+                                val timeReceived = System.currentTimeMillis() / 1000.0
 
-            val sourceRecords = recordContents.map contentMap@{ content ->
-
-                val response = client.retrieveFile(record, content.fileName)
-                // if receiving a content fails, mark that record as READY and stop converting
-                if(response == null) {
-                    client.updateStatus(recordId, record.metadata!!.copy(
-                            status = "READY",
-                            message = "Could not retrieve file ${content.fileName} from record with id $recordId"
-                    ))
-
-                    logsRepository.error(logger, recordId,"Could not retrieve file ${content.fileName} from record with id $recordId")
-                    return@convert ConversionResult(record, emptyList())
-                }
-
-                val timeReceived = Instant.now().epochSecond
-
-                response.use responseResource@{ res ->
-                    return@contentMap processData(content, res.byteStream(), record, timeReceived.toDouble())
-                            .map topicDataMap@{ topicData ->
-                                val valRecord = avroData.toConnectData(topicData.value.schema, topicData.value)
-                                val offset = mutableMapOf(
-                                        END_OF_RECORD_KEY to topicData.endOfFileOffSet,
-                                        RECORD_ID_KEY to recordId,
-                                        REVISION_KEY to record.metadata?.revision
-                                )
-                                return@topicDataMap SourceRecord(getPartition(), offset, topicData.topic, key.schema(), key.value(), valRecord.schema(), valRecord.value())
+                                processData(content, body.byteStream(), record, timeReceived)
                             }
-                }
-            }
-            return ConversionResult(record, sourceRecords.flatMap { it.toList() })
+                        } catch (ex: IOException) {
+                            throw ConversionTemporarilyFailedException("Could not retrieve file ${content.fileName} from record with id $recordId", ex)
+                        }
+                    }
+                    .map { topicData ->
+                        val valRecord = avroData.toConnectData(topicData.value.schema, topicData.value)
+                        val offset = mutableMapOf(
+                                END_OF_RECORD_KEY to topicData.endOfFileOffSet,
+                                RECORD_ID_KEY to recordId,
+                                REVISION_KEY to recordMetadata.revision
+                        )
+                        SourceRecord(getPartition(), offset, topicData.topic, key.schema(), key.value(), valRecord.schema(), valRecord.value())
+                    }
+            return ConversionResult(record, sourceRecords)
         } catch (exe: Exception){
             logsRepository.error(logger, recordId, "Could not convert record $recordId", exe)
             throw ConversionFailedException("Could not convert record $recordId",exe)
         }
-    }
-
-    private fun commitLogs(record: RecordDTO, client: UploadBackendClient): RecordMetadataDTO {
-        logger.debug("Sending record logs..")
-        val logs = LogsDto().apply {
-                contents = UploadSourceConnectorConfig.mapper.writeValueAsString(logsRepository)
-        }
-        logger.info(UploadSourceConnectorConfig.mapper.writeValueAsString(logsRepository))
-        return client.addLogs(record.id!!, logs)
     }
 
     /** process file content with the record data. The implementing method should close response-body. */
@@ -131,21 +112,13 @@ abstract class RecordConverter(override val sourceType: String, val avroData: Av
 
     override fun getPartition(): MutableMap<String, Any> = mutableMapOf("source-type" to sourceType)
 
-    private fun RecordDTO.validateRecord() {
-        this.id ?: throw IllegalStateException("Record id cannot be null")
-        this.metadata ?: throw IllegalStateException("Record meta-data cannot be null")
-        this.data ?: throw IllegalStateException("Record data cannot be null")
-        this.data?.contents ?: throw IllegalStateException("Record data has empty content")
-    }
-
-    private fun RecordDTO.computeObservationKey(avroData: AvroData): SchemaAndValue {
-        val data = this.data ?: throw IllegalStateException("Cannot process record without data")
+    private fun RecordDataDTO.computeObservationKey(avroData: AvroData): SchemaAndValue {
         return avroData.toConnectData(
                 ObservationKey.getClassSchema(),
                 ObservationKey(
-                        data.projectId,
-                        data.userId,
-                        data.sourceId
+                        projectId,
+                        userId,
+                        sourceId
                 )
         )
     }

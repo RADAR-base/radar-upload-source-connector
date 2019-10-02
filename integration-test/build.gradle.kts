@@ -7,10 +7,10 @@ plugins {
 }
 
 project.extra.apply {
-    set("okhttpVersion", "4.0.1")
+    set("okhttpVersion", "4.2.0")
     set("kafkaVersion", "2.3.0")
-    set("jacksonVersion", "2.9.9.1")
-    set("jacksonDataVersion", "2.9.9")
+    set("jacksonVersion", "2.9.10")
+    set("jacksonDataVersion", "2.9.10")
 }
 
 repositories {

@@ -19,11 +19,18 @@
 
 package org.radarbase.connect.upload.converter
 
+import okio.BufferedSink
+import okio.Sink
 import org.radarbase.connect.upload.UploadSourceConnectorConfig
 import org.radarbase.connect.upload.api.LogsDto
 import org.radarbase.connect.upload.api.UploadBackendClient
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.io.ByteArrayOutputStream
+import java.io.PrintStream
+import java.io.Writer
+import java.nio.charset.StandardCharsets.UTF_8
+import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
 
@@ -31,74 +38,79 @@ enum class LogLevel {
     INFO, DEBUG, WARN, ERROR
 }
 
-data class Log(
+data class LogRecord(
         var logLevel: LogLevel,
-        var message: String
-)
+        var message: String) {
+    val time = Instant.now()
+}
+
+data class Log(val recordId: Long, val records: Collection<LogRecord>) {
+    fun asString(writer: BufferedSink) {
+        records.forEach { log ->
+            writer.writeUtf8("${log.time} - [${log.logLevel}] ${log.message}\n")
+        }
+    }
+}
 
 interface LogRepository {
     fun info(logger: Logger, recordId: Long, logMessage: String)
     fun debug(logger: Logger, recordId: Long, logMessage: String)
     fun warn(logger: Logger, recordId: Long, logMessage: String)
     fun error(logger: Logger, recordId: Long, logMessage: String, exe: Exception? = null)
-    fun uploadLogs(recordId: Long)
-    fun uploadAllLogs()
+    val recordIds: Set<Long>
+    fun extract(recordId: Long, reset: Boolean = false): Log?
 }
 
 class ConverterLogRepository(
-        val uploadClient: UploadBackendClient): LogRepository {
-    private val logContainer = ConcurrentHashMap<Long, ConcurrentLinkedQueue<Log>>()
+        private val uploadClient: UploadBackendClient): LogRepository {
+    private val logContainer = ConcurrentHashMap<Long, ConcurrentLinkedQueue<LogRecord>>()
 
-    private fun get(recordId: Long): ConcurrentLinkedQueue<Log> =
+    private fun get(recordId: Long): ConcurrentLinkedQueue<LogRecord> =
             logContainer.getOrPut(recordId, { ConcurrentLinkedQueue() })
 
-
     override fun info(logger: Logger, recordId: Long, logMessage: String) {
-        get(recordId).add(Log(LogLevel.INFO, logMessage))
+        get(recordId).add(LogRecord(LogLevel.INFO, logMessage))
         logger.info(logMessage)
     }
 
     override fun debug(logger: Logger, recordId: Long, logMessage: String) {
-        get(recordId).add(Log(LogLevel.DEBUG, logMessage))
+        get(recordId).add(LogRecord(LogLevel.DEBUG, logMessage))
         logger.debug(logMessage)
     }
 
     override fun warn(logger: Logger, recordId: Long, logMessage: String) {
-        get(recordId).add(Log(LogLevel.WARN, logMessage))
+        get(recordId).add(LogRecord(LogLevel.WARN, logMessage))
         logger.warn(logMessage)
     }
 
     override fun error(logger: Logger, recordId: Long, logMessage: String, exe: Exception?) {
-        get(recordId).add(Log(LogLevel.ERROR, "$logMessage: ${exe?.stackTrace?.toString()}"))
+        val message = if (exe != null) {
+            val trace = ByteArrayOutputStream().use { byteOut ->
+                PrintStream(byteOut).use { printOut ->
+                    exe.printStackTrace(printOut)
+                }
+                byteOut.toString(UTF_8)
+            }
+            "$logMessage: $exe$trace"
+        } else {
+            logMessage
+        }
+
+        get(recordId).add(LogRecord(LogLevel.ERROR, message))
         logger.error(logMessage, exe)
     }
 
-    override fun uploadLogs(recordId: Long) {
-        val listOfLogs = logContainer.getValue(recordId)
+    override val recordIds: Set<Long>
+        get() = logContainer.keys
 
-        if (listOfLogs.isNotEmpty()) {
-            logger.info("Sending record $recordId logs...")
-            val logs = LogsDto().apply {
-                contents = UploadSourceConnectorConfig.mapper.writeValueAsString(listOfLogs)
-            }
-            logger.info(UploadSourceConnectorConfig.mapper.writeValueAsString(logs.contents))
-            uploadClient.addLogs(recordId, logs)
+    override fun extract(recordId: Long, reset: Boolean): Log? {
+        val recordQueue = if (reset) {
             logContainer.remove(recordId)
-        }
-
-    }
-
-    override fun uploadAllLogs() {
-        logger.info("Uploading all remaining logs")
-        if (logContainer.isNotEmpty()) {
-            logContainer.map { entry -> uploadLogs(entry.key) }
         } else {
-            logger.info("All record logs are uploaded")
+            logContainer[recordId]
         }
+        return recordQueue
+                ?.takeIf { it.isNotEmpty() }
+                ?.let { Log(recordId, it) }
     }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(ConverterLogRepository::class.java)
-    }
-
 }
