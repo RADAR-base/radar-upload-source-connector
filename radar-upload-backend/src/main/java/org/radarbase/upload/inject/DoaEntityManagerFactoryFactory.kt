@@ -49,7 +49,7 @@ class DoaEntityManagerFactoryFactory(@Context config: Config) : DisposableSuppli
             configMap["javax.persistence.jdbc.password"] = it
         }
         config.additionalPersistenceConfig?.let {
-            it.map { entry -> configMap[entry.key] = entry.value}
+            configMap.putAll(it)
         }
     }
 
