@@ -37,7 +37,7 @@ class RecordMapperImpl(
         @Context val sourceTypeRepository: SourceTypeRepository,
         @Context val config: Config) : RecordMapper {
 
-    private val cleanBaseUri: String
+    override val cleanBaseUri: String
         get() = (config.advertisedBaseUri ?: uri.baseUri).toString().trimEnd('/')
 
     override fun toRecord(record: RecordDTO): Pair<Record, RecordMetadata> {

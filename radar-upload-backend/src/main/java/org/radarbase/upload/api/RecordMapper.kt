@@ -24,6 +24,8 @@ import org.radarbase.upload.doa.entity.RecordContent
 import org.radarbase.upload.doa.entity.RecordMetadata
 
 interface RecordMapper {
+    val cleanBaseUri: String
+
     fun fromRecord(record: Record): RecordDTO
     fun fromRecords(records: List<Record>, page: Page?): RecordContainerDTO
     fun fromMetadata(metadata: RecordMetadata): RecordMetadataDTO
