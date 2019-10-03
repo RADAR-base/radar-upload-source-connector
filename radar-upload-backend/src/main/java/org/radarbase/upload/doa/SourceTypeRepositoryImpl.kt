@@ -23,7 +23,6 @@ import org.radarbase.upload.Config
 import org.radarbase.upload.api.SourceTypeDTO
 import org.radarbase.upload.api.SourceTypeMapper
 import org.radarbase.upload.doa.entity.SourceType
-import org.radarbase.upload.inject.transact
 import org.slf4j.LoggerFactory
 import javax.persistence.EntityManager
 import javax.ws.rs.core.Context
