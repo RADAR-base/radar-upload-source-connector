@@ -4,13 +4,12 @@ FROM node:10.16.3-alpine as builder
 RUN mkdir /app
 WORKDIR /app
 
-COPY ./radar-upload-frontend/package*.json /app/
+COPY package*.json /app/
 RUN npm install
 
-COPY ./radar-upload-frontend/ /app/
+COPY . /app/
 
 RUN npm run build --prod
-
 
 FROM nginx:1.17.3-alpine
 
@@ -21,7 +20,7 @@ WORKDIR /usr/share/nginx/html
 
 COPY --from=builder /app/dist/ .
 
-COPY ./docker/frontend-entrypoint.sh /entrypoint.sh
+COPY ./docker/entrypoint.sh /entrypoint.sh
 
 # expose internal port:80 and run init.sh
 EXPOSE 80

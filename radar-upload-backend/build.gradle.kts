@@ -14,22 +14,26 @@ application {
 }
 
 project.extra.apply {
-    set("okhttpVersion", "4.0.1")
-    set("radarMpVersion", "0.5.4")
-    set("radarCommonsVersion", "0.11.3")
-    set("radarSchemasVersion", "0.4.3")
-    set("jacksonVersion", "2.9.9.1")
+    set("okhttpVersion", "4.2.0")
+    set("radarMpVersion", "0.5.7")
+    set("radarAuthVersion", "0.1.0")
+    set("radarCommonsVersion", "0.12.2")
+    set("radarSchemasVersion", "0.5.2")
+    set("jacksonVersion", "2.9.9.2")
     set("jacksonDataVersion", "2.9.9")
-    set("slf4jVersion", "1.7.25")
+    set("slf4jVersion", "1.7.27")
     set("logbackVersion", "1.2.3")
     set("grizzlyVersion", "2.4.4")
-    set("jerseyVersion", "2.28")
+    set("jerseyVersion", "2.29.1")
+    // skip 5.4.5: https://hibernate.atlassian.net/browse/HHH-13625
     set("hibernateVersion", "5.4.4.Final")
 }
 
 repositories {
     jcenter()
     maven(url = "https://dl.bintray.com/radar-cns/org.radarcns")
+    maven(url = "https://dl.bintray.com/radar-base/org.radarbase")
+    maven(url = "https://repo.thehyve.nl/content/repositories/snapshots")
 }
 
 dependencies {
@@ -48,7 +52,7 @@ dependencies {
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${project.extra["jacksonDataVersion"]}")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:${project.extra["jacksonDataVersion"]}")
 
-    implementation("org.radarcns:radar-auth:${project.extra["radarMpVersion"]}")
+    implementation("org.radarbase:radar-auth-jersey:${project.extra["radarAuthVersion"]}")
 
     implementation("org.slf4j:slf4j-api:${project.extra["slf4jVersion"]}")
 

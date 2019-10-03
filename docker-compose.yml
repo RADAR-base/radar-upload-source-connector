@@ -164,7 +164,7 @@ services:
       MANAGEMENTPORTAL_OAUTH_SIGNING_KEY_ALIAS: 'radarbase-managementportal-ec'
       JAVA_OPTS: -Xmx256m  # maximum heap size for the JVM running ManagementPortal, increase this as necessary
     volumes:
-      - ./docker/mp-config/:/mp-includes/config
+      - ./etc/mp-config/:/mp-includes/config
 
   radarbase-postgresql:
     image: radarbase/radarbase-postgres:latest
@@ -178,15 +178,14 @@ services:
   #---------------------------------------------------------------------------#
   # RADAR Upload Source connector                                             #
   #---------------------------------------------------------------------------#
-  radar-upload-source-connector:
+  radar-upload-connector:
     build:
       context: .
-      dockerfile: Dockerfile.connector
+      dockerfile: kafka-connect-upload-source/Dockerfile
     image: radarbase/radar-connect-upload-source:dev
     restart: on-failure
     volumes:
-      - ./docker/source-upload.properties:/etc/kafka-connect/source-upload.properties
-      - ./docker/kafka-wait:/usr/bin/kafka-wait
+      - ./etc/source-upload.properties:/etc/kafka-connect/source-upload.properties
     depends_on:
       - zookeeper-1
       - zookeeper-2
@@ -195,7 +194,7 @@ services:
       - kafka-2
       - kafka-3
       - schema-registry-1
-      - radar-upload-connect-backend
+      - radar-upload-backend
     environment:
       CONNECT_BOOTSTRAP_SERVERS: PLAINTEXT://kafka-1:9092,PLAINTEXT://kafka-2:9092,PLAINTEXT://kafka-3:9092
       CONNECT_REST_PORT: 8083
@@ -210,37 +209,37 @@ services:
       CONNECT_INTERNAL_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
       CONNECT_INTERNAL_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
       CONNECT_OFFSET_STORAGE_FILE_FILENAME: "/var/lib/kafka-connect-upload-source/logs/connect.offsets"
-      CONNECT_REST_ADVERTISED_HOST_NAME: "radar-upload-source-connector"
+      CONNECT_REST_ADVERTISED_HOST_NAME: "radar-upload-connector"
       CONNECT_ZOOKEEPER_CONNECT: zookeeper-1:2181,zookeeper-2:2181,zookeeper-3:2181
       CONNECTOR_PROPERTY_FILE_PREFIX: "source-upload"
       KAFKA_HEAP_OPTS: "-Xms256m -Xmx768m"
       KAFKA_BROKERS: 3
       CONNECT_LOG4J_LOGGERS: "org.reflections=ERROR"
 
-  radar-upload-connect-backend:
+  radar-upload-backend:
     build:
       context: .
-      dockerfile: Dockerfile.backend
-    image: radarbase/radar-upload-connect-backend:dev
+      dockerfile: radar-upload-backend/Dockerfile
+    image: radarbase/radar-upload-backend:dev
     ports:
       - "8085:8085"
     depends_on:
       - managementportal-app
       - radarbase-postgresql
     volumes:
-      - ./docker/upload.yml:/etc/upload-backend/upload.yml
-      - ./docker/logback.xml:/etc/upload-backend/logback.xml
+      - ./etc/upload.yml:/etc/upload-backend/upload.yml
+      - ./etc/logback.xml:/etc/upload-backend/logback.xml
     environment:
       JAVA_OPTS: "-Dlogback.configurationFile=/etc/upload-backend/logback.xml"
     command: ["radar-upload-backend", "/etc/upload-backend/upload.yml"]
 
-  radar-upload-connect-frontend:
+  radar-upload-frontend:
     build:
-      context: .
-      dockerfile: Dockerfile.frontend
-    image: radarbase/radar-upload-connect-frontend:dev
+      context: radar-upload-frontend
+      dockerfile: Dockerfile
+    image: radarbase/radar-upload-frontend:dev
     depends_on:
-      - radar-upload-connect-backend
+      - radar-upload-backend
       - managementportal-app
     environment:
       VUE_APP_BASE_URL: "/upload"
@@ -254,8 +253,8 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - radar-upload-connect-backend
+      - radar-upload-backend
       - managementportal-app
-      - radar-upload-connect-frontend
+      - radar-upload-frontend
     volumes:
-      - "./docker/nginx-proxy.conf:/etc/nginx/nginx.conf"
+      - ./etc/nginx-proxy.conf:/etc/nginx/nginx.conf

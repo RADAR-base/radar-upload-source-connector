@@ -117,19 +117,16 @@ describe('axios/file', () => {
   });
 
   it('fileterRecords', async () => {
-    const params1 = {
+    const params = {
       projectId: 12,
       userId: 12,
       status: 'Status',
-      getRecordOnly: true,
-    };
-    const params2 = {
-      projectId: 12,
-      userId: 12,
-      status: 'Status',
-      getRecordOnly: false,
+      sourceType: 'sourceType',
+      size: 'size',
+      page: 10,
     };
     const response = {
+      totalElements: 10,
       records: [
         {
           id: 12,
@@ -159,14 +156,8 @@ describe('axios/file', () => {
           },
         }],
     };
-    const expectedVal1 = [{
-      ...response.records[0].metadata,
-      sourceType: response.records[0].sourceType,
-      userId: response.records[0].data.userId,
-      id: response.records[0].id,
-    }];
 
-    const expectedVal2 = [{
+    const expectedVal = [{
       ...response.records[0].metadata,
       files: response.records[0].data.contents
         .map(file => ({ ...file, uploadFailed: false, uploading: false })),
@@ -175,23 +166,13 @@ describe('axios/file', () => {
       id: response.records[0].id,
     }];
 
-    let endpoint = `records?projectId=${params1.projectId}`;
-    endpoint = params1.status ? endpoint += `&&status=${params1.status}` : endpoint;
-    endpoint = params1.userId ? endpoint += `&&userId=${params1.userId}` : endpoint;
+    const endpoint = `/records?projectId=${params.projectId}&size=${params.size}&page=${params.page}&sourceType=${params.sourceType}&userId=${params.userId}&status=${params.status}`;
 
     axios.get.mockResolvedValue(response);
 
 
-    await fileAPI.filterRecords(params1)
-      .then((data) => {
-        expect(data).toEqual(expectedVal1);
-        expect(axios.get).toBeCalledWith(endpoint);
-      });
-
-    await fileAPI.filterRecords(params2)
-      .then((data) => {
-        expect(data).toEqual(expectedVal2);
-        // expect(axios.get).toBeCalledWith(endpoint);
-      });
+    const res = await fileAPI.filterRecords(params);
+    expect(res).toEqual({ tableData: expectedVal, totalElements: 10 });
+    expect(axios.get).toBeCalledWith(endpoint);
   });
 });

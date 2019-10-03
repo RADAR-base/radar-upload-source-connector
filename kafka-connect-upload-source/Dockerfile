@@ -30,10 +30,10 @@ COPY --from=builder /code/kafka-connect-upload-source/build/third-party/*.jar ${
 COPY --from=builder /code/kafka-connect-upload-source/build/libs/kafka-connect-upload-source-*.jar ${CONNECT_PLUGIN_PATH}/kafka-connect-upload-source/
 
 # Load topics validator
-COPY ./docker/kafka-wait /usr/bin/kafka-wait
+COPY ./kafka-connect-upload-source/src/main/docker/kafka-wait /usr/bin/kafka-wait
 
 # Load modified launcher
-COPY ./docker/launch /etc/confluent/docker/launch
+COPY ./kafka-connect-upload-source/src/main/docker/launch /etc/confluent/docker/launch
 
 # create parent directory for storing offsets in standalone mode
 RUN mkdir -p /var/lib/kafka-connect-upload-source/logs

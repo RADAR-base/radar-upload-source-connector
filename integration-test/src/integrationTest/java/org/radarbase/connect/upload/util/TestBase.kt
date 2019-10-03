@@ -36,7 +36,9 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.hamcrest.CoreMatchers
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers
+import org.hamcrest.Matchers.*
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.radarbase.connect.upload.api.*
 import org.radarbase.connect.upload.auth.ClientCredentialsAuthorizer
 import org.radarbase.upload.Config
@@ -64,22 +66,22 @@ class TestBase {
 
         const val uploadConnectSecret = "upload_secret"
 
-        const val BEARER = "Bearer "
+        private const val BEARER = "Bearer "
 
-        const val USER = "sub-1"
+        private const val USER = "sub-1"
 
-        const val PROJECT = "radar"
+        private const val PROJECT = "radar"
 
-        const val SOURCE = "03d28e5c-e005-46d4-a9b3-279c27fbbc83"
+        private const val SOURCE = "03d28e5c-e005-46d4-a9b3-279c27fbbc83"
 
-        val APPLICATION_JSON = "application/json; charset=utf-8".toMediaType()
+        private val APPLICATION_JSON = "application/json; charset=utf-8".toMediaType()
 
-        val TEXT_CSV = "text/csv; charset=utf-8".toMediaType()
+        private val TEXT_CSV = "text/csv; charset=utf-8".toMediaType()
 
         val httpClient = OkHttpClient()
 
 
-        val sourceType = SourceTypeDTO(
+        private val sourceType = SourceTypeDTO(
                 name = sourceTypeName,
                 topics = mutableSetOf("test_topic"),
                 contentTypes = mutableSetOf("application/text"),
@@ -88,26 +90,28 @@ class TestBase {
                 configuration = mutableMapOf("setting1" to "value1", "setting2" to "value2")
         )
 
-        val altoidaZip = SourceTypeDTO(
+        private val altoidaZip = SourceTypeDTO(
                 name = "altoida-zip",
                 topics = mutableSetOf("test_topic"),
                 contentTypes = mutableSetOf("application/zip"),
                 timeRequired = false,
                 sourceIdRequired = false,
-                configuration = emptyMap()
+                configuration = mutableMapOf()
         )
 
-        val accelerationZip = SourceTypeDTO(
+        private val accelerationZip = SourceTypeDTO(
                 name = "acceleration-zip",
                 topics = mutableSetOf("test_topic_Acc"),
                 contentTypes = mutableSetOf("application/zip"),
                 timeRequired = false,
                 sourceIdRequired = false,
-                configuration = emptyMap()
+                configuration = mutableMapOf()
         )
 
         val uploadBackendConfig = Config(
                 managementPortalUrl = "http://localhost:8090/managementportal",
+                clientId = "radar_upload_backend",
+                clientSecret = "secret",
                 baseUri = URI.create(baseUri),
                 jdbcDriver = "org.postgresql.Driver",
                 jdbcUrl = "jdbc:postgresql://localhost:5434/uploadconnector",
@@ -116,7 +120,7 @@ class TestBase {
                 sourceTypes = listOf(sourceType, altoidaZip, accelerationZip)
         )
 
-        val mapper = ObjectMapper(JsonFactory())
+        private val mapper: ObjectMapper = ObjectMapper(JsonFactory())
                 .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
                 .registerModule(KotlinModule())
                 .registerModule(JavaTimeModule())
@@ -126,10 +130,9 @@ class TestBase {
                 httpClient,
                 uploadConnectClient,
                 uploadConnectSecret,
-                tokenUrl
-        )
+                tokenUrl)
 
-        fun call(
+        private fun call(
                 httpClient: OkHttpClient,
                 expectedStatus: Int,
                 requestSupplier: (Request.Builder) -> Request.Builder
@@ -142,56 +145,62 @@ class TestBase {
                     println(tree)
                     tree
                 }
-                assertThat(response.code, CoreMatchers.`is`(expectedStatus))
+                assertThat(response.code, `is`(expectedStatus))
                 body
             }
         }
 
-        fun Any.toJsonString(): String = mapper.writeValueAsString(this)
-
-        fun call(
+        private fun<T> call(
                 httpClient: OkHttpClient,
-                expectedStatus: Response.Status,
-                requestSupplier: (Request.Builder) -> Request.Builder
-        ): JsonNode? {
-            return call(httpClient, expectedStatus.statusCode, requestSupplier)
-        }
-
-        fun call(
-                httpClient: OkHttpClient,
-                expectedStatus: Response.Status,
-                stringProperty: String,
-                requestSupplier: (Request.Builder) -> Request.Builder
-        ): String {
-            return call(httpClient, expectedStatus, requestSupplier)?.get(stringProperty)?.asText()
-                    ?: throw AssertionError("String property $stringProperty not found")
-        }
-
-        fun retrieveRecordMetadata(accessToken: String, recordId: Long): RecordMetadataDTO {
-
-            val requestToUploadFile = Request.Builder()
-                    .url("$baseUri/records/$recordId/metadata")
-                    .get()
-                    .addHeader("Authorization", BEARER + accessToken)
-                    .build()
-            val response = httpClient.newCall(requestToUploadFile).execute()
-            Assertions.assertTrue(response.isSuccessful)
-
-            return mapper.readValue(response.body?.string(), RecordMetadataDTO::class.java)
-        }
-
-        fun getAccessToken() : String {
-            return call(httpClient, Response.Status.OK, "access_token") {
-                it.url(tokenUrl)
-                        .addHeader("Authorization", Credentials.basic("radar_upload_test_client", "test"))
-                        .post(FormBody.Builder()
-                                .add("grant_type", "client_credentials")
-                                .build())
+                expectedStatus: Int,
+                parseClass: Class<T>,
+                requestSupplier: Request.Builder.() -> Request.Builder
+        ): T {
+            val request = requestSupplier(Request.Builder()).build()
+            println(request.url)
+            return httpClient.newCall(request).execute().use { response ->
+                assertThat(response.code, `is`(expectedStatus))
+                assertThat(response.body, not(nullValue()))
+                mapper.readValue(response.body?.byteStream(), parseClass)
+                        .also { assertThat(it, not(nullValue())) }
+                        .also { println(it!!.toJsonString()) }
             }
         }
 
-        fun createRecordAndUploadContent(accessToken: String, sourceType: String, fileName: String): RecordDTO {
+        private fun Any.toJsonString(): String = mapper.writeValueAsString(this)
 
+        private fun call(
+                httpClient: OkHttpClient,
+                expectedStatus: Response.Status,
+                requestSupplier: (Request.Builder) -> Request.Builder
+        ): JsonNode? = call(httpClient, expectedStatus.statusCode, requestSupplier)
+
+        private fun call(
+                httpClient: OkHttpClient,
+                expectedStatus: Response.Status,
+                stringProperty: String,
+                requestSupplier: Request.Builder.() -> Request.Builder
+        ): String = call(httpClient, expectedStatus, requestSupplier)
+                ?.get(stringProperty)
+                ?.asText()
+                ?: throw AssertionError("String property $stringProperty not found")
+
+        fun retrieveRecordMetadata(accessToken: String, recordId: Long): RecordMetadataDTO {
+            return call(httpClient,200, RecordMetadataDTO::class.java) {
+                url("$baseUri/records/$recordId/metadata")
+                addHeader("Authorization", BEARER + accessToken)
+            }
+        }
+
+        fun getAccessToken() : String = call(httpClient, Response.Status.OK, "access_token") {
+            url(tokenUrl)
+            addHeader("Authorization", Credentials.basic("radar_upload_test_client", "test"))
+            post(FormBody.Builder()
+                    .add("grant_type", "client_credentials")
+                    .build())
+        }
+
+        fun createRecordAndUploadContent(accessToken: String, sourceType: String, fileName: String): RecordDTO {
             val record = RecordDTO(
                     id = null,
                     data = RecordDataDTO(
@@ -204,20 +213,14 @@ class TestBase {
                     metadata = null
             )
 
-            val request = Request.Builder()
-                    .url("$baseUri/records")
-                    .post(record.toJsonString().toRequestBody(APPLICATION_JSON))
-                    .addHeader("Authorization", BEARER + accessToken)
-                    .addHeader("Content-type", "application/json")
-                    .build()
-
-            val response = httpClient.newCall(request).execute()
-            Assertions.assertTrue(response.isSuccessful)
-
-            val recordCreated = mapper.readValue(response.body?.string(), RecordDTO::class.java)
-            Assertions.assertNotNull(recordCreated)
-            Assertions.assertNotNull(recordCreated.id)
-            assertThat(recordCreated?.id!!, Matchers.greaterThan(0L))
+            val recordCreated = call(httpClient, 201, RecordDTO::class.java) {
+                url("$baseUri/records")
+                post(record.toJsonString().toRequestBody(APPLICATION_JSON))
+                addHeader("Authorization", BEARER + accessToken)
+                addHeader("Content-type", "application/json")
+            }
+            assertThat(recordCreated.id, not(nullValue()))
+            assertThat(recordCreated.id!!, greaterThan(0L))
 
             //Test uploading request contentFile for created record
             uploadContent(recordCreated.id!!, fileName, accessToken)
@@ -229,36 +232,21 @@ class TestBase {
             //Test uploading request contentFile
             val file = File(fileName)
 
-            val requestToUploadFile = Request.Builder()
-                    .url("$baseUri/records/$recordId/contents/$fileName")
-                    .put(file.asRequestBody(TEXT_CSV))
-                    .addHeader("Authorization", BEARER + clientUserToken)
-                    .build()
-
-            val uploadResponse = httpClient.newCall(requestToUploadFile).execute()
-            Assertions.assertTrue(uploadResponse.isSuccessful)
-
-            val content = mapper.readValue(uploadResponse.body?.string(), ContentsDTO::class.java)
-            Assertions.assertNotNull(content)
-            Assertions.assertEquals(fileName, content.fileName)
+            val content = call(httpClient, 201, ContentsDTO::class.java) {
+                url("$baseUri/records/$recordId/contents/$fileName")
+                put(file.asRequestBody(TEXT_CSV))
+                addHeader("Authorization", BEARER + clientUserToken)
+            }
+            assertThat(content.fileName, equalTo(fileName))
         }
-
 
         private fun markReady(recordId: Long, clientUserToken: String) {
-            //Test marking record READY
-            val requestToUploadFile = Request.Builder()
-                    .url("$baseUri/records/$recordId/metadata")
-                    .post("{\"status\":\"READY\",\"revision\":1}".toRequestBody("application/json".toMediaType()))
-                    .addHeader("Authorization", BEARER + clientUserToken)
-                    .build()
-
-            val uploadResponse = httpClient.newCall(requestToUploadFile).execute()
-            Assertions.assertTrue(uploadResponse.isSuccessful)
-
-            val metadata = mapper.readValue(uploadResponse.body?.string(), RecordMetadataDTO::class.java)
-            Assertions.assertNotNull(metadata)
-            Assertions.assertEquals("READY", metadata.status)
+            val metadata = call(httpClient, 200, RecordMetadataDTO::class.java) {
+                url("$baseUri/records/$recordId/metadata")
+                post("{\"status\":\"READY\",\"revision\":1}".toRequestBody("application/json".toMediaType()))
+                addHeader("Authorization", BEARER + clientUserToken)
+            }
+            assertThat(metadata.status, equalTo("READY"))
         }
-
     }
 }

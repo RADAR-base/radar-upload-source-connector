@@ -33,29 +33,23 @@ import javax.persistence.Persistence
 import javax.ws.rs.core.Context
 
 class DoaEntityManagerFactoryFactory(@Context config: Config) : DisposableSupplier<EntityManagerFactory> {
-    private val configMap: Map<String, String>
-    init {
-        configMap = HashMap()
-        config.jdbcDriver?.let {
-            configMap["javax.persistence.jdbc.driver"] = it
-        }
-        config.jdbcUrl?.let {
-            configMap["javax.persistence.jdbc.url"] = it
-        }
-        config.jdbcUser?.let {
-            configMap["javax.persistence.jdbc.user"] = it
-        }
-        config.jdbcPassword?.let {
-            configMap["javax.persistence.jdbc.password"] = it
-        }
-        config.additionalPersistenceConfig?.let {
-            it.map { entry -> configMap[entry.key] = entry.value}
-        }
-    }
+    @Suppress("UNCHECKED_CAST")
+    private val configMap = (
+            mapOf(
+                    "javax.persistence.jdbc.driver" to config.jdbcDriver,
+                    "javax.persistence.jdbc.url" to config.jdbcUrl,
+                    "javax.persistence.jdbc.user" to config.jdbcUser,
+                    "javax.persistence.jdbc.password" to config.jdbcPassword)
+                    + (config.additionalPersistenceConfig ?: emptyMap()))
+            .filterValues { it != null } as Map<String, String>
 
     override fun get(): EntityManagerFactory {
         logger.info("Initializing EntityManagerFactory with config: $configMap")
-        val emf = Persistence.createEntityManagerFactory("org.radarbase.upload.doa", configMap)
+        return Persistence.createEntityManagerFactory("org.radarbase.upload.doa", configMap)
+                .also { initializeDatabase(it) }
+    }
+
+    private fun initializeDatabase(emf: EntityManagerFactory) {
         logger.info("Initializing Liquibase")
         val connection = emf.createEntityManager().unwrap(SessionImpl::class.java).connection()
         try {
@@ -63,9 +57,8 @@ class DoaEntityManagerFactoryFactory(@Context config: Config) : DisposableSuppli
             val liquibase = Liquibase("dbChangelog.xml", ClassLoaderResourceAccessor(), database)
             liquibase.update("test")
         } catch (e: LiquibaseException) {
-            e.printStackTrace()
+            logger.error("Failed to initialize database", e)
         }
-        return emf
     }
 
     override fun dispose(instance: EntityManagerFactory?) {
@@ -76,5 +69,4 @@ class DoaEntityManagerFactoryFactory(@Context config: Config) : DisposableSuppli
     companion object {
         private val logger = LoggerFactory.getLogger(DoaEntityManagerFactoryFactory::class.java)
     }
-
 }
