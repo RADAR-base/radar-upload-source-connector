@@ -40,8 +40,6 @@ import javax.annotation.Resource
 import javax.inject.Singleton
 import javax.ws.rs.*
 import javax.ws.rs.core.*
-import kotlin.math.max
-import kotlin.math.min
 import org.radarbase.upload.exception.BadRequestException as RbBadRequestException
 import org.radarbase.upload.exception.NotFoundException as RbNotFoundException
 
@@ -62,8 +60,8 @@ class RecordResource(
     fun query(
             @QueryParam("projectId") projectId: String?,
             @QueryParam("userId") userId: String?,
-            @DefaultValue("10") @QueryParam("size") size: Int,
-            @DefaultValue("1") @QueryParam("page") page: Int,
+            @QueryParam("size") pageSize: Int?,
+            @DefaultValue("1") @QueryParam("page") pageNumber: Int,
             @QueryParam("sourceType") sourceType: String?,
             @QueryParam("status") status: String?): RecordContainerDTO {
         projectId ?: throw RbBadRequestException("missing_project", "Required project ID not provided.")
@@ -74,10 +72,10 @@ class RecordResource(
             auth.checkPermissionOnProject(PROJECT_READ, projectId)
         }
 
-        val imposedLimit = min(max(size, 1), 100)
-        val (records, count) = recordRepository.query(Page(pageNumber = page, pageSize = imposedLimit), projectId, userId, status, sourceType)
+        val queryPage = Page(pageNumber = pageNumber, pageSize = pageSize)
+        val (records, page) = recordRepository.query(queryPage, projectId, userId, status, sourceType)
 
-        return recordMapper.fromRecords(records, Page(pageNumber = page, pageSize = imposedLimit, totalElements = count))
+        return recordMapper.fromRecords(records, page)
     }
 
     @POST
