@@ -41,7 +41,8 @@ import javax.ws.rs.core.MediaType
 @Singleton
 class ProjectResource(
         @Context private val projectService: UploadProjectService,
-        @Context private val auth: Auth) {
+        @Context private val auth: Auth
+) {
 
     @GET
     @NeedsPermission(Permission.Entity.PROJECT, Permission.Operation.READ)

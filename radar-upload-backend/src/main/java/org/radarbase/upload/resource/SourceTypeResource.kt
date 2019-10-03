@@ -36,13 +36,10 @@ import javax.ws.rs.core.MediaType
 @Resource
 @Authenticated
 @Singleton
-class SourceTypeResource {
-    @Context
-    lateinit var sourceTypeRepository: SourceTypeRepository
-
-    @Context
-    lateinit var sourceTypeMapper: SourceTypeMapper
-
+class SourceTypeResource(
+        @Context private var sourceTypeRepository: SourceTypeRepository,
+        @Context private var sourceTypeMapper: SourceTypeMapper
+) {
     @GET
     fun query(@DefaultValue("20") @QueryParam("limit") limit: Int,
               @QueryParam("lastId") lastId: Long?): SourceTypeContainerDTO {

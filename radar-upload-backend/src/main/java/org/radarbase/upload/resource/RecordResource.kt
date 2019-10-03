@@ -37,7 +37,6 @@ import java.io.IOException
 import java.io.InputStream
 import java.net.URI
 import javax.annotation.Resource
-import javax.inject.Provider
 import javax.inject.Singleton
 import javax.ws.rs.*
 import javax.ws.rs.core.*
@@ -50,25 +49,12 @@ import org.radarbase.upload.exception.NotFoundException as RbNotFoundException
 @Resource
 @Authenticated
 @Singleton
-class RecordResource {
-
-    @Context
-    lateinit var recordRepository: RecordRepository
-
-    @Context
-    lateinit var mapper: ObjectMapper
-
-    @Context
-    lateinit var recordMapper: RecordMapper
-
-    @Context
-    lateinit var uri: UriInfo
-
-    @Context
-    lateinit var auth: Provider<Auth>
-
-    @Context
-    lateinit var sourceTypeRepository: SourceTypeRepository
+class RecordResource(
+        @Context private val recordRepository: RecordRepository,
+        @Context private val recordMapper: RecordMapper,
+        @Context private val auth: Auth,
+        @Context private val sourceTypeRepository: SourceTypeRepository
+) {
 
     @GET
     fun query(
@@ -81,9 +67,9 @@ class RecordResource {
         projectId ?: throw RbBadRequestException("missing_project", "Required project ID not provided.")
 
         if (userId != null) {
-            auth.get().checkPermissionOnSubject(SUBJECT_READ, projectId, userId)
+            auth.checkPermissionOnSubject(SUBJECT_READ, projectId, userId)
         } else {
-            auth.get().checkPermissionOnProject(PROJECT_READ, projectId)
+            auth.checkPermissionOnProject(PROJECT_READ, projectId)
         }
 
         val queryPage = Page(pageNumber = pageNumber, pageSize = pageSize)
@@ -95,13 +81,13 @@ class RecordResource {
     @POST
     @NeedsPermission(Entity.MEASUREMENT, Operation.CREATE)
     fun create(record: RecordDTO): Response {
-        validateNewRecord(record, auth.get())
+        validateNewRecord(record)
 
         val (doaRecord, metadata) = recordMapper.toRecord(record)
         val result = recordRepository.create(doaRecord, metadata, record.data?.contents)
 
         logger.info("Record created $result")
-        return Response.created(URI("${uri.baseUri}records/${result.id}"))
+        return Response.created(URI("${recordMapper.cleanBaseUri}/records/${result.id}"))
                 .entity(recordMapper.fromRecord(result))
                 .build()
     }
@@ -139,7 +125,7 @@ class RecordResource {
         return Response.noContent().build()
     }
 
-    private fun validateNewRecord(record: RecordDTO, auth: Auth) {
+    private fun validateNewRecord(record: RecordDTO) {
         if (record.id != null) {
             throw RbBadRequestException("field_forbidden", "Record ID cannot be set explicitly")
         }
@@ -204,7 +190,7 @@ class RecordResource {
                 ?: throw RbNotFoundException("record_not_found", "Record with ID $recordId does not exist")
 
         if (permission != null) {
-            auth.get().checkPermissionOnSubject(permission, record.projectId, record.userId)
+            auth.checkPermissionOnSubject(permission, record.projectId, record.userId)
         }
 
         return record
@@ -247,7 +233,7 @@ class RecordResource {
     @POST
     @Path("poll")
     fun poll(pollDTO: PollDTO): RecordContainerDTO {
-        if (auth.get().token.grantType.equals("client_credentials", ignoreCase = true)) {
+        if (auth.token.grantType.equals("client_credentials", ignoreCase = true)) {
             val imposedLimit = pollDTO.limit
                     .coerceAtLeast(1)
                     .coerceAtMost(100)
