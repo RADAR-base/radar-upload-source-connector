@@ -19,12 +19,8 @@
 
 package org.radarbase.upload.exception
 
-import java.lang.RuntimeException
+import org.radarbase.auth.jersey.exception.HttpApplicationException
 import javax.ws.rs.core.Response.Status
-
-open class HttpApplicationException(val status: Int, val code: String, val detailedMessage: String?) : RuntimeException("[$status] $code: $detailedMessage") {
-    constructor(status: Status, code: String, detailedMessage: String?) : this(status.statusCode, code, detailedMessage)
-}
 
 class BadGatewayException(message: String) :
         HttpApplicationException(Status.BAD_GATEWAY, "bad_gateway", message)
