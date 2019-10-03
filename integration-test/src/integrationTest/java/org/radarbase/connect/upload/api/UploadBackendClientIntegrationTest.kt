@@ -45,8 +45,6 @@ import java.io.File
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class UploadBackendClientIntegrationTest {
-
-
     private lateinit var uploadBackendClient: UploadBackendClient
 
     private lateinit var logRepository: LogRepository
@@ -113,7 +111,7 @@ class UploadBackendClientIntegrationTest {
         val converter = AccelerometerCsvRecordConverter()
         converter.initialize(sourceType, uploadBackendClient, logRepository, emptyMap())
 
-        val recordToProcess = records.records.filter { recordDTO -> recordDTO.sourceType == sourceTypeName }.first()
+        val recordToProcess = records.records.first { recordDTO -> recordDTO.sourceType == sourceTypeName }
         createdRecord.metadata = uploadBackendClient.updateStatus(recordToProcess.id!!, recordToProcess.metadata!!.copy(status = "PROCESSING", message = "The record is being processed"))
         val convertedRecords = converter.convert(records.records.first())
         assertNotNull(convertedRecords)
@@ -137,9 +135,9 @@ class UploadBackendClientIntegrationTest {
     }
 
     private fun retrieveFile(recordId: RecordDTO) {
-        uploadBackendClient.retrieveFile(recordId, fileName).use { response ->
+        uploadBackendClient.retrieveFile(recordId, fileName) { response ->
             assertNotNull(response)
-            val responseData = response!!.bytes()
+            val responseData = response.bytes()
             assertThat(responseData.size.toLong(), equalTo(File(fileName).length()))
             assertThat(responseData, equalTo(File(fileName).readBytes()))
         }

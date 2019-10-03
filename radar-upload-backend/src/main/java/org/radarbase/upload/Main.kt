@@ -31,7 +31,6 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import kotlin.system.exitProcess
 
-
 val logger: Logger = LoggerFactory.getLogger("org.radarbase.upload.Main")
 
 fun loadConfig(args: Array<String>): Config {

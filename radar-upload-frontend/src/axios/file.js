@@ -1,6 +1,5 @@
 import axios from 'axios';
 import uuidv1 from 'uuid/v1';
-import { baseURL } from '@/app.config';
 
 export default {
   /** response
@@ -76,34 +75,25 @@ export default {
   },
 
   async filterRecords({
-    projectId, status, userId, getRecordOnly = false,
+    projectId, size, page, sourceType = '', status = '', userId = '',
   }) {
-    let endpoint = `records?projectId=${projectId}`;
-    endpoint = status ? endpoint += `&&status=${status}` : endpoint;
-    endpoint = userId ? endpoint += `&&userId=${userId}` : endpoint;
-    if (getRecordOnly) {
-      return axios.get(endpoint)
-        .then(res => res.records
-          .map(record => ({
-            ...record.metadata,
-            id: record.id,
-            sourceType: record.sourceType,
-            userId: record.data.userId,
-          }))
-          .reverse());
-    }
+    let endpoint = `/records?projectId=${projectId}&size=${size}&page=${page}`;
+    if (sourceType) endpoint += `&sourceType=${sourceType}`;
+    if (userId) endpoint += `&userId=${userId}`;
+    if (status) endpoint += `&status=${status}`;
 
-    return axios.get(endpoint)
-      .then(res => res.records
-        .map(record => ({
-          ...record.metadata,
-          files: record.data.contents
-            .map(file => ({ ...file, uploadFailed: false, uploading: false })),
-          id: record.id,
-          sourceType: record.sourceType,
-          userId: record.data.userId,
-        }))
-        .reverse());
+    const res = await axios.get(endpoint).catch((error) => { throw new Error(error); });
+    const tableData = res.records
+      .map(record => ({
+        ...record.metadata,
+        files: record.data.contents
+          .map(file => ({ ...file, uploadFailed: false, uploading: false })),
+        id: record.id,
+        sourceType: record.sourceType,
+        userId: record.data.userId,
+      }));
+    const { totalElements } = res;
+    return { totalElements, tableData };
   },
 
   async getRecordLog(url) {

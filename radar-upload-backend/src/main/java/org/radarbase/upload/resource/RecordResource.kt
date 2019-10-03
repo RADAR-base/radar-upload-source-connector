@@ -20,10 +20,10 @@
 package org.radarbase.upload.resource
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.radarbase.auth.jersey.Auth
+import org.radarbase.auth.jersey.Authenticated
+import org.radarbase.auth.jersey.NeedsPermission
 import org.radarbase.upload.api.*
-import org.radarbase.upload.auth.Auth
-import org.radarbase.upload.auth.Authenticated
-import org.radarbase.upload.auth.NeedsPermission
 import org.radarbase.upload.doa.RecordRepository
 import org.radarbase.upload.doa.SourceTypeRepository
 import org.radarbase.upload.doa.entity.Record
@@ -37,10 +37,9 @@ import java.io.IOException
 import java.io.InputStream
 import java.net.URI
 import javax.annotation.Resource
+import javax.inject.Singleton
 import javax.ws.rs.*
 import javax.ws.rs.core.*
-import kotlin.math.max
-import kotlin.math.min
 import org.radarbase.upload.exception.BadRequestException as RbBadRequestException
 import org.radarbase.upload.exception.NotFoundException as RbNotFoundException
 
@@ -49,58 +48,46 @@ import org.radarbase.upload.exception.NotFoundException as RbNotFoundException
 @Consumes(MediaType.APPLICATION_JSON)
 @Resource
 @Authenticated
-class RecordResource {
-
-    @Context
-    lateinit var recordRepository: RecordRepository
-
-    @Context
-    lateinit var mapper: ObjectMapper
-
-    @Context
-    lateinit var recordMapper: RecordMapper
-
-    @Context
-    lateinit var uri: UriInfo
-
-    @Context
-    lateinit var auth: Auth
-
-    @Context
-    lateinit var sourceTypeRepository: SourceTypeRepository
+@Singleton
+class RecordResource(
+        @Context private val recordRepository: RecordRepository,
+        @Context private val recordMapper: RecordMapper,
+        @Context private val auth: Auth,
+        @Context private val sourceTypeRepository: SourceTypeRepository
+) {
 
     @GET
     fun query(
             @QueryParam("projectId") projectId: String?,
             @QueryParam("userId") userId: String?,
-            @DefaultValue("10") @QueryParam("size") size: Int,
-            @DefaultValue("1") @QueryParam("page") page: Int,
+            @QueryParam("size") pageSize: Int?,
+            @DefaultValue("1") @QueryParam("page") pageNumber: Int,
             @QueryParam("sourceType") sourceType: String?,
             @QueryParam("status") status: String?): RecordContainerDTO {
         projectId ?: throw RbBadRequestException("missing_project", "Required project ID not provided.")
 
         if (userId != null) {
-            auth.checkUserPermission(SUBJECT_READ, projectId, userId)
+            auth.checkPermissionOnSubject(SUBJECT_READ, projectId, userId)
         } else {
-            auth.checkProjectPermission(PROJECT_READ, projectId)
+            auth.checkPermissionOnProject(PROJECT_READ, projectId)
         }
 
-        val imposedLimit = min(max(size, 1), 100)
-        val (records, count) = recordRepository.query(Page(pageNumber = page, pageSize = imposedLimit), projectId, userId, status, sourceType)
+        val queryPage = Page(pageNumber = pageNumber, pageSize = pageSize)
+        val (records, page) = recordRepository.query(queryPage, projectId, userId, status, sourceType)
 
-        return recordMapper.fromRecords(records, Page(pageNumber = page, pageSize = imposedLimit, totalElements = count))
+        return recordMapper.fromRecords(records, page)
     }
 
     @POST
     @NeedsPermission(Entity.MEASUREMENT, Operation.CREATE)
     fun create(record: RecordDTO): Response {
-        validateNewRecord(record, auth)
+        validateNewRecord(record)
 
         val (doaRecord, metadata) = recordMapper.toRecord(record)
         val result = recordRepository.create(doaRecord, metadata, record.data?.contents)
 
         logger.info("Record created $result")
-        return Response.created(URI("${uri.baseUri}records/${result.id}"))
+        return Response.created(URI("${recordMapper.cleanBaseUri}/records/${result.id}"))
                 .entity(recordMapper.fromRecord(result))
                 .build()
     }
@@ -138,7 +125,7 @@ class RecordResource {
         return Response.noContent().build()
     }
 
-    private fun validateNewRecord(record: RecordDTO, auth: Auth) {
+    private fun validateNewRecord(record: RecordDTO) {
         if (record.id != null) {
             throw RbBadRequestException("field_forbidden", "Record ID cannot be set explicitly")
         }
@@ -149,7 +136,7 @@ class RecordResource {
         data.projectId ?: throw RbBadRequestException("project_missing", "Record needs a project ID")
         data.userId ?: throw RbBadRequestException("user_missing", "Record needs a user ID")
 
-        auth.checkUserPermission(MEASUREMENT_CREATE, data.projectId, data.userId)
+        auth.checkPermissionOnSubject(MEASUREMENT_CREATE, data.projectId, data.userId)
 
         data.contents?.forEach {
             it.text ?: throw RbBadRequestException("field_missing", "Contents need explicit text value set in UTF-8 encoding.")
@@ -202,8 +189,8 @@ class RecordResource {
         val record = recordRepository.read(recordId)
                 ?: throw RbNotFoundException("record_not_found", "Record with ID $recordId does not exist")
 
-        permission?.let {
-            auth.checkUserPermission(it, record.projectId, record.userId)
+        if (permission != null) {
+            auth.checkPermissionOnSubject(permission, record.projectId, record.userId)
         }
 
         return record
@@ -246,14 +233,14 @@ class RecordResource {
     @POST
     @Path("poll")
     fun poll(pollDTO: PollDTO): RecordContainerDTO {
-        if (auth.isClientCredentials) {
+        if (auth.token.grantType.equals("client_credentials", ignoreCase = true)) {
             val imposedLimit = pollDTO.limit
                     .coerceAtLeast(1)
                     .coerceAtMost(100)
             val records = recordRepository.poll(imposedLimit, pollDTO.supportedConverters)
             return recordMapper.fromRecords(records, page = Page(pageSize = imposedLimit))
         } else {
-            throw NotAuthorizedException("Client is not authorized to poll records")
+            throw NotAuthorizedException("Only for internal use")
         }
     }
 

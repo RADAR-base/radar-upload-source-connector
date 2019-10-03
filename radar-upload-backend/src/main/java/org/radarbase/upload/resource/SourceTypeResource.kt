@@ -19,12 +19,13 @@
 
 package org.radarbase.upload.resource
 
+import org.radarbase.auth.jersey.Authenticated
 import org.radarbase.upload.api.SourceTypeContainerDTO
 import org.radarbase.upload.api.SourceTypeDTO
 import org.radarbase.upload.api.SourceTypeMapper
-import org.radarbase.upload.auth.Authenticated
 import org.radarbase.upload.doa.SourceTypeRepository
 import javax.annotation.Resource
+import javax.inject.Singleton
 import javax.ws.rs.*
 import javax.ws.rs.core.Context
 import javax.ws.rs.core.MediaType
@@ -34,18 +35,18 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 @Resource
 @Authenticated
-class SourceTypeResource {
-    @Context
-    lateinit var sourceTypeRepository: SourceTypeRepository
-
-    @Context
-    lateinit var sourceTypeMapper: SourceTypeMapper
-
+@Singleton
+class SourceTypeResource(
+        @Context private var sourceTypeRepository: SourceTypeRepository,
+        @Context private var sourceTypeMapper: SourceTypeMapper
+) {
     @GET
     fun query(@DefaultValue("20") @QueryParam("limit") limit: Int,
               @QueryParam("lastId") lastId: Long?): SourceTypeContainerDTO {
+        val imposedLimit = limit
+                .coerceAtLeast(1)
+                .coerceAtMost(100)
 
-        val imposedLimit = Math.min(Math.max(limit, 1), 100)
         val records = sourceTypeRepository.readAll(imposedLimit, lastId)
 
         return sourceTypeMapper.fromSourceTypes(records)

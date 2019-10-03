@@ -29,10 +29,9 @@ import javax.ws.rs.ext.Provider
 
 
 @Provider
-class CorsFilter: ContainerResponseFilter {
-
-    @Context
-    private lateinit var config: Config
+class CorsFilter(
+        @Context private val config: Config
+): ContainerResponseFilter {
 
     @Throws(IOException::class)
     override fun filter(request: ContainerRequestContext,

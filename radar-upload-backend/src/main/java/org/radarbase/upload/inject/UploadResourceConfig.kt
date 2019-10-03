@@ -28,20 +28,18 @@ import okhttp3.OkHttpClient
 import org.glassfish.jersey.internal.inject.AbstractBinder
 import org.glassfish.jersey.process.internal.RequestScoped
 import org.glassfish.jersey.server.ResourceConfig
+import org.radarbase.auth.jersey.JerseyResourceEnhancer
 import org.radarbase.upload.Config
 import org.radarbase.upload.api.RecordMapper
 import org.radarbase.upload.api.RecordMapperImpl
 import org.radarbase.upload.api.SourceTypeMapper
 import org.radarbase.upload.api.SourceTypeMapperImpl
-import org.radarbase.upload.auth.Auth
-import org.radarbase.upload.auth.MPClient
 import org.radarbase.upload.doa.RecordRepository
 import org.radarbase.upload.doa.RecordRepositoryImpl
 import org.radarbase.upload.doa.SourceTypeRepository
 import org.radarbase.upload.doa.SourceTypeRepositoryImpl
 import org.radarbase.upload.dto.CallbackManager
 import org.radarbase.upload.dto.QueuedCallbackManager
-import org.radarbase.upload.service.MPService
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 import javax.persistence.EntityManager
@@ -55,26 +53,23 @@ abstract class UploadResourceConfig {
             .readTimeout(30, TimeUnit.SECONDS)
             .build()
 
-    fun resources(config: Config): ResourceConfig {
-        val resources = ResourceConfig().apply {
-            packages(
-                    "org.radarbase.upload.auth",
-                    "org.radarbase.upload.exception",
-                    "org.radarbase.upload.filter",
-                    "org.radarbase.upload.resource")
-            register(binder(config))
-            register(ContextResolver<ObjectMapper> { OBJECT_MAPPER })
-            property("jersey.config.server.wadl.disableWadl", true)
-        }
-        registerAuthentication(resources)
-        return resources
+    fun resources(config: Config) = ResourceConfig().apply {
+        val enhancers = createEnhancers(config)
+        packages(
+                "org.radarbase.upload.exception",
+                "org.radarbase.upload.filter",
+                "org.radarbase.upload.resource")
+        enhancers.forEach { packages(*it.packages) }
+        register(binder(config, enhancers))
+        register(ContextResolver { OBJECT_MAPPER })
+        property("jersey.config.server.wadl.disableWadl", true)
     }
 
-    abstract fun registerAuthentication(resources: ResourceConfig)
+    abstract fun createEnhancers(config: Config): List<JerseyResourceEnhancer>
 
-    abstract fun registerAuthenticationUtilities(binder: AbstractBinder)
+    abstract fun registerAuthentication(binder: AbstractBinder)
 
-    private fun binder(config: Config) = object : AbstractBinder() {
+    private fun binder(config: Config, enhancers: List<JerseyResourceEnhancer>) = object : AbstractBinder() {
         override fun configure() {
             // Bind instances. These cannot use any injects themselves
             bind(config)
@@ -90,21 +85,7 @@ abstract class UploadResourceConfig {
                     .to(CallbackManager::class.java)
                     .`in`(Singleton::class.java)
 
-            bind(MPClient::class.java)
-                    .to(MPClient::class.java)
-                    .`in`(Singleton::class.java)
-
-            bind(MPService::class.java)
-                    .to(MPService::class.java)
-                    .`in`(Singleton::class.java)
-
             // Bind factories.
-            bindFactory(AuthFactory::class.java)
-                    .proxy(true)
-                    .proxyForSameScope(true)
-                    .to(Auth::class.java)
-                    .`in`(RequestScoped::class.java)
-
             bindFactory(DoaEntityManagerFactoryFactory::class.java)
                     .to(EntityManagerFactory::class.java)
                     .`in`(Singleton::class.java)
@@ -129,12 +110,14 @@ abstract class UploadResourceConfig {
                     .to(SourceTypeRepository::class.java)
                     .`in`(Singleton::class.java)
 
-            registerAuthenticationUtilities(this)
+            enhancers.forEach { it.enhance(this) }
+
+            registerAuthentication(this)
         }
     }
 
     companion object {
-        private val OBJECT_MAPPER = ObjectMapper()
+        private val OBJECT_MAPPER: ObjectMapper = ObjectMapper()
                 .setSerializationInclusion(JsonInclude.Include.NON_NULL)
                 .registerModule(JavaTimeModule())
                 .registerModule(KotlinModule())
