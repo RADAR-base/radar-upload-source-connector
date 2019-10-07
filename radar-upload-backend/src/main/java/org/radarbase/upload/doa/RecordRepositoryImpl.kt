@@ -21,13 +21,13 @@ package org.radarbase.upload.doa
 
 import org.hibernate.engine.jdbc.BlobProxy
 import org.hibernate.engine.jdbc.ClobProxy
+import org.radarbase.jersey.exception.HttpBadRequestException
+import org.radarbase.jersey.exception.HttpConflictException
+import org.radarbase.jersey.exception.HttpNotFoundException
 import org.radarbase.upload.api.ContentsDTO
 import org.radarbase.upload.api.Page
 import org.radarbase.upload.api.RecordMetadataDTO
 import org.radarbase.upload.doa.entity.*
-import org.radarbase.upload.exception.BadRequestException
-import org.radarbase.upload.exception.ConflictException
-import org.radarbase.upload.exception.NotFoundException
 import org.slf4j.LoggerFactory
 import java.io.InputStream
 import java.io.Reader
@@ -48,7 +48,7 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
         val logs = find(RecordLogs::class.java, id)
         val metadataToSave = if (logs == null) {
             val metadataFromDb = find(RecordMetadata::class.java, id)
-                    ?: throw NotFoundException("record_not_found", "RecordMetadata with ID $id does not exist")
+                    ?: throw HttpNotFoundException("record_not_found", "RecordMetadata with ID $id does not exist")
             refresh(metadataFromDb)
             metadataFromDb.logs = RecordLogs().apply {
                 this.metadata = metadataFromDb
@@ -165,9 +165,9 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
     override fun deleteContents(record: Record, fileName: String): Unit = em.get().transact {
         refresh(record)
         if (record.metadata.status != RecordStatus.INCOMPLETE) {
-            throw ConflictException("incompatible_status", "Cannot delete file contents from record ${record.id} that is already saved with status ${record.metadata.status}.")
+            throw HttpConflictException("incompatible_status", "Cannot delete file contents from record ${record.id} that is already saved with status ${record.metadata.status}.")
         }
-        val existingContent = record.contents?.find { it.fileName == fileName } ?: throw NotFoundException("file_not_found", "Cannot file $fileName in record ${record.id}")
+        val existingContent = record.contents?.find { it.fileName == fileName } ?: throw HttpNotFoundException("file_not_found", "Cannot file $fileName in record ${record.id}")
         record.contents?.remove(existingContent)
         remove(existingContent)
         merge(record)
@@ -297,17 +297,17 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
     override fun updateMetadata(id: Long, metadata: RecordMetadataDTO): RecordMetadata = em.get().transact {
         val existingMetadata = find(RecordMetadata::class.java, id,  LockModeType.PESSIMISTIC_WRITE,
                 mapOf("javax.persistence.lock.scope" to PessimisticLockScope.EXTENDED))
-                ?: throw NotFoundException("record_not_found", "RecordMetadata with ID $id does not exist")
+                ?: throw HttpNotFoundException("record_not_found", "RecordMetadata with ID $id does not exist")
 
         if (existingMetadata.revision != metadata.revision)
-            throw ConflictException("incompatible_revision", "Requested meta data revision ${metadata.revision} " +
+            throw HttpConflictException("incompatible_revision", "Requested meta data revision ${metadata.revision} " +
                     "should match the latest existing revision ${existingMetadata.revision}")
 
         logger.debug("Updating record $id status from ${existingMetadata.status} to ${metadata.status}")
         existingMetadata.apply {
             metadata.status?.let { newStatus ->
                 if (!allowedStateTransition(existingMetadata.status, newStatus)) {
-                    throw ConflictException("incompatible_status", "Record cannot be updated: Conflict in record meta-data status. " +
+                    throw HttpConflictException("incompatible_status", "Record cannot be updated: Conflict in record meta-data status. " +
                             "Cannot transition from state ${existingMetadata.status} to ${metadata.status}")
                 }
 
@@ -322,10 +322,10 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
     override fun delete(record: Record, revision: Int) = em.get().transact {
         refresh(record)
         if (record.metadata.revision != revision) {
-            throw ConflictException("incompatible_revision", "Revision in metadata ${record.metadata.revision} does not match provided revision $revision")
+            throw HttpConflictException("incompatible_revision", "Revision in metadata ${record.metadata.revision} does not match provided revision $revision")
         }
         if (record.metadata.status == RecordStatus.PROCESSING) {
-            throw ConflictException("incompatible_status", "Cannot delete record ${record.id}: it is currently being processed.")
+            throw HttpConflictException("incompatible_status", "Cannot delete record ${record.id}: it is currently being processed.")
         }
         remove(record)
     }
@@ -339,12 +339,12 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
             val toStatus = try {
                 RecordStatus.valueOf(to)
             } catch (ex: IllegalArgumentException) {
-                throw BadRequestException("unknown_status", "Record status $to is not a known status. Use one of: ${RecordStatus.values().joinToString()}.")
+                throw HttpBadRequestException("unknown_status", "Record status $to is not a known status. Use one of: ${RecordStatus.values().joinToString()}.")
             }
 
             return toStatus == from
                     || toStatus in allowedStateTransitions[from]
-                    ?: throw BadRequestException("unknown_status", "Record status $from is not a known status. Use one of: ${RecordStatus.values().joinToString()}.")
+                    ?: throw HttpBadRequestException("unknown_status", "Record status $from is not a known status. Use one of: ${RecordStatus.values().joinToString()}.")
         }
 
         private val allowedStateTransitions: Map<RecordStatus, Set<RecordStatus>> = EnumMap<RecordStatus, Set<RecordStatus>>(RecordStatus::class.java).apply {

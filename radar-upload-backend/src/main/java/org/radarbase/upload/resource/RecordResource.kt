@@ -19,17 +19,18 @@
 
 package org.radarbase.upload.resource
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import org.radarbase.auth.jersey.Auth
-import org.radarbase.auth.jersey.Authenticated
-import org.radarbase.auth.jersey.NeedsPermission
+import org.radarbase.jersey.auth.Auth
+import org.radarbase.jersey.auth.Authenticated
+import org.radarbase.jersey.auth.NeedsPermission
+import org.radarbase.jersey.exception.HttpBadRequestException
+import org.radarbase.jersey.exception.HttpConflictException
+import org.radarbase.jersey.exception.HttpNotFoundException
 import org.radarbase.upload.api.*
 import org.radarbase.upload.doa.RecordRepository
 import org.radarbase.upload.doa.SourceTypeRepository
 import org.radarbase.upload.doa.entity.Record
 import org.radarbase.upload.doa.entity.RecordStatus
 import org.radarbase.upload.dto.CallbackManager
-import org.radarbase.upload.exception.ConflictException
 import org.radarcns.auth.authorization.Permission
 import org.radarcns.auth.authorization.Permission.*
 import org.slf4j.LoggerFactory
@@ -40,8 +41,6 @@ import javax.annotation.Resource
 import javax.inject.Singleton
 import javax.ws.rs.*
 import javax.ws.rs.core.*
-import org.radarbase.upload.exception.BadRequestException as RbBadRequestException
-import org.radarbase.upload.exception.NotFoundException as RbNotFoundException
 
 @Path("records")
 @Produces(MediaType.APPLICATION_JSON)
@@ -64,7 +63,7 @@ class RecordResource(
             @DefaultValue("1") @QueryParam("page") pageNumber: Int,
             @QueryParam("sourceType") sourceType: String?,
             @QueryParam("status") status: String?): RecordContainerDTO {
-        projectId ?: throw RbBadRequestException("missing_project", "Required project ID not provided.")
+        projectId ?: throw HttpBadRequestException("missing_project", "Required project ID not provided.")
 
         if (userId != null) {
             auth.checkPermissionOnSubject(SUBJECT_READ, projectId, userId)
@@ -127,35 +126,35 @@ class RecordResource(
 
     private fun validateNewRecord(record: RecordDTO) {
         if (record.id != null) {
-            throw RbBadRequestException("field_forbidden", "Record ID cannot be set explicitly")
+            throw HttpBadRequestException("field_forbidden", "Record ID cannot be set explicitly")
         }
         val sourceTypeName = record.sourceType
-                ?: throw RbBadRequestException("field_missing", "Record needs a source type")
-        val data = record.data ?: throw RbBadRequestException("field_missing", "Record needs data")
+                ?: throw HttpBadRequestException("field_missing", "Record needs a source type")
+        val data = record.data ?: throw HttpBadRequestException("field_missing", "Record needs data")
 
-        data.projectId ?: throw RbBadRequestException("project_missing", "Record needs a project ID")
-        data.userId ?: throw RbBadRequestException("user_missing", "Record needs a user ID")
+        data.projectId ?: throw HttpBadRequestException("project_missing", "Record needs a project ID")
+        data.userId ?: throw HttpBadRequestException("user_missing", "Record needs a user ID")
 
         auth.checkPermissionOnSubject(MEASUREMENT_CREATE, data.projectId, data.userId)
 
         data.contents?.forEach {
-            it.text ?: throw RbBadRequestException("field_missing", "Contents need explicit text value set in UTF-8 encoding.")
+            it.text ?: throw HttpBadRequestException("field_missing", "Contents need explicit text value set in UTF-8 encoding.")
             if (it.url != null) {
-                throw RbBadRequestException("field_forbidden", "Cannot process URL for content file name ${it.fileName}")
+                throw HttpBadRequestException("field_forbidden", "Cannot process URL for content file name ${it.fileName}")
             }
         }
         if (record.metadata != null) {
-            throw RbBadRequestException("field_forbidden", "Record metadata cannot be set explicitly")
+            throw HttpBadRequestException("field_forbidden", "Record metadata cannot be set explicitly")
         }
 
         val sourceType = sourceTypeRepository.read(sourceTypeName)
-                ?: throw RbBadRequestException("source_type_not_found", "Source type $sourceTypeName does not exist.")
+                ?: throw HttpBadRequestException("source_type_not_found", "Source type $sourceTypeName does not exist.")
 
         if (sourceType.timeRequired && (data.time == null || data.timeZoneOffset == null)) {
-            throw RbBadRequestException("field_missing", "Time and time zone offset values are required for this source type.")
+            throw HttpBadRequestException("field_missing", "Time and time zone offset values are required for this source type.")
         }
         if (sourceType.sourceIdRequired && data.sourceId == null) {
-            throw RbBadRequestException("field_missing", "Source ID is required for source type $sourceTypeName.")
+            throw HttpBadRequestException("field_missing", "Source ID is required for source type $sourceTypeName.")
         }
     }
 
@@ -173,7 +172,7 @@ class RecordResource(
         val record = ensureRecord(recordId)
 
         if (record.metadata.status != RecordStatus.INCOMPLETE) {
-            throw ConflictException("incompatible_status", "Cannot add files to saved record.")
+            throw HttpConflictException("incompatible_status", "Cannot add files to saved record.")
         }
 
         val content = recordRepository.updateContent(record, fileName, contentType, input, contentLength)
@@ -187,7 +186,7 @@ class RecordResource(
 
     private fun ensureRecord(recordId: Long, permission: Permission? = MEASUREMENT_CREATE): Record {
         val record = recordRepository.read(recordId)
-                ?: throw RbNotFoundException("record_not_found", "Record with ID $recordId does not exist")
+                ?: throw HttpNotFoundException("record_not_found", "Record with ID $recordId does not exist")
 
         if (permission != null) {
             auth.checkPermissionOnSubject(permission, record.projectId, record.userId)
@@ -205,7 +204,7 @@ class RecordResource(
         val record = ensureRecord(recordId)
 
         val recordContent = record.contents?.find { it.fileName == fileName }
-                ?: throw RbNotFoundException("file_not_found", "Cannot read content of file $fileName from record $recordId")
+                ?: throw HttpNotFoundException("file_not_found", "Cannot read content of file $fileName from record $recordId")
 
         logger.debug("Reading record $recordId file $fileName of size ${recordContent.size}")
 
@@ -213,7 +212,7 @@ class RecordResource(
             try {
                 recordRepository.readFileContent(recordId, record.metadata.revision, recordContent.fileName).use {
                     it?.stream?.copyTo(out)
-                            ?: throw RbNotFoundException("file_not_found", "Cannot read content of file $fileName from record $recordId")
+                            ?: throw HttpNotFoundException("file_not_found", "Cannot read content of file $fileName from record $recordId")
                 }
                 out.flush()
             } catch (ex: IOException) {
@@ -272,13 +271,13 @@ class RecordResource(
             @PathParam("recordId") recordId: Long): Response {
         val record = ensureRecord(recordId, SUBJECT_READ)
         recordRepository.readLogs(recordId)
-                ?: throw RbNotFoundException("log_not_found", "Cannot find logs for record with record id $recordId")
+                ?: throw HttpNotFoundException("log_not_found", "Cannot find logs for record with record id $recordId")
 
         val streamingOutput = StreamingOutput { out ->
             try {
                 recordRepository.readLogContents(recordId).use { clobReader ->
                     clobReader
-                            ?: throw RbNotFoundException("log_not_found", "Cannot find logs for record with record id $recordId")
+                            ?: throw HttpNotFoundException("log_not_found", "Cannot find logs for record with record id $recordId")
 
                     clobReader.stream.use { reader ->
                         val buffer = CharArray(LOG_BUFFER_SIZE)
