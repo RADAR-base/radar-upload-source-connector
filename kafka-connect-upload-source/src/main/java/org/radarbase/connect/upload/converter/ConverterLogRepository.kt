@@ -20,16 +20,9 @@
 package org.radarbase.connect.upload.converter
 
 import okio.BufferedSink
-import okio.Sink
-import org.radarbase.connect.upload.UploadSourceConnectorConfig
-import org.radarbase.connect.upload.api.LogsDto
-import org.radarbase.connect.upload.api.UploadBackendClient
 import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
-import java.io.Writer
-import java.nio.charset.StandardCharsets.UTF_8
 import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -39,10 +32,9 @@ enum class LogLevel {
 }
 
 data class LogRecord(
-        var logLevel: LogLevel,
-        var message: String) {
-    val time = Instant.now()
-}
+        val logLevel: LogLevel,
+        val message: String,
+        val time: Instant = Instant.now())
 
 data class Log(val recordId: Long, val records: Collection<LogRecord>) {
     fun asString(writer: BufferedSink) {
@@ -61,8 +53,7 @@ interface LogRepository {
     fun extract(recordId: Long, reset: Boolean = false): Log?
 }
 
-class ConverterLogRepository(
-        private val uploadClient: UploadBackendClient): LogRepository {
+class ConverterLogRepository : LogRepository {
     private val logContainer = ConcurrentHashMap<Long, ConcurrentLinkedQueue<LogRecord>>()
 
     private fun get(recordId: Long): ConcurrentLinkedQueue<LogRecord> =

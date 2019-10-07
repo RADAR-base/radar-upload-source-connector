@@ -58,7 +58,7 @@ class AccelerationZipFileConverterTest {
     @BeforeAll
     fun setUp() {
         uploadBackendClient = Mockito.mock(UploadBackendClient::class.java)
-        logRepository = ConverterLogRepository(uploadBackendClient)
+        logRepository = ConverterLogRepository()
         converter = AccelerationZipFileConverter()
         converter.initialize(
                 connectorConfig = SourceTypeDTO(

@@ -75,7 +75,7 @@ class UploadSourceTask : SourceTask() {
 
         pollInterval = connectConfig.getLong(SOURCE_POLL_INTERVAL_CONFIG)
 
-        logRepository = ConverterLogRepository(uploadClient)
+        logRepository = ConverterLogRepository()
 
         for (converter in converters) {
             val config = uploadClient.requestConnectorConfig(converter.sourceType)

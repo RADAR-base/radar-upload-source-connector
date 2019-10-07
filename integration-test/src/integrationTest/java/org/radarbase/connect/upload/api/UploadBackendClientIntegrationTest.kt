@@ -20,8 +20,7 @@
 package org.radarbase.connect.upload.api
 
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.equalTo
-import org.hamcrest.Matchers.greaterThan
+import org.hamcrest.Matchers.*
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeAll
@@ -68,7 +67,7 @@ class UploadBackendClientIntegrationTest {
                 baseUri
         )
 
-        logRepository = ConverterLogRepository(uploadBackendClient)
+        logRepository = ConverterLogRepository()
 
         accessToken = getAccessToken()
 
@@ -88,7 +87,7 @@ class UploadBackendClientIntegrationTest {
     fun requestAllConnectors() {
         val connectors = uploadBackendClient.requestAllConnectors()
         assertNotNull(connectors)
-        assertTrue(!connectors.sourceTypes.isEmpty())
+        assertThat(connectors.sourceTypes, not(empty()))
         assertNotNull(connectors.sourceTypes.find { it.name == sourceType })
     }
 
