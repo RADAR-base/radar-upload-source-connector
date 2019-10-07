@@ -29,15 +29,14 @@ import org.radarbase.connect.upload.util.TestBase.Companion.tokenUrl
 import org.radarbase.connect.upload.util.TestBase.Companion.uploadBackendConfig
 import org.radarbase.connect.upload.util.TestBase.Companion.uploadConnectClient
 import org.radarbase.connect.upload.util.TestBase.Companion.uploadConnectSecret
-import org.radarbase.upload.Config
-import org.radarbase.upload.GrizzlyServer
+import org.radarbase.jersey.GrizzlyServer
+import org.radarbase.jersey.config.ConfigLoader
+import org.radarbase.upload.inject.ManagementPortalEnhancerFactory
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class UploadSourceTaskTest {
 
     private lateinit var sourceTask: UploadSourceTask
-
-    private lateinit var config: Config
 
     private lateinit var server: GrizzlyServer
 
@@ -47,11 +46,13 @@ class UploadSourceTaskTest {
     fun setUp() {
         sourceTask = UploadSourceTask()
 
-        config = uploadBackendConfig
+        val config = uploadBackendConfig
+
+        val resources = ConfigLoader.loadResources(ManagementPortalEnhancerFactory::class.java, config)
 
         accessToken = getAccessToken()
 
-        server = GrizzlyServer(config)
+        server = GrizzlyServer(config.baseUri, resources)
         server.start()
 
         val settings = mapOf(
