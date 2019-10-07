@@ -30,8 +30,8 @@ import org.radarbase.upload.service.UploadProjectService
 import javax.inject.Singleton
 
 /** This binder needs to register all non-Jersey classes, otherwise initialization fails. */
-class ManagementPortalEnhancerFactory : EnhancerFactory {
-    override fun createEnhancers(config: Config): List<JerseyResourceEnhancer> = listOf(
+class ManagementPortalEnhancerFactory(private val config: Config) : EnhancerFactory {
+    override fun createEnhancers(): List<JerseyResourceEnhancer> = listOf(
             UploadResourceEnhancer(config),
             MPClientResourceEnhancer(),
             RadarJerseyResourceEnhancer(AuthConfig(

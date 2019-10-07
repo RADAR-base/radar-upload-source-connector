@@ -19,8 +19,7 @@ project.extra.apply {
     set("radarAuthVersion", "0.1.1-SNAPSHOT")
     set("radarCommonsVersion", "0.12.2")
     set("radarSchemasVersion", "0.5.2")
-    set("jacksonVersion", "2.9.9.2")
-    set("jacksonDataVersion", "2.9.9")
+    set("jacksonVersion", "2.9.10")
     set("slf4jVersion", "1.7.27")
     set("logbackVersion", "1.2.3")
     set("grizzlyVersion", "2.4.4")
@@ -39,20 +38,11 @@ repositories {
 dependencies {
     compile(kotlin("stdlib-jdk8"))
 
-    implementation("org.glassfish.grizzly:grizzly-http-server:${project.extra["grizzlyVersion"]}")
-
-    implementation("org.glassfish.jersey.containers:jersey-container-grizzly2-http:${project.extra["jerseyVersion"]}")
-    implementation("org.glassfish.jersey.containers:jersey-container-grizzly2-servlet:${project.extra["jerseyVersion"]}")
-    implementation("org.glassfish.jersey.inject:jersey-hk2:${project.extra["jerseyVersion"]}")
-    runtimeOnly("org.glassfish.jersey.media:jersey-media-json-jackson:${project.extra["jerseyVersion"]}")
-
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:${project.extra["jacksonDataVersion"]}")
-    implementation("com.fasterxml.jackson.core:jackson-databind:${project.extra["jacksonVersion"]}")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${project.extra["jacksonDataVersion"]}")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${project.extra["jacksonDataVersion"]}")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:${project.extra["jacksonDataVersion"]}")
-
     implementation("org.radarbase:radar-jersey:${project.extra["radarAuthVersion"]}")
+
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${project.extra["jacksonVersion"]}")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:${project.extra["jacksonVersion"]}")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:${project.extra["jacksonVersion"]}")
 
     implementation("org.slf4j:slf4j-api:${project.extra["slf4jVersion"]}")
 
