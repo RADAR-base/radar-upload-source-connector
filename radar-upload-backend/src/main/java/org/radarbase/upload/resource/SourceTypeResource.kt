@@ -19,7 +19,6 @@
 
 package org.radarbase.upload.resource
 
-import org.radarbase.auth.jersey.Authenticated
 import org.radarbase.upload.api.SourceTypeContainerDTO
 import org.radarbase.upload.api.SourceTypeDTO
 import org.radarbase.upload.api.SourceTypeMapper
@@ -34,7 +33,6 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Resource
-@Authenticated
 @Singleton
 class SourceTypeResource(
         @Context private var sourceTypeRepository: SourceTypeRepository,

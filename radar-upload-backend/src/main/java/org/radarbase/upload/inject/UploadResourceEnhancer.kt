@@ -1,22 +1,3 @@
-/*
- *
- *  * Copyright 2019 The Hyve
- *  *
- *  * Licensed under the Apache License, Version 2.0 (the "License");
- *  * you may not use this file except in compliance with the License.
- *  * You may obtain a copy of the License at
- *  *
- *  *   http://www.apache.org/licenses/LICENSE-2.0
- *  *
- *  * Unless required by applicable law or agreed to in writing, software
- *  * distributed under the License is distributed on an "AS IS" BASIS,
- *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  * See the License for the specific language governing permissions and
- *  * limitations under the License.
- *  *
- *
- */
-
 package org.radarbase.upload.inject
 
 import com.fasterxml.jackson.annotation.JsonInclude
@@ -28,7 +9,7 @@ import okhttp3.OkHttpClient
 import org.glassfish.jersey.internal.inject.AbstractBinder
 import org.glassfish.jersey.process.internal.RequestScoped
 import org.glassfish.jersey.server.ResourceConfig
-import org.radarbase.auth.jersey.JerseyResourceEnhancer
+import org.radarbase.jersey.config.JerseyResourceEnhancer
 import org.radarbase.upload.Config
 import org.radarbase.upload.api.RecordMapper
 import org.radarbase.upload.api.RecordMapperImpl
@@ -46,31 +27,23 @@ import javax.persistence.EntityManager
 import javax.persistence.EntityManagerFactory
 import javax.ws.rs.ext.ContextResolver
 
-abstract class UploadResourceConfig {
+class UploadResourceEnhancer(private val config: Config): JerseyResourceEnhancer {
     private val client = OkHttpClient().newBuilder()
             .connectTimeout(10, TimeUnit.SECONDS)
             .writeTimeout(10, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .build()
 
-    fun resources(config: Config) = ResourceConfig().apply {
-        val enhancers = createEnhancers(config)
-        packages(
+    override fun enhanceResources(resourceConfig: ResourceConfig) {
+        resourceConfig.packages(
                 "org.radarbase.upload.exception",
                 "org.radarbase.upload.filter",
                 "org.radarbase.upload.resource")
-        enhancers.forEach { packages(*it.packages) }
-        register(binder(config, enhancers))
-        register(ContextResolver { OBJECT_MAPPER })
-        property("jersey.config.server.wadl.disableWadl", true)
+        resourceConfig.register(ContextResolver { OBJECT_MAPPER })
     }
 
-    abstract fun createEnhancers(config: Config): List<JerseyResourceEnhancer>
-
-    abstract fun registerAuthentication(binder: AbstractBinder)
-
-    private fun binder(config: Config, enhancers: List<JerseyResourceEnhancer>) = object : AbstractBinder() {
-        override fun configure() {
+    override fun enhanceBinder(binder: AbstractBinder) {
+        binder.apply {
             // Bind instances. These cannot use any injects themselves
             bind(config)
                     .to(Config::class.java)
@@ -109,10 +82,6 @@ abstract class UploadResourceConfig {
             bind(SourceTypeRepositoryImpl::class.java)
                     .to(SourceTypeRepository::class.java)
                     .`in`(Singleton::class.java)
-
-            enhancers.forEach { it.enhance(this) }
-
-            registerAuthentication(this)
         }
     }
 

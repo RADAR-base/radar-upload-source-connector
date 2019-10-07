@@ -20,14 +20,9 @@
 package org.radarbase.upload.inject
 
 import org.glassfish.jersey.internal.inject.DisposableSupplier
-import org.radarbase.upload.exception.InternalServerException
-import org.radarbase.upload.logger
 import org.slf4j.LoggerFactory
-import java.io.Closeable
-import java.lang.Exception
 import javax.persistence.EntityManager
 import javax.persistence.EntityManagerFactory
-import javax.persistence.EntityTransaction
 import javax.ws.rs.core.Context
 
 class DoaEntityManagerFactory(

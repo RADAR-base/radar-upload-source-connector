@@ -16,7 +16,7 @@ application {
 project.extra.apply {
     set("okhttpVersion", "4.2.0")
     set("radarMpVersion", "0.5.7")
-    set("radarAuthVersion", "0.1.0")
+    set("radarAuthVersion", "0.1.1-SNAPSHOT")
     set("radarCommonsVersion", "0.12.2")
     set("radarSchemasVersion", "0.5.2")
     set("jacksonVersion", "2.9.9.2")
@@ -52,7 +52,8 @@ dependencies {
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${project.extra["jacksonDataVersion"]}")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:${project.extra["jacksonDataVersion"]}")
 
-    implementation("org.radarbase:radar-auth-jersey:${project.extra["radarAuthVersion"]}")
+    implementation("org.radarbase:radar-jersey-core:${project.extra["radarAuthVersion"]}")
+    implementation("org.radarbase:radar-jersey-auth:${project.extra["radarAuthVersion"]}")
 
     implementation("org.slf4j:slf4j-api:${project.extra["slf4jVersion"]}")
 

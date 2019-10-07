@@ -21,7 +21,8 @@ package org.radarbase.upload
 
 import org.glassfish.grizzly.http.server.HttpServer
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory
-import org.radarbase.upload.inject.UploadResourceConfig
+import org.radarbase.jersey.config.RadarResourceConfigFactory
+import org.radarbase.upload.inject.EnhancerFactory
 import java.util.concurrent.TimeUnit
 
 class GrizzlyServer(private val config: Config) {
@@ -29,7 +30,8 @@ class GrizzlyServer(private val config: Config) {
 
     fun start() {
         val uploadResources = config.resourceConfig.getConstructor().newInstance()
-        val resourceConfig = (uploadResources as UploadResourceConfig).resources(config)
+        val enhancers = (uploadResources as EnhancerFactory).createEnhancers(config)
+        val resourceConfig = RadarResourceConfigFactory().resources(enhancers)
 
         httpServer = GrizzlyHttpServerFactory.createHttpServer(config.baseUri, resourceConfig)
         httpServer.start()
