@@ -58,7 +58,7 @@ class AccelerometerCsvRecordConverterTest {
     @BeforeAll
     fun setUp() {
         uploadBackendClient = mock(UploadBackendClient::class.java)
-        logRepository = ConverterLogRepository(uploadBackendClient)
+        logRepository = ConverterLogRepository()
         converter = AccelerometerCsvRecordConverter()
         converter.initialize(
                 connectorConfig = SourceTypeDTO(
