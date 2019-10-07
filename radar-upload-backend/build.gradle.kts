@@ -52,8 +52,7 @@ dependencies {
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${project.extra["jacksonDataVersion"]}")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:${project.extra["jacksonDataVersion"]}")
 
-    implementation("org.radarbase:radar-jersey-core:${project.extra["radarAuthVersion"]}")
-    implementation("org.radarbase:radar-jersey-auth:${project.extra["radarAuthVersion"]}")
+    implementation("org.radarbase:radar-jersey:${project.extra["radarAuthVersion"]}")
 
     implementation("org.slf4j:slf4j-api:${project.extra["slf4jVersion"]}")
 
