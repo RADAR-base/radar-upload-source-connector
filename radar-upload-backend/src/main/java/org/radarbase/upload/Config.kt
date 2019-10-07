@@ -19,6 +19,7 @@
 
 package org.radarbase.upload
 
+import org.radarbase.jersey.config.EnhancerFactory
 import org.radarbase.upload.api.SourceTypeDTO
 import org.radarbase.upload.inject.ManagementPortalEnhancerFactory
 import java.net.URI
@@ -27,7 +28,7 @@ data class Config(
         var baseUri: URI = URI.create("http://0.0.0.0:8080/radar-upload/"),
         var advertisedBaseUri: URI? = null,
         var managementPortalUrl: String = "http://managementportal-app:8080/managementportal/",
-        var resourceConfig: Class<*> = ManagementPortalEnhancerFactory::class.java,
+        var resourceConfig: Class<out EnhancerFactory> = ManagementPortalEnhancerFactory::class.java,
         var clientId: String = "UploadBackend",
         var clientSecret: String? = null,
         var jdbcDriver: String? = "org.h2.Driver",

@@ -59,7 +59,6 @@ dependencies {
 
 //    testImplementation("com.h2database:h2:1.4.199")
     testImplementation("org.junit.jupiter:junit-jupiter:5.4.2")
-    testImplementation("org.mockito:mockito-core:2.21.0")
     testImplementation("org.hamcrest:hamcrest-all:1.3")
     testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.1.0")
 
