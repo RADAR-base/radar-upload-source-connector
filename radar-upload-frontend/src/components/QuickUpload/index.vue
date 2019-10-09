@@ -1,8 +1,8 @@
 <template>
-  <v-bottom-sheet
+  <v-dialog
     v-model="sheet"
-    inset
     persistent
+    max-width="700px"
   >
     <template v-slot:activator="{ on }">
       <v-btn
@@ -20,18 +20,16 @@
         </v-icon>
       </v-btn>
     </template>
-    <v-sheet>
-      <UploadForm
-        :upload-info="{projectId:currentProject}"
-        :patient-list="patientList"
-        :loading="loading"
-        @finishUpload="finishUpload"
-        @cancelClick="removeData"
-        @creatingRecord="loading=true"
-        @uploadFailed="removeData"
-      />
-    </v-sheet>
-  </v-bottom-sheet>
+    <UploadForm
+      :upload-info="{projectId:currentProject}"
+      :patient-list="patientList"
+      :loading="loading"
+      @finishUpload="finishUpload"
+      @cancelClick="removeData"
+      @creatingRecord="loading=true"
+      @uploadFailed="removeData"
+    />
+  </v-dialog>
 </template>
 
 <script>
