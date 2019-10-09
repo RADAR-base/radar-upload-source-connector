@@ -34,3 +34,9 @@ Vue.filter('textTruncate', (val, length = 24) => {
   // eslint-disable-next-line consistent-return
   return truncate(val, { length });
 });
+
+
+Vue.filter('toMB', (val) => {
+  if (!val) return 0;
+  return `${(Number(val) / (1024 * 1024)).toFixed(2)} MB`;
+});

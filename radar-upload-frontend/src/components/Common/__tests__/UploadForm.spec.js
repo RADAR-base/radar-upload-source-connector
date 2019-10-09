@@ -43,6 +43,11 @@ describe('UploadForm', () => {
       'v-list-item',
       'v-select',
       'v-file-input',
+      'v-list-item-content',
+      'v-data-table',
+      'v-text-field',
+      'v-toolbar',
+      'v-toolbar-title',
     ],
   });
 
@@ -53,96 +58,112 @@ describe('UploadForm', () => {
   it('has uploadInfo props', () => {
     expect(wrapper.vm.uploadInfo).toEqual(postRecordBody);
   });
+
+
   it('call api to get sourceTypes/resourceTypes and contentTypes when created', async () => {
     expect(wrapper.vm.sourceTypeList).toEqual(sourceTypeList.map(el => el.name));
   });
 
-  it('disable button', () => {
-    const file = new File([''], 'filename1');
-    const uploadbtn = wrapper.findAll('v-btn-stub').at(1);
-    expect(uploadbtn.attributes().disabled).toBe('true');
 
-    wrapper.setData({ sourceType: '123' });
-    expect(uploadbtn.attributes().disabled).toBe('true');
-
-    wrapper.setData({ file });
-    expect(uploadbtn.attributes().disabled).not.toBe('true');
-
-    wrapper.setProps({ uploadInfo: { userId: null } });
-    expect(uploadbtn.attributes().disabled).toBe('true');
-
-    wrapper.setData({ userId: 'userId' });
-    expect(uploadbtn.attributes().disabled).not.toBe('true');
-  });
-
-  it('upload files success', async () => {
-    wrapper.setData({ uploadInfo: postRecordBody });
-    const removeData = jest.spyOn(wrapper.vm, 'removeData');
-    // mock POST /records
-    const postReturnVal = { id: 'id1', createdDate: '2019-10-10' };
-    const { projectId, userId } = wrapper.vm.uploadInfo;
-    const postRecordPayload = { projectId, userId, sourceType: wrapper.vm.sourceType };
-    fileAPI.postRecords = jest.fn().mockResolvedValue(postReturnVal);
-    // mock PUT request
-    const { file } = wrapper.vm;
-    const putRecordPayload = { id: postReturnVal.id, file, fileName: file.name };
-    const putReturnVal = { id: 'id1' };
-    fileAPI.putRecords = jest.fn().mockResolvedValue(putReturnVal);
-    // mock markRecord
-    const markRecordReturn = 'markRecordReturn';
-    fileAPI.markRecord = jest.fn().mockResolvedValue(markRecordReturn);
-    // file uploaded
-    const files = [];
-    files.push({ fileName: file.name, uploading: true, uploadFailed: false });
-
-    wrapper.vm.uploadFile();
-    expect(wrapper.emitted().creatingRecord).toBeTruthy();
+  it.only('closeDialog', async () => {
+    wrapper.vm.closeDialog();
     await flushPromises();
-    // postRecords
-    expect(fileAPI.postRecords).toBeCalledWith(postRecordPayload);
-    // eslint-disable-next-line max-len
-    expect(wrapper.emitted().startUploading[0][0]).toEqual({
-      ...postReturnVal,
-      files,
-      active: true,
-    });
-
-    // putRecords
-    expect(fileAPI.putRecords).toBeCalledWith(putRecordPayload);
-    expect(fileAPI.markRecord).toBeCalled();
-    expect(wrapper.emitted().finishUpload[0][0]).toEqual({
-      uploadingFile: putReturnVal,
-      recordMetadata: markRecordReturn,
-    });
-    expect(removeData).toBeCalled();
-
-    fileAPI.postRecords.mockClear();
-  });
-
-  it('uploadfile: POST error', async () => {
     const removeData = jest.spyOn(wrapper.vm, 'removeData');
-    fileAPI.postRecords = jest.fn().mockRejectedValue();
-
-    wrapper.vm.uploadFile();
-    await flushPromises();
-    expect(wrapper.vm.$error).toBeCalled();
+    expect(wrapper.emitted().cancelClick).toBeTruthy();
     expect(removeData).toBeCalled();
   });
 
-  it('uploadfile: PUT error', async () => {
-    fileAPI.postRecords = jest.fn().mockResolvedValue({ id: 'id1', createdDate: '2019-10-10' });
-    fileAPI.putRecords = jest.fn().mockRejectedValue();
-
-    wrapper.vm.uploadFile();
-
-    await flushPromises();
-    expect(wrapper.vm.$error).toBeCalled();
-    expect(wrapper.emitted().uploadFailed).toBeTruthy();
-  });
 
   it('removeData', () => {
     wrapper.vm.removeData();
-    expect(wrapper.vm.file).toEqual([]);
+    expect(wrapper.vm.files).toEqual([]);
+    // expect(wrapper.vm.sourceTypeList).toEqual([]);
     expect(wrapper.vm.sourceType).toBe('');
+    expect(wrapper.vm.activeRecord).toBe(null);
+    expect(wrapper.vm.userId).toBe('');
   });
+
+  it('removeErrorFile', () => {
+    const fileId = 'fileId';
+    wrapper.setData({ files: [{ fileId: 'fileId' }] });
+    wrapper.vm.removeErrorFile(fileId);
+    expect(wrapper.vm.files).toEqual([]);
+  });
+
+  it('createRecord', async () => {
+    const createRecordReturn = { id: 'id1', revision: 'revision' };
+    fileAPI.postRecords = jest.fn().mockResolvedValue(createRecordReturn);
+    wrapper.vm.createRecord();
+    expect(wrapper.vm.isLoading).toBe(true);
+    await flushPromises();
+    expect(wrapper.vm.activeRecord).toEqual(createRecordReturn);
+    expect(wrapper.vm.isLoading).toBe(false);
+
+    // error case
+    fileAPI.postRecords.mockClear();
+    fileAPI.postRecords = jest.fn().mockRejectedValue();
+    wrapper.vm.createRecord();
+    await flushPromises();
+    expect(wrapper.vm.$error).toBeCalled();
+  });
+
+  it('startUpload', () => {
+    const files = [
+      { success: true, error: true },
+      { success: false, error: false },
+    ];
+    wrapper.setData({
+      files,
+    });
+    const processUpload = jest.spyOn(wrapper.vm, 'processUpload');
+    wrapper.vm.startUpload();
+    expect(processUpload).toBeCalledTimes(1);
+    expect(processUpload).toBeCalledWith(files[1]);
+  });
+
+  it('processUpload', async () => {
+    const uploadedFile = 'uploadedFile';
+    fileAPI.putRecords = jest.fn().mockResolvedValue(uploadedFile);
+    const fileObject = {
+      id: 'fileId',
+      name: 'upload file',
+      file: { },
+      active: false,
+      success: false,
+      fileType: 'fileType',
+      error: '',
+    };
+    const activeRecord = { id: 'recordId' };
+    wrapper.setData({ activeRecord, files: [fileObject] });
+
+    wrapper.vm.processUpload(fileObject);
+    expect(wrapper.vm.files[0].active).toBe(true);
+    await flushPromises();
+    expect(wrapper.vm.files[0].success).toBe(true);
+    expect(wrapper.vm.files[0].active).toBe(false);
+
+    // error case
+    fileAPI.putRecords.mockClear();
+    fileAPI.putRecords = jest.fn().mockRejectedValue();
+    await wrapper.vm.processUpload(fileObject);
+    expect(wrapper.vm.files[0].error).toBe(true);
+  });
+
+  // it('disable button', () => {
+  //   const file = new File([''], 'filename1');
+  //   const uploadbtn = wrapper.findAll('v-btn-stub').at(1);
+  //   expect(uploadbtn.attributes().disabled).toBe('true');
+
+  //   wrapper.setData({ sourceType: '123' });
+  //   expect(uploadbtn.attributes().disabled).toBe('true');
+
+  //   wrapper.setData({ files: [file] });
+  //   expect(uploadbtn.attributes().disabled).not.toBe('true');
+
+  //   wrapper.setProps({ uploadInfo: { userId: null } });
+  //   expect(uploadbtn.attributes().disabled).toBe('true');
+
+  //   wrapper.setData({ userId: 'userId' });
+  //   expect(uploadbtn.attributes().disabled).not.toBe('true');
+  // });
 });
