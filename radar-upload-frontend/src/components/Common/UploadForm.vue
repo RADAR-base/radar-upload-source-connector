@@ -62,7 +62,7 @@
           class="pt-2"
           disable
           label="Patient"
-          :value="recordInfo.userId"
+          :value="uploadInfo.userId"
         />
       </v-list-item>
 
@@ -72,7 +72,7 @@
           disable
           label="Source type"
           :items="sourceTypeList"
-          :value="recordInfo.sourceType"
+          :value="uploadInfo.sourceType"
         />
       </v-list-item>
 
@@ -82,7 +82,7 @@
         <v-text-field
           class="pt-0"
           label="Created record"
-          :value="`ID: ${recordInfo.recordId} (status: ${recordInfo.recordStatus})`"
+          :value="`ID: ${uploadInfo.recordId} (status: ${uploadInfo.recordStatus})`"
           disabled
         />
       </v-list-item>
@@ -227,8 +227,9 @@ export default {
     VueUploadComponent,
   },
   props: {
-    recordInfo: {
+    uploadInfo: {
       type: Object,
+      default: () => ({}),
     },
     patientList: {
       type: Array,
@@ -261,6 +262,9 @@ export default {
     };
   },
   computed: {
+    projectId() {
+      return this.$store.state.project.currentProject.value;
+    },
     totalFileSize() {
       return this.files.length === 0 ? 0
         : this.files.map(file => file.size)
@@ -324,9 +328,8 @@ export default {
       }
     },
     async createRecord() {
-      const { projectId } = this.recordInfo;
-      const userId = this.recordInfo.userId || this.userId;
-      const { sourceType } = this;
+      const userId = this.uploadInfo.userId || this.userId;
+      const { sourceType, projectId } = this;
       const postPayload = { userId, projectId, sourceType };
       this.isLoading = true;
       const createdRecord = await fileAPI.postRecords(postPayload)
