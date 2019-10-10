@@ -1,7 +1,6 @@
 <template>
   <v-card
     flat
-    :loading="loading"
   >
     <v-toolbar
       color="primary"
@@ -17,7 +16,7 @@
       <v-list-item>
         <v-autocomplete
           class="pt-2"
-          :disabled="!!activeRecord"
+          :disabled="!!activeRecord||oldUserId"
           label="Patient"
           :items="patientList"
           v-model="userId"
@@ -27,7 +26,7 @@
       <v-list-item>
         <v-select
           class="pt-0"
-          :disabled="!!activeRecord"
+          :disabled="!!activeRecord||oldSourceType"
           label="Source type"
           :items="sourceTypeList"
           v-model="sourceType"
@@ -55,48 +54,6 @@
         </v-btn>
       </v-list-item>
     </v-list>
-    <!-- existing record -->
-    <!-- <v-list>
-      <v-list-item>
-        <v-autocomplete
-          class="pt-2"
-          disable
-          label="Patient"
-          :value="uploadInfo.userId"
-        />
-      </v-list-item>
-
-      <v-list-item>
-        <v-select
-          class="pt-0"
-          disable
-          label="Source type"
-          :items="sourceTypeList"
-          :value="uploadInfo.sourceType"
-        />
-      </v-list-item>
-
-      <v-list-item
-        v-show="!!activeRecord"
-      >
-        <v-text-field
-          class="pt-0"
-          label="Created record"
-          :value="`ID: ${uploadInfo.recordId} (status: ${uploadInfo.recordStatus})`"
-          disabled
-        />
-      </v-list-item>
-      <v-list-item v-show="!activeRecord">
-        <v-btn
-          color="primary"
-          @click="createRecord"
-          :loading="isLoading"
-          :disabled="!sourceType||!userId"
-        >
-          Create record
-        </v-btn>
-      </v-list-item>
-    </v-list> -->
 
     <!-- Upload File -->
     <v-list v-show="activeRecord">
@@ -227,10 +184,6 @@ export default {
     VueUploadComponent,
   },
   props: {
-    uploadInfo: {
-      type: Object,
-      default: () => ({}),
-    },
     patientList: {
       type: Array,
       default: () => [],
@@ -244,14 +197,26 @@ export default {
       type: Array,
       default: () => [],
     },
+    oldRecord: {
+      type: Object,
+      default: null,
+    },
+    oldUserId: {
+      type: String,
+      default: '',
+    },
+    oldSourceType: {
+      type: String,
+      default: '',
+    },
   },
   data() {
     return {
       files: [],
-      sourceType: '',
+      sourceType: this.oldSourceType,
       sourceTypeList: [],
-      userId: '',
-      activeRecord: null,
+      userId: this.oldUserId,
+      activeRecord: this.oldRecord,
       isLoading: false,
       headers: [
         { text: 'File name', value: 'name' },
@@ -288,7 +253,7 @@ export default {
     },
     closeDialog() {
       // delete record if it is new record
-      if (this.activeRecord && this.isNewRecord) {
+      if (this.activeRecord && this.isNewRecord && !this.allFilesUploaded) {
         fileAPI.deleteRecord({
           recordId: this.activeRecord.id,
           revision: this.activeRecord.revision,
@@ -328,8 +293,7 @@ export default {
       }
     },
     async createRecord() {
-      const userId = this.uploadInfo.userId || this.userId;
-      const { sourceType, projectId } = this;
+      const { sourceType, projectId, userId } = this;
       const postPayload = { userId, projectId, sourceType };
       this.isLoading = true;
       const createdRecord = await fileAPI.postRecords(postPayload)

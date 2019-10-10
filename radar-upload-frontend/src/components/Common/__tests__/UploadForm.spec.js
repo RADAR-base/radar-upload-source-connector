@@ -30,6 +30,10 @@ describe('UploadForm', () => {
       recordInfo,
       isNewRecord: true,
     },
+    computed: {
+      projectId: () => 'projectId',
+      allFilesUploaded: false,
+    },
     mocks: {
       $store,
       $success: jest.fn(),
@@ -58,11 +62,6 @@ describe('UploadForm', () => {
       'v-toolbar-title',
     ],
   });
-
-  it('has uploadInfo props', () => {
-    expect(wrapper.vm.recordInfo).toEqual(recordInfo);
-  });
-
 
   it('call api to get sourceTypes/resourceTypes and contentTypes when created', async () => {
     expect(wrapper.vm.sourceTypeList).toEqual(sourceTypeList.map(el => el.name));
