@@ -150,7 +150,7 @@ class TestBase {
             }
         }
 
-        private fun<T> call(
+        fun<T> call(
                 httpClient: OkHttpClient,
                 expectedStatus: Int,
                 parseClass: Class<T>,
@@ -201,6 +201,15 @@ class TestBase {
         }
 
         fun createRecordAndUploadContent(accessToken: String, sourceType: String, fileName: String): RecordDTO {
+            val recordCreated = createRecord(accessToken, sourceType)
+
+            //Test uploading request contentFile for created record
+            uploadContent(recordCreated.id!!, fileName, accessToken)
+            markReady(recordCreated.id!!, accessToken)
+            return recordCreated
+        }
+
+        fun createRecord(accessToken: String, sourceType: String): RecordDTO {
             val record = RecordDTO(
                     id = null,
                     data = RecordDataDTO(
@@ -221,14 +230,10 @@ class TestBase {
             }
             assertThat(recordCreated.id, not(nullValue()))
             assertThat(recordCreated.id!!, greaterThan(0L))
-
-            //Test uploading request contentFile for created record
-            uploadContent(recordCreated.id!!, fileName, accessToken)
-            markReady(recordCreated.id!!, accessToken)
             return recordCreated
         }
 
-        private fun uploadContent(recordId: Long, fileName: String, clientUserToken: String) {
+        fun uploadContent(recordId: Long, fileName: String, clientUserToken: String) {
             //Test uploading request contentFile
             val file = File(fileName)
 
@@ -240,7 +245,7 @@ class TestBase {
             assertThat(content.fileName, equalTo(fileName))
         }
 
-        private fun markReady(recordId: Long, clientUserToken: String) {
+        fun markReady(recordId: Long, clientUserToken: String) {
             val metadata = call(httpClient, 200, RecordMetadataDTO::class.java) {
                 url("$baseUri/records/$recordId/metadata")
                 post("{\"status\":\"READY\",\"revision\":1}".toRequestBody("application/json".toMediaType()))

@@ -36,7 +36,7 @@ class DoaEntityManagerFactory(
 
     override fun dispose(instance: EntityManager?) {
         instance?.let {
-            logger.debug("Disposing  EntityManager")
+            logger.debug("Disposing EntityManager")
             it.close()
         }
     }

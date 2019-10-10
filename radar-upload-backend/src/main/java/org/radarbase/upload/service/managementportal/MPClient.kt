@@ -42,7 +42,8 @@ class MPClient(@Context config: Config, @Context private val auth: Auth) {
     private val httpClient = OkHttpClient()
     private val baseUrl: HttpUrl = config.managementPortalUrl.toHttpUrlOrNull()
             ?: throw MalformedURLException("Cannot parse base URL ${config.managementPortalUrl} as an URL")
-    private val mapper = jacksonObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+    private val mapper = jacksonObjectMapper()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     private val projectListReader = mapper.readerFor(object : TypeReference<List<ProjectDto>>(){})
     private val userListReader = mapper.readerFor(object : TypeReference<List<SubjectDto>>(){})
 
