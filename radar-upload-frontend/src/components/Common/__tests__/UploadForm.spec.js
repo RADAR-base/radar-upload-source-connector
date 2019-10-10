@@ -12,9 +12,13 @@ const sourceTypeList = [
   },
 ];
 
-const postRecordBody = {
-  projectId: 'radar-test',
+const recordInfo = {
+  recordId: 'recordId',
+  recordStatus: 'recordStatus',
+  recordRevision: 'revision',
   userId: 'testUser',
+  sourceType: 'sourceType',
+  projectId: 'radar-test',
 };
 
 describe('UploadForm', () => {
@@ -23,12 +27,16 @@ describe('UploadForm', () => {
   fileAPI.getSourceTypes = jest.fn().mockReturnValue(sourceTypeList);
   const wrapper = shallowMount(UploadForm, {
     propsData: {
-      uploadInfo: postRecordBody,
+      recordInfo,
+      isNewRecord: true,
     },
     mocks: {
       $store,
       $success: jest.fn(),
       $error: jest.fn(),
+    },
+    filters: {
+      toMB: jest.fn(),
     },
     stubs: [
       'v-btn',
@@ -51,12 +59,8 @@ describe('UploadForm', () => {
     ],
   });
 
-  beforeEach(() => {
-    fileAPI.getSourceTypes.mockClear();
-    jest.fn().mockClear();
-  });
   it('has uploadInfo props', () => {
-    expect(wrapper.vm.uploadInfo).toEqual(postRecordBody);
+    expect(wrapper.vm.recordInfo).toEqual(recordInfo);
   });
 
 
@@ -65,12 +69,20 @@ describe('UploadForm', () => {
   });
 
 
-  it.only('closeDialog', async () => {
+  it('closeDialog', () => {
+    fileAPI.deleteRecord = jest.fn();
+    wrapper.setProps({ isNewRecord: false });
     wrapper.vm.closeDialog();
-    await flushPromises();
+    expect(fileAPI.deleteRecord).not.toBeCalled();
+
+    wrapper.setData({ activeRecord: { id: 'recordId', revision: 1 } });
+    wrapper.setProps({ isNewRecord: true });
     const removeData = jest.spyOn(wrapper.vm, 'removeData');
+    wrapper.vm.closeDialog();
+
     expect(wrapper.emitted().cancelClick).toBeTruthy();
     expect(removeData).toBeCalled();
+    expect(fileAPI.deleteRecord).toBeCalledWith({ recordId: 'recordId', revision: 1 });
   });
 
 
@@ -83,10 +95,36 @@ describe('UploadForm', () => {
     expect(wrapper.vm.userId).toBe('');
   });
 
-  it('removeErrorFile', () => {
-    const fileId = 'fileId';
-    wrapper.setData({ files: [{ fileId: 'fileId' }] });
-    wrapper.vm.removeErrorFile(fileId);
+  it('filterUploadingFiles', () => {
+    const newFile = { name: 'aaa' };
+    wrapper.setData({ files: [newFile] });
+    const prevent = jest.fn();
+    wrapper.vm.filterUploadingFiles(newFile, null, prevent);
+
+    expect(wrapper.vm.$error).toBeCalledWith(`File ${newFile.name} is duplicated`);
+    expect(prevent).toBeCalled();
+  });
+
+  it('removeFile', async () => {
+    const files = [
+      { name: 'fileName1', success: true },
+      { name: 'fileName2', success: false },
+    ];
+    wrapper.setData({ files, activeRecord: { status: 'INCOMPLETE', id: 'recordId' } });
+    // remove files[1]
+    wrapper.vm.removeFile(files[1]);
+    expect(wrapper.vm.files).toEqual([files[0]]);
+
+    // remove files[0]: error
+    fileAPI.deleteFile = jest.fn().mockRejectedValue();
+    wrapper.vm.removeFile(files[0]);
+    await flushPromises();
+    expect(wrapper.vm.$error).toBeCalledWith('Cannot delete this file, please try again later');
+    // remove files[0]: success
+
+    fileAPI.deleteFile = jest.fn().mockResolvedValue();
+    wrapper.vm.removeFile(files[0]);
+    await flushPromises();
     expect(wrapper.vm.files).toEqual([]);
   });
 
@@ -149,21 +187,23 @@ describe('UploadForm', () => {
     expect(wrapper.vm.files[0].error).toBe(true);
   });
 
-  // it('disable button', () => {
-  //   const file = new File([''], 'filename1');
-  //   const uploadbtn = wrapper.findAll('v-btn-stub').at(1);
-  //   expect(uploadbtn.attributes().disabled).toBe('true');
+  it('finishUpload', async () => {
+    // success
+    const closeDialog = jest.spyOn(wrapper.vm, 'closeDialog');
+    fileAPI.markRecord = jest.fn().mockResolvedValue('mockedReturn');
+    wrapper.vm.finishUpload();
 
-  //   wrapper.setData({ sourceType: '123' });
-  //   expect(uploadbtn.attributes().disabled).toBe('true');
+    expect(wrapper.vm.isLoading).toBe(true);
+    await flushPromises();
+    expect(wrapper.vm.isLoading).toBe(false);
+    expect(closeDialog).toBeCalled();
 
-  //   wrapper.setData({ files: [file] });
-  //   expect(uploadbtn.attributes().disabled).not.toBe('true');
+    // error
+    wrapper.setData({ activeRecord: { id: 'recordId', revision: 'recordRevision' } });
+    fileAPI.markRecord = jest.fn().mockRejectedValue();
+    wrapper.vm.finishUpload();
 
-  //   wrapper.setProps({ uploadInfo: { userId: null } });
-  //   expect(uploadbtn.attributes().disabled).toBe('true');
-
-  //   wrapper.setData({ userId: 'userId' });
-  //   expect(uploadbtn.attributes().disabled).not.toBe('true');
-  // });
+    await flushPromises();
+    expect(wrapper.vm.$error).toBeCalled();
+  });
 });

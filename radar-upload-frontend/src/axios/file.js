@@ -81,6 +81,15 @@ export default {
     });
   },
 
+  deleteRecord({ recordId, revision }) { // delete record only if its state != PROCESSING
+    return axios.delete(`/records/${recordId}?revision=${revision}`);
+  },
+
+  deleteFile({ recordId, fileName }) { // delete file only if its records == INCOMPLETE
+    return axios.delete(`/records/${recordId}/contents/${fileName}`);
+  },
+
+
   async filterRecords({
     projectId, size, page, sourceType = '', status = '', userId = '',
   }) {

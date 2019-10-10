@@ -14,13 +14,11 @@
       <v-subheader v-show="!activeRecord">
         Create a record
       </v-subheader>
-      <v-list-item
-        v-if="!uploadInfo.userId"
-      >
+      <v-list-item>
         <v-autocomplete
           class="pt-2"
           :disabled="!!activeRecord"
-          label="Select a patient"
+          label="Patient"
           :items="patientList"
           v-model="userId"
         />
@@ -30,7 +28,7 @@
         <v-select
           class="pt-0"
           :disabled="!!activeRecord"
-          label="Select source type"
+          label="Source type"
           :items="sourceTypeList"
           v-model="sourceType"
         />
@@ -51,11 +49,54 @@
           color="primary"
           @click="createRecord"
           :loading="isLoading"
+          :disabled="!sourceType||!userId"
         >
           Create record
         </v-btn>
       </v-list-item>
     </v-list>
+    <!-- existing record -->
+    <!-- <v-list>
+      <v-list-item>
+        <v-autocomplete
+          class="pt-2"
+          disable
+          label="Patient"
+          :value="recordInfo.userId"
+        />
+      </v-list-item>
+
+      <v-list-item>
+        <v-select
+          class="pt-0"
+          disable
+          label="Source type"
+          :items="sourceTypeList"
+          :value="recordInfo.sourceType"
+        />
+      </v-list-item>
+
+      <v-list-item
+        v-show="!!activeRecord"
+      >
+        <v-text-field
+          class="pt-0"
+          label="Created record"
+          :value="`ID: ${recordInfo.recordId} (status: ${recordInfo.recordStatus})`"
+          disabled
+        />
+      </v-list-item>
+      <v-list-item v-show="!activeRecord">
+        <v-btn
+          color="primary"
+          @click="createRecord"
+          :loading="isLoading"
+          :disabled="!sourceType||!userId"
+        >
+          Create record
+        </v-btn>
+      </v-list-item>
+    </v-list> -->
 
     <!-- Upload File -->
     <v-list v-show="activeRecord">
@@ -69,6 +110,7 @@
           class="pa-4 py-6 vue-upload-component"
           style="border:1px grey dashed"
           multiple
+          @input-filter="filterUploadingFiles"
         >
           <v-icon
             color="primary"
@@ -95,16 +137,22 @@
     <!-- List of files -->
     <v-data-table
       v-show="files.length&&!!activeRecord"
-      :items="files"
+      :items="dataTableItems"
       :headers="headers"
       hide-default-footer
       disable-sort
     >
-      <template #item.name="{value}">
-        {{ value | textTruncate }}
+      <template
+        #item.name="{item, value}"
+      >
+        <span :style="{color:item.error?'red':''}">
+          {{ value | textTruncate }}
+        </span>
       </template>
-      <template #item.size="{value}">
-        {{ value | toMB }}
+      <template #item.size="{value, item}">
+        <span :style="{color:item.error?'red':''}">
+          {{ value | toMB }}
+        </span>
       </template>
       <template #item.status="{ item}">
         <span v-if="!item.active&&!item.success&&!item.error">Waiting for upload</span>
@@ -113,19 +161,29 @@
         </span>
         <span v-if="item.success&&!item.active">
           Uploaded
-          <v-icon color="success">mdi-checkbox-marked-circle</v-icon>
+          <v-icon
+            color="success"
+            small
+          >mdi-checkbox-marked-circle</v-icon>
         </span>
         <span
           v-if="item.error&&!item.active"
+          :style="{color:'red'}"
         >
-          Upload failed
+          Failed
+        </span>
+      </template>
+
+      <template #item.action="{item}">
+        <div>
           <v-icon
-            color="error"
-            @click="removeErrorFile(item.id)"
+            small
+            :color="item.error?'red':''"
+            @click="removeFile(item)"
           >
             mdi-close-circle
           </v-icon>
-        </span>
+        </div>
       </template>
     </v-data-table>
 
@@ -141,13 +199,11 @@
 
       <v-btn
         color="primary"
-        text
         @click="startUpload"
         v-show="!!activeRecord&&!allFilesUploaded"
-        :disabled="!files.length||uploading"
+        :disabled="!files.length||hasUploadingFile"
       >
-        <span v-show="!allFilesUploaded">Upload</span>
-        <span v-show="allFilesUploaded">Done</span>
+        Upload
       </v-btn>
 
       <v-btn
@@ -171,17 +227,21 @@ export default {
     VueUploadComponent,
   },
   props: {
-    uploadInfo: {
+    recordInfo: {
       type: Object,
-      required: true,
     },
     patientList: {
       type: Array,
       default: () => [],
     },
-    loading: {
+    isNewRecord: {
       type: Boolean,
-      default: false,
+      default: true,
+      // required: true,
+    },
+    oldFiles: {
+      type: Array,
+      default: () => [],
     },
   },
   data() {
@@ -196,6 +256,7 @@ export default {
         { text: 'File name', value: 'name' },
         { text: 'File size', value: 'size' },
         { text: 'Status', value: 'status' },
+        { text: 'Action', value: 'action' },
       ],
     };
   },
@@ -208,8 +269,12 @@ export default {
     allFilesUploaded() {
       return this.files.length && this.files.findIndex(file => !file.success) === -1;
     },
-    uploading() {
+    hasUploadingFile() {
       return this.files.length && this.files.findIndex(file => file.active) > 0;
+    },
+    dataTableItems() {
+      const oldFiles = this.oldFiles.map(file => ({ ...file, success: true, error: '' }));
+      return this.files.concat(oldFiles);
     },
   },
   methods: {
@@ -218,9 +283,15 @@ export default {
       this.sourceTypeList = res.map(el => el.name);
     },
     closeDialog() {
-      this.$emit('cancelClick');
+      // delete record if it is new record
+      if (this.activeRecord && this.isNewRecord) {
+        fileAPI.deleteRecord({
+          recordId: this.activeRecord.id,
+          revision: this.activeRecord.revision,
+        });
+      }
       this.removeData();
-      // todo: delete record
+      this.$emit('cancelClick');
     },
     removeData() {
       this.files.splice(0);
@@ -230,13 +301,31 @@ export default {
       this.sourceType = '';
       // this.sourceTypeList.splice(0);
     },
-    removeErrorFile(fileId) {
-      const fileIndex = this.files.findIndex(file => file.id === fileId);
-      this.files.splice(fileIndex, 1);
+    filterUploadingFiles(newFile, oldFile, prevent) {
+      if (newFile) {
+        const newFileIndex = this.dataTableItems.findIndex(file => file.name === newFile.name);
+        if (newFileIndex > -1) {
+          this.$error(`File ${newFile.name} is duplicated`);
+          prevent();
+        }
+      }
+    },
+    async removeFile(removedFile) {
+      const fileIndex = this.files.findIndex(file => file.name === removedFile.name);
+      if (!removedFile.success) { // file not yet uploaded
+        this.files.splice(fileIndex, 1);
+      } else if (this.activeRecord.status === 'INCOMPLETE') {
+        fileAPI
+          .deleteFile({ recordId: this.activeRecord.id, fileName: removedFile.name })
+          .then(() => {
+            this.files.splice(fileIndex, 1);
+          })
+          .catch(() => { this.$error('Cannot delete this file, please try again later'); });
+      }
     },
     async createRecord() {
-      const { projectId } = this.uploadInfo;
-      const userId = this.uploadInfo.userId || this.userId;
+      const { projectId } = this.recordInfo;
+      const userId = this.recordInfo.userId || this.userId;
       const { sourceType } = this;
       const postPayload = { userId, projectId, sourceType };
       this.isLoading = true;
@@ -256,6 +345,7 @@ export default {
         });
     },
     async processUpload(fileObject) {
+      // only newly pushed files have id
       const fileIndex = this.files.findIndex(file => file.id === fileObject.id);
       const self = this;
       const onUploadProgress = (progressEvent) => {
@@ -288,8 +378,7 @@ export default {
         recordId: this.activeRecord.id,
         revision: this.activeRecord.revision,
       })
-        .catch((e) => {
-          console.log('Error when mark record', e);
+        .catch(() => {
           this.$error('Error when submitting data, please try again');
         });
       this.isLoading = false;
