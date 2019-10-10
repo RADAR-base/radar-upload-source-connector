@@ -21,13 +21,8 @@
       </v-btn>
     </template>
     <UploadForm
-      :upload-info="{projectId:currentProject}"
       :patient-list="patientList"
-      :loading="loading"
-      @finishUpload="finishUpload"
-      @cancelClick="removeData"
-      @creatingRecord="loading=true"
-      @uploadFailed="removeData"
+      :is-new-record="true"
     />
   </v-dialog>
 </template>

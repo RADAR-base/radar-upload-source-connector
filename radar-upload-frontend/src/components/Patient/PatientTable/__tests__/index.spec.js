@@ -118,22 +118,6 @@ describe.only('index', () => {
     expect(wrapper.vm.patientRecords).toEqual([]);
   });
 
-  it('startUploading', () => {
-    const record = 'record';
-    wrapper.vm.startUploading(record);
-    expect(wrapper.vm.patientRecords).toContain(record);
-  });
-
-  it('addUploadingFile', () => {
-    const uploadingFile = 'file 0';
-    const recordMetadata = { status: 'updated status', message: 'updated message' };
-    const patientRecords = [{ files: ['file 1', 'file 2'], status: 'status', message: '' }];
-    wrapper.setData({ patientRecords });
-    wrapper.vm.addUploadingFile({ uploadingFile, recordMetadata });
-    expect(wrapper.vm.patientRecords[0].files[0]).toBe(uploadingFile);
-    expect(wrapper.vm.patientRecords[0].status).toBe(recordMetadata.status);
-    expect(wrapper.vm.patientRecords[0].message).toBe(recordMetadata.message);
-  });
 
   it('expandRow', async () => {
     const getPatientRecords = jest.spyOn(wrapper.vm, 'getPatientRecords');
