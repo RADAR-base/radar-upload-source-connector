@@ -34,6 +34,7 @@ fun <T> EntityManager.createTransaction(transactionOperation: EntityManager.(Clo
                     if (currentTransaction.isActive) {
                         currentTransaction.rollback()
                     }
+                    throw ex
                 }
             }
         })

@@ -19,19 +19,28 @@
 
 package org.radarbase.connect.upload
 
+import okhttp3.Call
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody
+import okio.BufferedSink
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
 import org.radarbase.connect.upload.util.TestBase.Companion.baseUri
+import org.radarbase.connect.upload.util.TestBase.Companion.createRecord
 import org.radarbase.connect.upload.util.TestBase.Companion.createRecordAndUploadContent
 import org.radarbase.connect.upload.util.TestBase.Companion.getAccessToken
+import org.radarbase.connect.upload.util.TestBase.Companion.httpClient
+import org.radarbase.connect.upload.util.TestBase.Companion.markReady
 import org.radarbase.connect.upload.util.TestBase.Companion.retrieveRecordMetadata
 import org.radarbase.connect.upload.util.TestBase.Companion.tokenUrl
 import org.radarbase.connect.upload.util.TestBase.Companion.uploadBackendConfig
 import org.radarbase.connect.upload.util.TestBase.Companion.uploadConnectClient
 import org.radarbase.connect.upload.util.TestBase.Companion.uploadConnectSecret
+import org.radarbase.connect.upload.util.TestBase.Companion.uploadContent
 import org.radarbase.jersey.GrizzlyServer
 import org.radarbase.jersey.config.ConfigLoader
 import org.radarbase.upload.inject.ManagementPortalEnhancerFactory
+import java.io.IOException
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class UploadSourceTaskTest {
@@ -75,7 +84,6 @@ class UploadSourceTaskTest {
         server.shutdown()
         sourceTask.stop()
     }
-
 
     @Test
     @DisplayName("Should be able to convert a record with ZIP file")
@@ -134,5 +142,44 @@ class UploadSourceTaskTest {
         val metadata = retrieveRecordMetadata(accessToken, createdRecord.id!!)
         assertNotNull(metadata)
         assertEquals("FAILED", metadata.status)
+    }
+
+    @Test
+    @DisplayName("Should recuperate from failed upload")
+    fun failedUpload() {
+        val sourceType = "phone-acceleration"
+        val fileName = "TEST_ACC.zip"
+
+        val record = createRecord(accessToken, sourceType)
+
+        class CancelableRequestBody : RequestBody() {
+            var call: Call? = null
+            var repetitions = 1
+            override fun contentType() = "application-octet/stream".toMediaType()
+            override fun writeTo(sink: BufferedSink) {
+                repeat(100) { i ->
+                    sink.write(ByteArray(1_000_000))
+                    sink.flush()
+                    Thread.sleep(10)
+                    call?.takeIf { i >= repetitions }?.cancel()
+                }
+            }
+        }
+
+        val body = CancelableRequestBody()
+
+        val request = okhttp3.Request.Builder()
+                .url("$baseUri/records/${record.id}/contents/$fileName")
+                .header("Authorization", "Bearer $accessToken")
+                .put(body)
+                .build()
+
+        val call = httpClient.newCall(request)
+        body.call = call
+        body.repetitions = 50
+        assertThrows(IOException::class.java) { call.execute() }
+
+        uploadContent(record.id!!, fileName, accessToken)
+        markReady(record.id!!, accessToken)
     }
 }
