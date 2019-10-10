@@ -19,11 +19,8 @@
         text
       />
     </v-layout>
-    <v-subheader>
-      <span v-show="!loading">
-        <slot name="fileListSubHeader" />
-      </span>
-      <span v-show="!loading && patientRecords.length === 0 && !error">
+    <v-subheader v-show="!loading && patientRecords.length === 0 && !error">
+      <span>
         This patient does not have any records
       </span>
     </v-subheader>
@@ -143,7 +140,11 @@
               >
                 <v-list-item-group color="primary lighten-2">
                   <v-list-item>
-                    <a v-bind:href="file.url" download target="_blank">Download</a>
+                    <a
+                      :href="file.url"
+                      download
+                      target="_blank"
+                    >Download</a>
                   </v-list-item>
                 </v-list-item-group>
               </v-list>

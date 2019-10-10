@@ -48,19 +48,7 @@
           :patient-records="patientRecords"
           :loading="fileLoading"
           :error="fileLoadingError"
-        >
-          <template #fileListSubHeader>
-            <UploadButton
-              :upload-info="{
-                userId: item.patientId,
-                projectId: currentProject
-              }"
-              @addUploadingFile="addUploadingFile"
-              @startUploading="startUploading"
-              @uploadFailed="uploadFailed"
-            />
-          </template>
-        </Records>
+        />
       </td>
     </template>
   </v-data-table>
@@ -68,14 +56,12 @@
 
 <script>
 import { mapState } from 'vuex';
-import UploadButton from './UploadButton';
 import Records from './Records';
 import patientAPI from '@/axios/patient';
 import fileAPI from '@/axios/file';
 
 export default {
   components: {
-    UploadButton,
     Records,
   },
   props: {
@@ -154,21 +140,6 @@ export default {
       this.fileLoadingError = '';
       this.items = [];
       this.patientRecords = [];
-    },
-    startUploading(record) {
-      this.patientRecords.unshift(record);
-    },
-    addUploadingFile({ uploadingFile, recordMetadata }) {
-      this.patientRecords[0].files.splice(0, 1, uploadingFile);
-      this.patientRecords[0].status = recordMetadata.status;
-      this.patientRecords[0].message = recordMetadata.message;
-    },
-    uploadFailed({
-      recordId, fileName, uploading, uploadFailed,
-    }) {
-      const failedRecordIndex = this.patientRecords.findIndex(record => record.id === recordId);
-      this.patientRecords[failedRecordIndex].files
-        .splice(0, 1, { fileName, uploading, uploadFailed });
     },
     async expandRow(row) {
       if (this.expandedItems[0] && (this.expandedItems[0].patientId === row.patientId)) {

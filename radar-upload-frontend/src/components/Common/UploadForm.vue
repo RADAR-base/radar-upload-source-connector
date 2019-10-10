@@ -191,7 +191,7 @@ export default {
     isNewRecord: {
       type: Boolean,
       default: true,
-      // required: true,
+      required: true,
     },
     oldFiles: {
       type: Array,

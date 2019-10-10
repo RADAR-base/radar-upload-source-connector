@@ -31,9 +31,6 @@ describe('Records', () => {
     mocks: {
       $error: jest.fn(),
     },
-    slots: {
-      fileListSubHeader: '<div>fileListSubHeader slot</div>',
-    },
     stubs: [
       'v-list',
       'v-subheader',
@@ -59,9 +56,6 @@ describe('Records', () => {
     filters: {
       localTime: () => 'filteredDate',
     },
-  });
-  it('has fileListSubHeader scope', () => {
-    expect(wrapper.text()).toContain('fileListSubHeader slot');
   });
 
   it('get and render props patientRecords correctly', () => {
