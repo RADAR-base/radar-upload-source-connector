@@ -35,7 +35,6 @@ internal class ClientCredentialsAuthorizerTest {
 
     @BeforeEach
     fun setUp() {
-
         httpClient = OkHttpClient()
         clientCredentialsAuthorizer = ClientCredentialsAuthorizer(
                 httpClient,
