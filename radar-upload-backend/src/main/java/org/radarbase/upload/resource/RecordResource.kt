@@ -40,7 +40,10 @@ import java.net.URI
 import javax.annotation.Resource
 import javax.inject.Singleton
 import javax.ws.rs.*
-import javax.ws.rs.core.*
+import javax.ws.rs.core.Context
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
+import javax.ws.rs.core.StreamingOutput
 
 @Path("records")
 @Produces(MediaType.APPLICATION_JSON)

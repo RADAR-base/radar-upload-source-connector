@@ -35,8 +35,6 @@ import java.nio.file.Path
 import java.util.*
 import javax.ws.rs.client.Entity
 import javax.ws.rs.core.Application
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Request
 import javax.ws.rs.core.Response
 import javax.ws.rs.ext.ContextResolver
 
