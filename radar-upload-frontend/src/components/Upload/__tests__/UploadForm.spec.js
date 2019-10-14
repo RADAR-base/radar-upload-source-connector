@@ -5,12 +5,6 @@ import { Store } from 'vuex-mock-store';
 import UploadForm from '../UploadForm.vue';
 import fileAPI from '@/axios/file.js';
 
-const sourceTypeList = [
-  {
-    name: 'audioMp3',
-    sourceType: ['audio/mp3'],
-  },
-];
 
 const recordInfo = {
   recordId: 'recordId',
@@ -24,7 +18,6 @@ const recordInfo = {
 describe('UploadForm', () => {
   // call this api when component is created
   const $store = new Store();
-  fileAPI.getSourceTypes = jest.fn().mockReturnValue(sourceTypeList);
   const wrapper = shallowMount(UploadForm, {
     propsData: {
       recordInfo,
@@ -32,7 +25,7 @@ describe('UploadForm', () => {
     },
     computed: {
       projectId: () => 'projectId',
-      allFilesUploaded: false,
+      allFilesUploaded: () => false,
     },
     mocks: {
       $store,
@@ -61,10 +54,6 @@ describe('UploadForm', () => {
       'v-toolbar',
       'v-toolbar-title',
     ],
-  });
-
-  it('call api to get sourceTypes/resourceTypes and contentTypes when created', async () => {
-    expect(wrapper.vm.sourceTypeList).toEqual(sourceTypeList.map(el => el.name));
   });
 
 

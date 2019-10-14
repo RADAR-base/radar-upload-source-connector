@@ -48,6 +48,8 @@ describe('Records', () => {
       'v-list-group',
       'v-list-item-avatar',
       'v-card',
+      'v-menu',
+      'v-btn',
       'v-card-text',
       'v-card-title',
       'v-dialog',
@@ -56,6 +58,7 @@ describe('Records', () => {
     ],
     filters: {
       localTime: () => 'filteredDate',
+      toMB: () => 'convert to MB',
     },
   });
 
@@ -100,9 +103,9 @@ describe('Records', () => {
     const recordId = 'recordId';
     const revision = 'revision';
     const recordIndex = 0;
-    wrapper.setData({ records: ['record0', 'record1'] });
+    wrapper.setData({ records: [{ record0: 'record0' }, { record1: 'record1' }] });
     wrapper.vm.deleteRecord({ recordId, revision, recordIndex });
     expect(fileAPI.deleteRecord).toBeCalledWith({ recordId, revision });
-    expect(wrapper.vm.records).toEqual(['record1']);
+    expect(wrapper.vm.records).toEqual([{ record1: 'record1' }]);
   });
 });

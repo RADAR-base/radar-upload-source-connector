@@ -1,6 +1,5 @@
 <template>
   <v-list
-    shaped
     subheader
   >
     <!-- loader -->
@@ -55,49 +54,34 @@
       <v-subheader class="ml-2">
         Actions
       </v-subheader>
-      <v-list-item-group
-        color="primary"
-      >
-        <v-list-item>
-          <v-list-item-icon />
-          <v-list-item-content>
-            <v-list-item-title class="py-0">
-              Edit record
-            </v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
 
-        <v-list-item
-          :disabled="record.status==='PROCESSING'"
-          @click="deleteRecord({recordId:record.id, revision:record.revision, recordIndex})"
-        >
-          <v-list-item-icon />
-          <v-list-item-content>
-            <v-list-item-title class="py-0">
-              Delete record
-              <span v-show="record.status==='PROCESSING'">
-                (cannot delete record in processing)
-              </span>
-            </v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
+      <v-list-item>
+        <v-list-item-content>
+          <v-list-item-title class="py-0">
+            <!-- edit files uploaded  -->
+            <Upload
+              :is-new-upload="false"
+              :user-id="record.userId"
+              :source-type="record.sourceType"
+              :files="record.files"
+              :record="record"
+              @finishEditRecord="finishEditRecord"
+            />
 
-        <v-list-item :disabled="!record.logs">
-          <v-list-item-icon />
-          <v-list-item-content>
             <v-dialog
               v-model="dialog"
               max-width="700"
             >
               <template #activator="{ on }">
-                <v-list-item-title
-                  style="cursor: pointer;"
+                <v-btn
                   @click="viewLogs(record.logs&&record.logs.url)"
                   v-on="on"
+                  :disabled="!record.logs"
+                  class="mr-2"
+                  color="info"
                 >
                   View logs
-                  <span v-show="!record.logs">(no log exists)</span>
-                </v-list-item-title>
+                </v-btn>
               </template>
               <v-card>
                 <v-card-title v-show="!loadingLog">
@@ -121,9 +105,18 @@
                 </v-card-text>
               </v-card>
             </v-dialog>
-          </v-list-item-content>
-        </v-list-item>
-      </v-list-item-group>
+
+            <v-btn
+              color="error"
+              :disabled="record.status==='PROCESSING'"
+              @click="deleteRecord({recordId:record.id, revision:record.revision, recordIndex})"
+            >
+              Delete record
+            </v-btn>
+          </v-list-item-title>
+        </v-list-item-content>
+      </v-list-item>
+
       <v-divider />
       <!-- end of actions  -->
 
@@ -138,7 +131,7 @@
         three-line
       >
         <v-list-item-content>
-          <v-list-item-title v-text="file.fileName" />
+          <v-list-item-title v-text="file.fileName||file.name" />
           <v-list-item-subtitle>Size: {{ file.size | toMB }} </v-list-item-subtitle>
           <v-list-item-subtitle>{{ file.createdDate | localTime }}</v-list-item-subtitle>
         </v-list-item-content>
@@ -184,6 +177,7 @@
 
 <script>
 import fileAPI from '@/axios/file';
+import Upload from '@/components/Upload';
 
 export default {
   props: {
@@ -199,6 +193,9 @@ export default {
       type: Boolean,
       default: false,
     },
+  },
+  components: {
+    Upload,
   },
   data() {
     return {
@@ -224,6 +221,10 @@ export default {
         revision,
       });
       this.records.splice(recordIndex, 1);
+    },
+    finishEditRecord({ record }) {
+      const recordIndex = this.records.findIndex(re => re.id === record.id);
+      this.records.splice(recordIndex, 1, record);
     },
   },
 };

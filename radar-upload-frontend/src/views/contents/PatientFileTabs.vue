@@ -9,7 +9,7 @@
 
       <v-spacer />
 
-      <QuickUpload />
+      <Upload />
 
       <template #extension>
         <v-tabs
@@ -57,14 +57,14 @@
 <script>
 import PatientTable from '@/components/Patient/PatientTable';
 import RecordTable from '@/components/Record/RecordTable';
-import QuickUpload from '@/components/QuickUpload';
+import Upload from '@/components/Upload';
 
 export default {
   name: 'PatientFilterTabs',
   components: {
     RecordTable,
     PatientTable,
-    QuickUpload,
+    Upload,
   },
   data() {
     return {

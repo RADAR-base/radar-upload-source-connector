@@ -3,9 +3,10 @@ import { shallowMount } from '@vue/test-utils';
 import flushPromises from 'flush-promises';
 import index from '../index.vue';
 import patientAPI from '@/axios/patient';
+import fileAPI from '@/axios/file.js';
 
 
-describe('QuickUpload', () => {
+describe('Upload', () => {
   // call this api when component is created
   const wrapper = shallowMount(index, {
     mocks: {
@@ -20,15 +21,31 @@ describe('QuickUpload', () => {
         },
       },
     },
-    stubs: ['v-bottom-sheet', 'v-sheet'],
+    stubs: ['v-dialog'],
   });
 
-  it('watch:sheet => call getPatientList', () => {
+  it('watch:dialog => call getPatientList', () => {
     const getPatientList = jest.spyOn(wrapper.vm, 'getPatientList');
-    wrapper.setData({ sheet: false });
-    wrapper.setData({ sheet: true });
+    const getsourceTypeList = jest.spyOn(wrapper.vm, 'getsourceTypeList');
+    wrapper.setData({ dialog: false });
+    wrapper.setData({ dialog: true });
     expect(getPatientList).toBeCalledWith(wrapper.vm.currentProject);
+    expect(getsourceTypeList).toBeCalled();
   });
+
+  it('getsourceTypeList', async () => {
+    const sourceTypeList = [
+      {
+        name: 'audioMp3',
+        sourceType: ['audio/mp3'],
+      },
+    ];
+    fileAPI.getSourceTypes = jest.fn().mockReturnValue(sourceTypeList);
+    wrapper.vm.getsourceTypeList();
+    await flushPromises();
+    expect(wrapper.vm.sourceTypeList).toEqual(sourceTypeList.map(el => el.name));
+  });
+
 
   it('getPatientList: SUCCESS', async () => {
     // mock api
@@ -56,19 +73,12 @@ describe('QuickUpload', () => {
     expect(wrapper.vm.patientList).toEqual([]);
   });
 
-  it('finishUpload', () => {
-    const removeData = jest.spyOn(wrapper.vm, 'removeData');
-    wrapper.vm.finishUpload();
-    expect(wrapper.vm.$success).toBeCalled();
-    expect(removeData).toBeCalled();
-  });
-
   it('removeData', () => {
-    wrapper.setData({ patientList: ['value'], loading: true, sheet: true });
+    wrapper.setData({ patientList: ['value'], loading: true, dialog: true });
     wrapper.vm.removeData();
 
     expect(wrapper.vm.patientList).toEqual([]);
     expect(wrapper.vm.loading).toBe(false);
-    expect(wrapper.vm.sheet).toEqual(false);
+    expect(wrapper.vm.dialog).toEqual(false);
   });
 });

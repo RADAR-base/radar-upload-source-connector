@@ -16,8 +16,8 @@
       <v-list-item>
         <v-autocomplete
           class="pt-2"
-          :disabled="!!activeRecord||oldUserId"
-          label="Patient"
+          :disabled="!!activeRecord||!!oldUserId"
+          label="Participant"
           :items="patientList"
           v-model="userId"
         />
@@ -26,7 +26,7 @@
       <v-list-item>
         <v-select
           class="pt-0"
-          :disabled="!!activeRecord||oldSourceType"
+          :disabled="!!activeRecord||!!oldSourceType"
           label="Source type"
           :items="sourceTypeList"
           v-model="sourceType"
@@ -94,7 +94,7 @@
     <!-- List of files -->
     <v-data-table
       v-show="files.length&&!!activeRecord"
-      :items="dataTableItems"
+      :items="files"
       :headers="headers"
       hide-default-footer
       disable-sort
@@ -188,10 +188,13 @@ export default {
       type: Array,
       default: () => [],
     },
-    isNewRecord: {
+    sourceTypeList: {
+      type: Array,
+      default: () => [],
+    },
+    isNewUpload: {
       type: Boolean,
       default: true,
-      required: true,
     },
     oldFiles: {
       type: Array,
@@ -212,9 +215,10 @@ export default {
   },
   data() {
     return {
-      files: [],
+      files: this.oldFiles.map(file => ({
+        ...file, success: true, error: '', name: file.fileName,
+      })),
       sourceType: this.oldSourceType,
-      sourceTypeList: [],
       userId: this.oldUserId,
       activeRecord: this.oldRecord,
       isLoading: false,
@@ -241,19 +245,11 @@ export default {
     hasUploadingFile() {
       return this.files.length && this.files.findIndex(file => file.active) > 0;
     },
-    dataTableItems() {
-      const oldFiles = this.oldFiles.map(file => ({ ...file, success: true, error: '' }));
-      return this.files.concat(oldFiles);
-    },
   },
   methods: {
-    async getsourceTypeList() {
-      const res = await fileAPI.getSourceTypes();
-      this.sourceTypeList = res.map(el => el.name);
-    },
     closeDialog() {
       // delete record if it is new record
-      if (this.activeRecord && this.isNewRecord && !this.allFilesUploaded) {
+      if (this.activeRecord && this.isNewUpload && !this.allFilesUploaded) {
         fileAPI.deleteRecord({
           recordId: this.activeRecord.id,
           revision: this.activeRecord.revision,
@@ -268,11 +264,10 @@ export default {
       this.activeRecord = null;
       this.userId = '';
       this.sourceType = '';
-      // this.sourceTypeList.splice(0);
     },
     filterUploadingFiles(newFile, oldFile, prevent) {
       if (newFile) {
-        const newFileIndex = this.dataTableItems.findIndex(file => file.name === newFile.name);
+        const newFileIndex = this.files.findIndex(file => file.name === newFile.name);
         if (newFileIndex > -1) {
           this.$error(`File ${newFile.name} is duplicated`);
           prevent();
@@ -350,11 +345,13 @@ export default {
         });
       this.isLoading = false;
       if (!res) return;
+      if (!this.isNewUpload) {
+        this.$emit('finishEditRecord', {
+          record: { ...this.activeRecord, status: 'READY', files: this.files.slice() },
+        });
+      }
       this.closeDialog();
     },
-  },
-  created() {
-    this.getsourceTypeList();
   },
 };
 </script>
