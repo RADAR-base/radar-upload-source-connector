@@ -22,7 +22,6 @@ package org.radarbase.connect.upload.converter
 import io.confluent.connect.avro.AvroData
 import org.apache.kafka.connect.data.SchemaAndValue
 import org.apache.kafka.connect.source.SourceRecord
-import org.radarbase.connect.upload.UploadSourceConnectorConfig
 import org.radarbase.connect.upload.api.*
 import org.radarbase.connect.upload.converter.Converter.Companion.END_OF_RECORD_KEY
 import org.radarbase.connect.upload.converter.Converter.Companion.RECORD_ID_KEY
@@ -33,8 +32,6 @@ import org.radarcns.kafka.ObservationKey
 import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.io.InputStream
-import java.lang.Exception
-import java.time.Instant
 
 
 abstract class RecordConverter(override val sourceType: String, private val avroData: AvroData = AvroData(20)) : Converter {

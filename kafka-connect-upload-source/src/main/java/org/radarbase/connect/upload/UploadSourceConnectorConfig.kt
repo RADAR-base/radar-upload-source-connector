@@ -31,7 +31,7 @@ import org.apache.kafka.common.config.ConfigDef
 import org.radarbase.connect.upload.auth.ClientCredentialsAuthorizer
 import org.radarbase.connect.upload.converter.AccelerationZipFileConverter
 import org.radarbase.connect.upload.converter.AccelerometerCsvRecordConverter
-import org.radarbase.connect.upload.converter.altoida.*
+import org.radarbase.connect.upload.converter.altoida.AltoidaZipFileRecordConverter
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
