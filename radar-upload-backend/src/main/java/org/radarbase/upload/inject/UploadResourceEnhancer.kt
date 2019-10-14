@@ -9,6 +9,7 @@ import okhttp3.OkHttpClient
 import org.glassfish.jersey.internal.inject.AbstractBinder
 import org.glassfish.jersey.process.internal.RequestScoped
 import org.glassfish.jersey.server.ResourceConfig
+import org.radarbase.jersey.config.ConfigLoader
 import org.radarbase.jersey.config.JerseyResourceEnhancer
 import org.radarbase.upload.Config
 import org.radarbase.upload.api.RecordMapper
@@ -34,11 +35,16 @@ class UploadResourceEnhancer(private val config: Config): JerseyResourceEnhancer
             .readTimeout(30, TimeUnit.SECONDS)
             .build()
 
+    override val classes: Array<Class<*>> = arrayOf(
+            ConfigLoader.Filters.logResponse,
+            ConfigLoader.Filters.cors)
+
+    override val packages: Array<String> = arrayOf(
+            "org.radarbase.upload.exception",
+            "org.radarbase.upload.filter",
+            "org.radarbase.upload.resource")
+
     override fun enhanceResources(resourceConfig: ResourceConfig) {
-        resourceConfig.packages(
-                "org.radarbase.upload.exception",
-                "org.radarbase.upload.filter",
-                "org.radarbase.upload.resource")
         resourceConfig.register(ContextResolver { OBJECT_MAPPER })
     }
 
