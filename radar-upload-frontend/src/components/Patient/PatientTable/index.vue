@@ -125,7 +125,7 @@ export default {
       this.fileLoading = true;
       const { tableData } = await fileAPI
         .filterRecords({
-          userId: item.patientId, projectId: this.currentProject, page: 1, size: 10,
+          userId: item.patientId, projectId: this.currentProject, page: 1, size: 100,
         })
         .catch((error) => {
           this.fileLoadingError = error;

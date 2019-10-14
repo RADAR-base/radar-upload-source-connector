@@ -1,9 +1,9 @@
 <template>
   <v-list
     shaped
-    three-line
     subheader
   >
+    <!-- loader -->
     <v-layout justify-center>
       <v-progress-circular
         class="mt-2"
@@ -19,16 +19,22 @@
         text
       />
     </v-layout>
+
+    <!-- no data  -->
     <v-subheader v-show="!loading && patientRecords.length === 0 && !error">
       <span>
         This patient does not have any records
       </span>
     </v-subheader>
+
+    <!-- record list  -->
+
     <v-list-group
-      v-for="record in records"
+      v-for="(record, recordIndex) in records"
       :key="record.id"
       v-model="record.active"
       no-action
+      three-line
     >
       <template #activator>
         <v-list-item-content>
@@ -37,84 +43,103 @@
             {{ record.id }} ({{ record.sourceType }})
           </v-list-item-title>
           <v-list-item-subtitle>
-            {{ record.message }}
+            {{ record.status }} - {{ record.message }}
           </v-list-item-subtitle>
           <v-list-item-subtitle>
             {{ record.modifiedDate | localTime }}
           </v-list-item-subtitle>
         </v-list-item-content>
       </template>
-      <!-- view logs dialog -->
 
-      <v-dialog
-        v-model="dialog"
-        max-width="700"
+      <!-- actions  -->
+      <v-subheader class="ml-2">
+        Actions
+      </v-subheader>
+      <v-list-item-group
+        color="primary"
       >
-        <template #activator="{ on }">
-          <v-list-item-title
-            v-show="record.logs"
-            class="pl-10 ml-10"
-            style="cursor: pointer;"
-            @click="viewLogs(record.logs&&record.logs.url)"
-            v-on="on"
-          >
-            <v-icon color="primary">
-              mdi-logout-variant
-            </v-icon>
-            View logs
-          </v-list-item-title>
-        </template>
-        <v-card>
-          <v-card-title v-show="!loadingLog">
-            Record ID: {{ record.id }}
-          </v-card-title>
+        <v-list-item>
+          <v-list-item-icon />
+          <v-list-item-content>
+            <v-list-item-title class="py-0">
+              Edit record
+            </v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
 
-          <v-card-text
-            color="black"
-            v-show="!loadingLog"
-          >
-            {{ recordLogs }}
-          </v-card-text>
+        <v-list-item
+          :disabled="record.status==='PROCESSING'"
+          @click="deleteRecord({recordId:record.id, revision:record.revision, recordIndex})"
+        >
+          <v-list-item-icon />
+          <v-list-item-content>
+            <v-list-item-title class="py-0">
+              Delete record
+              <span v-show="record.status==='PROCESSING'">
+                (cannot delete record in processing)
+              </span>
+            </v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
 
-          <v-card-text v-show="loadingLog">
-            Loading logs...
-            <v-progress-circular
-              indeterminate
-              color="white"
-              class="mb-0"
-            />
-          </v-card-text>
-        </v-card>
-      </v-dialog>
+        <v-list-item :disabled="!record.logs">
+          <v-list-item-icon />
+          <v-list-item-content>
+            <v-dialog
+              v-model="dialog"
+              max-width="700"
+            >
+              <template #activator="{ on }">
+                <v-list-item-title
+                  style="cursor: pointer;"
+                  @click="viewLogs(record.logs&&record.logs.url)"
+                  v-on="on"
+                >
+                  View logs
+                  <span v-show="!record.logs">(no log exists)</span>
+                </v-list-item-title>
+              </template>
+              <v-card>
+                <v-card-title v-show="!loadingLog">
+                  Record ID: {{ record.id }}
+                </v-card-title>
 
-      <!-- End of view logs dialog -->
+                <v-card-text
+                  color="black"
+                  v-show="!loadingLog"
+                >
+                  {{ recordLogs }}
+                </v-card-text>
+
+                <v-card-text v-show="loadingLog">
+                  Loading logs...
+                  <v-progress-circular
+                    indeterminate
+                    color="white"
+                    class="mb-0"
+                  />
+                </v-card-text>
+              </v-card>
+            </v-dialog>
+          </v-list-item-content>
+        </v-list-item>
+      </v-list-item-group>
+      <v-divider />
+      <!-- end of actions  -->
+
+      <!-- file list  -->
+      <v-subheader class="ml-2">
+        Files
+      </v-subheader>
 
       <v-list-item
         v-for="(file,fileIndex) in record.files"
         :key="fileIndex"
+        three-line
       >
-        <v-list-item-avatar>
-          <v-icon v-show="!file.uploading&&!file.uploadFailed">
-            mdi-file
-          </v-icon>
-
-          <v-icon
-            v-show="file.uploadFailed"
-            color="error"
-          >
-            mdi-close-octagon
-          </v-icon>
-
-          <v-progress-circular
-            class="mt-2"
-            v-show="!file.uploadFailed&&file.uploading"
-            indeterminate
-            color="primary"
-          />
-        </v-list-item-avatar>
         <v-list-item-content>
           <v-list-item-title v-text="file.fileName" />
-          <v-list-item-subtitle>Size: {{ file.size }} Bytes</v-list-item-subtitle>
+          <v-list-item-subtitle>Size: {{ file.size | toMB }} </v-list-item-subtitle>
           <v-list-item-subtitle>{{ file.createdDate | localTime }}</v-list-item-subtitle>
         </v-list-item-content>
 
@@ -180,12 +205,8 @@ export default {
       recordLogs: '',
       dialog: false,
       loadingLog: false,
+      records: this.patientRecords.map(record => ({ active: false, ...record })),
     };
-  },
-  computed: {
-    records() {
-      return this.patientRecords.map(record => ({ active: false, ...record }));
-    },
   },
   methods: {
     async viewLogs(url) {
@@ -196,6 +217,13 @@ export default {
         return '';
       });
       this.loadingLog = false;
+    },
+    deleteRecord({ recordId, revision, recordIndex }) {
+      fileAPI.deleteRecord({
+        recordId,
+        revision,
+      });
+      this.records.splice(recordIndex, 1);
     },
   },
 };
