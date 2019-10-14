@@ -51,7 +51,8 @@ describe('Records', () => {
       'v-card-text',
       'v-card-title',
       'v-dialog',
-      'v-menu',
+      'v-divider',
+
     ],
     filters: {
       localTime: () => 'filteredDate',
@@ -93,7 +94,15 @@ describe('Records', () => {
     expect(wrapper.vm.recordLogs).toBe('');
     expect(wrapper.vm.dialog).toBe(false);
   });
-  // it('match snapShopt', () => {
-  //   expect(wrapper.html()).toMatchSnapshot();
-  // });
+
+  it('deleteRecord', () => {
+    fileAPI.deleteRecord = jest.fn();
+    const recordId = 'recordId';
+    const revision = 'revision';
+    const recordIndex = 0;
+    wrapper.setData({ records: ['record0', 'record1'] });
+    wrapper.vm.deleteRecord({ recordId, revision, recordIndex });
+    expect(fileAPI.deleteRecord).toBeCalledWith({ recordId, revision });
+    expect(wrapper.vm.records).toEqual(['record1']);
+  });
 });
