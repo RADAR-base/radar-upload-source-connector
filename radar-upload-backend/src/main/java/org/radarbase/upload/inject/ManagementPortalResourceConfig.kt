@@ -34,12 +34,12 @@ class ManagementPortalEnhancerFactory(private val config: Config) : EnhancerFact
     override fun createEnhancers(): List<JerseyResourceEnhancer> = listOf(
             UploadResourceEnhancer(config),
             MPClientResourceEnhancer(),
-            RadarJerseyResourceEnhancer(AuthConfig(
+            ConfigLoader.Enhancers.radar(AuthConfig(
                     managementPortalUrl = config.managementPortalUrl,
                     jwtResourceName = "res_upload")),
-            ManagementPortalResourceEnhancer(),
-            HttpExceptionResourceEnhancer(),
-            GeneralExceptionResourceEnhancer())
+            ConfigLoader.Enhancers.managementPortal,
+            ConfigLoader.Enhancers.generalException,
+            ConfigLoader.Enhancers.httpException)
 
     class MPClientResourceEnhancer: JerseyResourceEnhancer {
         override fun enhanceBinder(binder: AbstractBinder) {
