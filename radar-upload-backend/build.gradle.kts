@@ -15,7 +15,7 @@ application {
 
 project.extra.apply {
     set("okhttpVersion", "4.2.0")
-    set("radarJerseyVersion", "0.2.1")
+    set("radarJerseyVersion", "0.2.2-SNAPSHOT")
     set("radarCommonsVersion", "0.12.2")
     set("radarSchemasVersion", "0.5.2")
     set("jacksonVersion", "2.9.10")

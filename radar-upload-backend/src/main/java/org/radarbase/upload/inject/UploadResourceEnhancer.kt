@@ -44,51 +44,49 @@ class UploadResourceEnhancer(private val config: Config): JerseyResourceEnhancer
             "org.radarbase.upload.filter",
             "org.radarbase.upload.resource")
 
-    override fun enhanceResources(resourceConfig: ResourceConfig) {
-        resourceConfig.register(ContextResolver { OBJECT_MAPPER })
+    override val enhanceResources: ResourceConfig.() -> Unit = {
+        register(ContextResolver { OBJECT_MAPPER })
     }
 
-    override fun enhanceBinder(binder: AbstractBinder) {
-        binder.apply {
-            // Bind instances. These cannot use any injects themselves
-            bind(config)
-                    .to(Config::class.java)
+    override val enhanceBinder: AbstractBinder.() -> Unit = {
+        // Bind instances. These cannot use any injects themselves
+        bind(config)
+                .to(Config::class.java)
 
-            bind(client)
-                    .to(OkHttpClient::class.java)
+        bind(client)
+                .to(OkHttpClient::class.java)
 
-            bind(OBJECT_MAPPER)
-                    .to(ObjectMapper::class.java)
+        bind(OBJECT_MAPPER)
+                .to(ObjectMapper::class.java)
 
-            bind(QueuedCallbackManager::class.java)
-                    .to(CallbackManager::class.java)
-                    .`in`(Singleton::class.java)
+        bind(QueuedCallbackManager::class.java)
+                .to(CallbackManager::class.java)
+                .`in`(Singleton::class.java)
 
-            // Bind factories.
-            bindFactory(DoaEntityManagerFactoryFactory::class.java)
-                    .to(EntityManagerFactory::class.java)
-                    .`in`(Singleton::class.java)
+        // Bind factories.
+        bindFactory(DoaEntityManagerFactoryFactory::class.java)
+                .to(EntityManagerFactory::class.java)
+                .`in`(Singleton::class.java)
 
-            bindFactory(DoaEntityManagerFactory::class.java)
-                    .to(EntityManager::class.java)
-                    .`in`(RequestScoped::class.java)
+        bindFactory(DoaEntityManagerFactory::class.java)
+                .to(EntityManager::class.java)
+                .`in`(RequestScoped::class.java)
 
-            bind(RecordMapperImpl::class.java)
-                    .to(RecordMapper::class.java)
-                    .`in`(Singleton::class.java)
+        bind(RecordMapperImpl::class.java)
+                .to(RecordMapper::class.java)
+                .`in`(Singleton::class.java)
 
-            bind(SourceTypeMapperImpl::class.java)
-                    .to(SourceTypeMapper::class.java)
-                    .`in`(Singleton::class.java)
+        bind(SourceTypeMapperImpl::class.java)
+                .to(SourceTypeMapper::class.java)
+                .`in`(Singleton::class.java)
 
-            bind(RecordRepositoryImpl::class.java)
-                    .to(RecordRepository::class.java)
-                    .`in`(Singleton::class.java)
+        bind(RecordRepositoryImpl::class.java)
+                .to(RecordRepository::class.java)
+                .`in`(Singleton::class.java)
 
-            bind(SourceTypeRepositoryImpl::class.java)
-                    .to(SourceTypeRepository::class.java)
-                    .`in`(Singleton::class.java)
-        }
+        bind(SourceTypeRepositoryImpl::class.java)
+                .to(SourceTypeRepository::class.java)
+                .`in`(Singleton::class.java)
     }
 
     companion object {

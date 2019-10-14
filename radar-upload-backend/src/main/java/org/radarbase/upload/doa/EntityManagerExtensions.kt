@@ -3,7 +3,6 @@ package org.radarbase.upload.doa
 import org.radarbase.jersey.exception.HttpInternalServerException
 import org.radarbase.upload.logger
 import java.io.Closeable
-import java.lang.Exception
 import javax.persistence.EntityManager
 import javax.persistence.EntityTransaction
 
