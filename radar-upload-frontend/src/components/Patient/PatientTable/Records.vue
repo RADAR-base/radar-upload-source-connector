@@ -202,8 +202,16 @@ export default {
       recordLogs: '',
       dialog: false,
       loadingLog: false,
-      records: this.patientRecords.map(record => ({ active: false, ...record })),
+      records: [],
     };
+  },
+  watch: {
+    patientRecords: {
+      handler(propsRecords) {
+        this.records = propsRecords.map(record => ({ active: false, ...record }));
+      },
+      deep: true,
+    },
   },
   methods: {
     async viewLogs(url) {
