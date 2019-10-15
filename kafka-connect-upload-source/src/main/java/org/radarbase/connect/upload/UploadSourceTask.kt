@@ -19,7 +19,6 @@
 
 package org.radarbase.connect.upload
 
-import org.apache.kafka.connect.errors.ConnectException
 import org.apache.kafka.connect.source.SourceRecord
 import org.apache.kafka.connect.source.SourceTask
 import org.radarbase.connect.upload.UploadSourceConnectorConfig.Companion.SOURCE_POLL_INTERVAL_CONFIG
@@ -27,10 +26,11 @@ import org.radarbase.connect.upload.api.PollDTO
 import org.radarbase.connect.upload.api.RecordDTO
 import org.radarbase.connect.upload.api.RecordMetadataDTO
 import org.radarbase.connect.upload.api.UploadBackendClient
-import org.radarbase.connect.upload.converter.Converter
-import org.radarbase.connect.upload.converter.Converter.Companion.END_OF_RECORD_KEY
-import org.radarbase.connect.upload.converter.Converter.Companion.RECORD_ID_KEY
-import org.radarbase.connect.upload.converter.Converter.Companion.REVISION_KEY
+import org.radarbase.connect.upload.converter.ConverterFactory
+import org.radarbase.connect.upload.converter.ConverterFactory.Converter
+import org.radarbase.connect.upload.converter.ConverterFactory.Converter.Companion.END_OF_RECORD_KEY
+import org.radarbase.connect.upload.converter.ConverterFactory.Converter.Companion.RECORD_ID_KEY
+import org.radarbase.connect.upload.converter.ConverterFactory.Converter.Companion.REVISION_KEY
 import org.radarbase.connect.upload.converter.ConverterLogRepository
 import org.radarbase.connect.upload.converter.LogRepository
 import org.radarbase.connect.upload.exception.ConflictException
@@ -45,7 +45,7 @@ import java.time.temporal.ChronoUnit
 class UploadSourceTask : SourceTask() {
     private var pollInterval: Long = 60_000L
     private lateinit var uploadClient: UploadBackendClient
-    private lateinit var converters: List<Converter>
+    private lateinit var converters: Map<String, Converter>
     private lateinit var logRepository: LogRepository
 
     private lateinit var lastPooledAt: Instant
@@ -59,29 +59,14 @@ class UploadSourceTask : SourceTask() {
                 httpClient,
                 connectConfig.uploadBackendBaseUrl)
 
-        // init converters if configured
-        converters = connectConfig.converterClasses.map {
-            try {
-                val converterClass = Class.forName(it)
-                converterClass.getDeclaredConstructor().newInstance() as Converter
-            } catch (exe: Exception) {
-                when (exe) {
-                    is ClassNotFoundException -> throw ConnectException("Converter class $it not found in class path", exe)
-                    is IllegalAccessException, is InstantiationException -> throw ConnectException("Converter class $it could not be instantiated", exe)
-                    else -> throw ConnectException("Cannot successfully initialize converter $it", exe)
-                }
-            }
-        }
-
-        pollInterval = connectConfig.getLong(SOURCE_POLL_INTERVAL_CONFIG)
-
         logRepository = ConverterLogRepository()
 
-        for (converter in converters) {
-            val config = uploadClient.requestConnectorConfig(converter.sourceType)
-            converter.initialize(config, uploadClient, logRepository, props)
-        }
+        // init converters if configured
+        converters = connectConfig.converterClasses
+                .map { className -> ConverterFactory.createConverter(className, props, uploadClient, logRepository) }
+                .toMap()
 
+        pollInterval = connectConfig.getLong(SOURCE_POLL_INTERVAL_CONFIG)
 
         logger.info("Poll with interval $pollInterval milliseconds")
         logger.info("Initialized ${converters.size} converters...")
@@ -91,7 +76,7 @@ class UploadSourceTask : SourceTask() {
         logger.debug("Stopping source task")
         uploadAllLogs()
         uploadClient.close()
-        converters.forEach(Converter::close)
+        converters.values.forEach(Converter::close)
     }
 
     override fun version(): String = VersionUtil.getVersion()
@@ -105,7 +90,7 @@ class UploadSourceTask : SourceTask() {
 
         logger.info("Polling new records...")
         val records: List<RecordDTO> = try {
-            uploadClient.pollRecords(PollDTO(1, converters.map { it.sourceType })).records
+            uploadClient.pollRecords(PollDTO(1, converters.keys.toList())).records
         } catch (exe: Exception) {
             logger.info("Could not successfully poll records. Waiting for next polling...")
             return emptyList()
@@ -123,12 +108,12 @@ class UploadSourceTask : SourceTask() {
 
     private fun processRecord(record: RecordDTO): List<SourceRecord>? {
         return try {
-            val converter = converters.find { it.sourceType == record.sourceType }
+            val converter = converters[record.sourceType]
                     ?: throw ConversionTemporarilyFailedException("Could not find converter ${record.sourceType} for record ${record.id}")
 
             markProcessing(record) ?: return null
 
-            converter.convert(record).result
+            converter.convert(record)
         } catch (exe: ConversionFailedException) {
             logger.error("Could not convert record ${record.id}", exe)
             updateRecordFailure(record, exe)
@@ -149,14 +134,11 @@ class UploadSourceTask : SourceTask() {
                 )
                 logger.debug("Updated metadata $id to PROCESSING")
             }
+        } catch (exe: ConflictException) {
+            logger.warn("Conflicting request was made. Skipping this record")
+            null
         } catch (exe: Exception) {
-            when (exe) {
-                is ConflictException -> {
-                    logger.warn("Conflicting request was made. Skipping this record")
-                    null
-                }
-                else -> throw ConversionTemporarilyFailedException("Cannot update record metadata", exe)
-            }
+            throw ConversionTemporarilyFailedException("Cannot update record metadata", exe)
         }
     }
 

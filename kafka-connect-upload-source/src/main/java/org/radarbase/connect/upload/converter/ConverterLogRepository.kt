@@ -19,41 +19,18 @@
 
 package org.radarbase.connect.upload.converter
 
-import okio.BufferedSink
 import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
-import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
 
-enum class LogLevel {
-    INFO, DEBUG, WARN, ERROR
-}
-
-data class LogRecord(
-        val logLevel: LogLevel,
-        val message: String,
-        val time: Instant = Instant.now())
-
-data class Log(val recordId: Long, val records: Collection<LogRecord>) {
-    fun asString(writer: BufferedSink) {
-        records.forEach { log ->
-            writer.writeUtf8("${log.time} - [${log.logLevel}] ${log.message}\n")
-        }
-    }
-}
-
-interface LogRepository {
-    fun info(logger: Logger, recordId: Long, logMessage: String)
-    fun debug(logger: Logger, recordId: Long, logMessage: String)
-    fun warn(logger: Logger, recordId: Long, logMessage: String)
-    fun error(logger: Logger, recordId: Long, logMessage: String, exe: Exception? = null)
-    val recordIds: Set<Long>
-    fun extract(recordId: Long, reset: Boolean = false): Log?
-}
-
 class ConverterLogRepository : LogRepository {
+    override fun uploadLogger(logger: Logger): UploadLogger = UploadLoggerImpl(logger)
+
+    override fun uploadLogger(clazz: Class<*>): UploadLogger = uploadLogger(LoggerFactory.getLogger(clazz))
+
     private val logContainer = ConcurrentHashMap<Long, ConcurrentLinkedQueue<LogRecord>>()
 
     private fun get(recordId: Long): ConcurrentLinkedQueue<LogRecord> =
@@ -61,17 +38,17 @@ class ConverterLogRepository : LogRepository {
 
     override fun info(logger: Logger, recordId: Long, logMessage: String) {
         get(recordId).add(LogRecord(LogLevel.INFO, logMessage))
-        logger.info(logMessage)
+        logger.info("[record {}] {}", recordId, logMessage)
     }
 
     override fun debug(logger: Logger, recordId: Long, logMessage: String) {
         get(recordId).add(LogRecord(LogLevel.DEBUG, logMessage))
-        logger.debug(logMessage)
+        logger.debug("[record {}] {}", recordId, logMessage)
     }
 
     override fun warn(logger: Logger, recordId: Long, logMessage: String) {
         get(recordId).add(LogRecord(LogLevel.WARN, logMessage))
-        logger.warn(logMessage)
+        logger.warn("[record {}] {}", recordId, logMessage)
     }
 
     override fun error(logger: Logger, recordId: Long, logMessage: String, exe: Exception?) {
@@ -80,7 +57,7 @@ class ConverterLogRepository : LogRepository {
                 PrintStream(byteOut).use { printOut ->
                     exe.printStackTrace(printOut)
                 }
-                byteOut.toString(UTF_8)
+                byteOut.toString("UTF-8")
             }
             "$logMessage: $exe$trace"
         } else {
@@ -88,7 +65,7 @@ class ConverterLogRepository : LogRepository {
         }
 
         get(recordId).add(LogRecord(LogLevel.ERROR, message))
-        logger.error(logMessage, exe)
+        logger.error("[record {}] {}", recordId, logMessage, exe)
     }
 
     override val recordIds: Set<Long>
@@ -103,5 +80,27 @@ class ConverterLogRepository : LogRepository {
         return recordQueue
                 ?.takeIf { it.isNotEmpty() }
                 ?.let { Log(recordId, it) }
+    }
+
+    private inner class UploadLoggerImpl(private val logger: Logger) : UploadLogger {
+        override fun recordLogger(recordId: Long): RecordLogger = RecordLoggerImpl(recordId)
+
+        override fun info(recordId: Long, logMessage: String) = info(logger, recordId, logMessage)
+
+        override fun debug(recordId: Long, logMessage: String) = debug(logger, recordId, logMessage)
+
+        override fun warn(recordId: Long, logMessage: String) = warn(logger, recordId, logMessage)
+
+        override fun error(recordId: Long, logMessage: String, exe: Exception?) = error(logger, recordId, logMessage, exe)
+
+        private inner class RecordLoggerImpl(private val recordId: Long) : RecordLogger {
+            override fun info(logMessage: String) = info(logger, recordId, logMessage)
+
+            override fun debug(logMessage: String) = debug(logger, recordId, logMessage)
+
+            override fun warn(logMessage: String) = warn(logger, recordId, logMessage)
+
+            override fun error(logMessage: String, exe: Exception?) = error(logger, recordId, logMessage, exe)
+        }
     }
 }

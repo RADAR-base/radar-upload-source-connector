@@ -19,7 +19,21 @@
 
 package org.radarbase.connect.upload.converter
 
-class AccelerationZipFileConverter(
-        override val sourceType: String = "acceleration-zip",
-        processors: List<DataProcessor> = listOf(AccelerometerCsvProcessor())
-        ) : ZipFileRecordConverter(sourceType, processors)
+import org.apache.avro.generic.IndexedRecord
+import org.radarbase.connect.upload.api.ContentsDTO
+import org.radarbase.connect.upload.api.RecordDTO
+import java.io.InputStream
+
+interface FileProcessorFactory {
+    data class TopicData(
+            var endOfFileOffSet: Boolean,
+            val topic: String,
+            val value: IndexedRecord)
+
+    fun matches(filename: String): Boolean
+    fun fileProcessor(record: RecordDTO): FileProcessor
+
+    interface FileProcessor {
+        fun processData(contents: ContentsDTO, inputStream: InputStream, timeReceived: Double): List<TopicData>
+    }
+}
