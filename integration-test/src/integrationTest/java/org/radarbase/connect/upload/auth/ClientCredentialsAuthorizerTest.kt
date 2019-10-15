@@ -44,11 +44,6 @@ internal class ClientCredentialsAuthorizerTest {
         )
     }
 
-    @AfterEach
-    fun tearDown() {
-
-    }
-
     @Test
     fun getAccessToken() {
         val token = clientCredentialsAuthorizer.accessToken()
