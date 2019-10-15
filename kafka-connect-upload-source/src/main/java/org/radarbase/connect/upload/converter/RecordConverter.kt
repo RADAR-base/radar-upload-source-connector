@@ -22,54 +22,32 @@ package org.radarbase.connect.upload.converter
 import io.confluent.connect.avro.AvroData
 import org.apache.kafka.connect.data.SchemaAndValue
 import org.apache.kafka.connect.source.SourceRecord
-import org.radarbase.connect.upload.UploadSourceConnectorConfig
-import org.radarbase.connect.upload.api.*
-import org.radarbase.connect.upload.converter.Converter.Companion.END_OF_RECORD_KEY
-import org.radarbase.connect.upload.converter.Converter.Companion.RECORD_ID_KEY
-import org.radarbase.connect.upload.converter.Converter.Companion.REVISION_KEY
+import org.radarbase.connect.upload.api.ContentsDTO
+import org.radarbase.connect.upload.api.RecordDTO
+import org.radarbase.connect.upload.api.RecordDataDTO
+import org.radarbase.connect.upload.api.UploadBackendClient
+import org.radarbase.connect.upload.converter.ConverterFactory.Converter.Companion.END_OF_RECORD_KEY
+import org.radarbase.connect.upload.converter.ConverterFactory.Converter.Companion.RECORD_ID_KEY
+import org.radarbase.connect.upload.converter.ConverterFactory.Converter.Companion.REVISION_KEY
 import org.radarbase.connect.upload.exception.ConversionFailedException
 import org.radarbase.connect.upload.exception.ConversionTemporarilyFailedException
 import org.radarcns.kafka.ObservationKey
 import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.io.InputStream
-import java.lang.Exception
-import java.time.Instant
 
+class RecordConverter(
+        override val sourceType: String,
+        private val processorFactories: List<FileProcessorFactory>,
+        private val client: UploadBackendClient,
+        logRepository: LogRepository,
+        private val avroData: AvroData = AvroData(20)
+) : ConverterFactory.Converter {
+    private val uploadLogger: UploadLogger = logRepository.uploadLogger(logger)
 
-abstract class RecordConverter(override val sourceType: String, private val avroData: AvroData = AvroData(20)) : Converter {
-    private lateinit var connectorConfig: SourceTypeDTO
-    private lateinit var client: UploadBackendClient
-    private lateinit var settings: Map<String, String>
-    private lateinit var topic: String
-    private lateinit var logsRepository: LogRepository
-    override fun initialize(
-            connectorConfig: SourceTypeDTO,
-            client: UploadBackendClient,
-            logRepository: LogRepository,
-            settings: Map<String, String>) {
-        this.connectorConfig = connectorConfig
-        this.client = client
-        this.settings = settings
-
-        if (this.connectorConfig.topics?.size == 1) {
-            this.topic = this.connectorConfig.topics?.first()!!
-        }
-
-        this.logsRepository = logRepository
-    }
-
-    override fun close() {
-        if (this::client.isInitialized) {
-            this.client.close()
-        }
-    }
-
-    val logRepository get() = this.logsRepository
-
-    override fun convert(record: RecordDTO): ConversionResult {
+    override fun convert(record: RecordDTO): List<SourceRecord> {
         val recordId = checkNotNull(record.id)
-        logsRepository.info(logger, recordId,"Converting record: record-id $recordId")
+        uploadLogger.info(recordId,"Converting record: record-id $recordId")
 
         try {
             val recordData = checkNotNull(record.data) { "Record data cannot be null" }
@@ -78,16 +56,10 @@ abstract class RecordConverter(override val sourceType: String, private val avro
 
             val key = recordData.computeObservationKey(avroData)
 
-            val sourceRecords: List<SourceRecord> = recordContents
+            return recordContents
                     .flatMap { content ->
-                        try {
-                            client.retrieveFile(record, content.fileName) { body ->
-                                val timeReceived = System.currentTimeMillis() / 1000.0
-
-                                processData(content, body.byteStream(), record, timeReceived)
-                            }
-                        } catch (ex: IOException) {
-                            throw ConversionTemporarilyFailedException("Could not retrieve file ${content.fileName} from record with id $recordId", ex)
+                        client.retrieveFile(record, content.fileName) { body ->
+                            convertFile(record, content, body.byteStream())
                         }
                     }
                     .map { topicData ->
@@ -99,18 +71,32 @@ abstract class RecordConverter(override val sourceType: String, private val avro
                         )
                         SourceRecord(getPartition(), offset, topicData.topic, key.schema(), key.value(), valRecord.schema(), valRecord.value())
                     }
-            return ConversionResult(record, sourceRecords)
-        } catch (exe: Exception){
-            logsRepository.error(logger, recordId, "Could not convert record $recordId", exe)
-            throw ConversionFailedException("Could not convert record $recordId",exe)
+        } catch (exe: IOException) {
+            uploadLogger.error(recordId, "Temporarily could not convert record $recordId", exe)
+            throw ConversionTemporarilyFailedException("Temporarily could not convert record $recordId", exe)
         }
     }
 
-    /** process file content with the record data. The implementing method should close response-body. */
-    abstract fun processData(contents: ContentsDTO, inputStream: InputStream, record: RecordDTO, timeReceived: Double)
-            : List<TopicData>
+    override fun convertFile(record: RecordDTO, contents: ContentsDTO, inputStream: InputStream): List<FileProcessorFactory.TopicData> {
+        val processorFactory = processorFactories.firstOrNull { it.matches(contents.fileName) }
+                ?: throw ConversionFailedException("Cannot find data processor for record ${record.id} with file ${contents.fileName}")
+
+        try {
+            return processorFactory
+                    .fileProcessor(record)
+                    .processData(contents, inputStream, System.currentTimeMillis() / 1000.0)
+                    .also { it.lastOrNull()?.endOfFileOffSet = true }
+        } catch (exe: Exception) {
+            uploadLogger.error(record.id!!, "Could not convert record ${record.id}", exe)
+            throw ConversionFailedException("Could not convert record ${record.id}",exe)
+        }
+    }
 
     override fun getPartition(): MutableMap<String, Any> = mutableMapOf("source-type" to sourceType)
+
+    override fun close() {
+        this.client.close()
+    }
 
     private fun RecordDataDTO.computeObservationKey(avroData: AvroData): SchemaAndValue {
         return avroData.toConnectData(
@@ -126,6 +112,4 @@ abstract class RecordConverter(override val sourceType: String, private val avro
     companion object {
         private val logger = LoggerFactory.getLogger(RecordConverter::class.java)
     }
-
-
 }

@@ -19,18 +19,21 @@
 
 package org.radarbase.connect.upload.converter
 
-import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
-import org.mockito.Mockito
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.mockito.Mockito.mock
 import org.radarbase.connect.upload.api.*
+import org.radarbase.connect.upload.converter.phone.AcceleratometerZipConverterFactory
+import org.radarbase.connect.upload.exception.ConversionFailedException
 import java.io.File
-import java.io.IOException
 import java.time.Instant
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class AccelerationZipFileConverterTest {
-
-    private lateinit var converter: ZipFileRecordConverter
+class AcceleratometerZipConverterFactoryTest {
+    private lateinit var converter: ConverterFactory.Converter
 
     private lateinit var logRepository: LogRepository
 
@@ -53,26 +56,21 @@ class AccelerationZipFileConverterTest {
             sourceType = "phone-acceleration"
 
     )
-    private val timeReceived = Instant.now().toEpochMilli()
 
     @BeforeAll
     fun setUp() {
-        uploadBackendClient = Mockito.mock(UploadBackendClient::class.java)
+        uploadBackendClient = mock(UploadBackendClient::class.java)
         logRepository = ConverterLogRepository()
-        converter = AccelerationZipFileConverter()
-        converter.initialize(
-                connectorConfig = SourceTypeDTO(
-                        name = "phone-acceleration",
-                        configuration = emptyMap(),
-                        sourceIdRequired = false,
-                        timeRequired = false,
-                        topics = setOf("test_topic"),
-                        contentTypes = setOf()
-                ),
-                client = uploadBackendClient,
-                logRepository = logRepository,
-                settings = emptyMap()
+        val converterFactory = AcceleratometerZipConverterFactory()
+        val config = SourceTypeDTO(
+                name = "phone-acceleration",
+                configuration = emptyMap(),
+                sourceIdRequired = false,
+                timeRequired = false,
+                topics = setOf("test_topic"),
+                contentTypes = setOf()
         )
+        converter = converterFactory.converter(emptyMap(), config, uploadBackendClient, logRepository)
     }
 
 
@@ -81,7 +79,7 @@ class AccelerationZipFileConverterTest {
     fun testValidDataProcessing() {
         val accFile = File("src/test/resources/_ACC.zip")
 
-        val records = converter.processData(contentsDTO, accFile.inputStream(), record, timeReceived.toDouble())
+        val records = converter.convertFile(record, contentsDTO, accFile.inputStream())
 
         assertNotNull(record)
         assertEquals(6, records.size)
@@ -90,11 +88,13 @@ class AccelerationZipFileConverterTest {
     }
 
     @Test
-    @DisplayName("Should throw an IOException if the input is not a Zip file")
+    @DisplayName("Should throw an ConversionFailedException if the input is not a Zip file")
     fun testInValidDataProcessing() {
         val accFile = File("src/test/resources/ACC.csv")
 
-        val exception = assertThrows(IOException::class.java) { converter.processData(contentsDTO, accFile.inputStream(), record, timeReceived.toDouble()) }
+        val exception = assertThrows(ConversionFailedException::class.java) {
+            converter.convertFile(record, contentsDTO, accFile.inputStream())
+        }
         assertNotNull(exception)
     }
 }
