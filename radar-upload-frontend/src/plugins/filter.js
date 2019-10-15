@@ -26,7 +26,7 @@ Vue.filter('upperCase', (value) => {
 
 Vue.filter('localTime', (val) => {
   if (!val) return '';
-  return (new Date(val)).toLocaleString();
+  return (new Date(val.toString())).toLocaleString();
 });
 
 Vue.filter('textTruncate', (val, length = 24) => {

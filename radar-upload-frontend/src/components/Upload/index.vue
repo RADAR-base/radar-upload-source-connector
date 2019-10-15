@@ -6,6 +6,7 @@
   >
     <template v-slot:activator="{ on }">
       <v-btn
+        v-if="!buttonIsIcon"
         color="primary lighten-1"
         class="mr-2"
         :disabled="record&&record.status!=='INCOMPLETE'"
@@ -16,10 +17,19 @@
           dark
           class="pl-2"
           v-show="isNewUpload"
+          :disabled="isDisabled"
         >
           mdi-cloud-upload-outline
         </v-icon>
       </v-btn>
+      <v-icon
+        color="primary"
+        v-if="!!buttonIsIcon"
+        v-on="on"
+        :disabled="isDisabled"
+      >
+        {{ buttonIsIcon }}
+      </v-icon>
     </template>
     <UploadForm
       @cancelClick="closeDialog"
@@ -46,6 +56,14 @@ export default {
     isNewUpload: {
       type: Boolean,
       default: true,
+    },
+    buttonIsIcon: {
+      type: String,
+      default: '',
+    },
+    isDisabled: {
+      type: Boolean,
+      default: false,
     },
     userId: {
       type: String,
@@ -78,6 +96,7 @@ export default {
       return this.$store.state.project.currentProject.value;
     },
     buttonText() {
+      if (this.buttonIsIcon) { return ''; }
       return this.isNewUpload ? 'Upload' : 'Edit Record';
     },
   },
