@@ -43,7 +43,7 @@
         flat
       >
         <v-tab-item :value="0">
-          <PatientTable :is-active="tab==0" />
+          <PatientTable />
         </v-tab-item>
 
         <v-tab-item :value="1">
@@ -69,7 +69,6 @@ export default {
   data() {
     return {
       tab: 0,
-      sourceTypeList: [],
     };
   },
   computed: {

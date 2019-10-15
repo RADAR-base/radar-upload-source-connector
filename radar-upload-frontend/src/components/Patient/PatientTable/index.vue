@@ -64,12 +64,6 @@ export default {
   components: {
     Records,
   },
-  props: {
-    isActive: {
-      type: Boolean,
-      default: false,
-    },
-  },
   data() {
     return {
       loading: false,
@@ -96,21 +90,13 @@ export default {
   watch: {
     currentProject: {
       handler(projectId) {
-        if (projectId && this.isActive) {
+        if (projectId) {
           this.items = [];
           this.expandedItems = [];
           this.getPatientList(projectId);
         }
       },
       immediate: true,
-    },
-    isActive: {
-      handler(val) {
-        if (val && this.currentProject) {
-          this.items = [];
-          this.getPatientList(this.currentProject);
-        }
-      },
     },
   },
   methods: {
@@ -145,7 +131,7 @@ export default {
       if (this.expandedItems[0] && (this.expandedItems[0].patientId === row.patientId)) {
         this.expandedItems = [];
       } else {
-        await this.getPatientRecords({ item: row });
+        this.getPatientRecords({ item: row });
         this.expandedItems.splice(0, 1, row);
       }
     },
