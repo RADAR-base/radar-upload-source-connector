@@ -173,7 +173,7 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
         merge(record)
     }
 
-    override fun poll(limit: Int, supportedConverters: List<String>): List<Record> = em.get().transact {
+    override fun poll(limit: Int, supportedConverters: Set<String>): List<Record> = em.get().transact {
         setProperty("javax.persistence.lock.scope", PessimisticLockScope.EXTENDED)
 
         var queryString = "SELECT r FROM Record r WHERE r.metadata.status = :status "
