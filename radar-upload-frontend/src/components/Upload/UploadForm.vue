@@ -132,15 +132,13 @@
       </template>
 
       <template #item.action="{item}">
-        <div>
-          <v-icon
-            small
-            :color="item.error?'red':''"
-            @click="removeFile(item)"
-          >
-            mdi-close-circle
-          </v-icon>
-        </div>
+        <v-icon
+          small
+          :color="item.error?'red':''"
+          @click="removeFile(item)"
+        >
+          mdi-close-circle
+        </v-icon>
       </template>
     </v-data-table>
 
