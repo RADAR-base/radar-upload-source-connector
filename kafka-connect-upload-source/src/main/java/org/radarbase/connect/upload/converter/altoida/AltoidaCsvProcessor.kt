@@ -17,6 +17,7 @@
 package org.radarbase.connect.upload.converter.altoida
 
 import org.apache.avro.generic.IndexedRecord
+import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
 import org.radarbase.connect.upload.converter.CsvLineProcessorFactory
 import org.radarbase.connect.upload.converter.LogRepository
@@ -29,7 +30,7 @@ abstract class AltoidaCsvProcessor: CsvLineProcessorFactory {
 
     abstract fun SimpleCsvLineProcessor.lineConversion(line: Map<String, String>, timeReceived: Double): IndexedRecord
 
-    override fun matches(fileName: String) = fileName.endsWith(fileNameSuffix)
+    override fun matches(contents: ContentsDTO): Boolean = contents.fileName.endsWith(fileNameSuffix)
 
     override fun csvProcessor(record: RecordDTO, logRepository: LogRepository): CsvLineProcessorFactory.CsvLineProcessor =
             SimpleCsvLineProcessor(record, logRepository, topic) { l, t -> lineConversion(l, t) }

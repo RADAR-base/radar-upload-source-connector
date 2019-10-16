@@ -33,7 +33,7 @@ class AltoidaMetadataFileProcessor(
         private val logRepository: LogRepository) : FileProcessorFactory {
     private val topic = "connect_upload_altoida_metadata"
 
-    override fun matches(filename: String): Boolean = filename == "VERSION.csv"
+    override fun matches(contents: ContentsDTO): Boolean = contents.fileName == "VERSION.csv"
 
     override fun fileProcessor(record: RecordDTO): FileProcessorFactory.FileProcessor = AltoidaMetadataProcessor(record)
 

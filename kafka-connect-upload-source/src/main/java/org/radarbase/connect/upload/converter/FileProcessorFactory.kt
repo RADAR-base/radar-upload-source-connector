@@ -30,7 +30,7 @@ interface FileProcessorFactory {
             val topic: String,
             val value: IndexedRecord)
 
-    fun matches(filename: String): Boolean
+    fun matches(contents: ContentsDTO): Boolean
     fun fileProcessor(record: RecordDTO): FileProcessor
 
     interface FileProcessor {

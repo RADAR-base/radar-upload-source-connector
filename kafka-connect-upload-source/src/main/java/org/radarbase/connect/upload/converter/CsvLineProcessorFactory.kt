@@ -16,12 +16,13 @@
 
 package org.radarbase.connect.upload.converter
 
+import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
 
 interface CsvLineProcessorFactory {
     val header: List<String>
 
-    fun matches(fileName: String): Boolean
+    fun matches(contents: ContentsDTO): Boolean = contents.fileName.endsWith(".csv")
     fun matches(header: List<String>): Boolean = header.containsAll(this.header)
     fun csvProcessor(record: RecordDTO, logRepository: LogRepository): CsvLineProcessor
 
