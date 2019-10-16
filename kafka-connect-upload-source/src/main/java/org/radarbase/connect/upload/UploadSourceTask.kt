@@ -105,7 +105,7 @@ class UploadSourceTask : SourceTask() {
 
         logger.info("Polling new records...")
         val records: List<RecordDTO> = try {
-            uploadClient.pollRecords(PollDTO(1, converters.keys)).records
+            uploadClient.pollRecords(PollDTO(1, converters.map { it.sourceType }.toSet())).records
         } catch (exe: Exception) {
             logger.info("Could not successfully poll records. Waiting for next polling...")
             return emptyList()
