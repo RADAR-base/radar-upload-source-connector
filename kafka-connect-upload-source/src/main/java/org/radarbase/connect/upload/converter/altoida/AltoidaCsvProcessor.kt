@@ -22,8 +22,11 @@ import org.radarbase.connect.upload.api.RecordDTO
 import org.radarbase.connect.upload.converter.CsvLineProcessorFactory
 import org.radarbase.connect.upload.converter.LogRepository
 import org.radarbase.connect.upload.converter.SimpleCsvLineProcessor
+import org.slf4j.LoggerFactory
 
 abstract class AltoidaCsvProcessor: CsvLineProcessorFactory {
+    private val logger = LoggerFactory.getLogger(javaClass)
+
     abstract val fileNameSuffix: String
 
     abstract val topic: String
@@ -32,6 +35,9 @@ abstract class AltoidaCsvProcessor: CsvLineProcessorFactory {
 
     override fun matches(contents: ContentsDTO): Boolean = contents.fileName.endsWith(fileNameSuffix)
 
-    override fun csvProcessor(record: RecordDTO, logRepository: LogRepository): CsvLineProcessorFactory.CsvLineProcessor =
-            SimpleCsvLineProcessor(record, logRepository, topic) { l, t -> lineConversion(l, t) }
+    override fun csvProcessor(record: RecordDTO, logRepository: LogRepository): CsvLineProcessorFactory.CsvLineProcessor {
+        val recordLogger = logRepository.recordLogger(logger, record.id!!)
+        return SimpleCsvLineProcessor(recordLogger, topic) { l, t -> lineConversion(l, t) }
+    }
+
 }

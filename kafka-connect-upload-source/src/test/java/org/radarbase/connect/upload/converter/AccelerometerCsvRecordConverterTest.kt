@@ -82,7 +82,7 @@ class AccelerometerCsvRecordConverterTest {
         val accFile = File("src/test/resources/ACC.csv")
 
         val contents = ContentsDTO(fileName = "ACC.csv")
-        val records = converter.convertFile(record, contents, accFile.inputStream())
+        val records = converter.convertFile(record, contents, accFile.inputStream(), mock(RecordLogger::class.java))
 
         assertNotNull(record)
         assertEquals(6, records.size)
@@ -100,7 +100,7 @@ class AccelerometerCsvRecordConverterTest {
                         .inputStream()
 
         val exception = assertThrows(ConversionFailedException::class.java) {
-            converter.convertFile(record, contentsDTO, stream)
+            converter.convertFile(record, contentsDTO, stream, mock(RecordLogger::class.java))
         }
         assertNotNull(exception)
     }
@@ -116,7 +116,7 @@ class AccelerometerCsvRecordConverterTest {
                 .inputStream()
 
         val exception = assertThrows(ConversionFailedException::class.java) {
-            converter.convertFile(record, contentsDTO, stream)
+            converter.convertFile(record, contentsDTO, stream, mock(RecordLogger::class.java))
         }
         assertNotNull(exception)
     }

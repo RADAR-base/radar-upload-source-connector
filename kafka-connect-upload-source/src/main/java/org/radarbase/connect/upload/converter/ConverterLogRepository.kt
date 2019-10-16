@@ -23,50 +23,19 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
 
 class ConverterLogRepository : LogRepository {
-    override fun uploadLogger(logger: Logger): UploadLogger = UploadLoggerImpl(logger)
+    override fun recordLogger(logger: Logger, recordId: Long): RecordLogger = RecordLoggerImpl(logger, recordId, get(recordId))
 
-    override fun uploadLogger(clazz: Class<*>): UploadLogger = uploadLogger(LoggerFactory.getLogger(clazz))
+    override fun recordLogger(clazz: Class<*>, recordId: Long): RecordLogger = recordLogger(LoggerFactory.getLogger(clazz), recordId)
 
     private val logContainer = ConcurrentHashMap<Long, ConcurrentLinkedQueue<LogRecord>>()
 
-    private fun get(recordId: Long): ConcurrentLinkedQueue<LogRecord> =
+    private fun get(recordId: Long): Queue<LogRecord> =
             logContainer.getOrPut(recordId, { ConcurrentLinkedQueue() })
-
-    override fun info(logger: Logger, recordId: Long, logMessage: String) {
-        get(recordId).add(LogRecord(LogLevel.INFO, logMessage))
-        logger.info("[record {}] {}", recordId, logMessage)
-    }
-
-    override fun debug(logger: Logger, recordId: Long, logMessage: String) {
-        get(recordId).add(LogRecord(LogLevel.DEBUG, logMessage))
-        logger.debug("[record {}] {}", recordId, logMessage)
-    }
-
-    override fun warn(logger: Logger, recordId: Long, logMessage: String) {
-        get(recordId).add(LogRecord(LogLevel.WARN, logMessage))
-        logger.warn("[record {}] {}", recordId, logMessage)
-    }
-
-    override fun error(logger: Logger, recordId: Long, logMessage: String, exe: Exception?) {
-        val message = if (exe != null) {
-            val trace = ByteArrayOutputStream().use { byteOut ->
-                PrintStream(byteOut).use { printOut ->
-                    exe.printStackTrace(printOut)
-                }
-                byteOut.toString("UTF-8")
-            }
-            "$logMessage: $exe$trace"
-        } else {
-            logMessage
-        }
-
-        get(recordId).add(LogRecord(LogLevel.ERROR, message))
-        logger.error("[record {}] {}", recordId, logMessage, exe)
-    }
 
     override val recordIds: Set<Long>
         get() = logContainer.keys
@@ -82,25 +51,41 @@ class ConverterLogRepository : LogRepository {
                 ?.let { Log(recordId, it) }
     }
 
-    private inner class UploadLoggerImpl(private val logger: Logger) : UploadLogger {
-        override fun recordLogger(recordId: Long): RecordLogger = RecordLoggerImpl(recordId)
+    private class RecordLoggerImpl(
+            private val logger: Logger,
+            private val recordId: Long,
+            private val container: Queue<LogRecord>
+    ) : RecordLogger {
+        override fun info(logMessage: String) {
+            container.add(LogRecord(LogLevel.INFO, logMessage))
+            logger.info("[record {}] {}", recordId, logMessage)
+        }
 
-        override fun info(recordId: Long, logMessage: String) = info(logger, recordId, logMessage)
+        override fun debug(logMessage: String) {
+            container.add(LogRecord(LogLevel.DEBUG, logMessage))
+            logger.debug("[record {}] {}", recordId, logMessage)
+        }
 
-        override fun debug(recordId: Long, logMessage: String) = debug(logger, recordId, logMessage)
+        override fun warn(logMessage: String) {
+            container.add(LogRecord(LogLevel.WARN, logMessage))
+            logger.warn("[record {}] {}", recordId, logMessage)
+        }
 
-        override fun warn(recordId: Long, logMessage: String) = warn(logger, recordId, logMessage)
+        override fun error(logMessage: String, exe: Exception?) {
+            val message = if (exe != null) {
+                val trace = ByteArrayOutputStream().use { byteOut ->
+                    PrintStream(byteOut).use { printOut ->
+                        exe.printStackTrace(printOut)
+                    }
+                    byteOut.toString("UTF-8")
+                }
+                "$logMessage: $exe$trace"
+            } else {
+                logMessage
+            }
 
-        override fun error(recordId: Long, logMessage: String, exe: Exception?) = error(logger, recordId, logMessage, exe)
-
-        private inner class RecordLoggerImpl(private val recordId: Long) : RecordLogger {
-            override fun info(logMessage: String) = info(logger, recordId, logMessage)
-
-            override fun debug(logMessage: String) = debug(logger, recordId, logMessage)
-
-            override fun warn(logMessage: String) = warn(logger, recordId, logMessage)
-
-            override fun error(logMessage: String, exe: Exception?) = error(logger, recordId, logMessage, exe)
+            container.add(LogRecord(LogLevel.ERROR, message))
+            logger.error("[record {}] {}", recordId, logMessage, exe)
         }
     }
 }

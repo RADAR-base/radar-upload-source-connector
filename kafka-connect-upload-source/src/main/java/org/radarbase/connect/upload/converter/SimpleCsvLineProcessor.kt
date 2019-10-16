@@ -18,21 +18,15 @@ package org.radarbase.connect.upload.converter
 
 import org.apache.avro.generic.IndexedRecord
 import org.radarbase.connect.upload.api.RecordDTO
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 class SimpleCsvLineProcessor(
-        record: RecordDTO,
-        logRepository: LogRepository,
+        override val recordLogger: RecordLogger,
         private val topic: String,
         private val conversion: SimpleCsvLineProcessor.(lineValues: Map<String, String>, timeReceived: Double) -> IndexedRecord
 ) : CsvLineProcessorFactory.CsvLineProcessor {
-    override val recordLogger = logRepository.uploadLogger(logger).recordLogger(record.id!!)
-
     override fun convertToRecord(lineValues: Map<String, String>, timeReceived: Double): FileProcessorFactory.TopicData? {
         return FileProcessorFactory.TopicData(false, topic, conversion(lineValues, timeReceived))
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(SimpleCsvLineProcessor::class.java)
     }
 }

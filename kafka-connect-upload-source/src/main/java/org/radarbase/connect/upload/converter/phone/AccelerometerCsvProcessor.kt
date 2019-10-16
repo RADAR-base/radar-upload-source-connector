@@ -24,6 +24,7 @@ import org.radarbase.connect.upload.converter.CsvLineProcessorFactory
 import org.radarbase.connect.upload.converter.LogRepository
 import org.radarbase.connect.upload.converter.SimpleCsvLineProcessor
 import org.radarcns.passive.phone.PhoneAcceleration
+import org.slf4j.LoggerFactory
 
 class AccelerometerCsvProcessor : CsvLineProcessorFactory {
     private val topic: String = "android_phone_acceleration"
@@ -33,7 +34,8 @@ class AccelerometerCsvProcessor : CsvLineProcessorFactory {
     override fun csvProcessor(
             record: RecordDTO,
             logRepository: LogRepository
-    ): CsvLineProcessorFactory.CsvLineProcessor = SimpleCsvLineProcessor(record, logRepository, topic) { line, timeReceived ->
+    ): CsvLineProcessorFactory.CsvLineProcessor = SimpleCsvLineProcessor(
+            logRepository.recordLogger(logger, record.id!!), topic) { line, timeReceived ->
         PhoneAcceleration(
                 line["TIMESTAMP"]?.toDouble(),
                 timeReceived,
@@ -41,5 +43,9 @@ class AccelerometerCsvProcessor : CsvLineProcessorFactory {
                 line["Y"]?.toFloat(),
                 line["Z"]?.toFloat()
         )
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(AccelerometerCsvProcessor::class.java)
     }
 }

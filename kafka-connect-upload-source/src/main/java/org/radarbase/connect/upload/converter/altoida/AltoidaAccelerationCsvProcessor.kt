@@ -39,5 +39,4 @@ class AltoidaAccelerationCsvProcessor : AltoidaCsvProcessor() {
             line["X"]?.toFloat(),
             line["Y"]?.toFloat(),
             line["Z"]?.toFloat())
-
 }

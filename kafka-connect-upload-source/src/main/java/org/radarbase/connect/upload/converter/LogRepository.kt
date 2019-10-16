@@ -21,22 +21,11 @@ import org.slf4j.Logger
 import java.time.Instant
 
 interface LogRepository {
-    fun uploadLogger(logger: Logger): UploadLogger
-    fun uploadLogger(clazz: Class<*>): UploadLogger
-    fun info(logger: Logger, recordId: Long, logMessage: String)
-    fun debug(logger: Logger, recordId: Long, logMessage: String)
-    fun warn(logger: Logger, recordId: Long, logMessage: String)
-    fun error(logger: Logger, recordId: Long, logMessage: String, exe: Exception? = null)
+    fun recordLogger(logger: Logger, recordId: Long): RecordLogger
+    fun recordLogger(clazz: Class<*>, recordId: Long): RecordLogger
+
     val recordIds: Set<Long>
     fun extract(recordId: Long, reset: Boolean = false): Log?
-}
-
-interface UploadLogger {
-    fun recordLogger(recordId: Long): RecordLogger
-    fun info(recordId: Long, logMessage: String)
-    fun debug(recordId: Long, logMessage: String)
-    fun warn(recordId: Long, logMessage: String)
-    fun error(recordId: Long, logMessage: String, exe: Exception? = null)
 }
 
 interface RecordLogger {
