@@ -82,7 +82,7 @@ interface ConverterFactory {
         // convert and add logs return result
         fun convert(record: RecordDTO): List<SourceRecord>
 
-        fun convertFile(record: RecordDTO, contents: ContentsDTO, inputStream: InputStream): List<FileProcessorFactory.TopicData>
+        fun convertFile(record: RecordDTO, contents: ContentsDTO, inputStream: InputStream, recordLogger: RecordLogger): List<FileProcessorFactory.TopicData>
 
         fun getPartition(): MutableMap<String, Any>
 

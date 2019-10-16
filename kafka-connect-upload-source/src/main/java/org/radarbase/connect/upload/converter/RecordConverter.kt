@@ -40,14 +40,13 @@ class RecordConverter(
         override val sourceType: String,
         private val processorFactories: List<FileProcessorFactory>,
         private val client: UploadBackendClient,
-        logRepository: LogRepository,
+        private val logRepository: LogRepository,
         private val avroData: AvroData = AvroData(20)
 ) : ConverterFactory.Converter {
-    private val uploadLogger: UploadLogger = logRepository.uploadLogger(logger)
-
     override fun convert(record: RecordDTO): List<SourceRecord> {
         val recordId = checkNotNull(record.id)
-        uploadLogger.info(recordId,"Converting record: record-id $recordId")
+        val recordLogger = logRepository.recordLogger(logger, recordId)
+        recordLogger.info("Converting record: record-id $recordId")
 
         try {
             val recordData = checkNotNull(record.data) { "Record data cannot be null" }
@@ -59,7 +58,7 @@ class RecordConverter(
             return recordFileNames
                     .flatMap { contents ->
                         client.retrieveFile(record, contents.fileName) { body ->
-                            convertFile(record, contents, body.byteStream())
+                            convertFile(record, contents, body.byteStream(), recordLogger)
                         }
                     }
                     .map { topicData ->
@@ -72,12 +71,12 @@ class RecordConverter(
                         SourceRecord(getPartition(), offset, topicData.topic, key.schema(), key.value(), valRecord.schema(), valRecord.value())
                     }
         } catch (exe: IOException) {
-            uploadLogger.error(recordId, "Temporarily could not convert record $recordId", exe)
+            recordLogger.error("Temporarily could not convert record $recordId", exe)
             throw ConversionTemporarilyFailedException("Temporarily could not convert record $recordId", exe)
         }
     }
 
-    override fun convertFile(record: RecordDTO, contents: ContentsDTO, inputStream: InputStream): List<FileProcessorFactory.TopicData> {
+    override fun convertFile(record: RecordDTO, contents: ContentsDTO, inputStream: InputStream, recordLogger: RecordLogger): List<FileProcessorFactory.TopicData> {
         val processorFactory = processorFactories.firstOrNull { it.matches(contents) }
                 ?: throw ConversionFailedException("Cannot find data processor for record ${record.id} with file ${contents.fileName}")
 
@@ -87,7 +86,7 @@ class RecordConverter(
                     .processData(contents, inputStream, System.currentTimeMillis() / 1000.0)
                     .also { it.lastOrNull()?.endOfFileOffSet = true }
         } catch (exe: Exception) {
-            uploadLogger.error(record.id!!, "Could not convert record ${record.id}", exe)
+            recordLogger.error("Could not convert record ${record.id}", exe)
             throw ConversionFailedException("Could not convert record ${record.id}",exe)
         }
     }
