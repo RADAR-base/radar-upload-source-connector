@@ -31,7 +31,7 @@ class MockResourceEnhancerFactory(
             UploadResourceEnhancer(config),
             ConfigLoader.Enhancers.radar(AuthConfig(jwtResourceName = config.jwtResourceName)),
             object : JerseyResourceEnhancer {
-                override val enhanceBinder: AbstractBinder.() -> Unit = {
+                override fun AbstractBinder.enhance() {
                     bind(ProjectServiceWrapper::class.java)
                             .to(ProjectService::class.java)
                             .`in`(Singleton::class.java)
