@@ -44,11 +44,11 @@ class UploadResourceEnhancer(private val config: Config): JerseyResourceEnhancer
             "org.radarbase.upload.filter",
             "org.radarbase.upload.resource")
 
-    override val enhanceResources: ResourceConfig.() -> Unit = {
+    override fun ResourceConfig.enhance() {
         register(ContextResolver { OBJECT_MAPPER })
     }
 
-    override val enhanceBinder: AbstractBinder.() -> Unit = {
+    override fun AbstractBinder.enhance() {
         // Bind instances. These cannot use any injects themselves
         bind(config)
                 .to(Config::class.java)
