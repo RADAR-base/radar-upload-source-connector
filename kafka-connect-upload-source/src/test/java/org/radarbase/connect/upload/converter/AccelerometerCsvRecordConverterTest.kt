@@ -81,7 +81,8 @@ class AccelerometerCsvRecordConverterTest {
     fun testValidDataProcess() {
         val accFile = File("src/test/resources/ACC.csv")
 
-        val records = converter.convertFile(record, contentsDTO, accFile.inputStream())
+        val contents = ContentsDTO(fileName = "ACC.csv")
+        val records = converter.convertFile(record, contents, accFile.inputStream())
 
         assertNotNull(record)
         assertEquals(6, records.size)
