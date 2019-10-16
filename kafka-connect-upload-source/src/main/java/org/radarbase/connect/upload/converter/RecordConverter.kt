@@ -51,15 +51,15 @@ class RecordConverter(
 
         try {
             val recordData = checkNotNull(record.data) { "Record data cannot be null" }
-            val recordContents = checkNotNull(recordData.contents) { "Record data has empty content" }
+            val recordFileNames = checkNotNull(recordData.contents) { "Record data has empty content" }
             val recordMetadata = checkNotNull(record.metadata) { "Record meta-data cannot be null" }
 
             val key = recordData.computeObservationKey(avroData)
 
-            return recordContents
-                    .flatMap { content ->
-                        client.retrieveFile(record, content.fileName) { body ->
-                            convertFile(record, content, body.byteStream())
+            return recordFileNames
+                    .flatMap { contents ->
+                        client.retrieveFile(record, contents.fileName) { body ->
+                            convertFile(record, contents, body.byteStream())
                         }
                     }
                     .map { topicData ->
@@ -78,7 +78,7 @@ class RecordConverter(
     }
 
     override fun convertFile(record: RecordDTO, contents: ContentsDTO, inputStream: InputStream): List<FileProcessorFactory.TopicData> {
-        val processorFactory = processorFactories.firstOrNull { it.matches(contents.fileName) }
+        val processorFactory = processorFactories.firstOrNull { it.matches(contents) }
                 ?: throw ConversionFailedException("Cannot find data processor for record ${record.id} with file ${contents.fileName}")
 
         try {

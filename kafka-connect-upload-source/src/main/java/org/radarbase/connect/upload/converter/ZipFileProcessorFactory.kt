@@ -35,7 +35,7 @@ open class ZipFileProcessorFactory(
         private val entryProcessors: List<FileProcessorFactory>,
         private val logRepository: LogRepository
 ) : FileProcessorFactory {
-    override fun matches(filename: String): Boolean = filename.endsWith(".zip")
+    override fun matches(contents: ContentsDTO): Boolean = contents.fileName.endsWith(".zip")
 
     override fun fileProcessor(record: RecordDTO): FileProcessorFactory.FileProcessor = ZipFileDataProcessor(record)
 
@@ -50,13 +50,16 @@ open class ZipFileProcessorFactory(
                             .flatMap { zippedEntry ->
                                 val entryName = zippedEntry.name.trim()
                                 recordLogger.debug("Processing entry $entryName from record $recordId")
-                                val processor = entryProcessors.find { it.matches(entryName) }
+
+                                val entryContents = ContentsDTO(fileName = entryName)
+
+                                val processor = entryProcessors.find { it.matches(entryContents) }
                                         ?: throw DataProcessorNotFoundException("Could not find registered processor for zipped entry $entryName")
 
                                 recordLogger.debug("Processing $entryName with ${processor.javaClass.simpleName} processor")
 
                                 processor.fileProcessor(record)
-                                        .processData(contents, object : FilterInputStream(zippedInput) {
+                                        .processData(entryContents, object : FilterInputStream(zippedInput) {
                                             @Throws(IOException::class)
                                             override fun close() {
                                                 recordLogger.debug("Closing entry $entryName")

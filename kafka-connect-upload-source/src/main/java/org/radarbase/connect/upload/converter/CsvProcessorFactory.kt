@@ -25,18 +25,15 @@ import org.radarbase.connect.upload.exception.InvalidFormatException
 import java.io.IOException
 import java.io.InputStream
 
-class CsvProcessorFactory(private val processorFactories: List<CsvLineProcessorFactory>, private val logRepository: LogRepository): FileProcessorFactory {
-    override fun matches(filename: String) = processorFactories.any { it.matches(filename) }
+class CsvProcessorFactory(
+        private val processorFactories: List<CsvLineProcessorFactory>,
+        private val logRepository: LogRepository
+): FileProcessorFactory {
+    override fun matches(contents: ContentsDTO) = processorFactories.any { it.matches(contents) }
 
-    override fun fileProcessor(record: RecordDTO): FileProcessorFactory.FileProcessor {
-        return CsvProcessor(processorFactories, record, logRepository)
-    }
+    override fun fileProcessor(record: RecordDTO) = CsvProcessor(record)
 
-    class CsvProcessor(
-            private val processorFactories: List<CsvLineProcessorFactory>,
-            record: RecordDTO,
-            private val logRepository: LogRepository): AbstractFileProcessor(record, logRepository) {
-
+    inner class CsvProcessor(record: RecordDTO): AbstractFileProcessor(record, logRepository) {
         override fun processData(contents: ContentsDTO, inputStream: InputStream, timeReceived: Double): List<FileProcessorFactory.TopicData> {
             return try {
                 convertLines(contents, inputStream, timeReceived)
@@ -54,7 +51,7 @@ class CsvProcessorFactory(private val processorFactories: List<CsvLineProcessorF
                 timeReceived: Double): List<FileProcessorFactory.TopicData> = readCsv(inputStream) { reader ->
             val header = reader.readNext().map { it.trim() }
             val processorFactory = processorFactories
-                    .find { it.matches(contents.fileName) && it.matches(header) }
+                    .find { it.matches(contents) && it.matches(header) }
                     ?: throw InvalidFormatException("In record $recordId, cannot find CSV processor that matches header $header")
 
             val processor = processorFactory.csvProcessor(record, logRepository)

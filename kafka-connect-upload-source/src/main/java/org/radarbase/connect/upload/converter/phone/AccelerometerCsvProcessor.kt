@@ -26,8 +26,6 @@ import org.radarbase.connect.upload.converter.SimpleCsvLineProcessor
 import org.radarcns.passive.phone.PhoneAcceleration
 
 class AccelerometerCsvProcessor : CsvLineProcessorFactory {
-    override fun matches(fileName: String): Boolean = true
-
     private val topic: String = "android_phone_acceleration"
 
     override val header: List<String> = listOf("TIMESTAMP", "X", "Y", "Z")
