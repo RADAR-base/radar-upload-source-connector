@@ -5,6 +5,13 @@ import index from '../index.vue';
 import patientAPI from '@/axios/patient';
 import fileAPI from '@/axios/file.js';
 
+const sourceTypeList = [
+  {
+    name: 'audioMp3',
+    sourceType: ['audio/mp3'],
+  },
+];
+fileAPI.getSourceTypes = jest.fn().mockReturnValue(sourceTypeList);
 
 describe('Upload', () => {
   // call this api when component is created
@@ -34,13 +41,6 @@ describe('Upload', () => {
   });
 
   it('getsourceTypeList', async () => {
-    const sourceTypeList = [
-      {
-        name: 'audioMp3',
-        sourceType: ['audio/mp3'],
-      },
-    ];
-    fileAPI.getSourceTypes = jest.fn().mockReturnValue(sourceTypeList);
     wrapper.vm.getsourceTypeList();
     await flushPromises();
     expect(wrapper.vm.sourceTypeList).toEqual(sourceTypeList.map(el => el.name));

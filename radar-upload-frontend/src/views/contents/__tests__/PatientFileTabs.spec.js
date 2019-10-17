@@ -32,6 +32,7 @@ describe('PatientFileTabs', () => {
       'v-toolbar-title',
       'v-spacer',
       'v-tabs',
+      'v-card-title',
     ],
   });
 
