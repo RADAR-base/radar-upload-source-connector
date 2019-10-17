@@ -35,7 +35,8 @@ interface FileProcessorFactory {
     }
 
     /**
-     * Whether this processor factory can process given file contents.
+     * Whether this processor factory can process given file contents. Matching could occur based on
+     * file name, size or content type.
      */
     fun matches(contents: ContentsDTO): Boolean
 
@@ -46,6 +47,10 @@ interface FileProcessorFactory {
 
     /** Processor to process a single file in a record. */
     interface FileProcessor {
-        fun processData(contents: ContentsDTO, inputStream: InputStream, timeReceived: Double): List<TopicData>
+        fun processData(
+                contents: ContentsDTO,
+                inputStream: InputStream,
+                timeReceived: Double
+        ): List<TopicData>
     }
 }

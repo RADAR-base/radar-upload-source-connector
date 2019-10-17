@@ -66,10 +66,10 @@ interface ConverterFactory {
         fun createConverter(factoryClassName: String,
                 settings: Map<String, String>,
                 client: UploadBackendClient,
-                logRepository: LogRepository): Pair<String, Converter> {
+                logRepository: LogRepository): Converter {
             val converterFactory = fromClassName(factoryClassName)
             val config = client.requestConnectorConfig(converterFactory.sourceType)
-            return converterFactory.sourceType to converterFactory.converter(settings, config, client, logRepository)
+            return converterFactory.converter(settings, config, client, logRepository)
         }
     }
 
