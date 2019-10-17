@@ -29,9 +29,9 @@ import okhttp3.OkHttpClient
 import org.apache.kafka.common.config.AbstractConfig
 import org.apache.kafka.common.config.ConfigDef
 import org.radarbase.connect.upload.auth.ClientCredentialsAuthorizer
-import org.radarbase.connect.upload.converter.AccelerationZipFileConverter
-import org.radarbase.connect.upload.converter.AccelerometerCsvRecordConverter
-import org.radarbase.connect.upload.converter.altoida.*
+import org.radarbase.connect.upload.converter.altoida.AltoidaZipConverterFactory
+import org.radarbase.connect.upload.converter.phone.AcceleratometerZipConverterFactory
+import org.radarbase.connect.upload.converter.phone.AccelerometerConverterFactory
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
@@ -104,9 +104,9 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
         private const val UPLOAD_SOURCE_CONVERTERS_DOC = "List record converter classes that are in class-path"
         private const val UPLOAD_SOURCE_CONVERTERS_DISPLAY = "List of record converter class"
         private val UPLOAD_SOURCE_CONVERTERS_DEFAULT: List<String> = listOf(
-                AccelerometerCsvRecordConverter()::class.java.name,
-                AccelerationZipFileConverter()::class.java.name,
-                AltoidaZipFileRecordConverter()::class.java.name
+                AccelerometerConverterFactory()::class.java.name,
+                AcceleratometerZipConverterFactory()::class.java.name,
+                AltoidaZipConverterFactory()::class.java.name
                 )
 
 

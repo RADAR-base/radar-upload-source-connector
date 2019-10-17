@@ -1,9 +1,8 @@
 package org.radarbase.upload.doa
 
-import org.radarbase.upload.exception.InternalServerException
+import org.radarbase.jersey.exception.HttpInternalServerException
 import org.radarbase.upload.logger
 import java.io.Closeable
-import java.lang.Exception
 import javax.persistence.EntityManager
 import javax.persistence.EntityTransaction
 
@@ -18,7 +17,8 @@ fun <T> EntityManager.transact(transactionOperation: EntityManager.() -> T) = cr
  * Start a transaction without committing it. If an exception occurs, the transaction is rolled back.
  */
 fun <T> EntityManager.createTransaction(transactionOperation: EntityManager.(CloseableTransaction) -> T): T {
-    val currentTransaction = transaction ?: throw InternalServerException("transaction_not_found", "Cannot find a transaction from EntityManager")
+    val currentTransaction = transaction
+            ?: throw HttpInternalServerException("transaction_not_found", "Cannot find a transaction from EntityManager")
 
     currentTransaction.begin()
     try {
@@ -33,6 +33,7 @@ fun <T> EntityManager.createTransaction(transactionOperation: EntityManager.(Clo
                     if (currentTransaction.isActive) {
                         currentTransaction.rollback()
                     }
+                    throw ex
                 }
             }
         })
