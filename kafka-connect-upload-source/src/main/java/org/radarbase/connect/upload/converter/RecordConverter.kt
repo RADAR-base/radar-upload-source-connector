@@ -45,7 +45,7 @@ class RecordConverter(
 ) : ConverterFactory.Converter {
     override fun convert(record: RecordDTO): List<SourceRecord> {
         val recordId = checkNotNull(record.id)
-        val recordLogger = logRepository.recordLogger(logger, recordId)
+        val recordLogger = logRepository.createLogger(logger, recordId)
         recordLogger.info("Converting record: record-id $recordId")
 
         try {

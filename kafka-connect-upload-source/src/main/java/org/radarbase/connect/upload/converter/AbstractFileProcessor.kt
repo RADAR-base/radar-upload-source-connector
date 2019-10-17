@@ -20,5 +20,5 @@ import org.radarbase.connect.upload.api.RecordDTO
 
 abstract class AbstractFileProcessor(protected val record: RecordDTO, logRepository: LogRepository): FileProcessorFactory.FileProcessor {
     protected val recordId = record.id!!
-    protected val recordLogger = logRepository.recordLogger(javaClass, recordId)
+    protected val recordLogger = logRepository.createLogger(javaClass, recordId)
 }
