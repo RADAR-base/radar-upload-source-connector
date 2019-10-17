@@ -23,6 +23,7 @@ import okio.BufferedSink
 import org.slf4j.Logger
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
+import java.nio.charset.StandardCharsets.UTF_8
 import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
