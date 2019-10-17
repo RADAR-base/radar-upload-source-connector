@@ -21,10 +21,10 @@ package org.radarbase.connect.upload.converter.altoida
 
 import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
-import org.radarbase.connect.upload.converter.AbstractFileProcessor
 import org.radarbase.connect.upload.converter.FileProcessorFactory
 import org.radarbase.connect.upload.converter.LogRepository
 import org.radarcns.connector.upload.altoida.AltoidaMetadata
+import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.io.InputStream
 import java.time.Instant
@@ -35,16 +35,18 @@ class AltoidaMetadataFileProcessor(
 
     override fun matches(contents: ContentsDTO): Boolean = contents.fileName == "VERSION.csv"
 
-    override fun fileProcessor(record: RecordDTO): FileProcessorFactory.FileProcessor = AltoidaMetadataProcessor(record)
+    override fun createProcessor(record: RecordDTO): FileProcessorFactory.FileProcessor = AltoidaMetadataProcessor(record)
 
-    private inner class AltoidaMetadataProcessor(record: RecordDTO) : AbstractFileProcessor(record, logRepository) {
+    private inner class AltoidaMetadataProcessor(private val record: RecordDTO) : FileProcessorFactory.FileProcessor {
+        val recordLogger = logRepository.createLogger(logger, record.id!!)
+
         override fun processData(contents: ContentsDTO, inputStream: InputStream, timeReceived: Double): List<FileProcessorFactory.TopicData> {
             val version = try {
                 inputStream.bufferedReader().use { reader ->
                     reader.readLine()
                 }
             } catch (exe: IOException) {
-                recordLogger.warn("Something went wrong while processing contents of file $recordId: ${exe.message}")
+                recordLogger.warn("Something went wrong while processing contents of file ${record.id}: ${exe.message}")
                 return emptyList()
             }
 
@@ -60,7 +62,11 @@ class AltoidaMetadataFileProcessor(
                     timeReceived,
                     version)
 
-            return FileProcessorFactory.TopicData(false, topic, metadata)
+            return FileProcessorFactory.TopicData(topic, metadata)
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(AltoidaMetadataFileProcessor::class.java)
     }
 }

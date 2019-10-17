@@ -22,6 +22,7 @@ package org.radarbase.connect.upload.converter
 import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
 import org.radarbase.connect.upload.exception.DataProcessorNotFoundException
+import org.slf4j.LoggerFactory
 import java.io.FilterInputStream
 import java.io.IOException
 import java.io.InputStream
@@ -37,9 +38,10 @@ open class ZipFileProcessorFactory(
 ) : FileProcessorFactory {
     override fun matches(contents: ContentsDTO): Boolean = contents.fileName.endsWith(".zip")
 
-    override fun fileProcessor(record: RecordDTO): FileProcessorFactory.FileProcessor = ZipFileDataProcessor(record)
+    override fun createProcessor(record: RecordDTO): FileProcessorFactory.FileProcessor = ZipFileProcessor(record)
 
-    inner class ZipFileDataProcessor(record: RecordDTO): AbstractFileProcessor(record, logRepository) {
+    inner class ZipFileProcessor(private val record: RecordDTO): FileProcessorFactory.FileProcessor {
+        private val recordLogger = logRepository.createLogger(logger, record.id!!)
         override fun processData(contents: ContentsDTO, inputStream: InputStream, timeReceived: Double): List<FileProcessorFactory.TopicData> {
             recordLogger.info("Retrieved file content from record id ${record.id} and filename ${contents.fileName}")
             return try {
@@ -49,7 +51,7 @@ open class ZipFileProcessorFactory(
                             .ifEmpty { throw IOException("No zipped entry found from ${contents.fileName}") }
                             .flatMap { zippedEntry ->
                                 val entryName = zippedEntry.name.trim()
-                                recordLogger.debug("Processing entry $entryName from record $recordId")
+                                recordLogger.debug("Processing entry $entryName from record ${record.id}")
 
                                 val entryContents = ContentsDTO(fileName = entryName)
 
@@ -58,7 +60,7 @@ open class ZipFileProcessorFactory(
 
                                 recordLogger.debug("Processing $entryName with ${processor.javaClass.simpleName} processor")
 
-                                processor.fileProcessor(record)
+                                processor.createProcessor(record)
                                         .processData(entryContents, object : FilterInputStream(zippedInput) {
                                             @Throws(IOException::class)
                                             override fun close() {
@@ -79,5 +81,9 @@ open class ZipFileProcessorFactory(
                 throw exe
             }
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ZipFileProcessor::class.java)
     }
 }

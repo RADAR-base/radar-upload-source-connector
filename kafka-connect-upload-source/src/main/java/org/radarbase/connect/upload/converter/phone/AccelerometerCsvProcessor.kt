@@ -31,7 +31,7 @@ class AccelerometerCsvProcessor : CsvLineProcessorFactory {
 
     override val header: List<String> = listOf("TIMESTAMP", "X", "Y", "Z")
 
-    override fun csvProcessor(
+    override fun createLineProcessor(
             record: RecordDTO,
             logRepository: LogRepository
     ): CsvLineProcessorFactory.CsvLineProcessor = SimpleCsvLineProcessor(

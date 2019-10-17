@@ -82,7 +82,7 @@ class RecordConverter(
 
         try {
             return processorFactory
-                    .fileProcessor(record)
+                    .createProcessor(record)
                     .processData(contents, inputStream, System.currentTimeMillis() / 1000.0)
                     .also { it.lastOrNull()?.endOfFileOffSet = true }
         } catch (exe: Exception) {
