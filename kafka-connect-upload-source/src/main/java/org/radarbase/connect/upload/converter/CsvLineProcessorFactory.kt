@@ -19,16 +19,34 @@ package org.radarbase.connect.upload.converter
 import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
 
+/**
+ * Processor for processing single lines of CSV file.
+ */
 interface CsvLineProcessorFactory {
     val header: List<String>
 
-    fun matches(contents: ContentsDTO): Boolean = contents.fileName.endsWith(".csv")
-    fun matches(header: List<String>): Boolean = header.containsAll(this.header)
-    fun csvProcessor(record: RecordDTO, logRepository: LogRepository): CsvLineProcessor
+    /**
+     * Whether the file contents matches this CSV line processor.
+     */
+    fun matches(contents: ContentsDTO) = contents.fileName.endsWith(".csv")
+
+    /**
+     * Whether the header matches this CSV line processor.
+     */
+    fun matches(header: List<String>) = header.containsAll(this.header)
+
+    /**
+     * Create a line processor for given record.
+     */
+    fun createLineProcessor(record: RecordDTO, logRepository: LogRepository): CsvLineProcessor
 
     interface CsvLineProcessor {
         val recordLogger: RecordLogger
 
+        /**
+         * Whether the given line is valid. If not, the line will be discarded. An error can be
+         * thrown to mark the entire file invalid.
+         */
         fun isLineValid(
                 header: List<String>,
                 line: Array<String>): Boolean {

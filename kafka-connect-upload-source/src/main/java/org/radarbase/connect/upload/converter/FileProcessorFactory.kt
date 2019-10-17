@@ -24,15 +24,27 @@ import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
 import java.io.InputStream
 
+/**
+ * Factory to create processors of single files.
+ */
 interface FileProcessorFactory {
     data class TopicData(
-            var endOfFileOffSet: Boolean,
             val topic: String,
-            val value: IndexedRecord)
+            val value: IndexedRecord) {
+        var endOfFileOffSet: Boolean = false
+    }
 
+    /**
+     * Whether this processor factory can process given file contents.
+     */
     fun matches(contents: ContentsDTO): Boolean
-    fun fileProcessor(record: RecordDTO): FileProcessor
 
+    /**
+     * Create a file processor for a given record.
+     */
+    fun createProcessor(record: RecordDTO): FileProcessor
+
+    /** Processor to process a single file in a record. */
     interface FileProcessor {
         fun processData(contents: ContentsDTO, inputStream: InputStream, timeReceived: Double): List<TopicData>
     }

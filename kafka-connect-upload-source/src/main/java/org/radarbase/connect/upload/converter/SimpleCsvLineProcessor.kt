@@ -17,9 +17,6 @@
 package org.radarbase.connect.upload.converter
 
 import org.apache.avro.generic.IndexedRecord
-import org.radarbase.connect.upload.api.RecordDTO
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 class SimpleCsvLineProcessor(
         override val recordLogger: RecordLogger,
@@ -27,6 +24,6 @@ class SimpleCsvLineProcessor(
         private val conversion: SimpleCsvLineProcessor.(lineValues: Map<String, String>, timeReceived: Double) -> IndexedRecord
 ) : CsvLineProcessorFactory.CsvLineProcessor {
     override fun convertToRecord(lineValues: Map<String, String>, timeReceived: Double): FileProcessorFactory.TopicData? {
-        return FileProcessorFactory.TopicData(false, topic, conversion(lineValues, timeReceived))
+        return FileProcessorFactory.TopicData(topic, conversion(lineValues, timeReceived))
     }
 }
