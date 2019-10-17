@@ -34,8 +34,8 @@ class AltoidaAttitudeCsvProcessor : AltoidaCsvProcessor() {
     override fun SimpleCsvLineProcessor.lineConversion(
             line: Map<String, String>,
             timeReceived: Double
-    ): IndexedRecord = AltoidaAttitude(
-            line.getValue("TIMESTAMP").toDouble(),
+    ) = AltoidaAttitude(
+            time(line),
             timeReceived,
             line.getValue("PITCH").toFloat(),
             line.getValue("ROLL").toFloat(),

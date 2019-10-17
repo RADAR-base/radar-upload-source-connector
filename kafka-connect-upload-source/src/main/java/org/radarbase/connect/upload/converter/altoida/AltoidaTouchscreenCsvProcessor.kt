@@ -30,8 +30,8 @@ class AltoidaTouchscreenCsvProcessor : AltoidaCsvProcessor() {
             line: Map<String, String>,
             timeReceived: Double
     ) =  AltoidaTouchscreen(
-            line["TIMESTAMP"]?.toDouble(),
+            time(line),
             timeReceived,
-            line["X"]?.toDouble(),
-            line["Y"]?.toDouble())
+            line.getValue("X").toDouble(),
+            line.getValue("Y").toDouble())
 }

@@ -19,10 +19,8 @@
 
 package org.radarbase.connect.upload.converter.altoida
 
-import org.apache.avro.generic.IndexedRecord
 import org.radarbase.connect.upload.converter.SimpleCsvLineProcessor
 import org.radarcns.connector.upload.altoida.AltoidaDiagnostics
-
 
 class AltoidaDiagnosticsCsvProcessor : AltoidaCsvProcessor() {
     override val fileNameSuffix: String = "_DIAG.csv"
@@ -34,8 +32,8 @@ class AltoidaDiagnosticsCsvProcessor : AltoidaCsvProcessor() {
     override fun SimpleCsvLineProcessor.lineConversion(
             line: Map<String, String>,
             timeReceived: Double
-    ): IndexedRecord = AltoidaDiagnostics(
-            line["TIMESTAMP"]?.toDouble(),
+    ) = AltoidaDiagnostics(
+            time(line),
             timeReceived,
             line["TAG"],
             line["PAYLOAD"])

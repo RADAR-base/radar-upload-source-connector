@@ -19,7 +19,6 @@
 
 package org.radarbase.connect.upload.converter.altoida
 
-import org.apache.avro.generic.IndexedRecord
 import org.radarbase.connect.upload.converter.SimpleCsvLineProcessor
 import org.radarcns.connector.upload.altoida.AltoidaAcceleration
 
@@ -33,10 +32,10 @@ class AltoidaAccelerationCsvProcessor : AltoidaCsvProcessor() {
     override fun SimpleCsvLineProcessor.lineConversion(
             line: Map<String, String>,
             timeReceived: Double
-    ): IndexedRecord = AltoidaAcceleration(
-            line["TIMESTAMP"]?.toDouble(),
+    ) = AltoidaAcceleration(
+            time(line),
             timeReceived,
-            line["X"]?.toFloat(),
-            line["Y"]?.toFloat(),
-            line["Z"]?.toFloat())
+            line.getValue("X").toFloat(),
+            line.getValue("Y").toFloat(),
+            line.getValue("Z").toFloat())
 }

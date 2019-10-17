@@ -39,16 +39,17 @@ class AltoidaMetadataFileProcessor(
 
     private inner class AltoidaMetadataProcessor(record: RecordDTO) : AbstractFileProcessor(record, logRepository) {
         override fun processData(contents: ContentsDTO, inputStream: InputStream, timeReceived: Double): List<FileProcessorFactory.TopicData> {
-            return try {
-                        val version = inputStream.bufferedReader().use { reader ->
-                            reader.readLine()
-                        }
-                        convertVersionToRecord(version, timeReceived)
-                                ?.let { listOf(it) }
-                    } catch (exe: IOException) {
-                        recordLogger.warn("Something went wrong while processing contents of file $recordId: ${exe.message}")
-                        null
-                    }
+            val version = try {
+                inputStream.bufferedReader().use { reader ->
+                    reader.readLine()
+                }
+            } catch (exe: IOException) {
+                recordLogger.warn("Something went wrong while processing contents of file $recordId: ${exe.message}")
+                return emptyList()
+            }
+
+            return convertVersionToRecord(version, timeReceived)
+                    ?.let { listOf(it) }
                     ?: emptyList()
         }
 

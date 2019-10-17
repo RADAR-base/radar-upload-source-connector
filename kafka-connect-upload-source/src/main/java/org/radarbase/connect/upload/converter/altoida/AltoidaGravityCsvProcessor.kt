@@ -22,7 +22,6 @@ package org.radarbase.connect.upload.converter.altoida
 import org.radarbase.connect.upload.converter.SimpleCsvLineProcessor
 import org.radarcns.connector.upload.altoida.AltoidaGravity
 
-
 class AltoidaGravityCsvProcessor : AltoidaCsvProcessor() {
     override val fileNameSuffix: String = "_GRA.csv"
 
@@ -34,10 +33,10 @@ class AltoidaGravityCsvProcessor : AltoidaCsvProcessor() {
             line: Map<String, String>,
             timeReceived: Double
     ) = AltoidaGravity(
-            line["TIMESTAMP"]?.toDouble(),
+            time(line),
             timeReceived,
-            line["X"]?.toFloat(),
-            line["Y"]?.toFloat(),
-            line["Z"]?.toFloat())
+            line.getValue("X").toFloat(),
+            line.getValue("Y").toFloat(),
+            line.getValue("Z").toFloat())
 
 }

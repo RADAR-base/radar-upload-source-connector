@@ -35,6 +35,8 @@ abstract class AltoidaCsvProcessor: CsvLineProcessorFactory {
 
     override fun matches(contents: ContentsDTO): Boolean = contents.fileName.endsWith(fileNameSuffix)
 
+    protected fun time(line: Map<String, String>): Double = line.getValue("TIMESTAMP").toDouble() / 1000.0
+
     override fun csvProcessor(record: RecordDTO, logRepository: LogRepository): CsvLineProcessorFactory.CsvLineProcessor {
         val recordLogger = logRepository.recordLogger(logger, record.id!!)
         return SimpleCsvLineProcessor(recordLogger, topic) { l, t -> lineConversion(l, t) }

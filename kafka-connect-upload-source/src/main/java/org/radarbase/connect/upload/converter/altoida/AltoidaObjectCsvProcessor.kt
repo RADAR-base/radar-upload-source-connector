@@ -33,10 +33,10 @@ class AltoidaObjectCsvProcessor : AltoidaCsvProcessor() {
             line: Map<String, String>,
             timeReceived: Double
     ) =  AltoidaObject(
-            line["TIMESTAMP"]?.toDouble(),
+            time(line),
             timeReceived,
             line["OBJ"],
-            line["X"]?.toFloat(),
-            line["Y"]?.toFloat(),
-            line["Z"]?.toFloat())
+            line.getValue("X").toFloat(),
+            line.getValue("Y").toFloat(),
+            line.getValue("Z").toFloat())
 }
