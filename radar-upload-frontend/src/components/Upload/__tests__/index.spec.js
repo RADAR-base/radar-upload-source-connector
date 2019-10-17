@@ -5,7 +5,17 @@ import index from '../index.vue';
 import patientAPI from '@/axios/patient';
 import fileAPI from '@/axios/file.js';
 
+// mock api
+const sourceTypeList = [
+  {
+    name: 'audioMp3',
+    sourceType: ['audio/mp3'],
+  },
+];
+fileAPI.getSourceTypes = jest.fn().mockReturnValue(sourceTypeList);
 
+const patientListResolved = [{ patientName: '', patientValue: '' }];
+patientAPI.filteredPatients = jest.fn().mockResolvedValueOnce(patientListResolved);
 describe('Upload', () => {
   // call this api when component is created
   const wrapper = shallowMount(index, {
@@ -26,13 +36,6 @@ describe('Upload', () => {
 
 
   it('getsourceTypeList', async () => {
-    const sourceTypeList = [
-      {
-        name: 'audioMp3',
-        sourceType: ['audio/mp3'],
-      },
-    ];
-    fileAPI.getSourceTypes = jest.fn().mockReturnValue(sourceTypeList);
     wrapper.vm.getsourceTypeList();
     await flushPromises();
     expect(wrapper.vm.sourceTypeList).toEqual(sourceTypeList.map(el => el.name));
@@ -40,10 +43,6 @@ describe('Upload', () => {
 
 
   it('getPatientList: SUCCESS', async () => {
-    // mock api
-    const patientListResolved = [{ patientName: '', patientValue: '' }];
-    patientAPI.filteredPatients = jest.fn().mockResolvedValueOnce(patientListResolved);
-
     wrapper.setData({ patientList: ['value'] });
     const projectId = 'projectId';
 
