@@ -31,9 +31,9 @@ data class LogsDto(
 data class ContentsDTO(
         var url: String? = null,
         var text: String? = null,
-        var contentType: String,
-        var createdDate: Instant,
-        var size: Long,
+        var contentType: String? = null,
+        var createdDate: Instant? = null,
+        var size: Long? = null,
         var fileName: String)
 
 data class RecordDataDTO(
