@@ -2,9 +2,8 @@ package org.radarbase.upload.api
 
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-
-import org.junit.jupiter.api.Assertions.*
 import org.mockito.Mockito.mock
 import org.radarbase.upload.Config
 import org.radarbase.upload.doa.SourceTypeRepository

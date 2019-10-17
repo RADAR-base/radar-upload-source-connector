@@ -19,7 +19,6 @@
 
 package org.radarbase.connect.upload.converter.altoida
 
-import org.apache.commons.logging.LogFactory
 import org.radarbase.connect.upload.converter.DataProcessor
 import org.radarbase.connect.upload.converter.LogRepository
 import org.radarbase.connect.upload.converter.TopicData

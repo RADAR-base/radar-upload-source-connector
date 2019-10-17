@@ -1,7 +1,7 @@
 package org.radarbase.upload.service
 
-import org.radarbase.auth.jersey.Auth
-import org.radarbase.auth.jersey.ProjectService
+import org.radarbase.jersey.auth.Auth
+import org.radarbase.jersey.auth.ProjectService
 import org.radarbase.upload.dto.Project
 import org.radarbase.upload.dto.User
 

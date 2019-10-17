@@ -25,7 +25,6 @@ import org.radarbase.upload.doa.entity.Record
 import org.radarbase.upload.doa.entity.RecordContent
 import org.radarbase.upload.doa.entity.RecordMetadata
 import org.radarbase.upload.doa.entity.RecordStatus
-import java.lang.IllegalArgumentException
 import java.net.URLEncoder
 import java.time.Instant
 import javax.ws.rs.BadRequestException

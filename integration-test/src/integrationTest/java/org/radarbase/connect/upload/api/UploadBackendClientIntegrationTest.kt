@@ -36,9 +36,11 @@ import org.radarbase.connect.upload.util.TestBase.Companion.getAccessToken
 import org.radarbase.connect.upload.util.TestBase.Companion.httpClient
 import org.radarbase.connect.upload.util.TestBase.Companion.sourceTypeName
 import org.radarbase.connect.upload.util.TestBase.Companion.uploadBackendConfig
+import org.radarbase.jersey.GrizzlyServer
+import org.radarbase.jersey.config.ConfigLoader
 import org.radarbase.upload.Config
-import org.radarbase.upload.GrizzlyServer
 import org.radarbase.upload.doa.entity.RecordStatus
+import org.radarbase.upload.inject.ManagementPortalEnhancerFactory
 import java.io.File
 
 
@@ -72,10 +74,10 @@ class UploadBackendClientIntegrationTest {
         accessToken = getAccessToken()
 
         config = uploadBackendConfig
+        val resources = ConfigLoader.loadResources(ManagementPortalEnhancerFactory::class.java, config)
 
-        server = GrizzlyServer(config)
+        server = GrizzlyServer(config.baseUri, resources)
         server.start()
-
     }
 
     @AfterAll
@@ -123,8 +125,7 @@ class UploadBackendClientIntegrationTest {
     private fun pollRecords(): RecordContainerDTO {
         val pollConfig = PollDTO(
                 limit = 10,
-                supportedConverters = listOf(sourceType)
-        )
+                supportedConverters = setOf(sourceType))
         val records = uploadBackendClient.pollRecords(pollConfig)
         assertNotNull(records)
         assertThat(records.records.size, greaterThan(0))

@@ -80,7 +80,7 @@ class ConverterLogRepository : LogRepository {
                 PrintStream(byteOut).use { printOut ->
                     exe.printStackTrace(printOut)
                 }
-                byteOut.toString(UTF_8)
+                byteOut.toString("UTF-8")
             }
             "$logMessage: $exe$trace"
         } else {
