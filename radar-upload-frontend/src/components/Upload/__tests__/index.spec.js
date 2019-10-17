@@ -5,13 +5,6 @@ import index from '../index.vue';
 import patientAPI from '@/axios/patient';
 import fileAPI from '@/axios/file.js';
 
-const sourceTypeList = [
-  {
-    name: 'audioMp3',
-    sourceType: ['audio/mp3'],
-  },
-];
-fileAPI.getSourceTypes = jest.fn().mockReturnValue(sourceTypeList);
 
 describe('Upload', () => {
   // call this api when component is created
@@ -31,16 +24,15 @@ describe('Upload', () => {
     stubs: ['v-dialog'],
   });
 
-  it('watch:dialog => call getPatientList', () => {
-    const getPatientList = jest.spyOn(wrapper.vm, 'getPatientList');
-    const getsourceTypeList = jest.spyOn(wrapper.vm, 'getsourceTypeList');
-    wrapper.setData({ dialog: false });
-    wrapper.setData({ dialog: true });
-    expect(getPatientList).toBeCalledWith(wrapper.vm.currentProject);
-    expect(getsourceTypeList).toBeCalled();
-  });
 
   it('getsourceTypeList', async () => {
+    const sourceTypeList = [
+      {
+        name: 'audioMp3',
+        sourceType: ['audio/mp3'],
+      },
+    ];
+    fileAPI.getSourceTypes = jest.fn().mockReturnValue(sourceTypeList);
     wrapper.vm.getsourceTypeList();
     await flushPromises();
     expect(wrapper.vm.sourceTypeList).toEqual(sourceTypeList.map(el => el.name));
@@ -49,8 +41,8 @@ describe('Upload', () => {
 
   it('getPatientList: SUCCESS', async () => {
     // mock api
-    const resolvedValue = [{ patientName: '', patientValue: '' }];
-    patientAPI.filteredPatients = jest.fn().mockResolvedValueOnce(resolvedValue);
+    const patientListResolved = [{ patientName: '', patientValue: '' }];
+    patientAPI.filteredPatients = jest.fn().mockResolvedValueOnce(patientListResolved);
 
     wrapper.setData({ patientList: ['value'] });
     const projectId = 'projectId';
@@ -62,7 +54,7 @@ describe('Upload', () => {
     await flushPromises();
     expect(patientAPI.filteredPatients).toBeCalledWith(projectId);
     expect(wrapper.vm.patientList)
-      .toEqual(resolvedValue
+      .toEqual(patientListResolved
         .map(patient => ({ text: patient.patientName, value: patient.patientId })));
     patientAPI.filteredPatients.mockClear();
   });
@@ -72,6 +64,16 @@ describe('Upload', () => {
     await wrapper.vm.getPatientList('projectId');
     expect(wrapper.vm.patientList).toEqual([]);
   });
+
+  it('watch:dialog => call getPatientList', () => {
+    const getPatientList = jest.spyOn(wrapper.vm, 'getPatientList');
+    const getsourceTypeList = jest.spyOn(wrapper.vm, 'getsourceTypeList');
+    wrapper.setData({ dialog: false });
+    wrapper.setData({ dialog: true });
+    expect(getPatientList).toBeCalledWith(wrapper.vm.currentProject);
+    expect(getsourceTypeList).toBeCalled();
+  });
+
 
   it('removeData', () => {
     wrapper.setData({ patientList: ['value'], loading: true, dialog: true });
