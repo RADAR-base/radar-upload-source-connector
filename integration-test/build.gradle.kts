@@ -49,7 +49,6 @@ dependencies {
     testImplementation("org.apache.kafka:connect-api:${project.extra["kafkaVersion"]}")
 }
 
-// config JVM target to 1.8 for kotlin compilation tasks
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "11"
 }

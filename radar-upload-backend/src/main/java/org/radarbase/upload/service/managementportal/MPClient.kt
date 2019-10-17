@@ -25,11 +25,11 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import okhttp3.*
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
-import org.radarbase.auth.jersey.Auth
+import org.radarbase.jersey.auth.Auth
+import org.radarbase.jersey.exception.HttpBadGatewayException
 import org.radarbase.upload.Config
 import org.radarbase.upload.dto.Project
 import org.radarbase.upload.dto.User
-import org.radarbase.upload.exception.BadGatewayException
 import org.slf4j.LoggerFactory
 import java.net.MalformedURLException
 import java.time.Duration
@@ -42,7 +42,8 @@ class MPClient(@Context config: Config, @Context private val auth: Auth) {
     private val httpClient = OkHttpClient()
     private val baseUrl: HttpUrl = config.managementPortalUrl.toHttpUrlOrNull()
             ?: throw MalformedURLException("Cannot parse base URL ${config.managementPortalUrl} as an URL")
-    private val mapper = jacksonObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+    private val mapper = jacksonObjectMapper()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     private val projectListReader = mapper.readerFor(object : TypeReference<List<ProjectDto>>(){})
     private val userListReader = mapper.readerFor(object : TypeReference<List<SubjectDto>>(){})
 
@@ -74,7 +75,7 @@ class MPClient(@Context config: Config, @Context private val auth: Auth) {
 
             val result = mapper.readTree(execute(request))
             localToken = result["access_token"].asText()
-                    ?: throw BadGatewayException("ManagementPortal did not provide an access token")
+                    ?: throw HttpBadGatewayException("ManagementPortal did not provide an access token")
             expiration = Instant.now() + Duration.ofSeconds(result["expires_in"].asLong()) - Duration.ofMinutes(5)
             token = localToken
             localToken
@@ -101,10 +102,10 @@ class MPClient(@Context config: Config, @Context private val auth: Auth) {
         return httpClient.newCall(request).execute().use { response ->
             if (response.isSuccessful) {
                response.body?.string()
-                       ?: throw BadGatewayException("ManagementPortal did not provide a result")
+                       ?: throw HttpBadGatewayException("ManagementPortal did not provide a result")
             } else {
                 logger.error("Cannot connect to managementportal ", response.code)
-                throw BadGatewayException("Cannot connect to managementportal : Response-code ${response.code}")
+                throw HttpBadGatewayException("Cannot connect to managementportal : Response-code ${response.code}")
             }
         }
     }
