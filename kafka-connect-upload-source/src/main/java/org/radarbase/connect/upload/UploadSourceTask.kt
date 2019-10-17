@@ -143,7 +143,7 @@ class UploadSourceTask : SourceTask() {
     }
 
     private fun updateRecordFailure(record: RecordDTO, exe: Exception, reason: String = "Could not convert this record. Please refer to the conversion logs for more details") {
-        val recordLogger = logRepository.recordLogger(logger, record.id!!)
+        val recordLogger = logRepository.createLogger(logger, record.id!!)
         recordLogger.error(reason, exe)
         val metadata = uploadClient.retrieveRecordMetadata(record.id!!)
         val updatedMetadata = uploadClient.updateStatus(record.id!!, metadata.copy(
@@ -159,7 +159,7 @@ class UploadSourceTask : SourceTask() {
 
     private fun updateRecordTemporaryFailure(record: RecordDTO, exe: Exception, reason: String = "Temporarily could not convert this record. Please refer to the conversion logs for more details") {
         logger.info("Update record conversion failure")
-        val recordLogger = logRepository.recordLogger(logger, record.id!!)
+        val recordLogger = logRepository.createLogger(logger, record.id!!)
         recordLogger.error(reason, exe)
         val metadata = uploadClient.retrieveRecordMetadata(record.id!!)
         val updatedMetadata = uploadClient.updateStatus(record.id!!, metadata.copy(

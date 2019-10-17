@@ -21,17 +21,42 @@ import org.slf4j.Logger
 import java.time.Instant
 
 interface LogRepository {
-    fun recordLogger(logger: Logger, recordId: Long): RecordLogger
-    fun recordLogger(clazz: Class<*>, recordId: Long): RecordLogger
+    /**
+     * Create a logger for logging about a single record.
+     *
+     * @param logger system logger to write log messages with.
+     * @param recordId record that the logging should refer to.
+     */
+    fun createLogger(logger: Logger, recordId: Long): RecordLogger
 
+    /**
+     * Create a logger for logging about a single record.
+     *
+     * @param clazz class that the system logger should refer to
+     * @param recordId record that the logging should refer to
+     */
+    fun createLogger(clazz: Class<*>, recordId: Long): RecordLogger
+
+    /** Record IDs that have logs set. */
     val recordIds: Set<Long>
+
+    /**
+     * Extract a log from a single record.
+     *
+     * @param recordId record to extract log from
+     * @param reset whether to remove the log after extracting it
+     */
     fun extract(recordId: Long, reset: Boolean = false): Log?
 }
 
 interface RecordLogger {
+    /** Print an info log message. */
     fun info(logMessage: String)
+    /** Print an debug log message. */
     fun debug(logMessage: String)
+    /** Print an warn log message. */
     fun warn(logMessage: String)
+    /** Print an error log message. The stack trace of the exception is included. */
     fun error(logMessage: String, exe: Exception? = null)
 }
 

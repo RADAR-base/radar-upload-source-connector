@@ -28,9 +28,9 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
 
 class ConverterLogRepository : LogRepository {
-    override fun recordLogger(logger: Logger, recordId: Long): RecordLogger = RecordLoggerImpl(logger, recordId, get(recordId))
+    override fun createLogger(logger: Logger, recordId: Long): RecordLogger = RecordLoggerImpl(logger, recordId, get(recordId))
 
-    override fun recordLogger(clazz: Class<*>, recordId: Long): RecordLogger = recordLogger(LoggerFactory.getLogger(clazz), recordId)
+    override fun createLogger(clazz: Class<*>, recordId: Long): RecordLogger = createLogger(LoggerFactory.getLogger(clazz), recordId)
 
     private val logContainer = ConcurrentHashMap<Long, ConcurrentLinkedQueue<LogRecord>>()
 
