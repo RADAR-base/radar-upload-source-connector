@@ -79,7 +79,7 @@ data class SourceTypeContainerDTO(
 
 data class PollDTO(
         var limit: Int = 10,
-        var supportedConverters: List<String>)
+        var supportedConverters: Set<String>)
 
 data class Page(
         val pageNumber: Int = 1,

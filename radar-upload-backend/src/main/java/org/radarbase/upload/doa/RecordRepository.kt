@@ -43,7 +43,7 @@ interface RecordRepository {
     fun updateContent(record: Record, fileName: String, contentType: String, stream: InputStream, length: Long): RecordContent
     fun readMetadata(id: Long): RecordMetadata?
     fun query(page: Page, projectId: String, userId: String?, status: String?, sourceType: String?): Pair<List<Record>, Page>
-    fun poll(limit: Int, supportedConverters: List<String>): List<Record>
+    fun poll(limit: Int, supportedConverters: Set<String>): List<Record>
     fun readRecordContent(recordId: Long, fileName: String): RecordContent?
     fun deleteContents(record: Record, fileName: String)
 
