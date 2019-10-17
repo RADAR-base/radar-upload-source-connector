@@ -21,7 +21,6 @@ package org.radarbase.connect.upload.converter
 
 import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
-import org.radarbase.connect.upload.exception.ConversionFailedException
 import org.radarbase.connect.upload.exception.DataProcessorNotFoundException
 import org.slf4j.LoggerFactory
 import java.io.FilterInputStream

@@ -25,7 +25,6 @@ import org.radarbase.connect.upload.api.OauthToken
 import org.radarbase.connect.upload.exception.NotAuthorizedException
 import org.slf4j.LoggerFactory
 import java.io.IOException
-import java.lang.Exception
 import java.time.Instant
 
 class ClientCredentialsAuthorizer(

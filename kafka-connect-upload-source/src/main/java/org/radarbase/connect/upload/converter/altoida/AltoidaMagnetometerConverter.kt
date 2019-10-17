@@ -19,7 +19,10 @@
 
 package org.radarbase.connect.upload.converter.altoida
 
-import org.radarbase.connect.upload.converter.*
+import org.radarbase.connect.upload.converter.AbstractCsvProcessor
+import org.radarbase.connect.upload.converter.CsvFileRecordConverter
+import org.radarbase.connect.upload.converter.CsvProcessor
+import org.radarbase.connect.upload.converter.TopicData
 import org.radarcns.connector.upload.altoida.AltoidaMagnetometer
 
 class AltoidaMagnetometerCsvProcessor(
