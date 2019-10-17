@@ -33,10 +33,10 @@ class AltoidaMagnetometerCsvProcessor : AltoidaCsvProcessor() {
             line: Map<String, String>,
             timeReceived: Double
     ) = AltoidaMagnetometer(
-            line["TIMESTAMP"]?.toDouble(),
+            time(line),
             timeReceived,
-            line["X"]?.toFloat(),
-            line["Y"]?.toFloat(),
-            line["Z"]?.toFloat(),
+            line.getValue("X").toFloat(),
+            line.getValue("Y").toFloat(),
+            line.getValue("Z").toFloat(),
             line["ACCURACY"])
 }

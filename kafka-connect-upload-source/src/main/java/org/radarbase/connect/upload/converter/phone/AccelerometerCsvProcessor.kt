@@ -37,11 +37,11 @@ class AccelerometerCsvProcessor : CsvLineProcessorFactory {
     ): CsvLineProcessorFactory.CsvLineProcessor = SimpleCsvLineProcessor(
             logRepository.recordLogger(logger, record.id!!), topic) { line, timeReceived ->
         PhoneAcceleration(
-                line["TIMESTAMP"]?.toDouble(),
+                line.getValue("TIMESTAMP").toDouble(),
                 timeReceived,
-                line["X"]?.toFloat(),
-                line["Y"]?.toFloat(),
-                line["Z"]?.toFloat()
+                line.getValue("X").toFloat(),
+                line.getValue("Y").toFloat(),
+                line.getValue("Z").toFloat()
         )
     }
 
