@@ -63,7 +63,8 @@ class UploadSourceTask : SourceTask() {
 
         // init converters if configured
         converters = connectConfig.converterClasses
-                .map { className -> ConverterFactory.createConverter(className, props, uploadClient, logRepository) }
+                .map { className -> ConverterFactory.createConverter(className, props, uploadClient, logRepository)
+                        .let { it.sourceType to it }}
                 .toMap()
 
         pollInterval = connectConfig.getLong(SOURCE_POLL_INTERVAL_CONFIG)
