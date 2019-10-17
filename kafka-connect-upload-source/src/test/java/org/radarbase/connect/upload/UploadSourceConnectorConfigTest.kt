@@ -22,12 +22,13 @@ package org.radarbase.connect.upload
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
+import org.radarbase.connect.upload.converter.altoida.AltoidaZipConverterFactory
+import org.radarbase.connect.upload.converter.phone.AccelerometerConverterFactory
 
 class UploadSourceConnectorConfigTest {
 
     @Test
     fun testConfig() {
-
         val settings = mapOf(
                 "upload.source.client.id" to "radar_upload_connect",
                 "upload.source.client.secret" to "test_secret",
@@ -36,9 +37,10 @@ class UploadSourceConnectorConfigTest {
                 "upload.source.backend.baseUrl" to
                         "http://radar-upload-connect-backend:8085/radar-upload/",
                 "upload.source.poll.interval.ms" to "3600000",
-                "upload.source.record.converter.classes" to
-                        "org.radarbase.connect.upload.converter.AccelerometerCsvRecordConverter,org.radarbase.connect.upload.converter.altoida.AltoidaZipFileRecordConverter"
-
+                "upload.source.record.converter.classes" to listOf(
+                        AccelerometerConverterFactory::class.java.name,
+                        AltoidaZipConverterFactory::class.java.name
+                ).joinToString(separator=",")
         )
         val config = UploadSourceConnectorConfig(settings)
         assertNotNull(config)

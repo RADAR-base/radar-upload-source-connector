@@ -25,6 +25,8 @@ import okhttp3.RequestBody
 import okio.BufferedSink
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
+import org.radarbase.connect.upload.converter.altoida.AltoidaZipConverterFactory
+import org.radarbase.connect.upload.converter.phone.AccelerometerConverterFactory
 import org.radarbase.connect.upload.util.TestBase.Companion.baseUri
 import org.radarbase.connect.upload.util.TestBase.Companion.createRecord
 import org.radarbase.connect.upload.util.TestBase.Companion.createRecordAndUploadContent
@@ -71,8 +73,8 @@ class UploadSourceTaskTest {
                 "upload.source.backend.baseUrl" to baseUri,
                 "upload.source.poll.interval.ms" to "10000",
                 "upload.source.record.converter.classes" to listOf(
-                        "org.radarbase.connect.upload.converter.AccelerometerCsvRecordConverter",
-                        "org.radarbase.connect.upload.converter.altoida.AltoidaZipFileRecordConverter"
+                        AccelerometerConverterFactory::class.java.name,
+                        AltoidaZipConverterFactory::class.java.name
                 ).joinToString(separator=",")
         )
 
@@ -88,7 +90,6 @@ class UploadSourceTaskTest {
     @Test
     @DisplayName("Should be able to convert a record with ZIP file")
     fun successfulZipFileConversion() {
-
         val sourceType = "altoida-zip"
         val fileName = "TEST_ZIP.zip"
         val createdRecord = createRecordAndUploadContent(accessToken, sourceType, fileName)

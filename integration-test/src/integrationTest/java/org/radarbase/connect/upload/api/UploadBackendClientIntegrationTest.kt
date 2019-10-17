@@ -26,9 +26,9 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.radarbase.connect.upload.converter.AccelerometerCsvRecordConverter
 import org.radarbase.connect.upload.converter.ConverterLogRepository
 import org.radarbase.connect.upload.converter.LogRepository
+import org.radarbase.connect.upload.converter.phone.AccelerometerConverterFactory
 import org.radarbase.connect.upload.util.TestBase.Companion.baseUri
 import org.radarbase.connect.upload.util.TestBase.Companion.clientCredentialsAuthorizer
 import org.radarbase.connect.upload.util.TestBase.Companion.createRecordAndUploadContent
@@ -109,17 +109,14 @@ class UploadBackendClientIntegrationTest {
 
         val sourceType = uploadBackendClient.requestConnectorConfig(sourceType)
 
-        val converter = AccelerometerCsvRecordConverter()
-        converter.initialize(sourceType, uploadBackendClient, logRepository, emptyMap())
+        val converter = AccelerometerConverterFactory()
+                .converter(emptyMap(), sourceType, uploadBackendClient, logRepository)
 
         val recordToProcess = records.records.first { recordDTO -> recordDTO.sourceType == sourceTypeName }
         createdRecord.metadata = uploadBackendClient.updateStatus(recordToProcess.id!!, recordToProcess.metadata!!.copy(status = "PROCESSING", message = "The record is being processed"))
         val convertedRecords = converter.convert(records.records.first())
-        assertNotNull(convertedRecords)
-        assertNotNull(convertedRecords.result)
-        assertTrue(convertedRecords.result?.isNotEmpty()!!)
-        assertNotNull(convertedRecords.record)
-        assertEquals(convertedRecords.record.id, recordToProcess.id!!)
+        assertThat(convertedRecords, not(nullValue()))
+        assertThat(convertedRecords, not(empty()))
     }
 
     private fun pollRecords(): RecordContainerDTO {
@@ -129,7 +126,9 @@ class UploadBackendClientIntegrationTest {
         val records = uploadBackendClient.pollRecords(pollConfig)
         assertNotNull(records)
         assertThat(records.records.size, greaterThan(0))
-        records.records.map { recordDTO -> assertEquals(RecordStatus.QUEUED.toString(), recordDTO.metadata?.status) }
+        records.records.forEach { recordDTO ->
+            assertThat(recordDTO.metadata?.status, equalTo(RecordStatus.QUEUED.toString()))
+        }
         println("Polled ${records.records.size} records")
         return records
     }
