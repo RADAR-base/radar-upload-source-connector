@@ -32,7 +32,6 @@ import org.radarbase.upload.Config
 import org.radarbase.upload.api.SourceTypeMapper
 import org.radarbase.upload.api.SourceTypeMapperImpl
 import org.radarbase.upload.doa.entity.SourceType
-import org.radarbase.upload.inject.DoaEntityManagerFactory
 import org.radarbase.upload.inject.DoaEntityManagerFactoryFactory
 import java.nio.file.Path
 import javax.persistence.EntityManager
