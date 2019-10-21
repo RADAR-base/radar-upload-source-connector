@@ -19,12 +19,12 @@
 
 package org.radarbase.upload.service.managementportal
 
-import org.radarbase.auth.jersey.Auth
-import org.radarbase.upload.util.CachedSet
+import org.radarbase.jersey.auth.Auth
+import org.radarbase.jersey.exception.HttpNotFoundException
 import org.radarbase.upload.dto.Project
 import org.radarbase.upload.dto.User
-import org.radarbase.upload.exception.NotFoundException
 import org.radarbase.upload.service.UploadProjectService
+import org.radarbase.upload.util.CachedSet
 import org.radarcns.auth.authorization.Permission
 import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
@@ -42,7 +42,7 @@ class MPProjectService(@Context private val mpClient: MPClient): UploadProjectSe
 
     override fun ensureProject(projectId: String) {
         if (projects.find { it.id == projectId } == null) {
-            throw NotFoundException("project_not_found", "Project $projectId not found.")
+            throw HttpNotFoundException("project_not_found", "Project $projectId not found.")
         }
     }
 
@@ -52,7 +52,7 @@ class MPProjectService(@Context private val mpClient: MPClient): UploadProjectSe
     }
 
     override fun project(projectId: String) : Project = projects.find { it.id == projectId } ?:
-        throw NotFoundException("project_not_found", "Project $projectId not found.")
+        throw HttpNotFoundException("project_not_found", "Project $projectId not found.")
 
     override fun projectUsers(projectId: String): List<User> {
         val projectParticipants = participants.computeIfAbsent(projectId) {

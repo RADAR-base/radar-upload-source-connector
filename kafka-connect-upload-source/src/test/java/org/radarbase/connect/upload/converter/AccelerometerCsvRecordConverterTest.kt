@@ -19,10 +19,14 @@
 
 package org.radarbase.connect.upload.converter
 
-import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import org.mockito.Mockito.mock
 import org.radarbase.connect.upload.api.*
+import org.radarbase.connect.upload.converter.phone.AccelerometerConverterFactory
 import org.radarbase.connect.upload.exception.ConversionFailedException
 import java.io.File
 import java.time.Instant
@@ -30,11 +34,9 @@ import java.time.Instant
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AccelerometerCsvRecordConverterTest {
 
-    private lateinit var converter: CsvFileRecordConverter
+    private lateinit var converter: ConverterFactory.Converter
 
     private lateinit var logRepository: LogRepository
-
-    private lateinit var uploadBackendClient: UploadBackendClient
 
     private val contentsDTO = ContentsDTO(
             contentType = "application/csv",
@@ -53,14 +55,13 @@ class AccelerometerCsvRecordConverterTest {
             sourceType = "phone-acceleration"
 
     )
-    private val timeReceived = Instant.now().toEpochMilli()
 
     @BeforeAll
     fun setUp() {
-        uploadBackendClient = mock(UploadBackendClient::class.java)
         logRepository = ConverterLogRepository()
-        converter = AccelerometerCsvRecordConverter()
-        converter.initialize(
+        val converterFactory = AccelerometerConverterFactory()
+        converter = converterFactory.converter(
+                client = mock(UploadBackendClient::class.java),
                 connectorConfig = SourceTypeDTO(
                         name = "phone-acceleration",
                         configuration = emptyMap(),
@@ -69,7 +70,6 @@ class AccelerometerCsvRecordConverterTest {
                         topics = setOf("test_topic"),
                         contentTypes = setOf()
                 ),
-                client = uploadBackendClient,
                 logRepository = logRepository,
                 settings = emptyMap()
         )
@@ -81,12 +81,8 @@ class AccelerometerCsvRecordConverterTest {
     fun testValidDataProcess() {
         val accFile = File("src/test/resources/ACC.csv")
 
-        val records = converter.processData(
-                contentsDTO,
-                accFile.inputStream(),
-                record,
-                timeReceived.toDouble()
-        )
+        val contents = ContentsDTO(fileName = "ACC.csv")
+        val records = converter.convertFile(record, contents, accFile.inputStream(), mock(RecordLogger::class.java))
 
         assertNotNull(record)
         assertEquals(6, records.size)
@@ -104,12 +100,7 @@ class AccelerometerCsvRecordConverterTest {
                         .inputStream()
 
         val exception = assertThrows(ConversionFailedException::class.java) {
-            converter.processData(
-                contentsDTO,
-                stream,
-                record,
-                timeReceived.toDouble()
-            )
+            converter.convertFile(record, contentsDTO, stream, mock(RecordLogger::class.java))
         }
         assertNotNull(exception)
     }
@@ -125,14 +116,8 @@ class AccelerometerCsvRecordConverterTest {
                 .inputStream()
 
         val exception = assertThrows(ConversionFailedException::class.java) {
-            converter.processData(
-                contentsDTO,
-                stream,
-                record,
-                timeReceived.toDouble()
-            )
+            converter.convertFile(record, contentsDTO, stream, mock(RecordLogger::class.java))
         }
         assertNotNull(exception)
-
     }
 }
