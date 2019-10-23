@@ -25,6 +25,7 @@ import org.radarbase.connect.upload.exception.InvalidFormatException
 import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.io.InputStream
+import java.util.*
 
 class CsvProcessorFactory(
         private val processorFactories: List<CsvLineProcessorFactory>,
@@ -52,7 +53,7 @@ class CsvProcessorFactory(
                 contents: ContentsDTO,
                 inputStream: InputStream,
                 timeReceived: Double): List<FileProcessorFactory.TopicData> = readCsv(inputStream) { reader ->
-            val header = reader.readNext().map { it.trim() }
+            val header = reader.readNext().map { it.trim().toUpperCase(Locale.US) }
             val processorFactory = processorFactories
                     .find { it.matches(contents) && it.matches(header) }
                     ?: throw InvalidFormatException("In record ${record.id}, cannot find CSV processor that matches header $header")

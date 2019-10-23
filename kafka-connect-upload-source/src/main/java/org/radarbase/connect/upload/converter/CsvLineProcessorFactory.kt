@@ -23,6 +23,7 @@ import org.radarbase.connect.upload.api.RecordDTO
  * Processor for processing single lines of CSV file.
  */
 interface CsvLineProcessorFactory {
+    /** Upper case header list. */
     val header: List<String>
 
     /**
@@ -31,7 +32,8 @@ interface CsvLineProcessorFactory {
     fun matches(contents: ContentsDTO) = contents.fileName.endsWith(".csv")
 
     /**
-     * Whether the header matches this CSV line processor.
+     * Whether the header matches this CSV line processor. The provided header must be in upper
+     * case.
      */
     fun matches(header: List<String>) = header.containsAll(this.header)
 
