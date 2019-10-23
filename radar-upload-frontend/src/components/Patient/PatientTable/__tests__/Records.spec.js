@@ -31,9 +31,6 @@ describe('Records', () => {
     mocks: {
       $error: jest.fn(),
     },
-    slots: {
-      fileListSubHeader: '<div>fileListSubHeader slot</div>',
-    },
     stubs: [
       'v-list',
       'v-subheader',
@@ -51,17 +48,18 @@ describe('Records', () => {
       'v-list-group',
       'v-list-item-avatar',
       'v-card',
+      'v-menu',
+      'v-btn',
       'v-card-text',
       'v-card-title',
       'v-dialog',
-      'v-menu',
+      'v-divider',
+
     ],
     filters: {
       localTime: () => 'filteredDate',
+      toMB: () => 'convert to MB',
     },
-  });
-  it('has fileListSubHeader scope', () => {
-    expect(wrapper.text()).toContain('fileListSubHeader slot');
   });
 
   it('get and render props patientRecords correctly', () => {
@@ -99,7 +97,15 @@ describe('Records', () => {
     expect(wrapper.vm.recordLogs).toBe('');
     expect(wrapper.vm.dialog).toBe(false);
   });
-  // it('match snapShopt', () => {
-  //   expect(wrapper.html()).toMatchSnapshot();
-  // });
+
+  it('deleteRecord', () => {
+    fileAPI.deleteRecord = jest.fn();
+    const recordId = 'recordId';
+    const revision = 'revision';
+    const recordIndex = 0;
+    wrapper.setData({ records: [{ record0: 'record0' }, { record1: 'record1' }] });
+    wrapper.vm.deleteRecord({ recordId, revision, recordIndex });
+    expect(fileAPI.deleteRecord).toBeCalledWith({ recordId, revision });
+    expect(wrapper.vm.records).toEqual([{ record1: 'record1' }]);
+  });
 });
