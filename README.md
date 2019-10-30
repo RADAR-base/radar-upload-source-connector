@@ -46,13 +46,13 @@ docker-compose up -d --build
 ```
 
 
-# Development
+# Usage
 
 ## Configuring RADAR-base Data Uploader
 
 **Disclaimer:** This section does not cover how to install or configure the complete RADAR-Base stack. Please visit [RADAR-Docker](https://github.com/RADAR-base/RADAR-Docker) or [RADAR-Kubernetes](https://github.com/RADAR-base/RADAR-Kubernetes) for complete installation guidelines. 
 
-**Note:** Some values of the configurations are specified under the assumption that the deployments will have the same name of docker container services.
+**Note:** Some configuration values are specified under the assumption that the docker containers will have the same name on deployment as well.
 
 Configuring Data Uploader involves configuring the three components mentioned above.
 
@@ -152,7 +152,31 @@ Please copy `etc/source-upload.properties.template` to `etc/source-upload.proper
 #### Adding support to new device type
 To add processing data from new device type, please implement a ConverterFactory that can process the data from corresponding device and add the name of the class to the list of `upload.source.record.converter.classes`.
 
-## Add support to a new data source/device.
+### 3. Configuring radar-upload-frontend
+
+Configuring radar-upload-frontend requires configuring the right environment variables for the docker container.
+
+<table class="data-table"><tbody>
+<tr>
+<th>Name</th>
+<th>Description</th>
+<th>Values</th>
+</tr>
+<tr>
+<td>VUE_APP_BASE_URL</td><td>Base URL of the web-application.</td><td>/upload</td>
+<tr>
+<tr>
+<td>VUE_APP_API_BASE_URL</td><td>Advertised URL of the radar-upload-backend.</td><td>http://localhost:8080/upload/api/ or https://radarbase-test.domain.com/upload/api/</td>
+<tr>
+<tr>
+<td>VUE_APP_AUTH_API</td><td>Advertised URL of ManagementPortal Authorization.</td><td>http://localhost:8080/managementportal/oauth or https://radarbase-test.domain.com/managementportal/oauth</td>
+<tr>
+<tr>
+<td>VUE_APP_AUTH_CALLBACK</td><td>Callback URL to send the `authorization_code`. This should be correctly configured on ManagementPortal.</td><td>http://localhost:8080/upload/login or https://radarbase-test.domain.com/upload/login</td>
+<tr>
+<tr>
+<td>VUE_APP_CLIENT_ID</td><td>OAuth Client Id of the web application configured on ManagementPortal. </td><td>radar_upload_frontend</td>
+<tr>
+</tbody></table>
 
 
-Please visit our developer documentation on how to add support for a new data source/device. 
