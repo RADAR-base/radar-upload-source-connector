@@ -35,7 +35,7 @@ If you are a user who would like to upload data to RADAR-base, you require an ac
 8. You will see a new record created for the corresponding participant with `READY`
 9. You can switch to `RECORD` tab and monitor the status of the record.
 
-Please see the (step-by-step guide)[] with screenshots if you like more information.
+Please see the [step-by-step guide](https://radar-base.org/index.php/2019/10/31/a-step-by-step-on-how-to-manually-upload-data-radar-base/) with screenshots if you like more information.
 
 # Installation
 
