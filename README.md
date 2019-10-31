@@ -111,7 +111,7 @@ A single sourceType entry is defined as below.
       - "android_phone_acceleration" 
     contentTypes: # content types of the data
       - "application/zip"
-    timeRequired: false # if the data is large or if uploading data would require a lot of time mention this to true.
+    timeRequired: false # whether the user should supply a date-time for the upload e.g. when the data is not timestamped. 
     sourceIdRequired: false # if source-id is compulsory to upload data, specify true.    
 ``` 
 
