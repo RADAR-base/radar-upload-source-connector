@@ -14,13 +14,13 @@ The project contains three components:
 
 
 # Screenshots
-![login using managementportal credentials](https://raw.githubusercontent.com/RADAR-base/radar-upload-source-connector/add-documentation/docs/assets/Selection_003.bmp)
+![login using managementportal credentials](https://raw.githubusercontent.com/RADAR-base/radar-upload-source-connector/master/docs/assets/Selection_003.bmp)
 
-![create and upload files](https://raw.githubusercontent.com/RADAR-base/radar-upload-source-connector/add-documentation/docs/assets/Selection_010.bmp)
+![create and upload files](https://raw.githubusercontent.com/RADAR-base/radar-upload-source-connector/master/docs/assets/Selection_010.bmp)
 
-![view records and status](https://raw.githubusercontent.com/RADAR-base/radar-upload-source-connector/add-documentation/docs/assets/Selection_011.bmp)
+![view records and status](https://raw.githubusercontent.com/RADAR-base/radar-upload-source-connector/master/docs/assets/Selection_011.bmp)
 
-![view participants and records](https://raw.githubusercontent.com/RADAR-base/radar-upload-source-connector/add-documentation/docs/assets/Selection_012.bmp)
+![view participants and records](https://raw.githubusercontent.com/RADAR-base/radar-upload-source-connector/master/docs/assets/Selection_012.bmp)
 
 # Usage
 If you are a user who would like to upload data to RADAR-base, you require an account on ManagementPortal application of your environment. Please request an account from your System administer if you do not have done.
