@@ -6,38 +6,38 @@ Requirements:
 
 1. Go to upload application interface of your deployment at `https://domain-name/upload`
 2. Click on Login with ManagementPortal.
-![login with MP](https://raw.githubusercontent.com/RADAR-base/radar-upload-source-connector/master/docs/assets/Selection_001.bmp)
+![login with MP](https://raw.githubusercontent.com/RADAR-base/radar-upload-source-connector/master/docs/assets/Selection_001.png)
 3. You will be redirected to a login screen. Please enter your **credentials from Management Portal** to login.
-![login using managementportal credentials](https://raw.githubusercontent.com/RADAR-base/radar-upload-source-connector/master/docs/assets/Selection_003.bmp)
+![login using managementportal credentials](https://raw.githubusercontent.com/RADAR-base/radar-upload-source-connector/master/docs/assets/Selection_003.png)
 4. Once you have successfully logged in, Please click on the **Approve** button to allow the web-interface to upload data.
-![approve frontend](https://raw.githubusercontent.com/RADAR-base/radar-upload-source-connector/master/docs/assets/Selection_004.bmp)
+![approve frontend](https://raw.githubusercontent.com/RADAR-base/radar-upload-source-connector/master/docs/assets/Selection_004.png)
 5. Now you will see the home screen of the application. It will list all of the projects you have access to. 
 
    Please select on the project you want to work with.
-![select project](https://raw.githubusercontent.com/RADAR-base/radar-upload-source-connector/master/docs/assets/Selection_005.bmp)
+![select project](https://raw.githubusercontent.com/RADAR-base/radar-upload-source-connector/master/docs/assets/Selection_005.png)
 6. In the project view under the **PARTICIPANTS** tab, you will see all of the participants enrolled.
-![view project](https://raw.githubusercontent.com/RADAR-base/radar-upload-source-connector/master/docs/assets/Selection_006.bmp)
+![view project](https://raw.githubusercontent.com/RADAR-base/radar-upload-source-connector/master/docs/assets/Selection_006.png)
 
 7. Click on the **UPLOAD** button to upload data.
     7.1 Select the participant you want to upload data from. The participant's external id will be listed in the drop-down. 
     7.2 Select the type of device or data source of the data from the drop down list.
     7.3 Click on **CREATE RECORD**
-![create record](https://raw.githubusercontent.com/RADAR-base/radar-upload-source-connector/master/docs/assets/Selection_007.bmp)
+![create record](https://raw.githubusercontent.com/RADAR-base/radar-upload-source-connector/master/docs/assets/Selection_007.png)
     
 8. Once you have created the record,you will see the identifier and the status of the record. In this example, it is 542 and INCOMPLETE.
 
    Now you can start adding data to upload by drag and drop or selecting a file from your computer.
-![add files](https://raw.githubusercontent.com/RADAR-base/radar-upload-source-connector/master/docs/assets/Selection_008.bmp)
+![add files](https://raw.githubusercontent.com/RADAR-base/radar-upload-source-connector/master/docs/assets/Selection_008.png)
  
 9. Once you have created the record,you will see the identifier and the status of the record. In this example, it is 542 and INCOMPLETE.
 
    8.1 Now you can start adding data to upload by drag and drop or selecting a file from your computer.
    8.2 You can select one or more files to upload.
    8.3 Then click on **UPLOAD**.
-![upload files](https://raw.githubusercontent.com/RADAR-base/radar-upload-source-connector/master/docs/assets/Selection_009.bmp)
+![upload files](https://raw.githubusercontent.com/RADAR-base/radar-upload-source-connector/master/docs/assets/Selection_009.png)
 
 10. Once you are done with uploading files for this record, please click on the **DONE** button. This will finialize the record creation process and mark it READY for post processing by the RADAR-base platform.
-![mark it done](https://raw.githubusercontent.com/RADAR-base/radar-upload-source-connector/master/docs/assets/Selection_010.bmp)
+![mark it done](https://raw.githubusercontent.com/RADAR-base/radar-upload-source-connector/master/docs/assets/Selection_010.png)
 
 11. Under the **RECORDS** tab, you can see a list of all records available under your project.
     11.1 Here you can **monitor the status** of the records. Description of the record status are mentioned below.
@@ -57,4 +57,4 @@ Requirements:
     
     11.4 Delete a record, if necessary. 
      
-![record view](https://raw.githubusercontent.com/RADAR-base/radar-upload-source-connector/master/docs/assets/Selection_011.bmp)
+![record view](https://raw.githubusercontent.com/RADAR-base/radar-upload-source-connector/master/docs/assets/Selection_011.png)
