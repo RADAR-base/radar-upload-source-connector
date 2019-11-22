@@ -40,7 +40,10 @@ class AltoidaZipConverterFactory : ConverterFactory {
                 AltoidaObjectCsvProcessor(),
                 AltoidaPathCsvProcessor(),
                 AltoidaRotationCsvProcessor(),
-                AltoidaTouchscreenCsvProcessor())
+                AltoidaTapScreenCsvProcessor(),
+                AltoidaTouchScreenCsvProcessor(),
+                AltoidaEyeTrackingCsvProcessor(),
+                AltoidaBlinkCsvProcessor())
 
         val fileProcessors = listOf(
                 CsvProcessorFactory(csvLineProcessors, logRepository),

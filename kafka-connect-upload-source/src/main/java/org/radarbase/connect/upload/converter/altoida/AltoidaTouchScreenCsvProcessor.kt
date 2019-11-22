@@ -17,21 +17,25 @@
 package org.radarbase.connect.upload.converter.altoida
 
 import org.radarbase.connect.upload.converter.SimpleCsvLineProcessor
-import org.radarcns.connector.upload.altoida.AltoidaTouchscreen
+import org.radarcns.connector.upload.altoida.AltoidaTouch
 
-class AltoidaTouchscreenCsvProcessor : AltoidaCsvProcessor() {
-    override val fileNameSuffix: String = "_NORMAL.csv"
+class AltoidaTouchScreenCsvProcessor : AltoidaCsvProcessor() {
+    override val fileNameSuffix: String = "_TOUCH.csv"
 
-    override val topic: String = "connect_upload_altoida_touchscreen"
+    override val topic: String = "connect_upload_altoida_touch"
 
-    override val header: List<String> = listOf("TIMESTAMP", "X", "Y")
+    override val header: List<String> = listOf("TIMESTAMP", "X", "Y", "SURFACE", "ACC", "COMBINED", "HIT")
 
     override fun SimpleCsvLineProcessor.lineConversion(
             line: Map<String, String>,
             timeReceived: Double
-    ) =  AltoidaTouchscreen(
+    ) =  AltoidaTouch(
             time(line),
             timeReceived,
-            line.getValue("X").toDouble(),
-            line.getValue("Y").toDouble())
+            line.getValue("X").toFloat(),
+            line.getValue("Y").toFloat(),
+            line.getValue("SURFACE").toFloat(),
+            line.getValue("ACC").toFloat(),
+            line.getValue("COMBINED").toFloat(),
+            line.getValue("HIT").toBoolean())
 }
