@@ -23,7 +23,7 @@ import org.radarbase.connect.upload.converter.SimpleCsvLineProcessor
 import org.radarcns.connector.upload.altoida.AltoidaMagneticField
 
 class AltoidaMagnetometerCsvProcessor : AltoidaCsvProcessor() {
-    override val fileNameSuffix: String = "_GRA.csv"
+    override val fileNameSuffix: String = "_MAG.csv"
 
     override val topic: String = "connect_upload_altoida_magnetometer"
 

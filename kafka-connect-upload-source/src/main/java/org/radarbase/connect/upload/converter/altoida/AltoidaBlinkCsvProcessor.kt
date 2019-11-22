@@ -17,21 +17,21 @@
 package org.radarbase.connect.upload.converter.altoida
 
 import org.radarbase.connect.upload.converter.SimpleCsvLineProcessor
+import org.radarcns.connector.upload.altoida.AltoidaBlink
 import org.radarcns.connector.upload.altoida.AltoidaEyeTracking
 
 class AltoidaBlinkCsvProcessor : AltoidaCsvProcessor() {
-    override val fileNameSuffix: String = "_EYE.csv"
+    override val fileNameSuffix: String = "_BLINK.csv"
 
-    override val topic: String = "connect_upload_altoida_eye_tracking"
+    override val topic: String = "connect_upload_altoida_blink"
 
-    override val header: List<String> = listOf("TIMESTAMP", "X", "Y")
+    override val header: List<String> = listOf("TIMESTAMP", "EYE")
 
     override fun SimpleCsvLineProcessor.lineConversion(
             line: Map<String, String>,
             timeReceived: Double
-    ) =  AltoidaEyeTracking(
+    ) =  AltoidaBlink(
             time(line),
             timeReceived,
-            line.getValue("X").toFloat(),
-            line.getValue("Y").toFloat())
+            line["ACCURACY"])
 }
