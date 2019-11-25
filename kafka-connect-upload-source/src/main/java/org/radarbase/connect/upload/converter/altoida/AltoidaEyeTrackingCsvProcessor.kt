@@ -16,6 +16,7 @@
 
 package org.radarbase.connect.upload.converter.altoida
 
+import org.apache.avro.generic.IndexedRecord
 import org.radarbase.connect.upload.converter.SimpleCsvLineProcessor
 import org.radarcns.connector.upload.altoida.AltoidaEyeTracking
 
@@ -29,9 +30,16 @@ class AltoidaEyeTrackingCsvProcessor : AltoidaCsvProcessor() {
     override fun SimpleCsvLineProcessor.lineConversion(
             line: Map<String, String>,
             timeReceived: Double
-    ) =  AltoidaEyeTracking(
-            time(line),
-            timeReceived,
-            line.getValue("X").toFloatOrNull(),
-            line.getValue("Y").toFloatOrNull())
+    ): IndexedRecord? {
+        try {
+            return AltoidaEyeTracking(
+                    time(line),
+                    timeReceived,
+                    line.getValue("X").toFloat(),
+                    line.getValue("Y").toFloat())
+        } catch (exe: Exception) {
+            recordLogger.error("Could not process line", exe)
+            return null
+        }
+    }
 }
