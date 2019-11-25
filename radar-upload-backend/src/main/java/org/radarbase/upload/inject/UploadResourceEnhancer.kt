@@ -35,9 +35,17 @@ class UploadResourceEnhancer(private val config: Config): JerseyResourceEnhancer
             .readTimeout(30, TimeUnit.SECONDS)
             .build()
 
-    override val classes: Array<Class<*>> = arrayOf(
-            ConfigLoader.Filters.logResponse,
-            ConfigLoader.Filters.cors)
+    override val classes: Array<Class<*>>  get() {
+        return if (config.enableCors == true) {
+            arrayOf(
+                    ConfigLoader.Filters.logResponse,
+                    ConfigLoader.Filters.cors)
+        } else {
+            arrayOf(
+                    ConfigLoader.Filters.logResponse
+            )
+        }
+    }
 
     override val packages: Array<String> = arrayOf(
             "org.radarbase.upload.exception",

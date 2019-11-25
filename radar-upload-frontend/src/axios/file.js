@@ -59,12 +59,19 @@ export default {
         userId: record.data.userId,
       }));
   },
-  putRecords({ id, fileName, file }) {
+  putRecords({
+    id, fileName, file, onUploadProgress, fileType,
+  }) {
     const headers = {
-      'content-type': file.type,
+      'content-type': fileType,
     };
     // eslint-disable-next-line func-names
-    return axios.put(`records/${id}/contents/${fileName}`, file, { headers });
+    return axios.put(`records/${id}/contents/${fileName}`,
+      file,
+      {
+        headers,
+        onUploadProgress: progressEvent => onUploadProgress(progressEvent),
+      });
   },
 
   markRecord({ recordId, revision }) {
@@ -73,6 +80,15 @@ export default {
       revision,
     });
   },
+
+  deleteRecord({ recordId, revision }) { // delete record only if its state != PROCESSING
+    return axios.delete(`/records/${recordId}?revision=${revision}`);
+  },
+
+  deleteFile({ recordId, fileName }) { // delete file only if its records == INCOMPLETE
+    return axios.delete(`/records/${recordId}/contents/${fileName}`);
+  },
+
 
   async filterRecords({
     projectId, size, page, sourceType = '', status = '', userId = '',

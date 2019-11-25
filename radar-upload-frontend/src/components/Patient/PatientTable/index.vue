@@ -48,19 +48,7 @@
           :patient-records="patientRecords"
           :loading="fileLoading"
           :error="fileLoadingError"
-        >
-          <template #fileListSubHeader>
-            <UploadButton
-              :upload-info="{
-                userId: item.patientId,
-                projectId: currentProject
-              }"
-              @addUploadingFile="addUploadingFile"
-              @startUploading="startUploading"
-              @uploadFailed="uploadFailed"
-            />
-          </template>
-        </Records>
+        />
       </td>
     </template>
   </v-data-table>
@@ -68,21 +56,13 @@
 
 <script>
 import { mapState } from 'vuex';
-import UploadButton from './UploadButton';
 import Records from './Records';
 import patientAPI from '@/axios/patient';
 import fileAPI from '@/axios/file';
 
 export default {
   components: {
-    UploadButton,
     Records,
-  },
-  props: {
-    isActive: {
-      type: Boolean,
-      default: false,
-    },
   },
   data() {
     return {
@@ -110,21 +90,13 @@ export default {
   watch: {
     currentProject: {
       handler(projectId) {
-        if (projectId && this.isActive) {
+        if (projectId) {
           this.items = [];
           this.expandedItems = [];
           this.getPatientList(projectId);
         }
       },
       immediate: true,
-    },
-    isActive: {
-      handler(val) {
-        if (val && this.currentProject) {
-          this.items = [];
-          this.getPatientList(this.currentProject);
-        }
-      },
     },
   },
   methods: {
@@ -139,7 +111,7 @@ export default {
       this.fileLoading = true;
       const { tableData } = await fileAPI
         .filterRecords({
-          userId: item.patientId, projectId: this.currentProject, page: 1, size: 10,
+          userId: item.patientId, projectId: this.currentProject, page: 1, size: 100,
         })
         .catch((error) => {
           this.fileLoadingError = error;
@@ -155,26 +127,11 @@ export default {
       this.items = [];
       this.patientRecords = [];
     },
-    startUploading(record) {
-      this.patientRecords.unshift(record);
-    },
-    addUploadingFile({ uploadingFile, recordMetadata }) {
-      this.patientRecords[0].files.splice(0, 1, uploadingFile);
-      this.patientRecords[0].status = recordMetadata.status;
-      this.patientRecords[0].message = recordMetadata.message;
-    },
-    uploadFailed({
-      recordId, fileName, uploading, uploadFailed,
-    }) {
-      const failedRecordIndex = this.patientRecords.findIndex(record => record.id === recordId);
-      this.patientRecords[failedRecordIndex].files
-        .splice(0, 1, { fileName, uploading, uploadFailed });
-    },
     async expandRow(row) {
       if (this.expandedItems[0] && (this.expandedItems[0].patientId === row.patientId)) {
         this.expandedItems = [];
       } else {
-        await this.getPatientRecords({ item: row });
+        this.getPatientRecords({ item: row });
         this.expandedItems.splice(0, 1, row);
       }
     },
