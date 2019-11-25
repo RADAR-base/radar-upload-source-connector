@@ -22,9 +22,6 @@ describe.only('index', () => {
       },
     });
     wrapper = shallowMount(index, {
-      propsData: {
-        isActive: false,
-      },
       mocks: {
         $store,
       },
@@ -37,24 +34,12 @@ describe.only('index', () => {
   });
 
   it('watch: currentProject', async () => {
-    wrapper.setProps({ isActive: false });
-    wrapper.vm.$store.state.project.currentProject.value = 'original';
     const getPatientList = jest.spyOn(wrapper.vm, 'getPatientList');
-    expect(getPatientList).not.toBeCalled();
 
     wrapper.setProps({ isActive: true });
     wrapper.vm.$store.state.project.currentProject.value = '12312';
     await flushPromises();
     expect(getPatientList).toBeCalledWith('12312');
-  });
-
-  it('watch:isActive, if true & currentProject, getPatientList', () => {
-    const getPatientList = jest.spyOn(wrapper.vm, 'getPatientList');
-    wrapper.vm.$store.state.project.currentProject.value = 'original';
-    wrapper.setProps({ isActive: false });
-    wrapper.setProps({ isActive: true });
-    expect(wrapper.vm.items).toEqual([]);
-    expect(getPatientList).toBeCalledWith(wrapper.vm.currentProject);
   });
 
   it('getPatientList', async () => {
@@ -118,22 +103,6 @@ describe.only('index', () => {
     expect(wrapper.vm.patientRecords).toEqual([]);
   });
 
-  it('startUploading', () => {
-    const record = 'record';
-    wrapper.vm.startUploading(record);
-    expect(wrapper.vm.patientRecords).toContain(record);
-  });
-
-  it('addUploadingFile', () => {
-    const uploadingFile = 'file 0';
-    const recordMetadata = { status: 'updated status', message: 'updated message' };
-    const patientRecords = [{ files: ['file 1', 'file 2'], status: 'status', message: '' }];
-    wrapper.setData({ patientRecords });
-    wrapper.vm.addUploadingFile({ uploadingFile, recordMetadata });
-    expect(wrapper.vm.patientRecords[0].files[0]).toBe(uploadingFile);
-    expect(wrapper.vm.patientRecords[0].status).toBe(recordMetadata.status);
-    expect(wrapper.vm.patientRecords[0].message).toBe(recordMetadata.message);
-  });
 
   it('expandRow', async () => {
     const getPatientRecords = jest.spyOn(wrapper.vm, 'getPatientRecords');

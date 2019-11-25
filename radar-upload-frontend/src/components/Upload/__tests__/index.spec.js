@@ -3,9 +3,20 @@ import { shallowMount } from '@vue/test-utils';
 import flushPromises from 'flush-promises';
 import index from '../index.vue';
 import patientAPI from '@/axios/patient';
+import fileAPI from '@/axios/file.js';
 
+// mock api
+const sourceTypeList = [
+  {
+    name: 'audioMp3',
+    sourceType: ['audio/mp3'],
+  },
+];
+fileAPI.getSourceTypes = jest.fn().mockReturnValue(sourceTypeList);
 
-describe('QuickUpload', () => {
+const patientListResolved = [{ patientName: '', patientValue: '' }];
+patientAPI.filteredPatients = jest.fn().mockResolvedValueOnce(patientListResolved);
+describe('Upload', () => {
   // call this api when component is created
   const wrapper = shallowMount(index, {
     mocks: {
@@ -20,21 +31,18 @@ describe('QuickUpload', () => {
         },
       },
     },
-    stubs: ['v-bottom-sheet', 'v-sheet'],
+    stubs: ['v-dialog'],
   });
 
-  it('watch:sheet => call getPatientList', () => {
-    const getPatientList = jest.spyOn(wrapper.vm, 'getPatientList');
-    wrapper.setData({ sheet: false });
-    wrapper.setData({ sheet: true });
-    expect(getPatientList).toBeCalledWith(wrapper.vm.currentProject);
+
+  it('getsourceTypeList', async () => {
+    wrapper.vm.getsourceTypeList();
+    await flushPromises();
+    expect(wrapper.vm.sourceTypeList).toEqual(sourceTypeList.map(el => el.name));
   });
+
 
   it('getPatientList: SUCCESS', async () => {
-    // mock api
-    const resolvedValue = [{ patientName: '', patientValue: '' }];
-    patientAPI.filteredPatients = jest.fn().mockResolvedValueOnce(resolvedValue);
-
     wrapper.setData({ patientList: ['value'] });
     const projectId = 'projectId';
 
@@ -45,7 +53,7 @@ describe('QuickUpload', () => {
     await flushPromises();
     expect(patientAPI.filteredPatients).toBeCalledWith(projectId);
     expect(wrapper.vm.patientList)
-      .toEqual(resolvedValue
+      .toEqual(patientListResolved
         .map(patient => ({ text: patient.patientName, value: patient.patientId })));
     patientAPI.filteredPatients.mockClear();
   });
@@ -56,19 +64,22 @@ describe('QuickUpload', () => {
     expect(wrapper.vm.patientList).toEqual([]);
   });
 
-  it('finishUpload', () => {
-    const removeData = jest.spyOn(wrapper.vm, 'removeData');
-    wrapper.vm.finishUpload();
-    expect(wrapper.vm.$success).toBeCalled();
-    expect(removeData).toBeCalled();
+  it('watch:dialog => call getPatientList', () => {
+    const getPatientList = jest.spyOn(wrapper.vm, 'getPatientList');
+    const getsourceTypeList = jest.spyOn(wrapper.vm, 'getsourceTypeList');
+    wrapper.setData({ dialog: false });
+    wrapper.setData({ dialog: true });
+    expect(getPatientList).toBeCalledWith(wrapper.vm.currentProject);
+    expect(getsourceTypeList).toBeCalled();
   });
 
+
   it('removeData', () => {
-    wrapper.setData({ patientList: ['value'], loading: true, sheet: true });
+    wrapper.setData({ patientList: ['value'], loading: true, dialog: true });
     wrapper.vm.removeData();
 
     expect(wrapper.vm.patientList).toEqual([]);
     expect(wrapper.vm.loading).toBe(false);
-    expect(wrapper.vm.sheet).toEqual(false);
+    expect(wrapper.vm.dialog).toEqual(false);
   });
 });
