@@ -22,7 +22,7 @@ package org.radarbase.connect.upload.converter.altoida
 import org.radarbase.connect.upload.api.SourceTypeDTO
 import org.radarbase.connect.upload.converter.*
 
-class AltoidaZipConverterFactory : ConverterFactory {
+class AltoidaConverterFactory : ConverterFactory {
     override val sourceType: String = "altoida-zip"
 
     override fun fileProcessorFactories(
@@ -49,7 +49,10 @@ class AltoidaZipConverterFactory : ConverterFactory {
                 CsvProcessorFactory(csvLineProcessors, logRepository),
                 AltoidaMetadataFileProcessor(logRepository))
 
-        return listOf(ZipFileProcessorFactory(fileProcessors, logRepository))
+        val csvFileProcessor = listOf(AltoidaSummaryCsvProcessor())
+        return listOf(
+                ZipFileProcessorFactory(fileProcessors, logRepository),
+                CsvProcessorFactory(csvFileProcessor, logRepository))
     }
 }
 
