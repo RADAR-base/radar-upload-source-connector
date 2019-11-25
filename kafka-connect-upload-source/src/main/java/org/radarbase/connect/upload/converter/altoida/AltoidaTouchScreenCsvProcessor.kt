@@ -32,10 +32,10 @@ class AltoidaTouchScreenCsvProcessor : AltoidaCsvProcessor() {
     ) =  AltoidaTouch(
             time(line),
             timeReceived,
-            line.getValue("X").toFloat(),
-            line.getValue("Y").toFloat(),
-            line.getValue("SURFACE").toFloat(),
-            line.getValue("ACC").toFloat(),
-            line.getValue("COMBINED").toFloat(),
+            line.getValue("X").toDouble(),
+            line.getValue("Y").toDouble(),
+            line.getValue("SURFACE").toDouble(),
+            line.getValue("ACC").toDouble(),
+            line.getValue("COMBINED").toDouble(),
             line.getValue("HIT").toBoolean())
 }
