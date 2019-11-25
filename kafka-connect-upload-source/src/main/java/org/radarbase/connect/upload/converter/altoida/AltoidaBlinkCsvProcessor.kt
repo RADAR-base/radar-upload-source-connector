@@ -33,5 +33,5 @@ class AltoidaBlinkCsvProcessor : AltoidaCsvProcessor() {
     ) =  AltoidaBlink(
             time(line),
             timeReceived,
-            line["ACCURACY"])
+            line["EYE"])
 }
