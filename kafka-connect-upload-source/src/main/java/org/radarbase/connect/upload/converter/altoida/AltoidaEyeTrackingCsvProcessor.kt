@@ -18,7 +18,6 @@ package org.radarbase.connect.upload.converter.altoida
 
 import org.radarbase.connect.upload.converter.SimpleCsvLineProcessor
 import org.radarcns.connector.upload.altoida.AltoidaEyeTracking
-import org.radarcns.connector.upload.altoida.AltoidaTouch
 
 class AltoidaEyeTrackingCsvProcessor : AltoidaCsvProcessor() {
     override val fileNameSuffix: String = "_EYE.csv"
@@ -33,6 +32,6 @@ class AltoidaEyeTrackingCsvProcessor : AltoidaCsvProcessor() {
     ) =  AltoidaEyeTracking(
             time(line),
             timeReceived,
-            line.getValue("X").toFloat(),
-            line.getValue("Y").toFloat())
+            line.getValue("X").toFloatOrNull(),
+            line.getValue("Y").toFloatOrNull())
 }
