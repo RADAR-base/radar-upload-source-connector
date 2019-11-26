@@ -106,7 +106,6 @@ internal class RecordResourceTest: JerseyTest() {
                         sourceType = "type1",
                         metadata = null
                 ))).use { response ->
-                    logger.info(response.toString())
                     response.readEntity(RecordDTO::class.java)
                 }
 
