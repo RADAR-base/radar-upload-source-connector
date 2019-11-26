@@ -27,6 +27,7 @@ import org.radarbase.upload.Config
 import org.radarbase.upload.api.RecordDTO
 import org.radarbase.upload.api.RecordDataDTO
 import org.radarbase.upload.api.SourceTypeDTO
+import org.radarbase.upload.logger
 import org.radarbase.upload.mock.MockResourceEnhancerFactory
 import org.radarcns.auth.token.RadarToken
 import java.io.IOException
@@ -105,6 +106,7 @@ internal class RecordResourceTest: JerseyTest() {
                         sourceType = "type1",
                         metadata = null
                 ))).use { response ->
+                    logger.info(response.toString())
                     response.readEntity(RecordDTO::class.java)
                 }
 

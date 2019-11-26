@@ -27,25 +27,26 @@ class MockResourceEnhancerFactory(
         private val authQueue: Queue<Pair<Auth?, Boolean>>,
         private val projects: Map<String, List<String>>
 ): EnhancerFactory {
-    override fun createEnhancers(): List<JerseyResourceEnhancer> = listOf(
-            UploadResourceEnhancer(config),
-            ConfigLoader.Enhancers.radar(AuthConfig(jwtResourceName = config.jwtResourceName)),
-            object : JerseyResourceEnhancer {
-                override fun AbstractBinder.enhance() {
-                    bind(ProjectServiceWrapper::class.java)
-                            .to(ProjectService::class.java)
-                            .`in`(Singleton::class.java)
+    override fun createEnhancers(): List<JerseyResourceEnhancer> {
+        val projectService = MockProjectService(projects)
+        return listOf(
+                UploadResourceEnhancer(config),
+                ConfigLoader.Enhancers.radar(AuthConfig(jwtResourceName = config.jwtResourceName)),
+                object : JerseyResourceEnhancer {
+                    override fun AbstractBinder.enhance() {
+                        bind(ProjectServiceWrapper::class.java)
+                                .to(ProjectService::class.java)
+                                .`in`(Singleton::class.java)
 
-                    bind(MockProjectService::class.java)
-                            .to(UploadProjectService::class.java)
-                            .`in`(Singleton::class.java)
-
-                    bind(MockAuthValidator())
-                            .to(AuthValidator::class.java)
-                }
-            },
-            ConfigLoader.Enhancers.httpException,
-            ConfigLoader.Enhancers.generalException)
+                        bind(projectService)
+                                .to(UploadProjectService::class.java)
+                        bind(MockAuthValidator())
+                                .to(AuthValidator::class.java)
+                    }
+                },
+                ConfigLoader.Enhancers.httpException,
+                ConfigLoader.Enhancers.generalException)
+    }
 
     private inner class MockAuthValidator : AuthValidator {
         override fun verify(token: String, request: ContainerRequestContext): Auth? {
@@ -59,30 +60,32 @@ class MockResourceEnhancerFactory(
         }
     }
 
-    private inner class MockProjectService : UploadProjectService {
 
-        override fun userByExternalId(projectId: String, externalUserId: String): User? {
-            return projectUsers(projectId).first()
-        }
+}
 
-        override fun project(projectId: String): Project {
-            ensureProject(projectId)
-            return Project(id = projectId)
-        }
+class MockProjectService(private val projects: Map<String, List<String>>) : UploadProjectService {
 
-        override fun userProjects(auth: Auth) = projects.keys.map { Project(id = it) }
-
-        override fun projectUsers(projectId: String): List<User> {
-            ensureProject(projectId)
-            return projects.getValue(projectId)
-                    .map { User(projectId = projectId, id = it, status = "ACTIVATED") }
-        }
-
-        override fun ensureProject(projectId: String) {
-            if (projectId !in projects) {
-                throw HttpNotFoundException("project_not_found", "Project $projectId does not exist")
-            }
-        }
-
+    override fun userByExternalId(projectId: String, externalUserId: String): User? {
+        return User(projectId = projectId, id = "something", externalId = externalUserId, status = "ACTIVATED")
     }
+
+    override fun project(projectId: String): Project {
+        ensureProject(projectId)
+        return Project(id = projectId)
+    }
+
+    override fun userProjects(auth: Auth) = projects.keys.map { Project(id = it) }
+
+    override fun projectUsers(projectId: String): List<User> {
+        ensureProject(projectId)
+        return projects.getValue(projectId)
+                .map { User(projectId = projectId, id = it, status = "ACTIVATED") }
+    }
+
+    override fun ensureProject(projectId: String) {
+        if (projectId !in projects) {
+            throw HttpNotFoundException("project_not_found", "Project $projectId does not exist")
+        }
+    }
+
 }
