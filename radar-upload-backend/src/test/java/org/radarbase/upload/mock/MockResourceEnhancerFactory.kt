@@ -60,6 +60,11 @@ class MockResourceEnhancerFactory(
     }
 
     private inner class MockProjectService : UploadProjectService {
+
+        override fun userByExternalId(projectId: String, externalUserId: String): User? {
+            return projectUsers(projectId).first()
+        }
+
         override fun project(projectId: String): Project {
             ensureProject(projectId)
             return Project(id = projectId)

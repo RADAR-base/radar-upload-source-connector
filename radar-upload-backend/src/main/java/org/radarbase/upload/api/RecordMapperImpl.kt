@@ -25,6 +25,7 @@ import org.radarbase.upload.doa.entity.Record
 import org.radarbase.upload.doa.entity.RecordContent
 import org.radarbase.upload.doa.entity.RecordMetadata
 import org.radarbase.upload.doa.entity.RecordStatus
+import org.radarbase.upload.service.UploadProjectService
 import java.net.URLEncoder
 import java.time.Instant
 import javax.ws.rs.BadRequestException
@@ -34,6 +35,7 @@ import javax.ws.rs.core.UriInfo
 class RecordMapperImpl(
         @Context val uri: UriInfo,
         @Context val sourceTypeRepository: SourceTypeRepository,
+        @Context val mpService: UploadProjectService,
         @Context val config: Config) : RecordMapper {
 
     override val cleanBaseUri: String
@@ -43,7 +45,7 @@ class RecordMapperImpl(
         val recordDoa = Record().apply {
             val data = record.data ?: throw BadRequestException("No data field included")
             projectId = data.projectId ?: throw BadRequestException("Missing project ID")
-            userId = data.userId ?: throw BadRequestException("Missing user ID")
+            userId = data.resolveUserId()
             sourceId = data.sourceId ?: throw BadRequestException("Missing source ID")
             sourceType = sourceTypeRepository.read(record.sourceType
                     ?: throw BadRequestException("Missing source type"))
@@ -51,6 +53,18 @@ class RecordMapperImpl(
         }
 
         return Pair(recordDoa, toMetadata(record.metadata))
+    }
+
+    private fun RecordDataDTO.resolveUserId(): String {
+        when (this.userId != null) {
+            true -> return this.userId!!
+            false ->  {
+                this.externalUserId ?: throw BadRequestException("Missing both user ID and external-user ID")
+                val user = mpService.userByExternalId(this.projectId!!, this.externalUserId!!)
+                user ?: throw BadRequestException("Cannot find a user with externalID ${this.externalUserId}")
+                return user.id
+            }
+        }
     }
 
     private fun toMetadata(metadata: RecordMetadataDTO?) = RecordMetadata().apply {
