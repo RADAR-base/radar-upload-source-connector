@@ -2,22 +2,42 @@ package org.radarbase.connect.upload.converter.altoida
 
 import org.apache.avro.generic.IndexedRecord
 import org.radarbase.connect.upload.converter.SimpleCsvLineProcessor
+import org.radarcns.connector.upload.altoida.AltoidaDomainResult
+import org.radarcns.connector.upload.altoida.AltoidaSummary
+import org.radarcns.connector.upload.altoida.AltoidaSummaryMetrics
 
-class AltoidaSummaryCsvProcessor: AltoidaCsvProcessor() {
+class AltoidaSummaryCsvProcessor : AltoidaCsvProcessor() {
     override val fileNameSuffix: String = "export.csv"
 
     override val topic: String = "altoida_trial_summary"
 
     override fun SimpleCsvLineProcessor.lineConversion(line: Map<String, String>, timeReceived: Double): IndexedRecord {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        val bitMetrics = AltoidaSummaryMetrics()
+        val dotMetrics = AltoidaSummaryMetrics()
+        val domainResult = AltoidaDomainResult()
+
+        return AltoidaSummary(
+                time(line),
+                timeReceived,
+                line["LABEL"],
+                line.getValue("AGE").toInt(),
+                line.getValue("YEARSOFEDUCATION").toInt(),
+                line.getValue("GENDER").toInt(),
+                bitMetrics,
+                dotMetrics,
+                domainResult,
+                line.getValue("CLASS").toInt(),
+                line.getValue("NMI").toDouble(),
+                line.getValue("GROUNDTRUTH").toInt()
+        )
     }
 
     override val header: List<String> = listOf(
             "LABEL",
             "TIMESTAMP",
-            "TESTCOUNT",
-            "RESULT",
-            "GROUNDTRUTH",
+            "AGE",
+            "YEARSOFEDUCATION",
+            "GENDER",
             "BIT_PLAYHIGHREACTIONTIMES",
             "BIT_PLAYHIGHACCURACY",
             "BIT_PLAYLOWREACTIONS",
@@ -248,5 +268,5 @@ class AltoidaSummaryCsvProcessor: AltoidaCsvProcessor() {
             "CLASS",
             "NMI",
             "GROUNDTRUTH"
-        )
+    )
 }
