@@ -37,6 +37,7 @@ data class ContentsDTO(
 data class RecordDataDTO(
         var projectId: String?,
         var userId: String?,
+        var externalUserId: String? = null,
         var sourceId: String?,
         var time: LocalDateTime? = null,
         var timeZoneOffset: Int? = null,
