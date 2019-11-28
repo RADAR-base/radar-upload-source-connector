@@ -34,7 +34,7 @@ import javax.ws.rs.core.Context
 
 class MPProjectService(@Context private val config: Config, @Context private val mpClient: MPClient): UploadProjectService {
     private val projects = CachedSet(
-            Duration.ofMinutes(config.syncProjects!!),
+            Duration.ofMinutes(config.syncProjectsIntervalMin),
             Duration.ofMinutes(1)) {
         mpClient.readProjects()
     }
@@ -57,7 +57,7 @@ class MPProjectService(@Context private val config: Config, @Context private val
 
     override fun projectUsers(projectId: String): List<User> {
         val projectParticipants = participants.computeIfAbsent(projectId) {
-            CachedSet(Duration.ofMinutes(config.syncParticipants!!), Duration.ofMinutes(1)) {
+            CachedSet(Duration.ofMinutes(config.syncParticipantsIntervalMin), Duration.ofMinutes(1)) {
                 mpClient.readParticipants(projectId)
             }
         }
