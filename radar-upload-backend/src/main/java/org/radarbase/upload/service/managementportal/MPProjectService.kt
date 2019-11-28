@@ -66,6 +66,6 @@ class MPProjectService(@Context private val config: Config, @Context private val
     }
 
     override fun userByExternalId(projectId: String, externalUserId: String): User? =
-            projectUsers(projectId).firstOrNull { it.externalId == externalUserId }
+            projectUsers(projectId).find { it.externalId == externalUserId }
 
 }
