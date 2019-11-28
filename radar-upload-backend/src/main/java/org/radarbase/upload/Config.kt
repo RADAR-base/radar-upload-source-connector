@@ -43,5 +43,5 @@ data class Config(
         var additionalPersistenceConfig: Map<String, String>? = null,
         var contentStreamBufferSize: Long = 1048576L,
         var enableCors: Boolean? = false,
-        var syncProjects: Long? = 30,
-        var syncParticipants: Long? = 30)
+        var syncProjectsIntervalMin: Long = 30,
+        var syncParticipantsIntervalMin: Long = 30)
