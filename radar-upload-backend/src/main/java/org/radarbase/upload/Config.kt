@@ -42,4 +42,6 @@ data class Config(
         var sourceTypes: List<SourceTypeDTO>? = null,
         var additionalPersistenceConfig: Map<String, String>? = null,
         var contentStreamBufferSize: Long = 1048576L,
-        var enableCors: Boolean? = false)
+        var enableCors: Boolean? = false,
+        var syncProjectsIntervalMin: Long = 30,
+        var syncParticipantsIntervalMin: Long = 30)
