@@ -21,11 +21,11 @@ import org.apache.avro.generic.IndexedRecord
 class SimpleCsvLineProcessor(
         override val recordLogger: RecordLogger,
         private val topic: String,
-        private val conversion: SimpleCsvLineProcessor.(lineValues: Map<String, String>, timeReceived: Double) -> IndexedRecord?
+        private val conversion: SimpleCsvLineProcessor.(lineValues: Map<String, String>, timeReceived: Double) -> List<IndexedRecord>?
 ) : CsvLineProcessorFactory.CsvLineProcessor {
-    override fun convertToRecord(lineValues: Map<String, String>, timeReceived: Double): FileProcessorFactory.TopicData? {
+    override fun convertToRecord(lineValues: Map<String, String>, timeReceived: Double): List<FileProcessorFactory.TopicData>? {
         return conversion(lineValues, timeReceived)?.run {
-            return FileProcessorFactory.TopicData(topic, this)
+            this.map { FileProcessorFactory.TopicData(topic, it) }
         }
     }
 }

@@ -69,7 +69,7 @@ interface CsvLineProcessorFactory {
             }
         }
 
-        fun convertToRecord(lineValues: Map<String, String>, timeReceived: Double): FileProcessorFactory.TopicData?
+        fun convertToRecord(lineValues: Map<String, String>, timeReceived: Double): List<FileProcessorFactory.TopicData>?
     }
 }
 

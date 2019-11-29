@@ -32,11 +32,11 @@ class AltoidaMagnetometerCsvProcessor : AltoidaCsvProcessor() {
     override fun SimpleCsvLineProcessor.lineConversion(
             line: Map<String, String>,
             timeReceived: Double
-    ) = AltoidaMagneticField(
+    ) = listOf(AltoidaMagneticField(
             time(line),
             timeReceived,
             line.getValue("X").toFloat(),
             line.getValue("Y").toFloat(),
             line.getValue("Z").toFloat(),
-            line["ACCURACY"])
+            line["ACCURACY"]))
 }

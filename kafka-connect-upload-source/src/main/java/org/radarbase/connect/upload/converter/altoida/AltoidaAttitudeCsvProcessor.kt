@@ -34,11 +34,11 @@ class AltoidaAttitudeCsvProcessor : AltoidaCsvProcessor() {
     override fun SimpleCsvLineProcessor.lineConversion(
             line: Map<String, String>,
             timeReceived: Double
-    ) = AltoidaAttitude(
+    ) = listOf(AltoidaAttitude(
             time(line),
             timeReceived,
             line.getValue("PITCH").toFloat(),
             line.getValue("ROLL").toFloat(),
-            line.getValue("YAW").toFloat())
+            line.getValue("YAW").toFloat()))
 
 }

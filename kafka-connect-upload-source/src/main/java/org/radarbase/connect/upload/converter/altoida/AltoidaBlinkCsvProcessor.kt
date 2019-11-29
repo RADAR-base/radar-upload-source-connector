@@ -30,8 +30,8 @@ class AltoidaBlinkCsvProcessor : AltoidaCsvProcessor() {
     override fun SimpleCsvLineProcessor.lineConversion(
             line: Map<String, String>,
             timeReceived: Double
-    ) =  AltoidaBlink(
+    ) = listOf(AltoidaBlink(
             time(line),
             timeReceived,
-            line["EYE"])
+            line["EYE"]))
 }

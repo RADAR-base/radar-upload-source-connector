@@ -31,11 +31,11 @@ abstract class AltoidaCsvProcessor: CsvLineProcessorFactory {
 
     abstract val topic: String
 
-    abstract fun SimpleCsvLineProcessor.lineConversion(line: Map<String, String>, timeReceived: Double): IndexedRecord?
+    abstract fun SimpleCsvLineProcessor.lineConversion(line: Map<String, String>, timeReceived: Double): List<IndexedRecord>?
 
     override fun matches(contents: ContentsDTO): Boolean = contents.fileName.endsWith(fileNameSuffix)
 
-    protected fun time(line: Map<String, String>): Double = line.getValue("TIMESTAMP").toDouble() / 1000.0
+    open fun time(line: Map<String, String>): Double = line.getValue("TIMESTAMP").toDouble() / 1000.0
 
     override fun createLineProcessor(record: RecordDTO, logRepository: LogRepository): CsvLineProcessorFactory.CsvLineProcessor {
         val recordLogger = logRepository.createLogger(logger, record.id!!)
