@@ -220,7 +220,7 @@ services:
     build:
       context: .
       dockerfile: radar-upload-backend/Dockerfile
-    image: radarbase/radar-upload-connect-backend:0.3.0-SNAPSHOT
+    image: radarbase/radar-upload-backend:0.3.0-SNAPSHOT
     ports:
       - "8085:8085"
     depends_on:
@@ -237,7 +237,7 @@ services:
     build:
       context: radar-upload-frontend
       dockerfile: Dockerfile
-    image: radarbase/radar-upload-connect-frontend:0.3.0-SNAPSHOT
+    image: radarbase/radar-upload-frontend:0.3.0-SNAPSHOT
     depends_on:
       - radar-upload-backend
       - managementportal-app
