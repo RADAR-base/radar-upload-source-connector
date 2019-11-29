@@ -31,7 +31,7 @@ abstract class AltoidaCsvProcessor: CsvLineProcessorFactory {
 
     abstract val topic: String
 
-    abstract fun SimpleCsvLineProcessor.lineConversion(line: Map<String, String>, timeReceived: Double): List<IndexedRecord>?
+    abstract fun SimpleCsvLineProcessor.lineConversion(line: Map<String, String>, timeReceived: Double): IndexedRecord?
 
     override fun matches(contents: ContentsDTO): Boolean = contents.fileName.endsWith(fileNameSuffix)
 

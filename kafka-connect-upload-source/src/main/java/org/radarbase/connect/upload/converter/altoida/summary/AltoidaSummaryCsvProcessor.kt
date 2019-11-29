@@ -14,8 +14,8 @@ class AltoidaSummaryCsvProcessor : AltoidaCsvProcessor() {
 
     override fun time(line: Map<String, String>): Double = Instant.parse(line.getValue("TIMESTAMP")).toEpochMilli().toDouble()
 
-    override fun SimpleCsvLineProcessor.lineConversion(line: Map<String, String>, timeReceived: Double): List<IndexedRecord>? {
-        return listOf(AltoidaSummary(
+    override fun SimpleCsvLineProcessor.lineConversion(line: Map<String, String>, timeReceived: Double): IndexedRecord? {
+        return AltoidaSummary(
                 time(line),
                 timeReceived,
                 line["LABEL"],
@@ -28,7 +28,7 @@ class AltoidaSummaryCsvProcessor : AltoidaCsvProcessor() {
                 line.getValue("CLASS").toInt(),
                 line.getValue("NMI").toDouble(),
                 line.getValue("GROUNDTRUTH").toInt()
-        ))
+        )
     }
 
     private fun getTestMetrics(type: AltoidaTestCategory, line: Map<String, String>): AltoidaSummaryMetrics {

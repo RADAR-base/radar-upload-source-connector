@@ -29,9 +29,9 @@ class AltoidaEyeTrackingCsvProcessor : AltoidaCsvProcessor() {
     override fun SimpleCsvLineProcessor.lineConversion(
             line: Map<String, String>,
             timeReceived: Double
-    ) = listOf(AltoidaEyeTracking(
+    ) = AltoidaEyeTracking(
             time(line),
             timeReceived,
             line.getValue("X").toFloatOrNull(),
-            line.getValue("Y").toFloatOrNull()))
+            line.getValue("Y").toFloatOrNull())
 }
