@@ -29,9 +29,9 @@ class AltoidaTapScreenCsvProcessor : AltoidaCsvProcessor() {
     override fun SimpleCsvLineProcessor.lineConversion(
             line: Map<String, String>,
             timeReceived: Double
-    ) = listOf(AltoidaTap(
+    ) = AltoidaTap(
             time(line),
             timeReceived,
             line.getValue("X").toDouble(),
-            line.getValue("Y").toDouble()))
+            line.getValue("Y").toDouble())
 }

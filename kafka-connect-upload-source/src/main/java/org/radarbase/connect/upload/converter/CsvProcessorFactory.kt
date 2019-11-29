@@ -63,8 +63,8 @@ class CsvProcessorFactory(
             generateSequence { reader.readNext() }
                     .filter { processor.isLineValid(header, it) }
                     .mapNotNull { processor.convertToRecord(header.zip(it).toMap(), timeReceived) }
-                    .flatten()
                     .toList()
+                    .flatten()
         }
 
         private fun <T> readCsv(

@@ -29,7 +29,7 @@ class AltoidaTouchScreenCsvProcessor : AltoidaCsvProcessor() {
     override fun SimpleCsvLineProcessor.lineConversion(
             line: Map<String, String>,
             timeReceived: Double
-    ) = listOf(AltoidaTouch(
+    ) = AltoidaTouch(
             time(line),
             timeReceived,
             line.getValue("X").toDouble(),
@@ -37,5 +37,5 @@ class AltoidaTouchScreenCsvProcessor : AltoidaCsvProcessor() {
             line.getValue("SURFACE").toDouble(),
             line.getValue("ACC").toDouble(),
             line.getValue("COMBINED").toDouble(),
-            line.getValue("HIT").toBoolean()))
+            line.getValue("HIT").toBoolean())
 }
