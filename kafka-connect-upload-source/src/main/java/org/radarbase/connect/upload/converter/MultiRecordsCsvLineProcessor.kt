@@ -7,11 +7,11 @@ import org.apache.avro.generic.IndexedRecord
  */
 class MultiRecordsCsvLineProcessor(
         override val recordLogger: RecordLogger,
-        private val conversion: MultiRecordsCsvLineProcessor.(lineValues: Map<String, String>, timeReceived: Double) -> Map<String,IndexedRecord>?
+        private val conversion: MultiRecordsCsvLineProcessor.(lineValues: Map<String, String>, timeReceived: Double) -> List<Pair<String,IndexedRecord>>
 ) : CsvLineProcessorFactory.CsvLineProcessor {
     override fun convertToRecord(lineValues: Map<String, String>, timeReceived: Double): List<FileProcessorFactory.TopicData>? {
-        return conversion(lineValues, timeReceived)?.run {
-            this.map { FileProcessorFactory.TopicData(it.key, it.value) }
+        return conversion(lineValues, timeReceived).run {
+            this.map { FileProcessorFactory.TopicData(it.first, it.second) }
         }
     }
 }
