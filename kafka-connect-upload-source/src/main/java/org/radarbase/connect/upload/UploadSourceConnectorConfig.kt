@@ -93,7 +93,7 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
         const val UPLOAD_SOURCE_SERVER_BASE_URL_CONFIG = "upload.source.backend.baseUrl"
         private const val UPLOAD_SOURCE_SERVER_BASE_URL_DOC = "Base URL of the file upload backend"
         private const val UPLOAD_SOURCE_SERVER_BASE_URL_DISPLAY = "Base URL of the file upload backend"
-        private const val UPLOAD_SOURCE_SERVER_BASE_URL_DEFAULT = "http://radar-upload-backend:8080/"
+        private const val UPLOAD_SOURCE_SERVER_BASE_URL_DEFAULT = "http://radar-upload-connect-backend:8085/radar-upload/"
 
         const val SOURCE_POLL_INTERVAL_CONFIG = "upload.source.poll.interval.ms"
         private const val SOURCE_POLL_INTERVAL_DOC = "How often to poll the source URL."
@@ -102,7 +102,7 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
 
         const val UPLOAD_SOURCE_CONVERTERS_CONFIG = "upload.source.record.converter.classes"
         private const val UPLOAD_SOURCE_CONVERTERS_DOC = "List record converter classes that are in class-path"
-        private const val UPLOAD_SOURCE_CONVERTERS_DISPLAY = "List of record converter class"
+        private const val UPLOAD_SOURCE_CONVERTERS_DISPLAY = "List of record converter factory class"
         private val UPLOAD_SOURCE_CONVERTERS_DEFAULT: List<String> = listOf(
                 AccelerometerConverterFactory()::class.java.name,
                 AcceleratometerZipConverterFactory()::class.java.name,
@@ -125,7 +125,7 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
                     .define(SOURCE_POLL_INTERVAL_CONFIG,
                             ConfigDef.Type.LONG,
                             SOURCE_POLL_INTERVAL_DEFAULT,
-                            ConfigDef.Importance.LOW,
+                            ConfigDef.Importance.HIGH,
                             SOURCE_POLL_INTERVAL_DOC,
                             groupName,
                             ++orderInGroup,
@@ -135,7 +135,7 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
                     .define(UPLOAD_SOURCE_CLIENT_CONFIG,
                             ConfigDef.Type.STRING,
                             UPLOAD_SOURCE_MP_CLIENT_DEFAULT,
-                            ConfigDef.Importance.LOW,
+                            ConfigDef.Importance.HIGH,
                             UPLOAD_SOURCE_CLIENT_DOC,
                             groupName,
                             ++orderInGroup,
@@ -155,7 +155,7 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
                     .define(UPLOAD_SOURCE_SERVER_BASE_URL_CONFIG,
                             ConfigDef.Type.STRING,
                             UPLOAD_SOURCE_SERVER_BASE_URL_DEFAULT,
-                            ConfigDef.Importance.HIGH,
+                            ConfigDef.Importance.LOW,
                             UPLOAD_SOURCE_SERVER_BASE_URL_DOC,
                             groupName,
                             ++orderInGroup,
@@ -165,7 +165,7 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
                     .define(UPLOAD_SOURCE_CLIENT_TOKEN_URL_CONFIG,
                             ConfigDef.Type.STRING,
                             UPLOAD_SOURCE_CLIENT_TOKEN_URL_DEFAULT,
-                            ConfigDef.Importance.HIGH,
+                            ConfigDef.Importance.LOW,
                             UPLOAD_SOURCE_CLIENT_TOKEN_URL_DOC,
                             groupName,
                             ++orderInGroup,
