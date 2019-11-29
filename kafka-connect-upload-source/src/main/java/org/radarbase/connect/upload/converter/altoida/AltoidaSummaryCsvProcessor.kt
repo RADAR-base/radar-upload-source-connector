@@ -6,6 +6,7 @@ import org.radarcns.connector.upload.altoida.AltoidaDomainResult
 import org.radarcns.connector.upload.altoida.AltoidaSummary
 import org.radarcns.connector.upload.altoida.AltoidaSummaryMetrics
 
+
 class AltoidaSummaryCsvProcessor : AltoidaCsvProcessor() {
     override val fileNameSuffix: String = "export.csv"
 
@@ -30,6 +31,10 @@ class AltoidaSummaryCsvProcessor : AltoidaCsvProcessor() {
                 line.getValue("NMI").toDouble(),
                 line.getValue("GROUNDTRUTH").toInt()
         )
+    }
+
+    private fun extractTestMetrics(type: AltoidaTest, line: Map<String, String>): AltoidaSummaryMetrics {
+        return AltoidaSummaryMetrics()
     }
 
     override val header: List<String> = listOf(
@@ -269,4 +274,9 @@ class AltoidaSummaryCsvProcessor : AltoidaCsvProcessor() {
             "NMI",
             "GROUNDTRUTH"
     )
+
+    private enum class AltoidaTest {
+        DOT,
+        BIT
+    }
 }
