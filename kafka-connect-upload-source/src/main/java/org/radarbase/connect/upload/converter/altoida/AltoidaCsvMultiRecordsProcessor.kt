@@ -22,10 +22,8 @@ abstract class AltoidaCsvMultiRecordsProcessor : CsvLineProcessorFactory {
 
     abstract val listOfRecordMapperAltoidaSummaries: List<AltoidaSummaryLineToRecordMapper>
 
-    fun lineConversion(line: Map<String, String>, timeReceived: Double): Map<String, IndexedRecord>? =
+    fun lineConversion(line: Map<String, String>, timeReceived: Double): List<Pair<String, IndexedRecord>> =
             listOfRecordMapperAltoidaSummaries.mapNotNull { it.processLine(line, timeReceived) }
-                    .asSequence()
-                    .toMap()
 
     override fun matches(contents: ContentsDTO): Boolean = contents.fileName.endsWith(fileNameSuffix)
 
