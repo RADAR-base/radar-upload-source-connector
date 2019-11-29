@@ -32,11 +32,11 @@ class AltoidaGravityCsvProcessor : AltoidaCsvProcessor() {
     override fun SimpleCsvLineProcessor.lineConversion(
             line: Map<String, String>,
             timeReceived: Double
-    ) = AltoidaGravity(
+    ) = listOf(AltoidaGravity(
             time(line),
             timeReceived,
             line.getValue("X").toFloat(),
             line.getValue("Y").toFloat(),
-            line.getValue("Z").toFloat())
+            line.getValue("Z").toFloat()))
 
 }

@@ -21,6 +21,7 @@ package org.radarbase.connect.upload.converter.altoida
 
 import org.radarbase.connect.upload.api.SourceTypeDTO
 import org.radarbase.connect.upload.converter.*
+import org.radarbase.connect.upload.converter.altoida.summary.AltoidaSummaryCsvProcessor
 
 class AltoidaConverterFactory : ConverterFactory {
     override val sourceType: String = "altoida-zip"

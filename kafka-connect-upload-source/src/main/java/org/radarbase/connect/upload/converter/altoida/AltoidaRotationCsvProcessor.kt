@@ -32,10 +32,10 @@ class AltoidaRotationCsvProcessor : AltoidaCsvProcessor() {
     override fun SimpleCsvLineProcessor.lineConversion(
             line: Map<String, String>,
             timeReceived: Double
-    ) =  AltoidaRotation(
+    ) = listOf(AltoidaRotation(
             time(line),
             timeReceived,
             line.getValue("X").toFloat(),
             line.getValue("Y").toFloat(),
-            line.getValue("Z").toFloat())
+            line.getValue("Z").toFloat()))
 }

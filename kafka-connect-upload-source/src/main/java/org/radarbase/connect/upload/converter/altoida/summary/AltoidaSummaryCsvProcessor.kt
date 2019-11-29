@@ -1,10 +1,10 @@
-package org.radarbase.connect.upload.converter.altoida
+package org.radarbase.connect.upload.converter.altoida.summary
 
 import org.apache.avro.generic.IndexedRecord
 import org.radarbase.connect.upload.converter.SimpleCsvLineProcessor
-import org.radarcns.connector.upload.altoida.AltoidaDomainResult
-import org.radarcns.connector.upload.altoida.AltoidaSummary
-import org.radarcns.connector.upload.altoida.AltoidaSummaryMetrics
+import org.radarbase.connect.upload.converter.altoida.AltoidaCsvProcessor
+import org.radarcns.connector.upload.altoida.*
+import java.time.Instant
 
 
 class AltoidaSummaryCsvProcessor : AltoidaCsvProcessor() {
@@ -12,29 +12,100 @@ class AltoidaSummaryCsvProcessor : AltoidaCsvProcessor() {
 
     override val topic: String = "altoida_trial_summary"
 
-    override fun SimpleCsvLineProcessor.lineConversion(line: Map<String, String>, timeReceived: Double): IndexedRecord {
-        val bitMetrics = AltoidaSummaryMetrics()
-        val dotMetrics = AltoidaSummaryMetrics()
-        val domainResult = AltoidaDomainResult()
+    override fun time(line: Map<String, String>): Double = Instant.parse(line.getValue("TIMESTAMP")).toEpochMilli().toDouble()
 
-        return AltoidaSummary(
+    override fun SimpleCsvLineProcessor.lineConversion(line: Map<String, String>, timeReceived: Double): List<IndexedRecord>? {
+        return listOf(AltoidaSummary(
                 time(line),
                 timeReceived,
                 line["LABEL"],
                 line.getValue("AGE").toInt(),
                 line.getValue("YEARSOFEDUCATION").toInt(),
                 line.getValue("GENDER").toInt(),
-                bitMetrics,
-                dotMetrics,
-                domainResult,
+                getTestMetrics(AltoidaTestCategory.BIT, line),
+                getTestMetrics(AltoidaTestCategory.DOT, line),
+                line.getDomainResult(timeReceived),
                 line.getValue("CLASS").toInt(),
                 line.getValue("NMI").toDouble(),
                 line.getValue("GROUNDTRUTH").toInt()
+        ))
+    }
+
+    private fun getTestMetrics(type: AltoidaTestCategory, line: Map<String, String>): AltoidaSummaryMetrics {
+
+        val prefix = if (type === AltoidaTestCategory.BIT) "BIT_" else "DOT_"
+        return AltoidaSummaryMetrics(
+                line.getValue(prefix + "PLAYHIGHREACTIONTIMES").toFloat(),
+                line.getValue(prefix + "PLAYHIGHACCURACY").toFloat(),
+                line.getValue(prefix + "PLAYLOWREACTIONS").toInt(),
+                line.getValue(prefix + "IGNOREDHIGHTONEPERCENTAGE").toFloat(),
+                line.getValue(prefix + "PREMATURETONEBUTTONPRESSES").toInt(),
+                line.getValue(prefix + "RANDOMSCREENPRESSESDURINGPLACEMENT").toInt(),
+                line.getValue(prefix + "RANDOMSCREENPRESSESDURINGSEARCH").toInt(),
+                line.getValue(prefix + "TOOMUCHMOVEMENTCOUNT").toInt(),
+                line.getValue(prefix + "FINDBETTERPLACECOUNT").toFloat(),
+                line.getValue(prefix + "INTROREADTIMES").toFloat(),
+                line.getValue(prefix + "INTROREADTIMES1").toFloat(),
+                line.getValue(prefix + "INTROREADTIMES2").toFloat(),
+                line.getValue(prefix + "PLACEDELAYS").toFloat(),
+                line.getValue(prefix + "SPOTALREADYTAKENCOUNT").toInt(),
+                convertTrails(prefix, line),
+                getTrailMeans(prefix, line),
+                line.getValue(prefix + "FINDFAILCOUNT").toFloat(),
+                line.getValue(prefix + "FINDSKIPDURATIONS").toFloat(),
+                line.getValue(prefix + "SKIPBUTTONCOUNT").toFloat(),
+                line.getValue(prefix + "COUNTDOWNFAIL").toFloat(),
+                line.getValue(prefix + "STEPCOUNTPFRATIO").toFloat(),
+                line.getValue(prefix + "MEANSTEPDELAYP").toFloat(),
+                line.getValue(prefix + "MEANSTEPDELAYF").toFloat(),
+                line.getValue(prefix + "STEPVARIANCEP").toFloat(),
+                line.getValue(prefix + "STEPVARIANCEF").toFloat(),
+                line.getValue(prefix + "NOTWALKINGTIMEP").toFloat(),
+                line.getValue(prefix + "NOTWALKINGTIMEF").toFloat(),
+                line.getValue(prefix + "SHOCKCOUNT").toFloat(),
+                line.getValue(prefix + "ACCVARIANCE1").toFloat(),
+                line.getValue(prefix + "ACCVARIANCE2").toFloat(),
+                line.getValue(prefix + "ACCVARIANCE3").toFloat(),
+                line.getValue(prefix + "STRONGHAND").toFloat(),
+                getWalkingTestAggregate(prefix, AltoidaWalkingTestTypes.Circle, line),
+                getWalkingTestAggregate(prefix, AltoidaWalkingTestTypes.Square, line),
+                getWalkingTestAggregate(prefix, AltoidaWalkingTestTypes.Serpentine, line),
+                getWalkingTestAggregate(prefix, AltoidaWalkingTestTypes.SpeedCircle, line),
+                getTappingTestAggregate(prefix, AltoidaTappingTestTypes.RandomTapping, line),
+                getTappingTestAggregate(prefix, AltoidaTappingTestTypes.Tapping, line)
         )
     }
 
-    private fun extractTestMetrics(type: AltoidaTest, line: Map<String, String>): AltoidaSummaryMetrics {
-        return AltoidaSummaryMetrics()
+    private fun convertTrails(prefix: String, line: Map<String, String>): List<AltoidaTrial> {
+        return mutableListOf(AltoidaTrial())
+    }
+
+    private fun getTrailMeans(prefix: String, line: Map<String, String>): AltoidaTrial {
+        return AltoidaTrial()
+    }
+
+    private fun getWalkingTestAggregate(prefix: String, type: AltoidaWalkingTestTypes, line: Map<String, String>): AltoidaWalkingTestAggregate {
+        return AltoidaWalkingTestAggregate()
+    }
+
+    private fun getTappingTestAggregate(prefix: String, type: AltoidaTappingTestTypes, line: Map<String, String>): AltoidaTappingTestAggregate {
+        return AltoidaTappingTestAggregate()
+    }
+
+    private fun Map<String, String>.getDomainResult(timeReceived: Double): AltoidaDomainResult {
+        return AltoidaDomainResult(
+                time(this),
+                timeReceived,
+                this.getValue("DOMAINPERCENTILE_PERCEPTUALMOTORCOORDINATION").toFloat(),
+                this.getValue("DOMAINPERCENTILE_COMPLEXATTENTION").toFloat(),
+                this.getValue("DOMAINPERCENTILE_COGNITIVEPROCESSINGSPEED").toFloat(),
+                this.getValue("DOMAINPERCENTILE_INHIBITION").toFloat(),
+                this.getValue("DOMAINPERCENTILE_FLEXIBILITY").toFloat(),
+                this.getValue("DOMAINPERCENTILE_VISUALPERCEPTION").toFloat(),
+                this.getValue("DOMAINPERCENTILE_PLANNING").toFloat(),
+                this.getValue("DOMAINPERCENTILE_PROSPECTIVEMEMORY").toFloat(),
+                this.getValue("DOMAINPERCENTILE_SPATIALMEMORY").toFloat()
+        )
     }
 
     override val header: List<String> = listOf(
@@ -275,8 +346,20 @@ class AltoidaSummaryCsvProcessor : AltoidaCsvProcessor() {
             "GROUNDTRUTH"
     )
 
-    private enum class AltoidaTest {
+    private enum class AltoidaTestCategory {
         DOT,
         BIT
+    }
+
+    private enum class AltoidaWalkingTestTypes {
+        Circle,
+        Square,
+        Serpentine,
+        SpeedCircle
+    }
+
+    private enum class AltoidaTappingTestTypes {
+        RandomTapping,
+        Tapping
     }
 }

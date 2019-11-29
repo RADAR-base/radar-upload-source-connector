@@ -32,10 +32,10 @@ class AltoidaDiagnosticsCsvProcessor : AltoidaCsvProcessor() {
     override fun SimpleCsvLineProcessor.lineConversion(
             line: Map<String, String>,
             timeReceived: Double
-    ) = AltoidaDiagnostics(
+    ) = listOf(AltoidaDiagnostics(
             time(line),
             timeReceived,
             line["TAG"],
-            line["PAYLOAD"])
+            line["PAYLOAD"]))
 
 }
