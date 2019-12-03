@@ -34,7 +34,8 @@ import java.util.zip.ZipInputStream
  */
 open class ZipFileProcessorFactory(
         private val entryProcessors: List<FileProcessorFactory>,
-        private val logRepository: LogRepository
+        private val logRepository: LogRepository,
+        private val entryFilter: (String) -> Boolean = { true }
 ) : FileProcessorFactory {
     override fun matches(contents: ContentsDTO): Boolean = contents.fileName.endsWith(".zip")
 
@@ -49,6 +50,7 @@ open class ZipFileProcessorFactory(
                 zippedInput.use {
                     generateSequence { it.nextEntry }
                             .ifEmpty { throw IOException("No zipped entry found from ${contents.fileName}") }
+                            .filter { !it.isDirectory && entryFilter(it.name.trim()) }
                             .flatMap { zippedEntry ->
                                 val entryName = zippedEntry.name.trim()
                                 recordLogger.debug("Processing entry $entryName from record ${record.id}")
