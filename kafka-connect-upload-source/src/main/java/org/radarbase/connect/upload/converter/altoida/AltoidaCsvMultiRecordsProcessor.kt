@@ -8,10 +8,20 @@ import org.radarbase.connect.upload.converter.LogRepository
 import org.radarbase.connect.upload.converter.MultiRecordsCsvLineProcessor
 import org.slf4j.LoggerFactory
 import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+
 
 interface AltoidaSummaryLineToRecordMapper {
-    abstract val topic: String
-    fun time(line: Map<String, String>): Double = Instant.parse(line.getValue("TIMESTAMP")).toEpochMilli().toDouble()
+    val topic: String
+    fun time(line: Map<String, String>): Double =
+            Instant.from(
+                    DateTimeFormatter
+                            .ofPattern("yyyy-MM-dd HH:mm:ss")
+                            .withZone(ZoneId.systemDefault())
+                            .parse(line.getValue("TIMESTAMP")))
+                            .toEpochMilli()
+                            .toDouble()
     fun processLine(line: Map<String, String>, timeReceived: Double): Pair<String, IndexedRecord>?
 }
 
