@@ -1,11 +1,11 @@
 package org.radarbase.connect.upload.converter.altoida.summary
 
-import org.radarbase.connect.upload.converter.altoida.summary.AltoidaTestMetricsProcessor.AltoidaWalkingTestTypes.*
-import org.radarbase.connect.upload.converter.altoida.summary.AltoidaTestMetricsProcessor.AltoidaTappingTestTypes.*
-import org.radarbase.connect.upload.converter.altoida.summary.AltoidaExportCsvProcessor.AltoidaTestCategory
-
 import org.apache.avro.generic.IndexedRecord
 import org.radarbase.connect.upload.converter.altoida.AltoidaSummaryLineToRecordMapper
+import org.radarbase.connect.upload.converter.altoida.summary.AltoidaExportCsvProcessor.AltoidaTestCategory
+import org.radarbase.connect.upload.converter.altoida.summary.AltoidaTestMetricsProcessor.AltoidaTappingTestTypes.RandomTapping
+import org.radarbase.connect.upload.converter.altoida.summary.AltoidaTestMetricsProcessor.AltoidaTappingTestTypes.Tapping
+import org.radarbase.connect.upload.converter.altoida.summary.AltoidaTestMetricsProcessor.AltoidaWalkingTestTypes.*
 import org.radarcns.connector.upload.altoida.AltoidaSummaryMetrics
 import org.radarcns.connector.upload.altoida.AltoidaTappingTestAggregate
 import org.radarcns.connector.upload.altoida.AltoidaTrial
@@ -16,7 +16,7 @@ class AltoidaTestMetricsProcessor(private val type: AltoidaTestCategory, overrid
         return topic to getTestMetrics(type, line)
     }
 
-    private fun getTestMetrics(type: AltoidaTestCategory, line: Map<String, String>): AltoidaSummaryMetrics {
+    private fun getTestMetrics(type: AltoidaTestCategory, line: Map<String, String>): IndexedRecord {
 
         val prefix = if (type === AltoidaTestCategory.BIT) "BIT_" else "DOT_"
 
@@ -35,8 +35,8 @@ class AltoidaTestMetricsProcessor(private val type: AltoidaTestCategory, overrid
                 line.getValue(prefix + "INTROREADTIMES2").toFloat(),
                 line.getValue(prefix + "PLACEDELAYS").toFloat(),
                 line.getValue(prefix + "SPOTALREADYTAKENCOUNT").toInt(),
-                convertTrails(prefix, line),
-                getTrailMeans(prefix, line),
+                line.getTrails(prefix),
+                line.getTrailMeans(prefix),
                 line.getValue(prefix + "FINDFAILCOUNT").toFloat(),
                 line.getValue(prefix + "FINDSKIPDURATIONS").toFloat(),
                 line.getValue(prefix + "SKIPBUTTONCOUNT").toFloat(),
@@ -53,29 +53,73 @@ class AltoidaTestMetricsProcessor(private val type: AltoidaTestCategory, overrid
                 line.getValue(prefix + "ACCVARIANCE2").toFloat(),
                 line.getValue(prefix + "ACCVARIANCE3").toFloat(),
                 line.getValue(prefix + "STRONGHAND").toFloat(),
-                getWalkingTestAggregate(prefix, Circle, line),
-                getWalkingTestAggregate(prefix, Square, line),
-                getWalkingTestAggregate(prefix, Serpentine, line),
-                getWalkingTestAggregate(prefix, SpeedCircle, line),
-                getTappingTestAggregate(prefix, RandomTapping, line),
-                getTappingTestAggregate(prefix, Tapping, line)
+                line.getWalkingTestAggregate(prefix, Circle),
+                line.getWalkingTestAggregate(prefix, Square),
+                line.getWalkingTestAggregate(prefix, Serpentine),
+                line.getWalkingTestAggregate(prefix, SpeedCircle),
+                line.getTappingTestAggregate(prefix, RandomTapping),
+                line.getTappingTestAggregate(prefix, Tapping)
         )
     }
 
-    private fun convertTrails(prefix: String, line: Map<String, String>): List<AltoidaTrial> {
-        return mutableListOf(AltoidaTrial())
+    private fun Map<String, String>.getTrails(prefix: String): List<AltoidaTrial> {
+        return listOf("1", "2", "3").map { testIndex ->
+            AltoidaTrial(
+                    this.getValue(prefix + "PLACEDURATION" + testIndex).toFloat(),
+                    this.getValue(prefix + "FINDDURATION" + testIndex).toFloat(),
+                    this.getValue(prefix + "ANGULARCHANGEF" + testIndex).toFloat(),
+                    this.getValue(prefix + "WALKTURNANALYSISF" + testIndex).toFloat(),
+                    this.getValue(prefix + "DCOMPLEXITYF" + testIndex).toFloat()
+                    )
+        }
     }
 
-    private fun getTrailMeans(prefix: String, line: Map<String, String>): AltoidaTrial {
-        return AltoidaTrial()
+    private fun Map<String, String>.getTrailMeans(prefix: String): AltoidaTrial {
+        return AltoidaTrial(
+                this.getValue(prefix + "PLACEDURATIONS").toFloat(),
+                this.getValue(prefix + "FINDDURATIONS").toFloat(),
+                this.getValue(prefix + "PLACEDURATIONS").toFloat(), // TODO this should be null
+                this.getValue(prefix + "WALKTURNANALYSISF").toFloat(),
+                this.getValue(prefix + "PLACEDURATION").toFloat() // TODO this should be null
+        )
     }
 
-    private fun getWalkingTestAggregate(prefix: String, type: AltoidaWalkingTestTypes, line: Map<String, String>): AltoidaWalkingTestAggregate {
-        return AltoidaWalkingTestAggregate()
+    private fun Map<String, String>.getWalkingTestAggregate(prefix: String, type: AltoidaWalkingTestTypes): AltoidaWalkingTestAggregate {
+        val testName = when (type) {
+            Circle -> "CIRCLE"
+            Square -> "SQUARE"
+            Serpentine -> "SERPENTINE"
+            SpeedCircle -> "SPEEDCIRCLE"
+        }
+
+        return AltoidaWalkingTestAggregate(
+                this.getValue(prefix + "NORM" + testName + "MEAN").toFloat(),
+                this.getValue(prefix + "NORM" + testName + "VARIANCE").toFloat(),
+                this.getValue(prefix + "NORM" + testName + "TIMERATIOWITHIN").toFloat(),
+                this.getValue(prefix + "NORM" + testName + "DISTRATIOWITHIN").toFloat(),
+                this.getValue(prefix + "NORM" + testName + "DISTWITHIN").toFloat(),
+                this.getValue(prefix + "NORM" + testName + "DISTTOTAL").toFloat(),
+                this.getValue(prefix + "NORM" + testName + "ANGLESUM").toFloat(),
+                this.getValue(prefix + "NORM" + testName + "DIRECTIONALCHANGES").toInt(),
+                this.getValue(prefix + "NORM" + testName + "YPROGRESS")?.toFloat(),
+                this.getValue(prefix + "NORM" + testName + "SPEED").toFloat(),
+                this.getValue(prefix + "NORM" + testName + "SPEEDACCURACYRATIO").toFloat(),
+                this.getValue(prefix + "NORM" + testName + "DURATION").toFloat(),
+                this.getValue(prefix + "NORM" + testName + "FULLDURATION").toFloat()
+        )
     }
 
-    private fun getTappingTestAggregate(prefix: String, type: AltoidaTappingTestTypes, line: Map<String, String>): AltoidaTappingTestAggregate {
-        return AltoidaTappingTestAggregate()
+    private fun Map<String, String>.getTappingTestAggregate(prefix: String, type: AltoidaTappingTestTypes): AltoidaTappingTestAggregate {
+        val testType = if (type === RandomTapping) "RANDOMTAPPING" else "TAPPING"
+        return AltoidaTappingTestAggregate(
+                this.getValue(prefix + "NORM" + testType + "MEAN").toFloat(),
+                this.getValue(prefix + "NORM" + testType + "VARIANCE").toFloat(),
+                this.getValue(prefix + "NORM" + testType + "COUNT").toInt(),
+                this.getValue(prefix + "NORM" + testType + "REACTIONTIMES").toFloat(),
+                this.getValue(prefix + "NORM" + testType + "RATE").toFloat(),
+                this.getValue(prefix + "NORM" + testType + "DURATION").toFloat(),
+                this.getValue(prefix + "NORM" + testType + "FULLDURATION").toFloat()
+        )
     }
 
     private enum class AltoidaWalkingTestTypes {
