@@ -78,9 +78,9 @@ class AltoidaTestMetricsProcessor(private val type: AltoidaTestCategory, overrid
         return AltoidaTrial(
                 this.getValue(prefix + "PLACEDURATIONS").toFloat(),
                 this.getValue(prefix + "FINDDURATIONS").toFloat(),
-                null, // TODO this should be null
+                null,
                 this.getValue(prefix + "WALKTURNANALYSISF").toFloat(),
-                null // TODO this should be null
+                null
         )
     }
 
