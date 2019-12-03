@@ -31,8 +31,8 @@ class AltoidaTestMetricsProcessor(private val type: AltoidaTestCategory, overrid
                 line.getValue(prefix + "TOOMUCHMOVEMENTCOUNT").toInt(),
                 line.getValue(prefix + "FINDBETTERPLACECOUNT").toFloat(),
                 line.getValue(prefix + "INTROREADTIMES").toFloat(),
-                line.getValue(prefix + "INTROREADTIMES1").toFloat(),
-                line.getValue(prefix + "INTROREADTIMES2").toFloat(),
+                line.getValue(prefix + "INTROREADTIME1").toFloat(),
+                line.getValue(prefix + "INTROREADTIME2").toFloat(),
                 line.getValue(prefix + "PLACEDELAYS").toFloat(),
                 line.getValue(prefix + "SPOTALREADYTAKENCOUNT").toInt(),
                 line.getTrails(prefix),
@@ -78,9 +78,9 @@ class AltoidaTestMetricsProcessor(private val type: AltoidaTestCategory, overrid
         return AltoidaTrial(
                 this.getValue(prefix + "PLACEDURATIONS").toFloat(),
                 this.getValue(prefix + "FINDDURATIONS").toFloat(),
-                this.getValue(prefix + "PLACEDURATIONS").toFloat(), // TODO this should be null
+                null, // TODO this should be null
                 this.getValue(prefix + "WALKTURNANALYSISF").toFloat(),
-                this.getValue(prefix + "PLACEDURATION").toFloat() // TODO this should be null
+                null // TODO this should be null
         )
     }
 
@@ -99,9 +99,9 @@ class AltoidaTestMetricsProcessor(private val type: AltoidaTestCategory, overrid
                 this.getValue(prefix + "NORM" + testName + "DISTRATIOWITHIN").toFloat(),
                 this.getValue(prefix + "NORM" + testName + "DISTWITHIN").toFloat(),
                 this.getValue(prefix + "NORM" + testName + "DISTTOTAL").toFloat(),
-                this.getValue(prefix + "NORM" + testName + "ANGLESUM").toFloat(),
-                this.getValue(prefix + "NORM" + testName + "DIRECTIONALCHANGES").toInt(),
-                this.getValue(prefix + "NORM" + testName + "YPROGRESS")?.toFloat(),
+                if (type === Serpentine) null else this.getValue(prefix + "NORM" + testName + "ANGLESUM").toFloat(),
+                if (type === Serpentine) null else this.getValue(prefix + "NORM" + testName + "DIRECTIONALCHANGES").toInt(),
+                if (type === Serpentine) this.getValue(prefix + "NORM" + testName + "YPROGRESS")?.toFloat() else null,
                 this.getValue(prefix + "NORM" + testName + "SPEED").toFloat(),
                 this.getValue(prefix + "NORM" + testName + "SPEEDACCURACYRATIO").toFloat(),
                 this.getValue(prefix + "NORM" + testName + "DURATION").toFloat(),
