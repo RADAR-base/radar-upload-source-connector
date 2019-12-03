@@ -28,6 +28,6 @@ class WearableCameraConverterFactory : ConverterFactory {
 
         val processors = listOf(CameraDataFileProcessor(), CameraUploadProcessor(credentials, root, advertizedUrl))
         return listOf(ZipFileProcessorFactory(processors, logRepository) { name ->
-            !name.contains("256_192") && !name.contains("640_480")})
+            !name.contains("/256_192/") && !name.contains("/640_480/")})
     }
 }
