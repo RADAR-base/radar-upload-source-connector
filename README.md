@@ -90,7 +90,7 @@ sourceTypes: # these are the data source types that are supported to upload data
       - "application/zip"
     timeRequired: false
     sourceIdRequired: false
-  - name: "altoida-zip"
+  - name: "altoida"
     topics:
       - "connect_upload_altoida_acceleration"
     contentTypes:
