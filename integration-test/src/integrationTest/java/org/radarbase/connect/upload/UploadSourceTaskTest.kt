@@ -90,7 +90,7 @@ class UploadSourceTaskTest {
     @Test
     @DisplayName("Should be able to convert a record with ZIP file")
     fun successfulZipFileConversion() {
-        val sourceType = "altoida-zip"
+        val sourceType = "altoida"
         val fileName = "TEST_ZIP.zip"
         val createdRecord = createRecordAndUploadContent(accessToken, sourceType, fileName)
         assertNotNull(createdRecord)

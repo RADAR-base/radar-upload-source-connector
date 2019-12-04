@@ -24,7 +24,7 @@ import org.radarbase.connect.upload.converter.*
 import org.radarbase.connect.upload.converter.altoida.summary.AltoidaExportCsvProcessor
 
 class AltoidaConverterFactory : ConverterFactory {
-    override val sourceType: String = "altoida-zip"
+    override val sourceType: String = "altoida"
 
     override fun fileProcessorFactories(
             settings: Map<String, String>,

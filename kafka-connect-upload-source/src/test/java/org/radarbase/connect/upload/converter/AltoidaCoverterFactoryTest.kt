@@ -33,7 +33,7 @@ class AltoidaCoverterFactoryTest {
                     status = "PROCESSING"
             ),
             data = null,
-            sourceType = "altoida-zip"
+            sourceType = "altoida"
 
     )
 
@@ -43,7 +43,7 @@ class AltoidaCoverterFactoryTest {
         logRepository = ConverterLogRepository()
         val converterFactory = AltoidaConverterFactory()
         val config = SourceTypeDTO(
-                name = "altoida-zip",
+                name = "altoida",
                 configuration = emptyMap(),
                 sourceIdRequired = false,
                 timeRequired = false,
