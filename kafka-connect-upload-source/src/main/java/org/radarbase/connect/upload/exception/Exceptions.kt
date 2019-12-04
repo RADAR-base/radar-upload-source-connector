@@ -19,16 +19,16 @@
 
 package org.radarbase.connect.upload.exception
 
-class NotAuthorizedException(message: String) : RuntimeException(message)
-
-class BadGatewayException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
-
 class ConflictException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
 
-class InvalidFormatException(message: String) : RuntimeException(message)
+open class ConversionFailedException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
 
-class DataProcessorNotFoundException(message: String) : RuntimeException(message)
+class DataProcessorNotFoundException(message: String) : ConversionFailedException(message)
 
-class ConversionFailedException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
+class InvalidFormatException(message: String) : ConversionFailedException(message)
 
-class ConversionTemporarilyFailedException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
+open class ConversionTemporarilyFailedException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
+
+class NotAuthorizedException(message: String) : ConversionTemporarilyFailedException(message)
+
+class BadGatewayException(message: String, cause: Throwable? = null) : ConversionTemporarilyFailedException(message, cause)

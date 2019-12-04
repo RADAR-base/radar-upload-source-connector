@@ -51,11 +51,17 @@ describe('axios/file', () => {
     const id = 'id';
     const fileName = 'fileName';
     const file = { type: 'fileObject' };
-    const headers = { 'content-type': file.type };
+    const fileType = 'fileType';
+    const onUploadProgress = jest.fn();
+    const headers = { 'content-type': fileType };
     axios.put.mockResolvedValue();
-    return fileAPI.putRecords({ id, fileName, file })
+    return fileAPI.putRecords({
+      id, fileName, file, fileType, onUploadProgress,
+    })
       .then(() => {
-        expect(axios.put).toBeCalledWith(`records/${id}/contents/${fileName}`, file, { headers });
+        expect(axios.put).toBeCalledWith(`records/${id}/contents/${fileName}`, file, expect.objectContaining({
+          headers,
+        }));
       });
   });
 

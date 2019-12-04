@@ -35,7 +35,6 @@ internal class ClientCredentialsAuthorizerTest {
 
     @BeforeEach
     fun setUp() {
-
         httpClient = OkHttpClient()
         clientCredentialsAuthorizer = ClientCredentialsAuthorizer(
                 httpClient,
@@ -43,11 +42,6 @@ internal class ClientCredentialsAuthorizerTest {
                 uploadConnectSecret,
                 tokenUrl
         )
-    }
-
-    @AfterEach
-    fun tearDown() {
-
     }
 
     @Test

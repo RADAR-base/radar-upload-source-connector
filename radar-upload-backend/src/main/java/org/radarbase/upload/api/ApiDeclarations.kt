@@ -37,6 +37,7 @@ data class ContentsDTO(
 data class RecordDataDTO(
         var projectId: String?,
         var userId: String?,
+        var externalUserId: String? = null,
         var sourceId: String?,
         var time: LocalDateTime? = null,
         var timeZoneOffset: Int? = null,
@@ -79,7 +80,7 @@ data class SourceTypeContainerDTO(
 
 data class PollDTO(
         var limit: Int = 10,
-        var supportedConverters: List<String>)
+        var supportedConverters: Set<String>)
 
 data class Page(
         val pageNumber: Int = 1,
