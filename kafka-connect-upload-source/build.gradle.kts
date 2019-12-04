@@ -13,7 +13,7 @@ project.extra.apply {
     set("jacksonDataVersion", "2.9.10")
     set("openCsvVersion", "4.6")
     set("confluentVersion", "5.3.0")
-    set("radarSchemaVersion", "0.5.4-SNAPSHOT")
+    set("radarSchemaVersion", "0.5.5-SNAPSHOT")
 }
 
 repositories {

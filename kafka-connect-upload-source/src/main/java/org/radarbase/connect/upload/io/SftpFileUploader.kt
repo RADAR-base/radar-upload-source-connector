@@ -3,6 +3,7 @@ package org.radarbase.connect.upload.io
 import com.jcraft.jsch.ChannelSftp
 import com.jcraft.jsch.JSch
 import com.jcraft.jsch.Session
+import com.jcraft.jsch.SftpException
 import java.io.Closeable
 import java.io.InputStream
 import java.nio.file.Path
@@ -29,7 +30,12 @@ class SftpFileUploader(credentials: SftpCredentials) : Closeable {
         // copy remote log file to localhost.
         (session.openChannel("sftp") as ChannelSftp).run {
             connect()
-            put(stream, path.toString())
+            try {
+                put(stream, path.toString())
+            } catch (ex: SftpException) {
+                mkdirs(path)
+                put(stream, path.toString())
+            }
             exit()
         }
     }
@@ -45,5 +51,25 @@ class SftpFileUploader(credentials: SftpCredentials) : Closeable {
             val privateKeyFile: String? = null,
             val password: String? = null,
             val privateKeyPassphrase: String? = null)
-}
 
+    companion object {
+        fun ChannelSftp.mkdirs(path: Path) {
+            var isMissing = false
+            for (i in 1 until path.nameCount) {
+                val nextDirectory = path.subpath(0, i).toString()
+                if (!isMissing) {
+                    try {
+                        lstat(nextDirectory)
+                    } catch (ex: SftpException) {
+                        if (ex.id == ChannelSftp.SSH_FX_NO_SUCH_FILE) {
+                            isMissing = true
+                        } else throw ex // unknown exception
+                    }
+                }
+                if (isMissing) {
+                    mkdir(nextDirectory)
+                }
+            }
+        }
+    }
+}

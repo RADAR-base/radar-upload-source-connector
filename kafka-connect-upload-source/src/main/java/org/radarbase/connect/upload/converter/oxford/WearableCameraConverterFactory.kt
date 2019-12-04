@@ -22,12 +22,13 @@ class WearableCameraConverterFactory : ConverterFactory {
                 privateKeyFile = sourceConfig["keyFile"],
                 privateKeyPassphrase = sourceConfig["keyPassphrase"])
 
-        val root = Paths.get(sourceConfig.getValue("root"))
+        val root = Paths.get(sourceConfig["root"] ?: ".")
 
         val advertizedUrl = URL(sourceConfig["advertizedUrl"] ?: "sftp://${credentials.host}:${credentials.port}")
 
         val processors = listOf(CameraDataFileProcessor(), CameraUploadProcessor(credentials, root, advertizedUrl))
         return listOf(ZipFileProcessorFactory(processors, logRepository) { name ->
+            // ignore downsized versions of images
             !name.contains("/256_192/") && !name.contains("/640_480/")})
     }
 }
