@@ -4,9 +4,9 @@ plugins {
 
 subprojects {
     group = "org.radarbase"
-    version = "0.3.0-SNAPSHOT"
+    version = "0.3.0"
 }
 
 tasks.wrapper {
-    gradleVersion = "5.6.2"
+    gradleVersion = "6.0.1"
 }
