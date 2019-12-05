@@ -23,7 +23,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.radarbase.connect.upload.converter.axivity;
+package org.radarbase.connect.upload.converter.axivity.newcastle;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -34,7 +34,7 @@ import java.io.PrintStream;
 
 /**
  * Command-line utility for converting CWA files to CSV files, demonstrates the CwaCsvInputStream class.
- * All data output in CSV to stdout, all other output to stderr.  
+ * All data output in CSV to stdout, all other output to stderr.
  * @author Dan Jackson
  */
 public class CwaConverter {
@@ -86,13 +86,13 @@ public class CwaConverter {
 					help = true;
 				}
 			}
-			
+
 			// Display help if required
 			if (help) {
 				System.err.println("Usage: CwaConverter [[-in] CWA-DATA.CWA] [-out CWA-DATA.CSV] [-start 0] [-skip 1] [-count -1] [-light] [-temp] [-batt] [-events] [-metadata]");
 				System.exit(-1);
 			}
-			
+
 			// Establish input and output streams
 			InputStream in = System.in;
 			PrintStream out = System.out;
@@ -102,22 +102,25 @@ public class CwaConverter {
 			if (outputFile != null) {
 				out = new PrintStream(new FileOutputStream(outputFile), true);
 			}
-			
+
 			// Create the filter stream around the input stream
 			BufferedReader filter = new BufferedReader(new InputStreamReader(new CwaCsvInputStream(in, start, skip, count, options)));
-			
+
 			// While not EOF, read and output the CSV lines
 			String line;
 
+//            while ((line = filter.readLine()) != null) {
+//                out.println(line);
+//            }
 			for(int i =0; i<20; i++) {
                 line = filter.readLine();
 				out.println(line);
 			}
-			
+
 			// Close the streams
 			filter.close();
 			out.close();
-			
+
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.exit(-2);
