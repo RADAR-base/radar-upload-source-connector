@@ -21,9 +21,10 @@ package org.radarbase.connect.upload.converter.altoida
 
 import org.radarbase.connect.upload.api.SourceTypeDTO
 import org.radarbase.connect.upload.converter.*
+import org.radarbase.connect.upload.converter.altoida.summary.AltoidaExportCsvProcessor
 
-class AltoidaZipConverterFactory : ConverterFactory {
-    override val sourceType: String = "altoida-zip"
+class AltoidaConverterFactory : ConverterFactory {
+    override val sourceType: String = "altoida"
 
     override fun fileProcessorFactories(
             settings: Map<String, String>,
@@ -40,13 +41,18 @@ class AltoidaZipConverterFactory : ConverterFactory {
                 AltoidaObjectCsvProcessor(),
                 AltoidaPathCsvProcessor(),
                 AltoidaRotationCsvProcessor(),
-                AltoidaTouchscreenCsvProcessor())
+                AltoidaTapScreenCsvProcessor(),
+                AltoidaTouchScreenCsvProcessor(),
+                AltoidaEyeTrackingCsvProcessor(),
+                AltoidaBlinkCsvProcessor())
 
         val fileProcessors = listOf(
                 CsvProcessorFactory(csvLineProcessors, logRepository),
                 AltoidaMetadataFileProcessor(logRepository))
 
-        return listOf(ZipFileProcessorFactory(fileProcessors, logRepository))
+        return listOf(
+                ZipFileProcessorFactory(fileProcessors, logRepository),
+                CsvProcessorFactory(listOf(AltoidaExportCsvProcessor()), logRepository))
     }
 }
 

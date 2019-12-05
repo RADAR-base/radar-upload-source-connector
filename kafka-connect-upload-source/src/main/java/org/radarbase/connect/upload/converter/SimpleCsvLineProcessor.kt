@@ -18,12 +18,17 @@ package org.radarbase.connect.upload.converter
 
 import org.apache.avro.generic.IndexedRecord
 
+/**
+ * Simple Processor for one line to one record of a single topic conversion.
+ */
 class SimpleCsvLineProcessor(
         override val recordLogger: RecordLogger,
         private val topic: String,
-        private val conversion: SimpleCsvLineProcessor.(lineValues: Map<String, String>, timeReceived: Double) -> IndexedRecord
+        private val conversion: SimpleCsvLineProcessor.(lineValues: Map<String, String>, timeReceived: Double) -> IndexedRecord?
 ) : CsvLineProcessorFactory.CsvLineProcessor {
-    override fun convertToRecord(lineValues: Map<String, String>, timeReceived: Double): FileProcessorFactory.TopicData? {
-        return FileProcessorFactory.TopicData(topic, conversion(lineValues, timeReceived))
+    override fun convertToRecord(lineValues: Map<String, String>, timeReceived: Double): List<FileProcessorFactory.TopicData>? {
+        return conversion(lineValues, timeReceived)?.run {
+            listOf(FileProcessorFactory.TopicData(topic, this))
+        }
     }
 }

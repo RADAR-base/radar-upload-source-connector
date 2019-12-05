@@ -17,21 +17,21 @@
 package org.radarbase.connect.upload.converter.altoida
 
 import org.radarbase.connect.upload.converter.SimpleCsvLineProcessor
-import org.radarcns.connector.upload.altoida.AltoidaTouchscreen
+import org.radarcns.connector.upload.altoida.AltoidaEyeTracking
 
-class AltoidaTouchscreenCsvProcessor : AltoidaCsvProcessor() {
-    override val fileNameSuffix: String = "_NORMAL.csv"
+class AltoidaEyeTrackingCsvProcessor : AltoidaCsvProcessor() {
+    override val fileNameSuffix: String = "_EYE.csv"
 
-    override val topic: String = "connect_upload_altoida_touchscreen"
+    override val topic: String = "connect_upload_altoida_eye_tracking"
 
     override val header: List<String> = listOf("TIMESTAMP", "X", "Y")
 
     override fun SimpleCsvLineProcessor.lineConversion(
             line: Map<String, String>,
             timeReceived: Double
-    ) =  AltoidaTouchscreen(
+    ) = AltoidaEyeTracking(
             time(line),
             timeReceived,
-            line.getValue("X").toDouble(),
-            line.getValue("Y").toDouble())
+            line.getValue("X").toFloatOrNull(),
+            line.getValue("Y").toFloatOrNull())
 }
