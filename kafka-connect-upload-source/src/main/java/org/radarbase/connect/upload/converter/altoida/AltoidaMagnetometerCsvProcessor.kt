@@ -20,10 +20,10 @@
 package org.radarbase.connect.upload.converter.altoida
 
 import org.radarbase.connect.upload.converter.SimpleCsvLineProcessor
-import org.radarcns.connector.upload.altoida.AltoidaMagnetometer
+import org.radarcns.connector.upload.altoida.AltoidaMagneticField
 
 class AltoidaMagnetometerCsvProcessor : AltoidaCsvProcessor() {
-    override val fileNameSuffix: String = "_GRA.csv"
+    override val fileNameSuffix: String = "_MAG.csv"
 
     override val topic: String = "connect_upload_altoida_magnetometer"
 
@@ -32,7 +32,7 @@ class AltoidaMagnetometerCsvProcessor : AltoidaCsvProcessor() {
     override fun SimpleCsvLineProcessor.lineConversion(
             line: Map<String, String>,
             timeReceived: Double
-    ) = AltoidaMagnetometer(
+    ) = AltoidaMagneticField(
             time(line),
             timeReceived,
             line.getValue("X").toFloat(),

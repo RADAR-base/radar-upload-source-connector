@@ -29,7 +29,7 @@ import okhttp3.OkHttpClient
 import org.apache.kafka.common.config.AbstractConfig
 import org.apache.kafka.common.config.ConfigDef
 import org.radarbase.connect.upload.auth.ClientCredentialsAuthorizer
-import org.radarbase.connect.upload.converter.altoida.AltoidaZipConverterFactory
+import org.radarbase.connect.upload.converter.altoida.AltoidaConverterFactory
 import org.radarbase.connect.upload.converter.oxford.WearableCameraConverterFactory
 import org.radarbase.connect.upload.converter.phone.AcceleratometerZipConverterFactory
 import org.radarbase.connect.upload.converter.phone.AccelerometerConverterFactory
@@ -98,9 +98,8 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
         private val UPLOAD_SOURCE_CONVERTERS_DEFAULT: List<String> = listOf(
                 AccelerometerConverterFactory::class.java.name,
                 AcceleratometerZipConverterFactory::class.java.name,
-                AltoidaZipConverterFactory::class.java.name,
-                WearableCameraConverterFactory::class.java.name
-                )
+                AltoidaConverterFactory::class.java.name,
+                WearableCameraConverterFactory::class.java.name)
 
         const val SOURCE_POLL_INTERVAL_CONFIG = "upload.source.poll.interval.ms"
         private const val SOURCE_POLL_INTERVAL_DOC = "How often to poll the source URL."

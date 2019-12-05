@@ -27,7 +27,7 @@ class AltoidaDiagnosticsCsvProcessor : AltoidaCsvProcessor() {
 
     override val topic: String = "connect_upload_altoida_attitude"
 
-    override val header: List<String> = listOf("TIMESTAMP", "TAG", "PAYLOAD")
+    override val header: List<String> = listOf("TIMESTAMP", "TAG", "PAYLOAD", "CONTRAST", "MOVEMENT", "ANGLE", "FEATURES")
 
     override fun SimpleCsvLineProcessor.lineConversion(
             line: Map<String, String>,
