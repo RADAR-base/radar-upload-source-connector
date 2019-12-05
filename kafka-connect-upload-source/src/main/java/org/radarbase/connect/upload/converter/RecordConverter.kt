@@ -55,21 +55,27 @@ class RecordConverter(
 
             val key = recordData.computeObservationKey(avroData)
 
-            return recordFileNames
+            val sourceRecords = recordFileNames
                     .flatMap { contents ->
                         client.retrieveFile(record, contents.fileName) { body ->
                             convertFile(record, contents, body.byteStream(), recordLogger)
                         }
                     }
                     .map { topicData ->
-                        val valRecord = avroData.toConnectData(topicData.value.schema, topicData.value)
-                        val offset = mutableMapOf(
-                                END_OF_RECORD_KEY to topicData.endOfFileOffSet,
-                                RECORD_ID_KEY to recordId,
-                                REVISION_KEY to recordMetadata.revision
-                        )
-                        SourceRecord(getPartition(), offset, topicData.topic, key.schema(), key.value(), valRecord.schema(), valRecord.value())
+                        try {
+                            val valRecord = avroData.toConnectData(topicData.value.schema, topicData.value)
+                            val offset = mutableMapOf(
+                                    END_OF_RECORD_KEY to topicData.endOfFileOffSet,
+                                    RECORD_ID_KEY to recordId,
+                                    REVISION_KEY to recordMetadata.revision
+                            )
+                            SourceRecord(getPartition(), offset, topicData.topic, key.schema(), key.value(), valRecord.schema(), valRecord.value())
+                        } catch (exe: Exception) {
+                            logger.info("This value {} and schema {}", topicData.value.schema.toString(true))
+                            null
+                        }
                     }
+            return sourceRecords.filterNotNull()
         } catch (exe: IOException) {
             recordLogger.error("Temporarily could not convert record $recordId", exe)
             throw ConversionTemporarilyFailedException("Temporarily could not convert record $recordId", exe)

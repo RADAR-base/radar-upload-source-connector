@@ -32,7 +32,7 @@ class AltoidaObjectCsvProcessor : AltoidaCsvProcessor() {
     override fun SimpleCsvLineProcessor.lineConversion(
             line: Map<String, String>,
             timeReceived: Double
-    ) =  AltoidaObject(
+    ) = AltoidaObject(
             time(line),
             timeReceived,
             line["OBJ"],

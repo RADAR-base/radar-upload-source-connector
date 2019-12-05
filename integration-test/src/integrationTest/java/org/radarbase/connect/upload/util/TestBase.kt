@@ -52,10 +52,10 @@ class TestBase {
         val fileAndSourceTypeStore = mapOf(
                 "TEST_ACC.csv" to "phone-acceleration",
                 "TEST_ACC.zip" to "acceleration-zip",
-                "TEST_ZIP.zip" to "altoida-zip"
+                "TEST_ZIP.zip" to "altoida"
         )
 
-        const val baseUri = "http://0.0.0.0:8085/radar-upload"
+        const val baseUri = "http://0.0.0.0:8085/upload/api"
 
         const val tokenUrl = "http://localhost:8090/managementportal/oauth/token"
 
@@ -90,7 +90,7 @@ class TestBase {
         )
 
         private val altoidaZip = SourceTypeDTO(
-                name = "altoida-zip",
+                name = "altoida",
                 topics = mutableSetOf("test_topic"),
                 contentTypes = mutableSetOf("application/zip"),
                 timeRequired = false,

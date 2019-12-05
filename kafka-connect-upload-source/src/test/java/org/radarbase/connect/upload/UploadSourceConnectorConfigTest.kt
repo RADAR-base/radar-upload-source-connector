@@ -22,7 +22,7 @@ package org.radarbase.connect.upload
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
-import org.radarbase.connect.upload.converter.altoida.AltoidaZipConverterFactory
+import org.radarbase.connect.upload.converter.altoida.AltoidaConverterFactory
 import org.radarbase.connect.upload.converter.phone.AccelerometerConverterFactory
 
 class UploadSourceConnectorConfigTest {
@@ -39,7 +39,7 @@ class UploadSourceConnectorConfigTest {
                 "upload.source.poll.interval.ms" to "3600000",
                 "upload.source.record.converter.classes" to listOf(
                         AccelerometerConverterFactory::class.java.name,
-                        AltoidaZipConverterFactory::class.java.name
+                        AltoidaConverterFactory::class.java.name
                 ).joinToString(separator=",")
         )
         val config = UploadSourceConnectorConfig(settings)

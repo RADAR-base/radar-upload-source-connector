@@ -32,7 +32,7 @@ class AltoidaPathCsvProcessor : AltoidaCsvProcessor() {
     override fun SimpleCsvLineProcessor.lineConversion(
             line: Map<String, String>,
             timeReceived: Double
-    ) =  AltoidaPath(
+    ) = AltoidaPath(
             time(line),
             timeReceived,
             line.getValue("X").toFloat(),
