@@ -5,17 +5,22 @@ import com.jcraft.jsch.JSch
 import com.jcraft.jsch.Session
 import com.jcraft.jsch.SftpException
 import java.io.Closeable
+import java.io.IOException
 import java.io.InputStream
+import java.lang.Exception
 import java.nio.file.Path
 import java.util.*
 
 
-class SftpFileUploader(credentials: SftpCredentials) : Closeable {
+class SftpFileUploader(credentials: SftpCredentials) : FileUploader {
     private val jsch = JSch()
     private val session: Session
+    private val sftpChannel: ChannelSftp
 
     init {
-        jsch.addIdentity(credentials.privateKeyFile, credentials.privateKeyPassphrase)
+        credentials.privateKeyFile?.let {
+            jsch.addIdentity(it, credentials.privateKeyPassphrase)
+        }
         session = jsch.getSession(credentials.username, credentials.host, credentials.port)
         session.setPassword(credentials.password)
 
@@ -23,25 +28,33 @@ class SftpFileUploader(credentials: SftpCredentials) : Closeable {
         config["StrictHostKeyChecking"] = "no"
         session.setConfig(config)
         session.connect()
+        sftpChannel = session.openChannel("sftp") as ChannelSftp
+        sftpChannel.connect()
     }
 
-    fun upload(path: Path, stream: InputStream) {
+    override fun upload(path: Path, stream: InputStream) {
         // copy remote log file to localhost.
         // copy remote log file to localhost.
-        (session.openChannel("sftp") as ChannelSftp).run {
-            connect()
+        sftpChannel.run {
             try {
                 put(stream, path.toString())
             } catch (ex: SftpException) {
                 mkdirs(path)
                 put(stream, path.toString())
             }
-            exit()
         }
     }
 
     override fun close() {
+        var exception: Exception? = null
+        try {
+            sftpChannel.disconnect()
+        } catch (ex: Exception) {
+            exception = ex
+        }
+
         session.disconnect()
+        exception?.let { throw it }
     }
 
     data class SftpCredentials(
