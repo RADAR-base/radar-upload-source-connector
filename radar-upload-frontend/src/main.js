@@ -4,7 +4,6 @@ import router from './router';
 import store from './store';
 import vuetify from './plugins/vuetify';
 import './plugins/filter';
-import './plugins/vue-moment';
 import services from '@/axios/';
 import '@/assets/styles/main.scss';
 import Snackbar from './plugins/snackbar';

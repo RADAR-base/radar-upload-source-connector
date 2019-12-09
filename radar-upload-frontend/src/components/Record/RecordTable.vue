@@ -73,7 +73,7 @@
       </v-row>
     </template>
 
-    <template #item.uploadedAt="{item}">
+    <template #item.modifiedDate="{item}">
       <td
         class="pl-0 pb-0"
       >
@@ -81,47 +81,64 @@
       </td>
     </template>
 
-    <template #item.logs="{item}">
-      <td
-        class="pl-0 pb-0"
-        style="cursor: pointer;"
+    <template #item.actions="{item}">
+      <!-- edit uploaded files  -->
+      <Upload
+        button-is-icon="mdi-circle-edit-outline"
+        :is-new-upload="false"
+        :source-type="item.sourceType"
+        :files="item.files"
+        :record="item"
+        @finishEditRecord="finishEditRecord"
+        :is-disabled="item.status!=='INCOMPLETE'"
+      />
+
+      <!-- open logs  -->
+
+      <v-dialog
+        v-model="dialog"
+        max-width="700"
       >
-        <v-dialog
-          v-model="dialog"
-          max-width="700"
-        >
-          <template #activator="{ on }">
-            <v-icon
-              v-if="item.logs"
-              v-on="on"
-              @click="viewLogs(item.logs.url)"
-            >
-              mdi-folder-open-outline
-            </v-icon>
-          </template>
-          <v-card>
-            <v-card-title v-show="!loadingLog">
-              Record ID: {{ item.id }}
-            </v-card-title>
+        <template #activator="{ on }">
+          <v-icon
+            v-on="on"
+            @click="viewLogs(item.logs.url)"
+            color="success"
+            :disabled="!item.logs"
+          >
+            mdi-folder-open-outline
+          </v-icon>
+        </template>
+        <v-card>
+          <v-card-title v-show="!loadingLog">
+            Record ID: {{ item.id }}
+          </v-card-title>
 
-            <v-card-text
-              color="black"
-              v-show="!loadingLog"
-            >
-              {{ recordLogs }}
-            </v-card-text>
+          <v-card-text
+            color="black"
+            v-show="!loadingLog"
+          >
+            {{ recordLogs }}
+          </v-card-text>
 
-            <v-card-text v-show="loadingLog">
-              Loading logs...
-              <v-progress-circular
-                indeterminate
-                color="white"
-                class="mb-0"
-              />
-            </v-card-text>
-          </v-card>
-        </v-dialog>
-      </td>
+          <v-card-text v-show="loadingLog">
+            Loading logs...
+            <v-progress-circular
+              indeterminate
+              color="white"
+              class="mb-0"
+            />
+          </v-card-text>
+        </v-card>
+      </v-dialog>
+      <v-icon
+        color="error"
+        @click="deleteRecord({recordId: item.id, revision: item.revision})"
+        :disabled="item.status=='PROCESSING'"
+        class="pa-0"
+      >
+        mdi-close-circle
+      </v-icon>
     </template>
     <!-- file list -->
     <template #expanded-item="{item}">
@@ -139,7 +156,7 @@
             </v-icon>
           </v-list-item-avatar>
           <v-list-item-content>
-            <v-list-item-title v-text="file.fileName" />
+            <v-list-item-title v-text="file.fileName||file.name" />
             <v-list-item-subtitle>Size: {{ file.size }} Bytes</v-list-item-subtitle>
             <v-list-item-subtitle>{{ file.createdDate | localTime }}</v-list-item-subtitle>
           </v-list-item-content>
@@ -166,7 +183,11 @@
                 >
                   <v-list-item-group color="primary lighten-2">
                     <v-list-item>
-                      <a v-bind:href="file.url" download target="_blank">Download</a>
+                      <a
+                        :href="file.url"
+                        download
+                        target="_blank"
+                      >Download</a>
                     </v-list-item>
                   </v-list-item-group>
                 </v-list>
@@ -181,8 +202,12 @@
 
 <script>
 import fileAPI from '@/axios/file';
+import Upload from '@/components/Upload';
 
 export default {
+  components: {
+    Upload,
+  },
   data() {
     return {
       loading: false,
@@ -192,7 +217,7 @@ export default {
         { text: 'Source type', value: 'sourceType' },
         { text: 'Participant ID', value: 'userId' },
         { text: 'Last modified', value: 'modifiedDate' },
-        { text: 'Logs', value: 'logs' },
+        { text: 'Actions', value: 'actions' },
       ],
       recordList: [
       ],
@@ -263,6 +288,18 @@ export default {
     async getsourceTypeList() {
       const res = await fileAPI.getSourceTypes();
       this.sourceTypeList = res.map(el => el.name);
+    },
+    deleteRecord({ recordId, revision }) {
+      const recordIndex = this.recordList.findIndex(re => re.id === recordId);
+      fileAPI.deleteRecord({
+        recordId,
+        revision,
+      });
+      this.recordList.splice(recordIndex, 1);
+    },
+    finishEditRecord({ record }) {
+      const recordIndex = this.recordList.findIndex(re => re.id === record.id);
+      this.recordList.splice(recordIndex, 1, record);
     },
   },
   created() {

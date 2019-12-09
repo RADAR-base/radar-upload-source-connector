@@ -1,10 +1,10 @@
 plugins {
-    kotlin("jvm") version "1.3.41" apply false
+    kotlin("jvm") version "1.3.61" apply false
 }
 
 subprojects {
     group = "org.radarbase"
-    version = "0.2.0"
+    version = "0.3.0-SNAPSHOT"
 }
 
 tasks.wrapper {
