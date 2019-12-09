@@ -33,13 +33,12 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
-import org.hamcrest.CoreMatchers
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers
 import org.hamcrest.Matchers.*
-import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.radarbase.connect.upload.api.*
+import org.radarbase.connect.upload.api.ContentsDTO
+import org.radarbase.connect.upload.api.RecordDTO
+import org.radarbase.connect.upload.api.RecordDataDTO
+import org.radarbase.connect.upload.api.RecordMetadataDTO
 import org.radarbase.connect.upload.auth.ClientCredentialsAuthorizer
 import org.radarbase.upload.Config
 import org.radarbase.upload.api.SourceTypeDTO
@@ -53,10 +52,10 @@ class TestBase {
         val fileAndSourceTypeStore = mapOf(
                 "TEST_ACC.csv" to "phone-acceleration",
                 "TEST_ACC.zip" to "acceleration-zip",
-                "TEST_ZIP.zip" to "altoida-zip"
+                "TEST_ZIP.zip" to "altoida"
         )
 
-        const val baseUri = "http://0.0.0.0:8085/radar-upload"
+        const val baseUri = "http://0.0.0.0:8085/upload/api"
 
         const val tokenUrl = "http://localhost:8090/managementportal/oauth/token"
 
@@ -91,7 +90,7 @@ class TestBase {
         )
 
         private val altoidaZip = SourceTypeDTO(
-                name = "altoida-zip",
+                name = "altoida",
                 topics = mutableSetOf("test_topic"),
                 contentTypes = mutableSetOf("application/zip"),
                 timeRequired = false,
@@ -150,7 +149,7 @@ class TestBase {
             }
         }
 
-        private fun<T> call(
+        fun<T> call(
                 httpClient: OkHttpClient,
                 expectedStatus: Int,
                 parseClass: Class<T>,
@@ -201,6 +200,15 @@ class TestBase {
         }
 
         fun createRecordAndUploadContent(accessToken: String, sourceType: String, fileName: String): RecordDTO {
+            val recordCreated = createRecord(accessToken, sourceType)
+
+            //Test uploading request contentFile for created record
+            uploadContent(recordCreated.id!!, fileName, accessToken)
+            markReady(recordCreated.id!!, accessToken)
+            return recordCreated
+        }
+
+        fun createRecord(accessToken: String, sourceType: String): RecordDTO {
             val record = RecordDTO(
                     id = null,
                     data = RecordDataDTO(
@@ -221,14 +229,10 @@ class TestBase {
             }
             assertThat(recordCreated.id, not(nullValue()))
             assertThat(recordCreated.id!!, greaterThan(0L))
-
-            //Test uploading request contentFile for created record
-            uploadContent(recordCreated.id!!, fileName, accessToken)
-            markReady(recordCreated.id!!, accessToken)
             return recordCreated
         }
 
-        private fun uploadContent(recordId: Long, fileName: String, clientUserToken: String) {
+        fun uploadContent(recordId: Long, fileName: String, clientUserToken: String) {
             //Test uploading request contentFile
             val file = File(fileName)
 
@@ -240,7 +244,7 @@ class TestBase {
             assertThat(content.fileName, equalTo(fileName))
         }
 
-        private fun markReady(recordId: Long, clientUserToken: String) {
+        fun markReady(recordId: Long, clientUserToken: String) {
             val metadata = call(httpClient, 200, RecordMetadataDTO::class.java) {
                 url("$baseUri/records/$recordId/metadata")
                 post("{\"status\":\"READY\",\"revision\":1}".toRequestBody("application/json".toMediaType()))

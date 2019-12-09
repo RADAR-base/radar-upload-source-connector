@@ -2,14 +2,14 @@ package org.radarbase.upload.api
 
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-
-import org.junit.jupiter.api.Assertions.*
 import org.mockito.Mockito.mock
 import org.radarbase.upload.Config
 import org.radarbase.upload.doa.SourceTypeRepository
 import org.radarbase.upload.doa.entity.Record
 import org.radarbase.upload.doa.entity.RecordContent
+import org.radarbase.upload.service.UploadProjectService
 import java.net.URI
 import java.time.Instant
 
@@ -35,6 +35,7 @@ internal class RecordMapperImplTest {
                     on { baseUri } doReturn URI.create("http://localhost/upload/")
                 },
                 mock(SourceTypeRepository::class.java),
+                mock(UploadProjectService::class.java),
                 Config(advertisedBaseUri = URI.create("https://localhost/upload/")))
 
         val expected = ContentsDTO(

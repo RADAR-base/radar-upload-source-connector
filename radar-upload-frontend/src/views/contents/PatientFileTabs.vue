@@ -1,75 +1,70 @@
 <template>
-  <v-card v-show="currentProject">
-    <v-toolbar
-      flat
-    >
+  <div v-show="currentProject">
+    <v-card outlined>
       <!-- <v-app-bar-nav-icon /> -->
 
-      <v-toolbar-title>{{ currentProject }}</v-toolbar-title>
+      <v-card-title>
+        <span class="pr-2">{{ currentProject }} </span>
+        <Upload />
+      </v-card-title>
 
-      <v-spacer />
-
-      <QuickUpload />
-
-      <template #extension>
-        <v-tabs
-          v-model="tab"
+      <v-tabs
+        v-model="tab"
+        right
+      >
+        <v-tab
+          active-class
         >
-          <v-tabs-slider />
-          <v-tab
-            active-class
-            class="ml-0"
-          >
-            <v-icon class="pr-2">
-              mdi-account-box-multiple
-            </v-icon>
-            Participants
-          </v-tab>
+          <v-icon class="pr-2">
+            mdi-account-box-multiple
+          </v-icon>
+          Participants
+        </v-tab>
 
-          <v-tab>
-            <v-icon class="pr-2">
-              mdi-file-multiple
-            </v-icon>
-            Records
-          </v-tab>
-        </v-tabs>
-      </template>
-    </v-toolbar>
+        <v-tab>
+          <v-icon class="pr-2">
+            mdi-file-multiple
+          </v-icon>
+          Records
+        </v-tab>
+      </v-tabs>
+    </v-card>
 
-    <v-tabs-items
-      v-model="tab"
+
+    <v-card
+      class="mt-2"
+      outlined
     >
-      <v-card
-        flat
+      <v-tabs-items
+        v-model="tab"
       >
         <v-tab-item :value="0">
-          <PatientTable :is-active="tab==0" />
+          <PatientTable />
         </v-tab-item>
 
         <v-tab-item :value="1">
           <RecordTable :is-active="tab==1" />
         </v-tab-item>
-      </v-card>
-    </v-tabs-items>
-  </v-card>
+      </v-tabs-items>
+    </v-card>
+  </div>
 </template>
 
 <script>
 import PatientTable from '@/components/Patient/PatientTable';
 import RecordTable from '@/components/Record/RecordTable';
-import QuickUpload from '@/components/QuickUpload';
+import Upload from '@/components/Upload';
 
 export default {
   name: 'PatientFilterTabs',
   components: {
     RecordTable,
     PatientTable,
-    QuickUpload,
+    Upload,
   },
   data() {
     return {
       tab: 0,
-      sourceTypeList: [],
     };
   },
   computed: {

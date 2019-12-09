@@ -20,16 +20,15 @@
 package org.radarbase.connect.upload.api
 
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.equalTo
-import org.hamcrest.Matchers.greaterThan
+import org.hamcrest.Matchers.*
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.radarbase.connect.upload.converter.AccelerometerCsvRecordConverter
 import org.radarbase.connect.upload.converter.ConverterLogRepository
 import org.radarbase.connect.upload.converter.LogRepository
+import org.radarbase.connect.upload.converter.phone.AccelerometerConverterFactory
 import org.radarbase.connect.upload.util.TestBase.Companion.baseUri
 import org.radarbase.connect.upload.util.TestBase.Companion.clientCredentialsAuthorizer
 import org.radarbase.connect.upload.util.TestBase.Companion.createRecordAndUploadContent
@@ -37,9 +36,11 @@ import org.radarbase.connect.upload.util.TestBase.Companion.getAccessToken
 import org.radarbase.connect.upload.util.TestBase.Companion.httpClient
 import org.radarbase.connect.upload.util.TestBase.Companion.sourceTypeName
 import org.radarbase.connect.upload.util.TestBase.Companion.uploadBackendConfig
+import org.radarbase.jersey.GrizzlyServer
+import org.radarbase.jersey.config.ConfigLoader
 import org.radarbase.upload.Config
-import org.radarbase.upload.GrizzlyServer
 import org.radarbase.upload.doa.entity.RecordStatus
+import org.radarbase.upload.inject.ManagementPortalEnhancerFactory
 import java.io.File
 
 
@@ -68,15 +69,15 @@ class UploadBackendClientIntegrationTest {
                 baseUri
         )
 
-        logRepository = ConverterLogRepository(uploadBackendClient)
+        logRepository = ConverterLogRepository()
 
         accessToken = getAccessToken()
 
         config = uploadBackendConfig
+        val resources = ConfigLoader.loadResources(ManagementPortalEnhancerFactory::class.java, config)
 
-        server = GrizzlyServer(config)
+        server = GrizzlyServer(config.baseUri, resources)
         server.start()
-
     }
 
     @AfterAll
@@ -88,7 +89,7 @@ class UploadBackendClientIntegrationTest {
     fun requestAllConnectors() {
         val connectors = uploadBackendClient.requestAllConnectors()
         assertNotNull(connectors)
-        assertTrue(!connectors.sourceTypes.isEmpty())
+        assertThat(connectors.sourceTypes, not(empty()))
         assertNotNull(connectors.sourceTypes.find { it.name == sourceType })
     }
 
@@ -108,28 +109,26 @@ class UploadBackendClientIntegrationTest {
 
         val sourceType = uploadBackendClient.requestConnectorConfig(sourceType)
 
-        val converter = AccelerometerCsvRecordConverter()
-        converter.initialize(sourceType, uploadBackendClient, logRepository, emptyMap())
+        val converter = AccelerometerConverterFactory()
+                .converter(emptyMap(), sourceType, uploadBackendClient, logRepository)
 
         val recordToProcess = records.records.first { recordDTO -> recordDTO.sourceType == sourceTypeName }
         createdRecord.metadata = uploadBackendClient.updateStatus(recordToProcess.id!!, recordToProcess.metadata!!.copy(status = "PROCESSING", message = "The record is being processed"))
         val convertedRecords = converter.convert(records.records.first())
-        assertNotNull(convertedRecords)
-        assertNotNull(convertedRecords.result)
-        assertTrue(convertedRecords.result?.isNotEmpty()!!)
-        assertNotNull(convertedRecords.record)
-        assertEquals(convertedRecords.record.id, recordToProcess.id!!)
+        assertThat(convertedRecords, not(nullValue()))
+        assertThat(convertedRecords, not(empty()))
     }
 
     private fun pollRecords(): RecordContainerDTO {
         val pollConfig = PollDTO(
                 limit = 10,
-                supportedConverters = listOf(sourceType)
-        )
+                supportedConverters = setOf(sourceType))
         val records = uploadBackendClient.pollRecords(pollConfig)
         assertNotNull(records)
         assertThat(records.records.size, greaterThan(0))
-        records.records.map { recordDTO -> assertEquals(RecordStatus.QUEUED.toString(), recordDTO.metadata?.status) }
+        records.records.forEach { recordDTO ->
+            assertThat(recordDTO.metadata?.status, equalTo(RecordStatus.QUEUED.toString()))
+        }
         println("Polled ${records.records.size} records")
         return records
     }

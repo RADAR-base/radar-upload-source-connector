@@ -15,12 +15,9 @@ application {
 
 project.extra.apply {
     set("okhttpVersion", "4.2.0")
-    set("radarMpVersion", "0.5.7")
-    set("radarAuthVersion", "0.1.0")
+    set("radarJerseyVersion", "0.2.2.3")
     set("radarCommonsVersion", "0.12.2")
-    set("radarSchemasVersion", "0.5.2")
-    set("jacksonVersion", "2.9.9.2")
-    set("jacksonDataVersion", "2.9.9")
+    set("jacksonVersion", "2.9.10")
     set("slf4jVersion", "1.7.27")
     set("logbackVersion", "1.2.3")
     set("grizzlyVersion", "2.4.4")
@@ -31,28 +28,19 @@ project.extra.apply {
 
 repositories {
     jcenter()
-    maven(url = "https://dl.bintray.com/radar-cns/org.radarcns")
     maven(url = "https://dl.bintray.com/radar-base/org.radarbase")
+    maven(url = "https://dl.bintray.com/radar-cns/org.radarcns")
     maven(url = "https://repo.thehyve.nl/content/repositories/snapshots")
 }
 
 dependencies {
     compile(kotlin("stdlib-jdk8"))
 
-    implementation("org.glassfish.grizzly:grizzly-http-server:${project.extra["grizzlyVersion"]}")
+    implementation("org.radarbase:radar-jersey:${project.extra["radarJerseyVersion"]}")
 
-    implementation("org.glassfish.jersey.containers:jersey-container-grizzly2-http:${project.extra["jerseyVersion"]}")
-    implementation("org.glassfish.jersey.containers:jersey-container-grizzly2-servlet:${project.extra["jerseyVersion"]}")
-    implementation("org.glassfish.jersey.inject:jersey-hk2:${project.extra["jerseyVersion"]}")
-    runtimeOnly("org.glassfish.jersey.media:jersey-media-json-jackson:${project.extra["jerseyVersion"]}")
-
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:${project.extra["jacksonDataVersion"]}")
-    implementation("com.fasterxml.jackson.core:jackson-databind:${project.extra["jacksonVersion"]}")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${project.extra["jacksonDataVersion"]}")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${project.extra["jacksonDataVersion"]}")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:${project.extra["jacksonDataVersion"]}")
-
-    implementation("org.radarbase:radar-auth-jersey:${project.extra["radarAuthVersion"]}")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${project.extra["jacksonVersion"]}")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:${project.extra["jacksonVersion"]}")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:${project.extra["jacksonVersion"]}")
 
     implementation("org.slf4j:slf4j-api:${project.extra["slf4jVersion"]}")
 
@@ -66,13 +54,12 @@ dependencies {
     runtimeOnly("org.postgresql:postgresql:42.2.5")
     runtimeOnly("ch.qos.logback:logback-classic:${project.extra["logbackVersion"]}")
 
-
 //    testImplementation("com.h2database:h2:1.4.199")
     testImplementation("org.junit.jupiter:junit-jupiter:5.4.2")
-    testImplementation("org.mockito:mockito-core:2.21.0")
     testImplementation("org.hamcrest:hamcrest-all:1.3")
     testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.1.0")
 
+    testImplementation("org.glassfish.jersey.test-framework.providers:jersey-test-framework-provider-grizzly2:${project.extra["jerseyVersion"]}")
 }
 
 // config JVM target to 1.8 for kotlin compilation tasks

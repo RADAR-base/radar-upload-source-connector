@@ -47,11 +47,11 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:5.4.2")
     testImplementation("org.hamcrest:hamcrest-all:1.3")
     testImplementation("org.apache.kafka:connect-api:${project.extra["kafkaVersion"]}")
+    testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.1.0")
 }
 
-// config JVM target to 1.8 for kotlin compilation tasks
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.jvmTarget = "11"
 }
 
 task<Test>("integrationTest") {
@@ -65,14 +65,15 @@ task<Test>("integrationTest") {
 tasks.withType<Test> {
     useJUnitPlatform()
     testLogging {
-        events("passed", "skipped", "failed")
+        events("passed", "skipped", "failed", "standard_out", "standard_error")
+        setExceptionFormat("full")
     }
 }
 val compileKotlin: KotlinCompile by tasks
 compileKotlin.kotlinOptions {
-    jvmTarget = "1.8"
+    jvmTarget = "11"
 }
 val compileTestKotlin: KotlinCompile by tasks
 compileTestKotlin.kotlinOptions {
-    jvmTarget = "1.8"
+    jvmTarget = "11"
 }

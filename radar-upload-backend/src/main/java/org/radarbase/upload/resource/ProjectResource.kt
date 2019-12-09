@@ -19,9 +19,9 @@
 
 package org.radarbase.upload.resource
 
-import org.radarbase.auth.jersey.Auth
-import org.radarbase.auth.jersey.Authenticated
-import org.radarbase.auth.jersey.NeedsPermission
+import org.radarbase.jersey.auth.Auth
+import org.radarbase.jersey.auth.Authenticated
+import org.radarbase.jersey.auth.NeedsPermission
 import org.radarbase.upload.dto.Project
 import org.radarbase.upload.dto.ProjectList
 import org.radarbase.upload.dto.UserList
