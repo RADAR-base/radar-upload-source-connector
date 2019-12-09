@@ -47,3 +47,11 @@ services:
       - POSTGRES_USER=radarcns
       - POSTGRES_PASSWORD=radarcns
       - POSTGRES_MULTIPLE_DATABASES=managementportal,uploadconnector
+
+  sftp-server:
+    image: atmoz/sftp:alpine
+    networks:
+      - default
+    ports:
+      - "2222:22"
+    command: ["connect:pass:::upload"]

@@ -44,6 +44,8 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:${project.extra["jacksonDataVersion"]}")
     implementation("com.opencsv:opencsv:${project.extra["openCsvVersion"]}")
 
+    implementation("com.jcraft:jsch:0.1.55")
+
     // Included in connector runtime
     compileOnly("org.apache.kafka:connect-api:${project.extra["kafkaVersion"]}")
     implementation(kotlin("stdlib-jdk8"))
