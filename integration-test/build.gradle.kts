@@ -47,6 +47,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:5.4.2")
     testImplementation("org.hamcrest:hamcrest-all:1.3")
     testImplementation("org.apache.kafka:connect-api:${project.extra["kafkaVersion"]}")
+    testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.1.0")
 }
 
 tasks.withType<KotlinCompile> {

@@ -30,6 +30,7 @@ import org.apache.kafka.common.config.AbstractConfig
 import org.apache.kafka.common.config.ConfigDef
 import org.radarbase.connect.upload.auth.ClientCredentialsAuthorizer
 import org.radarbase.connect.upload.converter.altoida.AltoidaConverterFactory
+import org.radarbase.connect.upload.converter.oxford.WearableCameraConverterFactory
 import org.radarbase.connect.upload.converter.phone.AcceleratometerZipConverterFactory
 import org.radarbase.connect.upload.converter.phone.AccelerometerConverterFactory
 import org.slf4j.Logger
@@ -39,17 +40,18 @@ import java.util.concurrent.TimeUnit
 class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, String>) :
         AbstractConfig(config, parsedConfig) {
 
-    private lateinit var authorizer: Authenticator
+    private lateinit var authenticator: Authenticator
 
     fun getAuthenticator(): Authenticator {
-        if(!::authorizer.isInitialized) {
+        if(!::authenticator.isInitialized) {
             logger.info("Initializing authenticator")
-            authorizer = ClientCredentialsAuthorizer(OkHttpClient(),
+            authenticator = ClientCredentialsAuthorizer(
+                    httpClient,
                     oauthClientId,
                     oauthClientSecret,
                     tokenRequestUrl)
         }
-        return authorizer
+        return authenticator
     }
 
     constructor(parsedConfig: Map<String, String>) : this(conf(), parsedConfig)
@@ -80,11 +82,6 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
         private const val UPLOAD_SOURCE_MP_SECRET_DOC = "Secret for the Upload connector client set in upload.source.mp.client."
         private const val UPLOAD_SOURCE_MP_SECRET_DISPLAY = "Upload connector client secret"
 
-        const val UPLOAD_SOURCE_CLIENT_SCOPE_CONFIG = "upload.source.client.scopes"
-        private const val UPLOAD_SOURCE_CLIENT_SCOPE_DOC = "List of scopes of the upload connector client"
-        private const val UPLOAD_SOURCE_CLIENT_SCOPE_DISPLAY = "Scopes of upload connector"
-        private const val UPLOAD_SOURCE_CLIENT_SCOPE_DEFAULT = ""
-
         const val UPLOAD_SOURCE_CLIENT_TOKEN_URL_CONFIG = "upload.source.client.tokenUrl"
         private const val UPLOAD_SOURCE_CLIENT_TOKEN_URL_DOC = "Complete Token URL to get access token"
         private const val UPLOAD_SOURCE_CLIENT_TOKEN_URL_DISPLAY = "Token URL to get access token"
@@ -95,20 +92,19 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
         private const val UPLOAD_SOURCE_SERVER_BASE_URL_DISPLAY = "Base URL of the file upload backend"
         private const val UPLOAD_SOURCE_SERVER_BASE_URL_DEFAULT = "http://radar-upload-connect-backend:8085/radar-upload/"
 
-        const val SOURCE_POLL_INTERVAL_CONFIG = "upload.source.poll.interval.ms"
-        private const val SOURCE_POLL_INTERVAL_DOC = "How often to poll the source URL."
-        private const val SOURCE_POLL_INTERVAL_DISPLAY = "Polling interval"
-        private const val SOURCE_POLL_INTERVAL_DEFAULT = 60000L
-
         const val UPLOAD_SOURCE_CONVERTERS_CONFIG = "upload.source.record.converter.classes"
         private const val UPLOAD_SOURCE_CONVERTERS_DOC = "List record converter classes that are in class-path"
         private const val UPLOAD_SOURCE_CONVERTERS_DISPLAY = "List of record converter factory class"
         private val UPLOAD_SOURCE_CONVERTERS_DEFAULT: List<String> = listOf(
-                AccelerometerConverterFactory()::class.java.name,
-                AcceleratometerZipConverterFactory()::class.java.name,
-                AltoidaConverterFactory()::class.java.name
-                )
+                AccelerometerConverterFactory::class.java.name,
+                AcceleratometerZipConverterFactory::class.java.name,
+                AltoidaConverterFactory::class.java.name,
+                WearableCameraConverterFactory::class.java.name)
 
+        const val SOURCE_POLL_INTERVAL_CONFIG = "upload.source.poll.interval.ms"
+        private const val SOURCE_POLL_INTERVAL_DOC = "How often to poll the source URL."
+        private const val SOURCE_POLL_INTERVAL_DISPLAY = "Polling interval"
+        private const val SOURCE_POLL_INTERVAL_DEFAULT = 60000L
 
         var mapper: ObjectMapper = ObjectMapper()
                 .registerModule(KotlinModule())
@@ -116,11 +112,10 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
                 .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
                 .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
 
-
-
         fun conf(): ConfigDef {
             val groupName = "upload"
             var orderInGroup = 0
+
             return ConfigDef()
                     .define(SOURCE_POLL_INTERVAL_CONFIG,
                             ConfigDef.Type.LONG,
