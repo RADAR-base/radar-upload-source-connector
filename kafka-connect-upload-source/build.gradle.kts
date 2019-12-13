@@ -13,7 +13,7 @@ project.extra.apply {
     set("jacksonDataVersion", "2.9.10")
     set("openCsvVersion", "4.6")
     set("confluentVersion", "5.3.0")
-    set("radarSchemaVersion", "0.5.5-SNAPSHOT")
+    set("radarSchemaVersion", "0.5.5")
 }
 
 repositories {
@@ -43,6 +43,8 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-databind:${project.extra["jacksonVersion"]}")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:${project.extra["jacksonDataVersion"]}")
     implementation("com.opencsv:opencsv:${project.extra["openCsvVersion"]}")
+
+    implementation("com.jcraft:jsch:0.1.55")
 
     // Included in connector runtime
     compileOnly("org.apache.kafka:connect-api:${project.extra["kafkaVersion"]}")

@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory
 import java.io.Closeable
 import java.io.IOException
 
-class UploadBackendClient(
+open class UploadBackendClient(
         auth: Authenticator,
         private var httpClient: OkHttpClient,
         private var uploadBackendBaseUrl: String) : Closeable {

@@ -34,8 +34,13 @@ import java.util.zip.ZipInputStream
  */
 open class ZipFileProcessorFactory(
         private val entryProcessors: List<FileProcessorFactory>,
-        private val logRepository: LogRepository
-) : FileProcessorFactory {
+        private val logRepository: LogRepository) : FileProcessorFactory {
+    open fun entryFilter(name: String): Boolean = true
+
+    open fun beforeProcessing(contents: ContentsDTO) = Unit
+
+    open fun afterProcessing(contents: ContentsDTO) = Unit
+
     override fun matches(contents: ContentsDTO): Boolean = contents.fileName.endsWith(".zip")
 
     override fun createProcessor(record: RecordDTO): FileProcessorFactory.FileProcessor = ZipFileProcessor(record)
@@ -44,11 +49,12 @@ open class ZipFileProcessorFactory(
         private val recordLogger = logRepository.createLogger(logger, record.id!!)
         override fun processData(contents: ContentsDTO, inputStream: InputStream, timeReceived: Double): List<FileProcessorFactory.TopicData> {
             recordLogger.info("Retrieved file content from record id ${record.id} and filename ${contents.fileName}")
+            beforeProcessing(contents)
             return try {
-                val zippedInput = ZipInputStream(inputStream)
-                zippedInput.use {
-                    generateSequence { it.nextEntry }
+                ZipInputStream(inputStream).use { zippedInput ->
+                    generateSequence { zippedInput.nextEntry }
                             .ifEmpty { throw IOException("No zipped entry found from ${contents.fileName}") }
+                            .filter { !it.isDirectory && entryFilter(it.name.trim()) }
                             .flatMap { zippedEntry ->
                                 val entryName = zippedEntry.name.trim()
                                 recordLogger.debug("Processing entry $entryName from record ${record.id}")
@@ -72,13 +78,14 @@ open class ZipFileProcessorFactory(
                             }
                             .toList()
                 }
-
             } catch (exe: IOException) {
                 recordLogger.error("Failed to process zipped input from record ${record.id}", exe)
                 throw exe
             } catch (exe: Exception) {
                 recordLogger.error("Could not process record ${record.id}", exe)
                 throw exe
+            } finally {
+                afterProcessing(contents)
             }
         }
     }
