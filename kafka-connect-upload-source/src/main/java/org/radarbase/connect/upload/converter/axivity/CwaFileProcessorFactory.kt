@@ -14,6 +14,28 @@ import java.io.IOException
 import java.io.InputStream
 import java.util.*
 
+/**
+ * Sample cwa file read with options 30 () looks like below.
+ *
+ * ,,,,,,,,deviceId,13110
+ * ,,,,,,,,_se,-1
+ * ,,,,,,,,investigator,Wilby
+ * ,,,,,,,,exerciseCode,Daily Activity
+ * ,,,,,,,,_ha,-1
+ * ,,,,,,,,bodyLocation,-1
+ * ,,,,,,,,studyCode,Test 1
+ * ,,,,,,,,studyCentre,Oxforrd
+ * yyyy-MM-dd HH:mm:ss.SSS,X,Y,Z,temp,batt,events (format of the data). Not part of the actual data.
+ * 2014-05-07 16:29:29.995,-0.140625,0.90625,-0.546875,279,204,r
+ * 2014-05-07 16:29:30.005,0.046875,-0.296875,-1.0625,279,204,r
+ * 2014-05-07 16:29:30.015,0.0625,-0.234375,-1.046875,279,204,r
+ * 2014-05-07 16:29:30.025,0.046875,-0.140625,-0.984375,279,204,r
+ * 2014-05-07 16:29:30.035,0.03125,-0.078125,-0.984375,279,204,r
+ * 2014-05-07 16:29:30.045,0.0625,-0.046875,-1.0625,279,204,r
+ * 2014-05-07 16:29:30.055,0.125,-0.078125,-1.25,279,204,r
+ * 2014-05-07 16:29:30.065,0.171875,-0.1875,-1.421875,279,204,r
+ *
+ */
 class CwaFileProcessorFactory (
         private val processorFactories: List<CsvLineProcessorFactory>,
         private val logRepository: LogRepository
