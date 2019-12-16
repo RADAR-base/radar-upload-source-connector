@@ -23,14 +23,17 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.radarbase.connect.upload.converter.axivity.newcastle;
+package org.radarbase.connect.upload.converter;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+
+import org.radarbase.connect.upload.converter.axivity.newcastle.CwaCsvInputStream;
 
 /**
  * Command-line utility for converting CWA files to CSV files, demonstrates the CwaCsvInputStream class.
@@ -103,6 +106,7 @@ public class CwaConverter {
 				out = new PrintStream(new FileOutputStream(outputFile), true);
 			}
 
+			System.out.println("Options " + options);
 			// Create the filter stream around the input stream
 			BufferedReader filter = new BufferedReader(new InputStreamReader(new CwaCsvInputStream(in, start, skip, count, options)));
 
