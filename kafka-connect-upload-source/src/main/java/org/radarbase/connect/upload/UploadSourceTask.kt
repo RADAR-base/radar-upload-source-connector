@@ -40,20 +40,22 @@ import org.radarbase.connect.upload.util.VersionUtil
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
-import java.time.temporal.ChronoUnit
+import java.time.temporal.Temporal
+import java.time.temporal.TemporalAmount
 
 class UploadSourceTask : SourceTask() {
-    private var pollInterval: Long = 60_000L
+    private var pollInterval = Duration.ofMinutes(1)
+    private var failedPollInterval = Duration.ofSeconds(6)
     private lateinit var uploadClient: UploadBackendClient
     private lateinit var converters: Map<String, Converter>
     private lateinit var logRepository: LogRepository
 
-    private lateinit var lastPooledAt: Instant
+    private lateinit var nextPoll: Instant
 
     override fun start(props: Map<String, String>?) {
         val connectConfig = UploadSourceConnectorConfig(props!!)
         val httpClient = connectConfig.httpClient
-        lastPooledAt = Instant.EPOCH
+        nextPoll = Instant.EPOCH
         uploadClient = UploadBackendClient(
                 connectConfig.getAuthenticator(),
                 httpClient,
@@ -67,7 +69,8 @@ class UploadSourceTask : SourceTask() {
                         .let { it.sourceType to it }}
                 .toMap()
 
-        pollInterval = connectConfig.getLong(SOURCE_POLL_INTERVAL_CONFIG)
+        pollInterval = Duration.ofMillis(connectConfig.getLong(SOURCE_POLL_INTERVAL_CONFIG))
+        failedPollInterval = pollInterval.dividedBy(10)
 
         logger.info("Poll with interval $pollInterval milliseconds")
         logger.info("Initialized ${converters.size} converters...")
@@ -83,7 +86,7 @@ class UploadSourceTask : SourceTask() {
     override fun version(): String = VersionUtil.getVersion()
 
     override fun poll(): List<SourceRecord> {
-        val timeout = ChronoUnit.MILLIS.between(Instant.now(), getNextPollingTime())
+        val timeout = nextPoll.untilNow().toMillis()
         if (timeout > 0) {
             logger.info("Waiting {} milliseconds for next polling time", timeout)
             Thread.sleep(timeout)
@@ -94,17 +97,15 @@ class UploadSourceTask : SourceTask() {
             uploadClient.pollRecords(PollDTO(1, converters.keys)).records
         } catch (exe: Exception) {
             logger.info("Could not successfully poll records. Waiting for next polling...")
+            nextPoll = failedPollInterval.fromNow()
             return emptyList()
         }
 
-        lastPooledAt = Instant.now()
-        logger.info("Received ${records.size} records at $lastPooledAt")
+        nextPoll = pollInterval.fromNow()
+
+        logger.info("Received ${records.size} records at $nextPoll")
 
         return records.flatMap { record -> processRecord(record) ?: emptyList() }
-    }
-
-    private fun getNextPollingTime(): Instant {
-        return lastPooledAt.plus(Duration.of(pollInterval, ChronoUnit.MILLIS))
     }
 
     private fun processRecord(record: RecordDTO): List<SourceRecord>? {
@@ -211,5 +212,8 @@ class UploadSourceTask : SourceTask() {
 
     companion object {
         private val logger = LoggerFactory.getLogger(UploadSourceTask::class.java)
+
+        private fun Temporal.untilNow(): Duration = Duration.between(Instant.now(), this)
+        private fun TemporalAmount.fromNow(): Instant = Instant.now().plus(this)
     }
 }
