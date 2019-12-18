@@ -40,10 +40,8 @@ import org.radarbase.connect.upload.util.VersionUtil
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
-import java.time.temporal.ChronoUnit
 import java.time.temporal.Temporal
 import java.time.temporal.TemporalAmount
-import java.time.temporal.TemporalUnit
 
 class UploadSourceTask : SourceTask() {
     private var pollInterval = Duration.ofMinutes(1)
@@ -88,7 +86,7 @@ class UploadSourceTask : SourceTask() {
     override fun version(): String = VersionUtil.getVersion()
 
     override fun poll(): List<SourceRecord> {
-        val timeout = nextPoll.untilNow(ChronoUnit.MILLIS)
+        val timeout = nextPoll.untilNow().toMillis()
         if (timeout > 0) {
             logger.info("Waiting {} milliseconds for next polling time", timeout)
             Thread.sleep(timeout)
@@ -215,7 +213,7 @@ class UploadSourceTask : SourceTask() {
     companion object {
         private val logger = LoggerFactory.getLogger(UploadSourceTask::class.java)
 
-        private fun Temporal.untilNow(unit: TemporalUnit): Long = unit.between(Instant.now(), this)
+        private fun Temporal.untilNow(): Duration = Duration.between(Instant.now(), this)
         private fun TemporalAmount.fromNow(): Instant = Instant.now().plus(this)
     }
 }
