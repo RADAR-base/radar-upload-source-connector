@@ -43,7 +43,7 @@ class MPProjectService(@Context private val config: Config, @Context private val
 
     override fun ensureProject(projectId: String) {
         if (projects.find { it.id == projectId } == null) {
-            throw HttpNotFoundException("project_not_found", "Project $projectId not found.")
+            throw HttpNotFoundException("project_not_found", "Project $projectId not found in Management Portal.")
         }
     }
 
@@ -53,7 +53,7 @@ class MPProjectService(@Context private val config: Config, @Context private val
     }
 
     override fun project(projectId: String) : Project = projects.find { it.id == projectId } ?:
-        throw HttpNotFoundException("project_not_found", "Project $projectId not found.")
+        throw HttpNotFoundException("project_not_found", "Project $projectId not found in Management Portal.")
 
     override fun projectUsers(projectId: String): List<User> {
         val projectParticipants = participants.computeIfAbsent(projectId) {

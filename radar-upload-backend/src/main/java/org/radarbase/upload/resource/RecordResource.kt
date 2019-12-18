@@ -31,6 +31,7 @@ import org.radarbase.upload.doa.SourceTypeRepository
 import org.radarbase.upload.doa.entity.Record
 import org.radarbase.upload.doa.entity.RecordStatus
 import org.radarbase.upload.dto.CallbackManager
+import org.radarbase.upload.service.UploadProjectService
 import org.radarcns.auth.authorization.Permission
 import org.radarcns.auth.authorization.Permission.*
 import org.slf4j.LoggerFactory
@@ -55,7 +56,8 @@ class RecordResource(
         @Context private val recordRepository: RecordRepository,
         @Context private val recordMapper: RecordMapper,
         @Context private val auth: Auth,
-        @Context private val sourceTypeRepository: SourceTypeRepository
+        @Context private val sourceTypeRepository: SourceTypeRepository,
+        @Context private val projectService: UploadProjectService
 ) {
 
     @GET
@@ -135,10 +137,13 @@ class RecordResource(
                 ?: throw HttpBadRequestException("field_missing", "Record needs a source type")
         val data = record.data ?: throw HttpBadRequestException("field_missing", "Record needs data")
 
-        data.projectId ?: throw HttpBadRequestException("project_missing", "Record needs a project ID")
-        data.userId ?: throw HttpBadRequestException("user_missing", "Record needs a user ID")
+        val projectId = data.projectId
+        if (projectId.isNullOrEmpty()) throw HttpBadRequestException("project_missing", "Record needs a project ID")
+        if (data.userId.isNullOrEmpty() && data.externalUserId.isNullOrEmpty())
+            throw HttpBadRequestException("user_missing", "Record needs a user ID or externalUserId")
 
-        auth.checkPermissionOnSubject(MEASUREMENT_CREATE, data.projectId, data.userId)
+        projectService.ensureProject(projectId)
+        auth.checkPermissionOnSubject(MEASUREMENT_CREATE, projectId, data.userId)
 
         data.contents?.forEach {
             it.text ?: throw HttpBadRequestException("field_missing", "Contents need explicit text value set in UTF-8 encoding.")
@@ -178,7 +183,7 @@ class RecordResource(
             throw HttpConflictException("incompatible_status", "Cannot add files to saved record.")
         }
 
-        if (contentLength != 0L) {
+        if (contentLength == 0L) {
             throw HttpBadRequestException("content-length-not-specified", "Content-Length header not specified in the request or invalid value found")
         }
 
