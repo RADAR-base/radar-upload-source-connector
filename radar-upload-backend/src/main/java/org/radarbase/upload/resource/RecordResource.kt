@@ -178,6 +178,14 @@ class RecordResource(
             throw HttpConflictException("incompatible_status", "Cannot add files to saved record.")
         }
 
+        if (contentLength != 0L) {
+            throw HttpBadRequestException("content-length-not-specified", "Content-Length header not specified in the request or invalid value found")
+        }
+
+        if (contentType.isEmpty()) {
+            throw HttpBadRequestException("content-type-not-specified", "Content-Type header not specified in the request or invalid value found")
+        }
+
         val content = recordRepository.updateContent(record, fileName, contentType, input, contentLength)
 
         val contentDto = recordMapper.fromContent(content)
