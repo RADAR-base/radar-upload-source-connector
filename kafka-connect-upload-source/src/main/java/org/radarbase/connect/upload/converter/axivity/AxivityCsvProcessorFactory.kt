@@ -6,12 +6,7 @@ import org.radarbase.connect.upload.api.RecordDTO
 import org.radarbase.connect.upload.converter.CsvLineProcessorFactory
 import org.radarbase.connect.upload.converter.LogRepository
 import org.radarbase.connect.upload.converter.MultiRecordsCsvLineProcessor
-import org.radarbase.connect.upload.converter.altoida.AltoidaCsvMultiRecordsProcessor
-import org.radarbase.connect.upload.converter.altoida.AltoidaSummaryLineToRecordMapper
-import org.radarbase.connect.upload.converter.altoida.summary.AltoidaDomainResultProcessor
-import org.radarbase.connect.upload.converter.altoida.summary.AltoidaExportCsvProcessor
-import org.radarbase.connect.upload.converter.altoida.summary.AltoidaSummaryProcessor
-import org.radarbase.connect.upload.converter.altoida.summary.AltoidaTestMetricsProcessor
+import org.radarbase.connect.upload.converter.axivity.CwaFileProcessorFactory.Companion.CWA_HEADER
 import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.time.ZoneId
@@ -23,7 +18,7 @@ interface AxivityCwaLineToRecordMapper {
     fun time(line: Map<String, String>): Double =
             Instant.from(
                     DateTimeFormatter
-                            .ofPattern("yyyy-MM-dd HH:mm:ss")
+                            .ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
                             .withZone(ZoneId.systemDefault())
                             .parse(line.getValue("TIMESTAMP")))
                     .toEpochMilli()
@@ -52,7 +47,7 @@ abstract class AxivityCsvMultiRecordProcessorFactory : CsvLineProcessorFactory {
 
 class AxivityCsvProcessorFactory() : AxivityCsvMultiRecordProcessorFactory() {
     override val fileNameSuffix: String = ".cwa"
-    override val header: List<String> = listOf()
+    override val header: List<String> = CWA_HEADER
     override val listOfRecordMapperAltoidaSummaries: List<AxivityCwaLineToRecordMapper>
         get() = listOf(
             AxivityAccelerationCwaProcessor()

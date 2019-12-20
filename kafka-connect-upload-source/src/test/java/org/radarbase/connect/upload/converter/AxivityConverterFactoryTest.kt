@@ -58,9 +58,9 @@ class AxivityConverterFactoryTest {
         val records = converter.convertFile(record, contentsDTO, file.inputStream(), Mockito.mock(RecordLogger::class.java))
 
         assertNotNull(records)
-//        assertTrue(records.size > 1000)
-//        assertEquals(true, records.last().endOfFileOffSet)
-//        assertEquals(1, records.filter { it.endOfFileOffSet }.size)
+        assertTrue(records.size > 100)
+        assertEquals(true, records.last().endOfFileOffSet)
+        assertEquals(1, records.filter { it.endOfFileOffSet }.size)
     }
 
 }
