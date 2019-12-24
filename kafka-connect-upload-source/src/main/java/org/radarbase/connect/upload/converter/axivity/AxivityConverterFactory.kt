@@ -1,10 +1,10 @@
 package org.radarbase.connect.upload.converter.axivity
 
 import org.radarbase.connect.upload.api.SourceTypeDTO
-import org.radarbase.connect.upload.converter.*
-import org.radarbase.connect.upload.converter.altoida.AltoidaAccelerationCsvProcessor
-import org.radarbase.connect.upload.converter.altoida.AltoidaMetadataFileProcessor
-import org.radarbase.connect.upload.converter.altoida.summary.AltoidaExportCsvProcessor
+import org.radarbase.connect.upload.converter.ConverterFactory
+import org.radarbase.connect.upload.converter.FileProcessorFactory
+import org.radarbase.connect.upload.converter.LogRepository
+import org.radarbase.connect.upload.converter.ZipFileProcessorFactory
 
 class AxivityConverterFactory : ConverterFactory {
     override val sourceType: String = "axivity"
@@ -17,8 +17,7 @@ class AxivityConverterFactory : ConverterFactory {
         val fileProcessors = listOf(
                 CwaFileProcessorFactory(listOf(AxivityCsvProcessorFactory()), logRepository))
         return listOf(
-                ZipFileProcessorFactory(fileProcessors, logRepository)
-                )
+                ZipFileProcessorFactory(fileProcessors, logRepository))
     }
 }
 
