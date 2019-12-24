@@ -1,7 +1,7 @@
 package org.radarbase.connect.upload.converter.altoida.summary
 
 import org.apache.avro.generic.IndexedRecord
-import org.radarbase.connect.upload.converter.LineToRecordMapper
+import org.radarbase.connect.upload.converter.altoida.AltoidaSummaryLineToRecordMapper
 import org.radarbase.connect.upload.converter.altoida.summary.AltoidaExportCsvProcessor.AltoidaTestCategory
 import org.radarbase.connect.upload.converter.altoida.summary.AltoidaTestMetricsProcessor.AltoidaTappingTestTypes.RandomTapping
 import org.radarbase.connect.upload.converter.altoida.summary.AltoidaTestMetricsProcessor.AltoidaTappingTestTypes.Tapping
@@ -11,7 +11,7 @@ import org.radarcns.connector.upload.altoida.AltoidaTappingTestAggregate
 import org.radarcns.connector.upload.altoida.AltoidaTrial
 import org.radarcns.connector.upload.altoida.AltoidaWalkingTestAggregate
 
-class AltoidaTestMetricsProcessor(private val type: AltoidaTestCategory, override val topic: String) : LineToRecordMapper {
+class AltoidaTestMetricsProcessor(private val type: AltoidaTestCategory, override val topic: String) : AltoidaSummaryLineToRecordMapper {
     override fun processLine(line: Map<String, String>, timeReceived: Double): Pair<String, IndexedRecord>? {
         return topic to getTestMetrics(type, line)
     }

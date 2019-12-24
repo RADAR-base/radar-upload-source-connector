@@ -17,10 +17,9 @@
 package org.radarbase.connect.upload.converter.altoida
 
 import org.radarbase.connect.upload.converter.OneToOneCsvLineProcessor
-import org.radarbase.connect.upload.converter.OneToOneCsvLineProcessorFactory
 import org.radarcns.connector.upload.altoida.AltoidaTouch
 
-class AltoidaTouchScreenCsvProcessor : OneToOneCsvLineProcessorFactory() {
+class AltoidaTouchScreenCsvProcessor : AltoidaCsvProcessor() {
     override val fileNameSuffix: String = "_TOUCH.csv"
 
     override val topic: String = "connect_upload_altoida_touch"
