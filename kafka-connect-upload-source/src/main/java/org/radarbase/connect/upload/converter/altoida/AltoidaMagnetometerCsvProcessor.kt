@@ -19,7 +19,7 @@
 
 package org.radarbase.connect.upload.converter.altoida
 
-import org.radarbase.connect.upload.converter.SimpleCsvLineProcessor
+import org.radarbase.connect.upload.converter.OneToOneCsvLineProcessor
 import org.radarcns.connector.upload.altoida.AltoidaMagneticField
 
 class AltoidaMagnetometerCsvProcessor : AltoidaCsvProcessor() {
@@ -29,7 +29,7 @@ class AltoidaMagnetometerCsvProcessor : AltoidaCsvProcessor() {
 
     override val header: List<String> = listOf("TIMESTAMP", "X", "Y", "Z", "ACCURACY")
 
-    override fun SimpleCsvLineProcessor.lineConversion(
+    override fun OneToOneCsvLineProcessor.lineConversion(
             line: Map<String, String>,
             timeReceived: Double
     ) = AltoidaMagneticField(

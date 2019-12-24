@@ -16,7 +16,7 @@
 
 package org.radarbase.connect.upload.converter.altoida
 
-import org.radarbase.connect.upload.converter.SimpleCsvLineProcessor
+import org.radarbase.connect.upload.converter.OneToOneCsvLineProcessor
 import org.radarcns.connector.upload.altoida.AltoidaTap
 
 class AltoidaTapScreenCsvProcessor : AltoidaCsvProcessor() {
@@ -26,7 +26,7 @@ class AltoidaTapScreenCsvProcessor : AltoidaCsvProcessor() {
 
     override val header: List<String> = listOf("TIMESTAMP", "X", "Y")
 
-    override fun SimpleCsvLineProcessor.lineConversion(
+    override fun OneToOneCsvLineProcessor.lineConversion(
             line: Map<String, String>,
             timeReceived: Double
     ) = AltoidaTap(
