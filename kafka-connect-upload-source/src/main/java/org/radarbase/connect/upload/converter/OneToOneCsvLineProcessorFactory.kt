@@ -21,6 +21,9 @@ import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
 import org.slf4j.LoggerFactory
 
+/**
+ * Simple Processor for one line to one record of a single topic conversion.
+ */
 abstract class OneToOneCsvLineProcessorFactory: CsvLineProcessorFactory {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -28,7 +31,7 @@ abstract class OneToOneCsvLineProcessorFactory: CsvLineProcessorFactory {
 
     abstract val topic: String
 
-    abstract fun OneToOneCsvLineProcessor.lineConversion(line: Map<String, String>, timeReceived: Double): IndexedRecord?
+    abstract fun lineConversion(line: Map<String, String>, timeReceived: Double): IndexedRecord?
 
     override fun matches(contents: ContentsDTO): Boolean = contents.fileName.endsWith(fileNameSuffix)
 
@@ -39,20 +42,18 @@ abstract class OneToOneCsvLineProcessorFactory: CsvLineProcessorFactory {
         return OneToOneCsvLineProcessor(recordLogger, topic) { l, t -> lineConversion(l, t) }
     }
 
-}
-
-
-/**
- * Simple Processor for one line to one record of a single topic conversion.
- */
-class OneToOneCsvLineProcessor(
-        override val recordLogger: RecordLogger,
-        private val topic: String,
-        private val conversion: OneToOneCsvLineProcessor.(lineValues: Map<String, String>, timeReceived: Double) -> IndexedRecord?
-) : CsvLineProcessorFactory.CsvLineProcessor {
-    override fun convertToRecord(lineValues: Map<String, String>, timeReceived: Double): List<FileProcessorFactory.TopicData>? {
-        return conversion(lineValues, timeReceived)?.run {
-            listOf(FileProcessorFactory.TopicData(topic, this))
+    internal class OneToOneCsvLineProcessor(
+            override val recordLogger: RecordLogger,
+            private val topic: String,
+            private val conversion: OneToOneCsvLineProcessor.(lineValues: Map<String, String>, timeReceived: Double) -> IndexedRecord?
+    ) : CsvLineProcessorFactory.CsvLineProcessor {
+        override fun convertToRecord(lineValues: Map<String, String>, timeReceived: Double): List<FileProcessorFactory.TopicData>? {
+            return conversion(lineValues, timeReceived)?.run {
+                listOf(FileProcessorFactory.TopicData(topic, this))
+            }
         }
     }
+
 }
+
+
