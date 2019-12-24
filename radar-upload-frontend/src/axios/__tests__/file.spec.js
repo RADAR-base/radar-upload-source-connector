@@ -53,7 +53,7 @@ describe('axios/file', () => {
     const file = { type: 'fileObject' };
     const fileType = 'fileType';
     const onUploadProgress = jest.fn();
-    const headers = { 'content-type': fileType };
+    const headers = { 'Content-Type': fileType };
     axios.put.mockResolvedValue();
     return fileAPI.putRecords({
       id, fileName, file, fileType, onUploadProgress,
