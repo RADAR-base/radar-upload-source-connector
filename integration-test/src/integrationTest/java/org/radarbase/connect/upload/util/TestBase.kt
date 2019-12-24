@@ -108,7 +108,7 @@ class TestBase {
         )
 
         val uploadBackendConfig = Config(
-                managementPortalUrl = "http://localhost:8090/managementportal",
+                managementPortalUrl = "http://localhost:8090/managementportal/",
                 clientId = "radar_upload_backend",
                 clientSecret = "secret",
                 baseUri = URI.create(baseUri),
@@ -225,7 +225,8 @@ class TestBase {
                 url("$baseUri/records")
                 post(record.toJsonString().toRequestBody(APPLICATION_JSON))
                 addHeader("Authorization", BEARER + accessToken)
-                addHeader("Content-type", "application/json")
+                addHeader("Content-Type", "application/json")
+                addHeader("Content-Length", "10000")
             }
             assertThat(recordCreated.id, not(nullValue()))
             assertThat(recordCreated.id!!, greaterThan(0L))
@@ -240,6 +241,8 @@ class TestBase {
                 url("$baseUri/records/$recordId/contents/$fileName")
                 put(file.asRequestBody(TEXT_CSV))
                 addHeader("Authorization", BEARER + clientUserToken)
+                addHeader("Content-Type", "text/csv")
+                addHeader("Content-Length", "10000")
             }
             assertThat(content.fileName, equalTo(fileName))
         }

@@ -312,10 +312,11 @@ export default {
         const percentCompleted = Math.floor((progressEvent.loaded * 100) / progressEvent.total);
         self.files[fileIndex].progress = percentCompleted;
       };
-
+      const fileType = fileObject.type;
+      const fileContentType = (fileType == null || fileType.length === 0) ? 'application/octet-stream' : fileType;
       const uploadPayload = {
         file: fileObject.file,
-        fileType: fileObject.type,
+        fileType: fileContentType,
         fileName: fileObject.name,
         id: this.activeRecord.id,
         onUploadProgress,
