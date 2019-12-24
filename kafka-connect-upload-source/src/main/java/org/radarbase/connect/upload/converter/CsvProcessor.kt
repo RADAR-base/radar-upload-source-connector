@@ -58,6 +58,5 @@ open class CsvProcessor(
     companion object {
         private val logger = LoggerFactory.getLogger(CsvProcessor::class.java)
     }
-
 }
 
