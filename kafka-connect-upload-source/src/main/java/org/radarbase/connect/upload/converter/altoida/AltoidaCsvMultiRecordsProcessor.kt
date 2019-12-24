@@ -5,7 +5,7 @@ import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
 import org.radarbase.connect.upload.converter.CsvLineProcessorFactory
 import org.radarbase.connect.upload.converter.LogRepository
-import org.radarbase.connect.upload.converter.MultiRecordsCsvLineProcessor
+import org.radarbase.connect.upload.converter.OneToManyCsvLineProcessor
 import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.time.ZoneId
@@ -39,7 +39,7 @@ abstract class AltoidaCsvMultiRecordsProcessor : CsvLineProcessorFactory {
 
     override fun createLineProcessor(record: RecordDTO, logRepository: LogRepository): CsvLineProcessorFactory.CsvLineProcessor {
         val recordLogger = logRepository.createLogger(logger, record.id!!)
-        return MultiRecordsCsvLineProcessor(recordLogger) { l, t -> lineConversion(l, t) }
+        return OneToManyCsvLineProcessor(recordLogger) { l, t -> lineConversion(l, t) }
     }
 
 }
