@@ -313,7 +313,7 @@ export default {
         self.files[fileIndex].progress = percentCompleted;
       };
       const fileType = fileObject.type;
-      const fileContentType = (fileType == null || fileType.length === 0) ? 'application/octet-stream' : fileObject.type;
+      const fileContentType = (fileType == null || fileType.length === 0) ? 'application/octet-stream' : fileType;
       const uploadPayload = {
         file: fileObject.file,
         fileType: fileContentType,
