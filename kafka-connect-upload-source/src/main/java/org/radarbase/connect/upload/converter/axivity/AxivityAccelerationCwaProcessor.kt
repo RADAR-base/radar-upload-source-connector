@@ -1,6 +1,8 @@
 package org.radarbase.connect.upload.converter.axivity
 
 import org.apache.avro.generic.IndexedRecord
+import org.radarbase.connect.upload.converter.altoida.AltoidaSummaryLineToRecordMapper
+import org.radarcns.connector.upload.altoida.AltoidaDomainResult
 import org.radarcns.connector.upload.axivity.AxivityAcceleration
 
 class AxivityAccelerationCwaProcessor : AxivityCwaLineToRecordMapper {

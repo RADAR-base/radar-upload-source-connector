@@ -17,10 +17,9 @@
 package org.radarbase.connect.upload.converter.altoida
 
 import org.radarbase.connect.upload.converter.OneToOneCsvLineProcessor
-import org.radarbase.connect.upload.converter.OneToOneCsvLineProcessorFactory
 import org.radarcns.connector.upload.altoida.AltoidaBlink
 
-class AltoidaBlinkCsvProcessor : OneToOneCsvLineProcessorFactory() {
+class AltoidaBlinkCsvProcessor : AltoidaCsvProcessor() {
     override val fileNameSuffix: String = "_BLINK.csv"
 
     override val topic: String = "connect_upload_altoida_blink"
