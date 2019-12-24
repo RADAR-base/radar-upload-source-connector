@@ -39,20 +39,9 @@ class CwaFileProcessorFactory (
         }
 
         /**
-         * Sample cwa file content with options 30 (with temp, battery, events and metadata)
+         * Sample cwa file content with options 14 (with temp, battery, events)
          * looks like below.
-         * 8 lines of meta-data followed by csv data.
          * yyyy-MM-dd HH:mm:ss.SSS,X,Y,Z,temp,batt,events (format of the data). Not part of the actual data.
-         *
-         *
-         * ,,,,,,,,deviceId,13110
-         * ,,,,,,,,_se,-1
-         * ,,,,,,,,investigator,Wilby
-         * ,,,,,,,,exerciseCode,Daily Activity
-         * ,,,,,,,,_ha,-1
-         * ,,,,,,,,bodyLocation,-1
-         * ,,,,,,,,studyCode,Test 1
-         * ,,,,,,,,studyCentre,Oxforrd
          * 2014-05-07 16:29:29.995,-0.140625,0.90625,-0.546875,279,204,r
          * 2014-05-07 16:29:30.005,0.046875,-0.296875,-1.0625,279,204,r
          * 2014-05-07 16:29:30.015,0.0625,-0.234375,-1.046875,279,204,r
@@ -67,13 +56,6 @@ class CwaFileProcessorFactory (
                 contents: ContentsDTO,
                 inputStream: InputStream,
                 timeReceived: Double): List<FileProcessorFactory.TopicData> = readCwa(inputStream) { reader ->
-            // First 8 lines contains the metadata
-            val metadata = mutableListOf<List<String>>()
-            for ( i in 0..7) {
-                metadata.add(i,reader.readNext().asList())
-            }
-
-            logger.info("metadata $metadata")
             val header = CWA_HEADER
             logger.info("Header ", header)
             val processorFactory = processorFactories
@@ -87,13 +69,12 @@ class CwaFileProcessorFactory (
                     .mapNotNull { processor.convertToRecord(header.zip(it).toMap(), timeReceived) }
                     .toList()
                     .flatten()
-            return@readCwa emptyList<FileProcessorFactory.TopicData>()
         }
 
         private fun <T> readCwa(
                 inputStream: InputStream,
                 action: (reader: CSVReader) -> T
-        ): T = CSVReaderBuilder(CwaCsvInputStream(inputStream, 0, 1, -1, 30).bufferedReader())
+        ): T = CSVReaderBuilder(CwaCsvInputStream(inputStream, 0, 1, -1, 14).bufferedReader())
                 .withCSVParser(CSVParserBuilder().withSeparator(',').build())
                 .build()
                 .use { reader -> action(reader) }
