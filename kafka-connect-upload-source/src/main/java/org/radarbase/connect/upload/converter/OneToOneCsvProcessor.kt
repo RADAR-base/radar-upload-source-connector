@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory
 /**
  * Simple Processor for one line to one record of a single topic conversion.
  */
-abstract class OneToOneCsvLineProcessorFactory: CsvLineProcessorFactory {
+abstract class OneToOneCsvProcessor: CsvLineProcessorFactory {
     private val logger = LoggerFactory.getLogger(javaClass)
 
     abstract val fileNameSuffix: String

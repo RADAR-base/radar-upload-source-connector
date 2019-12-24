@@ -15,7 +15,7 @@ class AxivityConverterFactory : ConverterFactory {
             logRepository: LogRepository
     ): List<FileProcessorFactory> {
         val fileProcessors = listOf(
-                CwaFileProcessorFactory(listOf(AxivityCsvProcessorFactory()), logRepository))
+                CwaFileProcessorFactory(listOf(AxivityCsvLineProcessor()), logRepository))
         return listOf(
                 ZipFileProcessorFactory(fileProcessors, logRepository))
     }

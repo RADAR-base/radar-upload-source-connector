@@ -19,10 +19,10 @@
 
 package org.radarbase.connect.upload.converter.altoida
 
-import org.radarbase.connect.upload.converter.OneToOneCsvLineProcessorFactory
+import org.radarbase.connect.upload.converter.OneToOneCsvProcessor
 import org.radarcns.connector.upload.altoida.AltoidaAction
 
-class AltoidaActionCsvProcessor : OneToOneCsvLineProcessorFactory() {
+class AltoidaActionCsvProcessor : OneToOneCsvProcessor() {
     override val fileNameSuffix: String = "_TAG.csv"
 
     override val topic: String = "connect_upload_altoida_action"
