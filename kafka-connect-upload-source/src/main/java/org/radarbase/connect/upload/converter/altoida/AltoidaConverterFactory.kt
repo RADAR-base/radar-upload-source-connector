@@ -47,12 +47,12 @@ class AltoidaConverterFactory : ConverterFactory {
                 AltoidaBlinkCsvProcessor())
 
         val fileProcessors = listOf(
-                CsvProcessorFactory(csvLineProcessors, logRepository),
+                CsvFileProcessorFactory(csvLineProcessors, logRepository),
                 AltoidaMetadataFileProcessor(logRepository))
 
         return listOf(
                 ZipFileProcessorFactory(fileProcessors, logRepository),
-                CsvProcessorFactory(listOf(AltoidaExportCsvProcessor()), logRepository))
+                CsvFileProcessorFactory(listOf(AltoidaExportCsvProcessor()), logRepository))
     }
 }
 
