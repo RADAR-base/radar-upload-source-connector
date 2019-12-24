@@ -1,10 +1,10 @@
 package org.radarbase.connect.upload.converter.altoida.summary
 
 import org.apache.avro.generic.IndexedRecord
-import org.radarbase.connect.upload.converter.altoida.AltoidaSummaryLineToRecordMapper
+import org.radarbase.connect.upload.converter.LineToRecordMapper
 import org.radarcns.connector.upload.altoida.*
 
-class AltoidaSummaryProcessor : AltoidaSummaryLineToRecordMapper {
+class AltoidaSummaryProcessor : LineToRecordMapper {
     override val topic: String = "altoida_trial_summary"
     override fun processLine(line: Map<String, String>, timeReceived: Double): Pair<String, IndexedRecord>? {
         return topic to AltoidaSummary(
