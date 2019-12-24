@@ -1,10 +1,10 @@
 package org.radarbase.connect.upload.converter.altoida.summary
 
 import org.radarbase.connect.upload.converter.LineToRecordMapper
-import org.radarbase.connect.upload.converter.OneToManyCsvLineProcessorFactory
+import org.radarbase.connect.upload.converter.OneToManyCsvProcessor
 
 
-class AltoidaExportCsvProcessor : OneToManyCsvLineProcessorFactory() {
+class AltoidaExportCsvProcessor : OneToManyCsvProcessor() {
     override val fileNameSuffix: String = "export.csv"
 
     override val recordMappers: List<LineToRecordMapper>

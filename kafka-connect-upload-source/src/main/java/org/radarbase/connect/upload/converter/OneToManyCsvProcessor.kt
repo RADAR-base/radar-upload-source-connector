@@ -11,7 +11,7 @@ import java.time.format.DateTimeFormatter
 /**
  * Allows to process one line to multiple records of various topics.
  */
-abstract class OneToManyCsvLineProcessorFactory : CsvLineProcessorFactory {
+abstract class OneToManyCsvProcessor : CsvLineProcessorFactory {
     private val logger = LoggerFactory.getLogger(javaClass)
 
     abstract val fileNameSuffix: String
