@@ -74,7 +74,7 @@ class CwaFileProcessorFactory (
         private fun <T> readCwa(
                 inputStream: InputStream,
                 action: (reader: CSVReader) -> T
-        ): T = CSVReaderBuilder(CwaCsvInputStream(inputStream, 0, 1, -1, 14).bufferedReader())
+        ): T = CSVReaderBuilder(CwaCsvInputStream(inputStream, 0, 1, -1, 0).bufferedReader())
                 .withCSVParser(CSVParserBuilder().withSeparator(',').build())
                 .build()
                 .use { reader -> action(reader) }
@@ -83,6 +83,6 @@ class CwaFileProcessorFactory (
 
     companion object {
         private val logger = LoggerFactory.getLogger(CwaProcessor::class.java)
-        val CWA_HEADER = listOf("TIMESTAMP", "X", "Y", "Z", "TEMP", "BATT", "EVENTS")
+        val CWA_HEADER = listOf("TIMESTAMP", "X", "Y", "Z")
     }
 }
