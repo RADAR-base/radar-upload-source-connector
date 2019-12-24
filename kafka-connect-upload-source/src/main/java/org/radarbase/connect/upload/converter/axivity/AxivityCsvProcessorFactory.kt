@@ -1,11 +1,11 @@
-package org.radarbase.connect.upload.converter.axivity;
+package org.radarbase.connect.upload.converter.axivity
 
 import org.apache.avro.generic.IndexedRecord
 import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
 import org.radarbase.connect.upload.converter.CsvLineProcessorFactory
 import org.radarbase.connect.upload.converter.LogRepository
-import org.radarbase.connect.upload.converter.MultiRecordsCsvLineProcessor
+import org.radarbase.connect.upload.converter.OneToManyCsvLineProcessor
 import org.radarbase.connect.upload.converter.axivity.CwaFileProcessorFactory.Companion.CWA_HEADER
 import org.slf4j.LoggerFactory
 import java.time.Instant
@@ -40,7 +40,7 @@ abstract class AxivityCsvMultiRecordProcessorFactory : CsvLineProcessorFactory {
 
     override fun createLineProcessor(record: RecordDTO, logRepository: LogRepository): CsvLineProcessorFactory.CsvLineProcessor {
         val recordLogger = logRepository.createLogger(logger, record.id!!)
-        return MultiRecordsCsvLineProcessor(recordLogger) { l, t -> lineConversion(l, t) }
+        return OneToManyCsvLineProcessor(recordLogger) { l, t -> lineConversion(l, t) }
     }
 
 }
