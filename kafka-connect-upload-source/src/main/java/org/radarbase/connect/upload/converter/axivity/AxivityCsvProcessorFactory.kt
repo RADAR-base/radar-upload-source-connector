@@ -36,7 +36,7 @@ abstract class AxivityCsvMultiRecordProcessorFactory : CsvLineProcessorFactory {
     fun lineConversion(line: Map<String, String>, timeReceived: Double): List<Pair<String, IndexedRecord>> =
             listOfRecordMapperAltoidaSummaries.mapNotNull { it.processLine(line, timeReceived) }
 
-    override fun matches(contents: ContentsDTO): Boolean = contents.fileName.endsWith(fileNameSuffix)
+    override fun matches(contents: ContentsDTO): Boolean = contents.fileName.endsWith(fileNameSuffix, true)
 
     override fun createLineProcessor(record: RecordDTO, logRepository: LogRepository): CsvLineProcessorFactory.CsvLineProcessor {
         val recordLogger = logRepository.createLogger(logger, record.id!!)
