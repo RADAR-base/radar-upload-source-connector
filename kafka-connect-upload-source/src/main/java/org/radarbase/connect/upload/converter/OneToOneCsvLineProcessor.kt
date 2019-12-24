@@ -17,6 +17,30 @@
 package org.radarbase.connect.upload.converter
 
 import org.apache.avro.generic.IndexedRecord
+import org.radarbase.connect.upload.api.ContentsDTO
+import org.radarbase.connect.upload.api.RecordDTO
+import org.slf4j.LoggerFactory
+
+abstract class OneToOneCsvLineProcessorFactory: CsvLineProcessorFactory {
+    private val logger = LoggerFactory.getLogger(javaClass)
+
+    abstract val fileNameSuffix: String
+
+    abstract val topic: String
+
+    abstract fun OneToOneCsvLineProcessor.lineConversion(line: Map<String, String>, timeReceived: Double): IndexedRecord?
+
+    override fun matches(contents: ContentsDTO): Boolean = contents.fileName.endsWith(fileNameSuffix)
+
+    open fun time(line: Map<String, String>): Double = line.getValue("TIMESTAMP").toDouble() / 1000.0
+
+    override fun createLineProcessor(record: RecordDTO, logRepository: LogRepository): CsvLineProcessorFactory.CsvLineProcessor {
+        val recordLogger = logRepository.createLogger(logger, record.id!!)
+        return OneToOneCsvLineProcessor(recordLogger, topic) { l, t -> lineConversion(l, t) }
+    }
+
+}
+
 
 /**
  * Simple Processor for one line to one record of a single topic conversion.
