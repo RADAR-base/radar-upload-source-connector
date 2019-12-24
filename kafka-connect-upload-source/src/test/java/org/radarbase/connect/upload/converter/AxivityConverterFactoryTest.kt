@@ -18,7 +18,7 @@ class AxivityConverterFactoryTest {
 
     private val contentsDTO = ContentsDTO(
             contentType = "application/zip",
-            fileName = "sample.zip",
+            fileName = "CWA-DATA.zip",
             createdDate = Instant.now(),
             size = 1L
     )
@@ -53,12 +53,12 @@ class AxivityConverterFactoryTest {
     @Test
     @DisplayName("Should be able to convert a zip file with sample data to TopicRecords")
     fun testValidRawDataProcessing() {
-        val file = File("src/test/resources/sample.zip")
+        val file = File("src/test/resources/CWA-DATA.zip")
 
         val records = converter.convertFile(record, contentsDTO, file.inputStream(), Mockito.mock(RecordLogger::class.java))
 
         assertNotNull(records)
-        assertTrue(records.size > 100)
+        assertTrue(records.size > 0)
         assertEquals(true, records.last().endOfFileOffSet)
         assertEquals(1, records.filter { it.endOfFileOffSet }.size)
     }
