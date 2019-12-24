@@ -18,7 +18,7 @@ package org.radarbase.connect.upload.converter.phone
 
 import org.radarbase.connect.upload.api.SourceTypeDTO
 import org.radarbase.connect.upload.converter.ConverterFactory
-import org.radarbase.connect.upload.converter.CsvProcessorFactory
+import org.radarbase.connect.upload.converter.CsvFileProcessorFactory
 import org.radarbase.connect.upload.converter.FileProcessorFactory
 import org.radarbase.connect.upload.converter.LogRepository
 
@@ -26,7 +26,7 @@ class AccelerometerConverterFactory : ConverterFactory {
     override val sourceType: String = "phone-acceleration"
 
     override fun fileProcessorFactories(settings: Map<String, String>, connectorConfig: SourceTypeDTO, logRepository: LogRepository): List<FileProcessorFactory> {
-        return listOf(CsvProcessorFactory(listOf(
+        return listOf(CsvFileProcessorFactory(listOf(
                 AccelerometerCsvProcessor()), logRepository))
     }
 }
