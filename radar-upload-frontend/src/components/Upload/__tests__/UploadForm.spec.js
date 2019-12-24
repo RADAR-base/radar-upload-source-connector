@@ -17,43 +17,46 @@ const recordInfo = {
 
 describe('UploadForm', () => {
   // call this api when component is created
-  const $store = new Store();
-  const wrapper = shallowMount(UploadForm, {
-    propsData: {
-      recordInfo,
-      isNewRecord: true,
-    },
-    computed: {
-      projectId: () => 'projectId',
-      allFilesUploaded: () => false,
-    },
-    mocks: {
-      $store,
-      $success: jest.fn(),
-      $error: jest.fn(),
-    },
-    filters: {
-      toMB: jest.fn(),
-    },
-    stubs: [
-      'v-btn',
-      'v-icon',
-      'v-card',
-      'v-list',
-      'v-subheader',
-      'v-card-actions',
-      'v-spacer',
-      'v-autocomplete',
-      'v-card-text',
-      'v-list-item',
-      'v-select',
-      'v-file-input',
-      'v-list-item-content',
-      'v-data-table',
-      'v-text-field',
-      'v-toolbar',
-      'v-toolbar-title',
-    ],
+  let wrapper;
+  beforeEach(() => {
+    const $store = new Store();
+    wrapper = shallowMount(UploadForm, {
+      propsData: {
+        recordInfo,
+        isNewRecord: true,
+      },
+      computed: {
+        projectId: () => 'projectId',
+        allFilesUploaded: () => false,
+      },
+      mocks: {
+        $store,
+        $success: jest.fn(),
+        $error: jest.fn(),
+      },
+      filters: {
+        toMB: jest.fn(),
+      },
+      stubs: [
+        'v-btn',
+        'v-icon',
+        'v-card',
+        'v-list',
+        'v-subheader',
+        'v-card-actions',
+        'v-spacer',
+        'v-autocomplete',
+        'v-card-text',
+        'v-list-item',
+        'v-select',
+        'v-file-input',
+        'v-list-item-content',
+        'v-data-table',
+        'v-text-field',
+        'v-toolbar',
+        'v-toolbar-title',
+      ],
+    });
   });
 
 
@@ -135,16 +138,19 @@ describe('UploadForm', () => {
 
   it('startUpload', () => {
     const files = [
-      { success: true, error: true },
-      { success: false, error: false },
+      { success: true, error: true, id: 'file1' },
+      { success: false, error: false, id: 'file2' },
     ];
+    const activeRecord = { id: 'file2' };
     wrapper.setData({
+      activeRecord,
       files,
     });
     const processUpload = jest.spyOn(wrapper.vm, 'processUpload');
     wrapper.vm.startUpload();
     expect(processUpload).toBeCalledTimes(1);
     expect(processUpload).toBeCalledWith(files[1]);
+    jest.clearAllMocks();
   });
 
   it('processUpload', async () => {
@@ -179,6 +185,8 @@ describe('UploadForm', () => {
     // success
     const closeDialog = jest.spyOn(wrapper.vm, 'closeDialog');
     fileAPI.markRecord = jest.fn().mockResolvedValue('mockedReturn');
+    const activeRecord = { id: 'recordId' };
+    wrapper.setData({ activeRecord });
     wrapper.vm.finishUpload();
 
     expect(wrapper.vm.isLoading).toBe(true);
