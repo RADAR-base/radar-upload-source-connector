@@ -63,7 +63,7 @@ export default {
     id, fileName, file, onUploadProgress, fileType,
   }) {
     const headers = {
-      'content-type': fileType,
+      'Content-Type': fileType,
     };
     // eslint-disable-next-line func-names
     return axios.put(`records/${id}/contents/${fileName}`,
