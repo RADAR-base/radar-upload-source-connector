@@ -19,7 +19,6 @@
 
 package org.radarbase.connect.upload.converter.altoida
 
-import org.radarbase.connect.upload.converter.OneToOneCsvLineProcessor
 import org.radarbase.connect.upload.converter.OneToOneCsvLineProcessorFactory
 import org.radarcns.connector.upload.altoida.AltoidaAttitude
 
@@ -31,7 +30,7 @@ class AltoidaAttitudeCsvProcessor : OneToOneCsvLineProcessorFactory() {
 
     override val header: List<String> = listOf("TIMESTAMP", "PITCH", "ROLL", "YAW")
 
-    override fun OneToOneCsvLineProcessor.lineConversion(
+    override fun lineConversion(
             line: Map<String, String>,
             timeReceived: Double
     ) = AltoidaAttitude(
