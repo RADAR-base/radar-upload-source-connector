@@ -8,9 +8,6 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-/**
- * Allows to process one line to multiple records of various topics.
- */
 abstract class OneToManyCsvLineProcessorFactory : CsvLineProcessorFactory {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -29,14 +26,18 @@ abstract class OneToManyCsvLineProcessorFactory : CsvLineProcessorFactory {
         return OneToManyCsvLineProcessor(recordLogger) { l, t -> lineConversion(l, t) }
     }
 
-    internal class OneToManyCsvLineProcessor(
-            override val recordLogger: RecordLogger,
-            private val conversion: OneToManyCsvLineProcessor.(lineValues: Map<String, String>, timeReceived: Double) -> List<Pair<String, IndexedRecord>>
-    ) : CsvLineProcessorFactory.CsvLineProcessor {
-        override fun convertToRecord(lineValues: Map<String, String>, timeReceived: Double): List<FileProcessorFactory.TopicData>? {
-            return conversion(lineValues, timeReceived).run {
-                this.map { FileProcessorFactory.TopicData(it.first, it.second) }
-            }
+}
+
+/**
+ * Allows to process one line to multiple records of various topics.
+ */
+class OneToManyCsvLineProcessor(
+        override val recordLogger: RecordLogger,
+        private val conversion: OneToManyCsvLineProcessor.(lineValues: Map<String, String>, timeReceived: Double) -> List<Pair<String, IndexedRecord>>
+) : CsvLineProcessorFactory.CsvLineProcessor {
+    override fun convertToRecord(lineValues: Map<String, String>, timeReceived: Double): List<FileProcessorFactory.TopicData>? {
+        return conversion(lineValues, timeReceived).run {
+            this.map { FileProcessorFactory.TopicData(it.first, it.second) }
         }
     }
 }

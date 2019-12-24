@@ -19,6 +19,7 @@
 
 package org.radarbase.connect.upload.converter.altoida
 
+import org.radarbase.connect.upload.converter.OneToOneCsvLineProcessor
 import org.radarbase.connect.upload.converter.OneToOneCsvLineProcessorFactory
 import org.radarcns.connector.upload.altoida.AltoidaAcceleration
 
@@ -29,7 +30,7 @@ class AltoidaAccelerationCsvProcessor : OneToOneCsvLineProcessorFactory() {
 
     override val header: List<String> = listOf("TIMESTAMP", "X", "Y", "Z")
 
-    override fun lineConversion(
+    override fun OneToOneCsvLineProcessor.lineConversion(
             line: Map<String, String>,
             timeReceived: Double
     ) = AltoidaAcceleration(
