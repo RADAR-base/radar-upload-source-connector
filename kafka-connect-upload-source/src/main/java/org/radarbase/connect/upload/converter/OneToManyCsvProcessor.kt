@@ -44,7 +44,7 @@ abstract class OneToManyCsvProcessor : CsvLineProcessorFactory {
 interface LineToRecordMapper {
     val topic: String
 
-    fun time(line: Map<String, String>, timeFormat: String): Double =
+    fun time(line: Map<String, String>, timeFormat: String = "yyyy-MM-dd HH:mm:ss"): Double =
             Instant.from(
                     DateTimeFormatter
                             .ofPattern(timeFormat)
@@ -52,7 +52,6 @@ interface LineToRecordMapper {
                             .parse(line.getValue("TIMESTAMP")))
                     .toEpochMilli()
                     .toDouble()
-    fun time(line: Map<String, String>): Double = time(line, "yyyy-MM-dd HH:mm:ss")
 
     fun processLine(line: Map<String, String>, timeReceived: Double): Pair<String, IndexedRecord>?
 }
