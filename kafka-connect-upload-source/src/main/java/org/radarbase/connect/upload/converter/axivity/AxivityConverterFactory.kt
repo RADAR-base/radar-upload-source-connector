@@ -14,10 +14,14 @@ class AxivityConverterFactory : ConverterFactory {
             connectorConfig: SourceTypeDTO,
             logRepository: LogRepository
     ): List<FileProcessorFactory> {
-        val fileProcessors = listOf(
-                CwaFileProcessorFactory(listOf(AxivityCsvLineProcessor()), logRepository))
         return listOf(
-                ZipFileProcessorFactory(fileProcessors, logRepository))
+                ZipFileProcessorFactory(
+                        listOf(
+                                CwaFileProcessorFactory(
+                                        listOf(AxivityCsvLineProcessor()),
+                                        logRepository,
+                                        connectorConfig)),
+                        logRepository))
     }
 }
 
