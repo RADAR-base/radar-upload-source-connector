@@ -10,10 +10,8 @@ class TemperatureCwaBlockProcessor: CwaFileProcessorFactory.CwaBlockProcessor {
         return listOf(TopicData(
                 "connect_upload_axivity_temperature",
                 AxivityTemperature(
-                        block.timestampValues[0] / 1000.0,
+                        block.startTime(),
                         timeReceived,
-                        block.temperature.toFloat()
-                )
-        ))
+                        block.temperature.toFloat())))
     }
 }

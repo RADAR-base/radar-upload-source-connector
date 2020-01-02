@@ -47,14 +47,17 @@ public class CwaReader {
     private CwaBlock currentBlock;
 
     private int sessionId = -1;
-    private short deviceId = -1;
+    private int deviceId = -1;
     private Map<String, String> annotations = new HashMap<>();
 
     /** @return Device ID */
-    public short getDeviceId() {
+    public int getDeviceId() {
         return deviceId;
     }
 
+    public int getSessionId() {
+        return sessionId;
+    }
 
     /**
      * Creates a CwaReader object

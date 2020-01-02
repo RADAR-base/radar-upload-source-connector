@@ -10,9 +10,8 @@ class LightCwaBlockProcessor: CwaFileProcessorFactory.CwaBlockProcessor {
         return listOf(TopicData(
                 "connect_upload_axivity_light",
                 AxivityLight(
-                        block.timestampValues[0] / 1000.0,
+                        block.startTime(),
                         timeReceived,
-                        block.light.toFloat()
-                )))
+                        block.light.toFloat())))
     }
 }
