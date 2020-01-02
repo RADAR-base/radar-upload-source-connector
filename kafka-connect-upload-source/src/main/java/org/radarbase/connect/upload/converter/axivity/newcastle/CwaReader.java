@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) 2009-2018, Newcastle University, UK.
  * All rights reserved.
  * <p>
@@ -25,14 +25,12 @@
  * CWA File Reader
  */
 
-/**
- * CWA File Reader
- */
 package org.radarbase.connect.upload.converter.axivity.newcastle;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -48,12 +46,9 @@ public class CwaReader {
     /** Block */
     private CwaBlock currentBlock;
 
-    /** Flag indicating whether the meta data has been read */
-    private boolean metadataRead;
-    private String metadataString;
     private int sessionId = -1;
     private short deviceId = -1;
-    private Map<String, String> annotations = new HashMap<String, String>();
+    private Map<String, String> annotations = new HashMap<>();
 
     /** @return Device ID */
     public short getDeviceId() {
@@ -68,7 +63,6 @@ public class CwaReader {
     public CwaReader(InputStream inputStream) {
         this.inputStream = inputStream;
         currentBlock = new CwaBlock();
-        metadataRead = false;
         //skipNonDataBlocks();
     }
 
@@ -80,15 +74,6 @@ public class CwaReader {
     public void close() throws IOException {
         inputStream.close();
     }
-
-
-    /**
-     * @return whether the metadata has been read.
-     */
-    public boolean isMetadataRead() {
-        return metadataRead;
-    }
-
 
     /**
      * @return metadata annotations
@@ -118,74 +103,29 @@ public class CwaReader {
         return currentBlock;
     }
 
-
-    /**
-     * Skips a single block
-     * @return whether the block was successfully skipped
-     * @throws IOException if reading the input stream fails
-     */
-    public boolean skipBlock() throws IOException {
-        if (peekBlock() == null) {
-            return false;
-        }
-        currentBlock.invalidate();
-        return true;
-    }
-
-
     /**
      * Returns a copy of, and consumes the next block in the file.
      * Internally, this returns the current buffered block or a newly-read block if none is buffered.
-     * @return The next block in the file, null if end of file.
      * @throws IOException if reading the input stream fails
      */
-    public CwaBlock readBlock() throws IOException {
+    public void readBlock() throws IOException {
         // If no block buffered, read a new block
         if (!currentBlock.isValid()) {
             currentBlock.readFromInputStream(inputStream);
         }
         // If invalid
         if (!currentBlock.isValid()) {
-            return null;
+            return;
         }
-        // Return a copy
-        CwaBlock returnBlock = new CwaBlock(currentBlock);
         // Invalidate the block
         currentBlock.invalidate();
-        return returnBlock;
     }
-
-
-    /**
-     * Skips the number of specified blocks
-     * @param toSkip the number of blocks to skip
-     * @return the number of blocks skipped
-     * @throws IOException if reading the input stream fails
-     */
-    public long skipBlocks(long toSkip) throws IOException {
-        long numSkipped = 0;
-
-        // Consume the current buffer block if it exists
-        if (currentBlock.isValid() && toSkip > 0) {
-            currentBlock.invalidate();
-            numSkipped++;
-            toSkip--;
-        }
-
-        // Seek the input stream forward
-        numSkipped += inputStream.skip(toSkip * CwaBlock.BLOCK_SIZE) / CwaBlock.BLOCK_SIZE;
-
-        return numSkipped;
-    }
-
 
     /**
      * Consumes header and null blocks
-     * @return the number of non-data blocks skipped
-     * @throws IOException
+     * @throws IOException if data could not be read
      */
-    public long skipNonDataBlocks() throws IOException {
-        long numSkipped = 0;
+    public void skipNonDataBlocks() throws IOException {
         for (; ; ) {
             // Peek at the next block
             CwaBlock block = peekBlock();
@@ -198,7 +138,7 @@ public class CwaReader {
 
             // If header block, read contents
             if (blockType == CwaBlock.BLOCK_HEADER) {
-                Map<String, String> labelMap = new HashMap<String, String>();
+                Map<String, String> labelMap = new HashMap<>();
                 // At device set-up time
                 labelMap.put("_c", "studyCentre");
                 labelMap.put("_s", "studyCode");
@@ -237,7 +177,7 @@ public class CwaReader {
                 readBlock();
 
                 for (int i = 0; i < 512; i++) {
-                    char c = (char) block.buffer().get(0 + i);
+                    char c = (char) block.buffer().get(i);
                     if (c != ' ' && c >= 32 && c < 128) {
                         if (c == '?') {
                             c = '&';
@@ -246,7 +186,7 @@ public class CwaReader {
                     }
                 }
 
-                metadataString = sb.toString().trim();
+                String metadataString = sb.toString().trim();
                 String[] pairs = metadataString.split("&");
 
                 for (String pair : pairs) {
@@ -258,29 +198,24 @@ public class CwaReader {
                         value = pair.substring(i + 1);
                     }
                     if (value.trim().length() > 0 && name.trim().length() > 0) {
-                        name = URLDecoder.decode(name, "UTF-8");
-                        value = URLDecoder.decode(value, "UTF-8");
+                        name = URLDecoder.decode(name, StandardCharsets.UTF_8);
+                        value = URLDecoder.decode(value, StandardCharsets.UTF_8);
 
                         if (labelMap.containsKey(name)) {
                             name = labelMap.get(name);
                         }
 
                         annotations.put(name, value);
-                    }
                 }
-                metadataRead = true;
+                }
             }
             // If first item of data, peek at contents then exit loop
             else if (blockType == CwaBlock.BLOCK_DATA) {
-                metadataRead = true;
                 break;        // exit loop if data seen
             }
 
             // If not data then consume block
             readBlock();
         }
-        return numSkipped;
     }
-
-
 }

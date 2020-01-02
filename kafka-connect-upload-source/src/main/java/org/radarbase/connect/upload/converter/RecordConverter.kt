@@ -71,7 +71,7 @@ class RecordConverter(
                             )
                             SourceRecord(getPartition(), offset, topicData.topic, key.schema(), key.value(), valRecord.schema(), valRecord.value())
                         } catch (exe: Exception) {
-                            logger.info("This value {} and schema {}", topicData.value.schema.toString(true))
+                            recordLogger.info("This value ${topicData.value} and schema ${topicData.value.schema.toString(true)} could not be converted")
                             null
                         }
                     }
@@ -82,7 +82,7 @@ class RecordConverter(
         }
     }
 
-    override fun convertFile(record: RecordDTO, contents: ContentsDTO, inputStream: InputStream, recordLogger: RecordLogger): List<FileProcessorFactory.TopicData> {
+    override fun convertFile(record: RecordDTO, contents: ContentsDTO, inputStream: InputStream, recordLogger: RecordLogger): List<TopicData> {
         val processorFactory = processorFactories.firstOrNull { it.matches(contents) }
                 ?: throw ConversionFailedException("Cannot find data processor for record ${record.id} with file ${contents.fileName}")
 

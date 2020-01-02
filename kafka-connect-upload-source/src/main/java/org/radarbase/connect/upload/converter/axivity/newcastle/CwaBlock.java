@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) 2009-2018, Newcastle University, UK.
  * All rights reserved.
  * <p>
@@ -25,9 +25,6 @@
  * CWA Data Block
  */
 
-/**
- * CWA Data Block
- */
 package org.radarbase.connect.upload.converter.axivity.newcastle;
 
 import java.io.IOException;
@@ -45,7 +42,7 @@ import java.util.GregorianCalendar;
  * Mutable for efficiency reasons.
  * @author Dan Jackson, Newcastle University
  */
-public class CwaBlock implements Cloneable {
+public class CwaBlock {
 
     /** Block size for data */
     public static final int BLOCK_SIZE = 512;
@@ -67,9 +64,6 @@ public class CwaBlock implements Cloneable {
 
     /** Maximum number of samples per (new format) data block */
     public static final int MAX_SAMPLES_PER_BLOCK = 120;
-
-    /** Number of samples per (old format) data block */
-    public static final int NUM_SAMPLES_PER_OLD_BLOCK = 80;
 
     /** Number of axes per sample */
     public static final int NUM_AXES_PER_SAMPLE = 3;
@@ -100,6 +94,15 @@ public class CwaBlock implements Cloneable {
     /** Block length - data block */
     public static final int LENGTH_DATA = 0x01FC;
 
+    //private static final int DATA_EVENT_NONE = 0x00;
+    public static final int DATA_EVENT_RESUME = 0x01;
+    public static final int DATA_EVENT_SINGLE_TAP = 0x02;
+    public static final int DATA_EVENT_DOUBLE_TAP = 0x04;
+    public static final int DATA_EVENT_EVENT = 0x08; // (not used)
+    public static final int DATA_EVENT_FIFO_OVERFLOW = 0x10;
+    public static final int DATA_EVENT_BUFFER_OVERFLOW = 0x20;
+    public static final int DATA_EVENT_UNHANDLED_INTERRUPT = 0x40;
+    public static final int DATA_EVENT_CHECKSUM_FAIL = 0x80;  // (not used)
 
 	/*
 	// 512-byte data packet
@@ -190,13 +193,8 @@ public class CwaBlock implements Cloneable {
         //byteBuffer.rewind();
     }
 
-    // Clone method -- calls copy constructor
-    public Object clone() { // throws CloneNotSupportedException
-        return new CwaBlock(this);
-    }
-
     // Marks the block as invalidate
-    /*package*/ void invalidate() {
+    public void invalidate() {
         bufferValid = false;
     }
 
@@ -249,12 +247,10 @@ public class CwaBlock implements Cloneable {
 
                 // See which format the packet is
                 if (sampleRate == 0) {
-                    sum = 0;
-                    freq = (float) timestampOffset;  // Old format, frequency stored directly
+                    freq = timestampOffset;  // Old format, frequency stored directly
                     offsetStart = 0.0f;
                 } else {
                     // Calculate sum of packet (should be zero)
-                    sum = 0;
                     for (int i = 0; i < BLOCK_SIZE / 2; i++) {
                         sum += byteBuffer.getShort(i * 2);
                     }
@@ -320,9 +316,9 @@ public class CwaBlock implements Cloneable {
                             z = (short) ((short) (0xffffffc0 & (value >> 14)) >> (6 - ((value >> 30)
                                     & 0x03)));    // Sign-extend 10-bit value, adjust for exponent
                         } else if (bytesPerSample == 6) {
-                            x = byteBuffer.getShort(30 + 2 * NUM_AXES_PER_SAMPLE * i + 0);
-                            y = byteBuffer.getShort(30 + 2 * NUM_AXES_PER_SAMPLE * i + 2);
-                            z = byteBuffer.getShort(30 + 2 * NUM_AXES_PER_SAMPLE * i + 4);
+                            x = byteBuffer.getShort(30 + 2 * NUM_AXES_PER_SAMPLE * i);
+                            y = byteBuffer.getShort(32 + 2 * NUM_AXES_PER_SAMPLE * i);
+                            z = byteBuffer.getShort(34 + 2 * NUM_AXES_PER_SAMPLE * i);
                         } else {
                             x = 0;
                             y = 0;
@@ -330,7 +326,7 @@ public class CwaBlock implements Cloneable {
                         }
 
                         sampleTimes[i] = t;
-                        sampleValues[i * NUM_AXES_PER_SAMPLE + 0] = x;
+                        sampleValues[i * NUM_AXES_PER_SAMPLE] = x;
                         sampleValues[i * NUM_AXES_PER_SAMPLE + 1] = y;
                         sampleValues[i * NUM_AXES_PER_SAMPLE + 2] = z;
                     }

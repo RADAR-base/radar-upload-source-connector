@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) 2009-2018, Newcastle University, UK.
  * All rights reserved.
  * <p>
@@ -25,16 +25,25 @@
  * CWA Converter
  */
 
-/**
- * CWA Converter
- */
-package org.radarbase.connect.upload.converter.axivity.newcastle;
+package org.radarbase.connect.upload.converter;
+
+import org.radarbase.connect.upload.converter.axivity.newcastle.CwaBlock;
+import org.radarbase.connect.upload.converter.axivity.newcastle.CwaReader;
 
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Map;
+
+import static org.radarbase.connect.upload.converter.axivity.newcastle.CwaBlock.DATA_EVENT_BUFFER_OVERFLOW;
+import static org.radarbase.connect.upload.converter.axivity.newcastle.CwaBlock.DATA_EVENT_CHECKSUM_FAIL;
+import static org.radarbase.connect.upload.converter.axivity.newcastle.CwaBlock.DATA_EVENT_DOUBLE_TAP;
+import static org.radarbase.connect.upload.converter.axivity.newcastle.CwaBlock.DATA_EVENT_EVENT;
+import static org.radarbase.connect.upload.converter.axivity.newcastle.CwaBlock.DATA_EVENT_FIFO_OVERFLOW;
+import static org.radarbase.connect.upload.converter.axivity.newcastle.CwaBlock.DATA_EVENT_RESUME;
+import static org.radarbase.connect.upload.converter.axivity.newcastle.CwaBlock.DATA_EVENT_SINGLE_TAP;
+import static org.radarbase.connect.upload.converter.axivity.newcastle.CwaBlock.DATA_EVENT_UNHANDLED_INTERRUPT;
 
 /**
  * A FilterInputStream that converts the binary CWA files into a CSV stream.
@@ -75,18 +84,9 @@ public class CwaCsvInputStream extends FilterInputStream {
     private final static int MAX_OUT_BUFFER = (CwaBlock.MAX_SAMPLES_PER_BLOCK * 128);
     private ByteBuffer outBuffer;
     private StringBuilder outputStringBuilder;
-    private int line, firstLine, lineSkip, lineCount, options;
+    public int line;
+    private final int firstLine, lineSkip, lineCount, options;
     private short events = 0;
-
-    //private static final int DATA_EVENT_NONE = 0x00;
-    private static final int DATA_EVENT_RESUME = 0x01;
-    private static final int DATA_EVENT_SINGLE_TAP = 0x02;
-    private static final int DATA_EVENT_DOUBLE_TAP = 0x04;
-    private static final int DATA_EVENT_EVENT = 0x08; // (not used)
-    private static final int DATA_EVENT_FIFO_OVERFLOW = 0x10;
-    private static final int DATA_EVENT_BUFFER_OVERFLOW = 0x20;
-    private static final int DATA_EVENT_UNHANDLED_INTERRUPT = 0x40;
-    private static final int DATA_EVENT_CHECKSUM_FAIL = 0x80;  // (not used)
 
     /** No export options */
     public static final int OPTIONS_NONE = 0x00;
@@ -100,15 +100,6 @@ public class CwaCsvInputStream extends FilterInputStream {
     public static final int OPTIONS_EVENTS = 0x08;
     /** Export option for meta-data header */
     public static final int OPTIONS_METADATA = 0x10;
-
-
-    /**
-     * Creates a CwaCsvInputStream object
-     * @param inputStream the source input stream
-     */
-    public CwaCsvInputStream(InputStream inputStream) {
-        this(inputStream, 0, 1, -1, 0);
-    }
 
     /**
      * Creates a CwaCsvInputStream object
@@ -171,13 +162,13 @@ public class CwaCsvInputStream extends FilterInputStream {
         }
     }
 
-    private boolean fillOutputBuffer() throws IOException {
+    private void fillOutputBuffer() throws IOException {
         // Peek the next block (temporary copy)
         CwaBlock block;
         for (; ; ) {
             block = cwaReader.peekBlock();
             if (block == null) {
-                return false;
+                return;
             }
             if (block.isDataBlock()) {
                 break;
@@ -190,7 +181,7 @@ public class CwaCsvInputStream extends FilterInputStream {
         short[] sampleValues = block.getSampleValues();
         int numSamples = block.getNumSamples();
         for (int i = 0; i < numSamples; i++) {
-            float x = (float) sampleValues[CwaBlock.NUM_AXES_PER_SAMPLE * i + 0] / 256.0f;
+            float x = (float) sampleValues[CwaBlock.NUM_AXES_PER_SAMPLE * i] / 256.0f;
             float y = (float) sampleValues[CwaBlock.NUM_AXES_PER_SAMPLE * i + 1] / 256.0f;
             float z = (float) sampleValues[CwaBlock.NUM_AXES_PER_SAMPLE * i + 2] / 256.0f;
 
@@ -268,8 +259,6 @@ public class CwaCsvInputStream extends FilterInputStream {
 
         // Invalidate the next block (we will read the following block next time)
         block.invalidate();
-
-        return true;
     }
 
     // Reads up to len bytes of data from this input stream into an array of bytes.
@@ -345,13 +334,4 @@ public class CwaCsvInputStream extends FilterInputStream {
     public void reset() throws IOException {
         throw new IOException("Reset to mark not supported.");
     }
-
-
-    /** Exposes the internal CwaReader object -- allows access to annotations, etc.
-     * @return CwaReader object
-     */
-    public CwaReader getCwaReader() {
-        return cwaReader;
-    }
-
 }

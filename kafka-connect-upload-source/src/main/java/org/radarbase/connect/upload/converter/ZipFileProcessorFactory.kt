@@ -47,7 +47,7 @@ open class ZipFileProcessorFactory(
 
     inner class ZipFileProcessor(private val record: RecordDTO): FileProcessorFactory.FileProcessor {
         private val recordLogger = logRepository.createLogger(logger, record.id!!)
-        override fun processData(contents: ContentsDTO, inputStream: InputStream, timeReceived: Double): List<FileProcessorFactory.TopicData> {
+        override fun processData(contents: ContentsDTO, inputStream: InputStream, timeReceived: Double): List<TopicData> {
             recordLogger.info("Retrieved file content from record id ${record.id} and filename ${contents.fileName}")
             beforeProcessing(contents)
             return try {

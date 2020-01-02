@@ -22,7 +22,8 @@ package org.radarbase.connect.upload.converter.phone
 import org.radarbase.connect.upload.api.RecordDTO
 import org.radarbase.connect.upload.converter.CsvLineProcessorFactory
 import org.radarbase.connect.upload.converter.LogRepository
-import org.radarbase.connect.upload.converter.OneToOneCsvProcessor
+import org.radarbase.connect.upload.converter.StatelessCsvLineProcessor
+import org.radarbase.connect.upload.converter.TopicData
 import org.radarcns.passive.phone.PhoneAcceleration
 import org.slf4j.LoggerFactory
 
@@ -34,15 +35,15 @@ class AccelerometerCsvProcessor : CsvLineProcessorFactory {
     override fun createLineProcessor(
             record: RecordDTO,
             logRepository: LogRepository
-    ): CsvLineProcessorFactory.CsvLineProcessor = OneToOneCsvProcessor.OneToOneCsvLineProcessor(
-            logRepository.createLogger(logger, record.id!!), topic) { line, timeReceived ->
-        PhoneAcceleration(
+    ): CsvLineProcessorFactory.CsvLineProcessor = StatelessCsvLineProcessor.Processor(
+            logRepository.createLogger(logger, record.id!!)) { line, timeReceived ->
+        listOf(TopicData(topic, PhoneAcceleration(
                 line.getValue("TIMESTAMP").toDouble(),
                 timeReceived,
                 line.getValue("X").toFloat(),
                 line.getValue("Y").toFloat(),
                 line.getValue("Z").toFloat()
-        )
+        )))
     }
 
     companion object {

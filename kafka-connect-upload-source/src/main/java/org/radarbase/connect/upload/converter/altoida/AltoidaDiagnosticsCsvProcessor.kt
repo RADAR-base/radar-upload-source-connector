@@ -19,23 +19,22 @@
 
 package org.radarbase.connect.upload.converter.altoida
 
-import org.radarbase.connect.upload.converter.OneToOneCsvProcessor
+import org.radarbase.connect.upload.converter.StatelessCsvLineProcessor
+import org.radarbase.connect.upload.converter.TopicData
 import org.radarcns.connector.upload.altoida.AltoidaDiagnostics
 
-class AltoidaDiagnosticsCsvProcessor : OneToOneCsvProcessor() {
+class AltoidaDiagnosticsCsvProcessor : StatelessCsvLineProcessor() {
     override val fileNameSuffix: String = "_DIAG.csv"
-
-    override val topic: String = "connect_upload_altoida_attitude"
 
     override val header: List<String> = listOf("TIMESTAMP", "TAG", "PAYLOAD", "CONTRAST", "MOVEMENT", "ANGLE", "FEATURES")
 
     override fun lineConversion(
             line: Map<String, String>,
             timeReceived: Double
-    ) = AltoidaDiagnostics(
+    ) = TopicData("connect_upload_altoida_attitude", AltoidaDiagnostics(
             time(line),
             timeReceived,
             line["TAG"],
-            line["PAYLOAD"])
+            line["PAYLOAD"]))
 
 }

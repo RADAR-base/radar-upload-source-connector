@@ -18,7 +18,7 @@ open class CsvProcessor(
         private val processorFactories: List<CsvLineProcessorFactory>): FileProcessorFactory.FileProcessor {
     private val recordLogger = logRepository.createLogger(logger, record.id!!)
 
-    override fun processData(contents: ContentsDTO, inputStream: InputStream, timeReceived: Double): List<FileProcessorFactory.TopicData> {
+    override fun processData(contents: ContentsDTO, inputStream: InputStream, timeReceived: Double): List<TopicData> {
         return try {
             convertLines(contents, inputStream, timeReceived)
         } catch (exe: IOException) {
@@ -32,17 +32,23 @@ open class CsvProcessor(
     open fun convertLines(
             contents: ContentsDTO,
             inputStream: InputStream,
-            timeReceived: Double): List<FileProcessorFactory.TopicData> = readCsv(inputStream.bufferedReader()) { reader ->
+            timeReceived: Double): List<TopicData> = readCsv(inputStream.bufferedReader()) { reader ->
         val header = reader.readNext().map { it.trim().toUpperCase(Locale.US) }
-        val processorFactory = processorFactories
-                .find { it.matches(contents) && it.matches(header) }
+        val processors = processorFactories
+                .filter { it.matches(contents) && it.matches(header) }
+                .map { it.createLineProcessor(record, logRepository) }
+                .takeIf { it.isNotEmpty() }
                 ?: throw InvalidFormatException("In record ${record.id}, cannot find CSV processor that matches header $header")
 
-        val processor = processorFactory.createLineProcessor(record, logRepository)
-
         generateSequence { reader.readNext() }
-                .filter { processor.isLineValid(header, it) }
-                .mapNotNull { processor.convertToRecord(header.zip(it).toMap(), timeReceived) }
+                .map { line ->
+                    val lineMap = header.zip(line).toMap()
+                    processors.flatMap { processor ->
+                        processor.takeIf { it.isLineValid(header, line) }
+                                ?.convertToRecord(lineMap, timeReceived)
+                                ?: emptyList()
+                    }
+                }
                 .toList()
                 .flatten()
     }

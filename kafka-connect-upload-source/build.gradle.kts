@@ -14,6 +14,7 @@ project.extra.apply {
     set("openCsvVersion", "4.6")
     set("confluentVersion", "5.3.0")
     set("radarSchemaVersion", "0.5.5")
+    set("slf4jVersion", "1.7.27")
 }
 
 repositories {
@@ -55,6 +56,7 @@ dependencies {
     testImplementation("org.apache.kafka:connect-api:${project.extra["kafkaVersion"]}")
     testImplementation("org.mockito:mockito-core:2.21.0")
     testImplementation ("org.mockito:mockito-inline:2.21.0")
+    testRuntimeOnly("org.slf4j:slf4j-simple:${project.extra["slf4jVersion"]}")
 }
 
 // config JVM target to 1.8 for kotlin compilation tasks

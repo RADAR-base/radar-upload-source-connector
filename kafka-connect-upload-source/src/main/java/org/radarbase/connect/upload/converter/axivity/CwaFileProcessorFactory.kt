@@ -2,41 +2,47 @@ package org.radarbase.connect.upload.converter.axivity
 
 import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
-import org.radarbase.connect.upload.converter.*
-import org.radarbase.connect.upload.converter.axivity.newcastle.CwaCsvInputStream
-import org.radarbase.connect.upload.exception.InvalidFormatException
+import org.radarbase.connect.upload.converter.FileProcessorFactory
+import org.radarbase.connect.upload.converter.LogRepository
+import org.radarbase.connect.upload.converter.RecordLogger
+import org.radarbase.connect.upload.converter.TopicData
+import org.radarbase.connect.upload.converter.axivity.newcastle.CwaBlock
+import org.radarbase.connect.upload.converter.axivity.newcastle.CwaReader
 import org.slf4j.LoggerFactory
 import java.io.InputStream
 
 class CwaFileProcessorFactory(
-        override val processorFactories: List<CsvLineProcessorFactory>,
-        override val logRepository: LogRepository,
-        private val header: List<String>,
-        private val readOption: Int
-) : CsvFileProcessorFactory(processorFactories, logRepository) {
+        val logRepository: LogRepository,
+        private val dataBlockProcessors: Set<CwaBlockProcessor>
+) : FileProcessorFactory {
+    override fun matches(contents: ContentsDTO): Boolean = contents.fileName.endsWith(".cwa", ignoreCase = true)
 
     override fun createProcessor(record: RecordDTO) = CwaProcessor(record)
 
-    inner class CwaProcessor(private val record: RecordDTO) : CsvProcessor(record, logRepository, processorFactories) {
+    inner class CwaProcessor(record: RecordDTO) : FileProcessorFactory.FileProcessor {
+        val recordLogger = logRepository.createLogger(logger, record.id!!)
 
-        override fun convertLines(
-                contents: ContentsDTO,
-                inputStream: InputStream,
-                timeReceived: Double): List<FileProcessorFactory.TopicData> = readCsv(CwaCsvInputStream(inputStream, 0, 1, -1, readOption).bufferedReader()) { reader ->
-            logger.info("Current Headers are $header")
-            val processorFactory = processorFactories
-                    .find { it.matches(contents) && it.matches(header) }
-                    ?: throw InvalidFormatException("In record ${record.id}, cannot find CSV processor that matches header $header")
+        override fun processData(contents: ContentsDTO, inputStream: InputStream, timeReceived: Double): List<TopicData> {
+            val cwaReader = CwaReader(inputStream)
 
-            val processor = processorFactory.createLineProcessor(record, logRepository)
+            return generateSequence { cwaReader.peekBlock() }
+                    .flatMap { block ->
+                        val result = if (block.isDataBlock) {
+                            dataBlockProcessors.flatMap { processor ->
+                                processor.processBlock(recordLogger, block, timeReceived)
+                            }
+                            .asSequence()
+                        } else emptySequence()
 
-            generateSequence { reader.readNext() }
-                    .filter { processor.isLineValid(header, it) }
-                    .mapNotNull { processor.convertToRecord(header.zip(it).toMap(), timeReceived) }
+                        block.invalidate()
+                        result
+                    }
                     .toList()
-                    .flatten()
         }
+    }
 
+    interface CwaBlockProcessor {
+        fun processBlock(recordLogger: RecordLogger, block: CwaBlock, timeReceived: Double): List<TopicData>
     }
 
     companion object {

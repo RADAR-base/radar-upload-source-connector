@@ -16,21 +16,20 @@
 
 package org.radarbase.connect.upload.converter.altoida
 
-import org.radarbase.connect.upload.converter.OneToOneCsvProcessor
+import org.radarbase.connect.upload.converter.StatelessCsvLineProcessor
+import org.radarbase.connect.upload.converter.TopicData
 import org.radarcns.connector.upload.altoida.AltoidaBlink
 
-class AltoidaBlinkCsvProcessor : OneToOneCsvProcessor() {
+class AltoidaBlinkCsvProcessor : StatelessCsvLineProcessor() {
     override val fileNameSuffix: String = "_BLINK.csv"
-
-    override val topic: String = "connect_upload_altoida_blink"
 
     override val header: List<String> = listOf("TIMESTAMP", "EYE")
 
     override fun lineConversion(
             line: Map<String, String>,
             timeReceived: Double
-    ) = AltoidaBlink(
+    ) = TopicData("connect_upload_altoida_blink", AltoidaBlink(
             time(line),
             timeReceived,
-            line["EYE"])
+            line["EYE"]))
 }
