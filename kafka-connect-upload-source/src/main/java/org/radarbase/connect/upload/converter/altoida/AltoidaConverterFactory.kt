@@ -37,7 +37,7 @@ class AltoidaConverterFactory : ConverterFactory {
                 AltoidaAttitudeCsvProcessor(),
                 AltoidaDiagnosticsCsvProcessor(),
                 AltoidaGravityCsvProcessor(),
-                AltoidaMagnetometerCsvProcessor(),
+                AltoidaMagneticFieldCsvProcessor(),
                 AltoidaObjectCsvProcessor(),
                 AltoidaPathCsvProcessor(),
                 AltoidaRotationCsvProcessor(),
