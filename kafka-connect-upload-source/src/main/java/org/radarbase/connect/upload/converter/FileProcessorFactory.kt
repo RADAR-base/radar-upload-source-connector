@@ -19,7 +19,6 @@
 
 package org.radarbase.connect.upload.converter
 
-import org.apache.avro.generic.IndexedRecord
 import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
 import java.io.InputStream
@@ -28,11 +27,6 @@ import java.io.InputStream
  * Factory to create processors of single files.
  */
 interface FileProcessorFactory {
-    data class TopicData(
-            val topic: String,
-            val value: IndexedRecord) {
-        var endOfFileOffSet: Boolean = false
-    }
 
     /**
      * Whether this processor factory can process given file contents. Matching could occur based on

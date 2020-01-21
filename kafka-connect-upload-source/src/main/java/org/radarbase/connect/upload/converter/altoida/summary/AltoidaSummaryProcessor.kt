@@ -1,24 +1,40 @@
 package org.radarbase.connect.upload.converter.altoida.summary
 
-import org.apache.avro.generic.IndexedRecord
-import org.radarbase.connect.upload.converter.altoida.AltoidaSummaryLineToRecordMapper
-import org.radarcns.connector.upload.altoida.*
+import org.radarbase.connect.upload.converter.StatelessCsvLineProcessor
+import org.radarbase.connect.upload.converter.TimeFieldParser.DateFormatParser.Companion.formatTimeFieldParser
+import org.radarbase.connect.upload.converter.TopicData
+import org.radarcns.connector.upload.altoida.AltoidaSummary
+import org.radarcns.connector.upload.altoida.Classification
+import org.radarcns.connector.upload.altoida.GenderType
+import org.radarcns.connector.upload.altoida.GroundTruth
 
-class AltoidaSummaryProcessor : AltoidaSummaryLineToRecordMapper {
-    override val topic: String = "altoida_trial_summary"
-    override fun processLine(line: Map<String, String>, timeReceived: Double): Pair<String, IndexedRecord>? {
-        return topic to AltoidaSummary(
-                time(line),
-                timeReceived,
-                line["LABEL"],
-                line.getValue("AGE").toInt(),
-                line.getValue("YEARSOFEDUCATION").toInt(),
-                line.getValue("GENDER").toInt().toGender(),
-                line.getValue("CLASS").toInt().classify(),
-                line.getValue("NMI").toDouble(),
-                line.getValue("GROUNDTRUTH").toInt().toGroundTruth()
-        )
-    }
+class AltoidaSummaryProcessor : StatelessCsvLineProcessor() {
+    override val fileNameSuffix: String = "export.csv"
+
+    override val timeFieldParser = defaultTimeFormatter
+
+    override val header: List<String> = listOf(
+            "TIMESTAMP",
+            "LABEL",
+            "AGE",
+            "YEARSOFEDUCATION",
+            "GENDER",
+            "CLASS",
+            "NMI",
+            "GROUNDTRUTH")
+
+    override fun lineConversion(line: Map<String, String>, timeReceived: Double) =
+            TopicData("altoida_trial_summary", AltoidaSummary(
+                    timeFieldParser.time(line),
+                    timeReceived,
+                    line["LABEL"],
+                    line.getValue("AGE").toInt(),
+                    line.getValue("YEARSOFEDUCATION").toInt(),
+                    line.getValue("GENDER").toInt().toGender(),
+                    line.getValue("CLASS").toInt().classify(),
+                    line.getValue("NMI").toDouble(),
+                    line.getValue("GROUNDTRUTH").toInt().toGroundTruth())
+            )
 
     private fun Int.toGender() : GenderType {
         return when (this) {
@@ -38,7 +54,7 @@ class AltoidaSummaryProcessor : AltoidaSummaryLineToRecordMapper {
         }
     }
 
-    private fun Int.toGroundTruth() : GroundTruth? {
+    private fun Int.toGroundTruth() : GroundTruth {
         return when (this) {
             -1 -> GroundTruth.UNKNOWN
             0 -> GroundTruth.HEALTHY
@@ -49,4 +65,8 @@ class AltoidaSummaryProcessor : AltoidaSummaryLineToRecordMapper {
         }
     }
 
+    companion object {
+        private const val defaultTimeFormat = "yyyy-MM-dd HH:mm:ss"
+        val defaultTimeFormatter = defaultTimeFormat.formatTimeFieldParser()
+    }
 }

@@ -30,7 +30,7 @@ class AcceleratometerZipConverterFactory : ConverterFactory {
         val csvLineProcessors  = listOf<CsvLineProcessorFactory>(
                 AccelerometerCsvProcessor())
 
-        val csvProcessors = listOf(CsvProcessorFactory(csvLineProcessors,logRepository))
+        val csvProcessors = listOf(CsvFileProcessorFactory(csvLineProcessors, logRepository))
 
         return listOf(ZipFileProcessorFactory(csvProcessors, logRepository))
     }
