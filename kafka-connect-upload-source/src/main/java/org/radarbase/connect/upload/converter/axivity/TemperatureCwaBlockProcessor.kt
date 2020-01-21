@@ -12,6 +12,6 @@ class TemperatureCwaBlockProcessor: CwaFileProcessorFactory.CwaBlockProcessor {
                 AxivityTemperature(
                         block.startTime(),
                         timeReceived,
-                        block.temperature.toFloat())))
+                        ((block.temperature.toInt() * 3 - 410) / 20.0f))))
     }
 }

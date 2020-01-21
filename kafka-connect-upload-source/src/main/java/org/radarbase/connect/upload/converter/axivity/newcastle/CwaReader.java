@@ -66,9 +66,7 @@ public class CwaReader {
     public CwaReader(InputStream inputStream) {
         this.inputStream = inputStream;
         currentBlock = new CwaBlock();
-        //skipNonDataBlocks();
     }
-
 
     /**
      * Closes the wrapped input stream
@@ -107,8 +105,7 @@ public class CwaReader {
     }
 
     /**
-     * Returns a copy of, and consumes the next block in the file.
-     * Internally, this returns the current buffered block or a newly-read block if none is buffered.
+     * Reads a block of data into memory.
      * @throws IOException if reading the input stream fails
      */
     public void readBlock() throws IOException {
