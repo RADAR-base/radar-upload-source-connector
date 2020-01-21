@@ -4,6 +4,7 @@ import org.radarbase.connect.upload.converter.RecordLogger
 import org.radarbase.connect.upload.converter.TopicData
 import org.radarbase.connect.upload.converter.axivity.newcastle.CwaBlock
 import org.radarcns.connector.upload.axivity.AxivityBatteryLevel
+import kotlin.math.pow
 
 class BatteryLevelCwaBlockProcessor: CwaFileProcessorFactory.CwaBlockProcessor {
     override fun processBlock(recordLogger: RecordLogger, block: CwaBlock, timeReceived: Double): List<TopicData> {
@@ -12,6 +13,6 @@ class BatteryLevelCwaBlockProcessor: CwaFileProcessorFactory.CwaBlockProcessor {
                 AxivityBatteryLevel(
                         block.startTime(),
                         timeReceived,
-                        block.battery.toFloat())))
+                        (block.battery.toInt() + 512) * 3 / 512.0f)))
     }
 }

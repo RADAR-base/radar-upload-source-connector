@@ -31,10 +31,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.GregorianCalendar;
 
 /**
@@ -464,25 +461,4 @@ public class CwaBlock {
         calendar.set(year, month - 1, day, hours, mins, secs);        // Month is zero-indexed(!)
         return calendar.getTimeInMillis();
     }
-
-
-    /**
-     * Standard CWA date formatting string
-     */
-    public static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
-
-    private static DateFormat dateFormat = null;
-
-    /**
-     * @param timespan Timespan since 1/1/1970 in milliseconds
-     * @return Standard formatting for the supplied date
-     */
-    public static String getDateString(long timespan) {
-        if (dateFormat == null) {
-            dateFormat = new SimpleDateFormat(DATE_FORMAT);
-        }
-        return dateFormat.format(new Date(timespan));
-    }
-
-
 }

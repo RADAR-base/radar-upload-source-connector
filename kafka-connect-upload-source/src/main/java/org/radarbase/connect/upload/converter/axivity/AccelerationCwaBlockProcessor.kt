@@ -10,7 +10,7 @@ class AccelerationCwaBlockProcessor: CwaFileProcessorFactory.CwaBlockProcessor {
         return (0 until block.numSamples)
                 .map { i -> TopicData("connect_upload_axivity_acceleration",
                         AxivityAcceleration(
-                                block.startTime(),
+                                block.timestampValues[i] / 1000.0,
                                 timeReceived,
                                 block.sampleValues[CwaBlock.NUM_AXES_PER_SAMPLE * i].toFloat() / 256.0f,
                                 block.sampleValues[CwaBlock.NUM_AXES_PER_SAMPLE * i + 1].toFloat() / 256.0f,

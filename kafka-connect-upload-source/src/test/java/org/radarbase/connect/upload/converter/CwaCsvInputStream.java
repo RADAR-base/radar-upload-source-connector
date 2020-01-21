@@ -34,6 +34,9 @@ import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Map;
 
 import static org.radarbase.connect.upload.converter.axivity.newcastle.CwaBlock.DATA_EVENT_BUFFER_OVERFLOW;
@@ -191,7 +194,7 @@ public class CwaCsvInputStream extends FilterInputStream {
             if (line >= firstLine && (line % lineSkip) == 0 && (lineCount < 0
                     || line < lineCount * lineSkip)) {
                 //outputStringBuilder.append(timestamps[i]);
-                outputStringBuilder.append(CwaBlock.getDateString(timestamps[i]));
+                outputStringBuilder.append(getDateString(timestamps[i]));
                 outputStringBuilder.append(',').append(x).append(',').append(y).append(',')
                         .append(z);
 
@@ -333,5 +336,23 @@ public class CwaCsvInputStream extends FilterInputStream {
     // Repositions this stream to the position at the time the mark method was last called on this input stream.
     public void reset() throws IOException {
         throw new IOException("Reset to mark not supported.");
+    }
+
+    /**
+     * Standard CWA date formatting string
+     */
+    private static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
+
+    private static DateFormat dateFormat = null;
+
+    /**
+     * @param timespan Timespan since 1/1/1970 in milliseconds
+     * @return Standard formatting for the supplied date
+     */
+    private static String getDateString(long timespan) {
+        if (dateFormat == null) {
+            dateFormat = new SimpleDateFormat(DATE_FORMAT);
+        }
+        return dateFormat.format(new Date(timespan));
     }
 }
