@@ -25,7 +25,7 @@ while true; do
 
     IFS=',' read -r -a array <<< ${ZOOKEEPER_CHECK}
     LENGTH=${#array[@]}
-    if [ "$LENGTH" -eq "$KAFKA_BROKERS" ]; then
+    if [ "$LENGTH" -ge "$KAFKA_BROKERS" ]; then
         echo "Kafka brokers available."
         break
     fi
