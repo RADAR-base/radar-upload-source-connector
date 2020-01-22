@@ -198,8 +198,8 @@ public class CwaReader {
                         value = pair.substring(i + 1);
                     }
                     if (value.trim().length() > 0 && name.trim().length() > 0) {
-                        name = URLDecoder.decode(name, StandardCharsets.UTF_8);
-                        value = URLDecoder.decode(value, StandardCharsets.UTF_8);
+                        name = URLDecoder.decode(name, "UTF-8");
+                        value = URLDecoder.decode(value, "UTF-8");
 
                         if (labelMap.containsKey(name)) {
                             name = labelMap.get(name);
