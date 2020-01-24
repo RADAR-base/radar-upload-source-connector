@@ -35,13 +35,18 @@ import org.radarcns.kafka.ObservationKey
 import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.io.InputStream
+import io.confluent.connect.avro.AvroDataConfig
 
 class RecordConverter(
         override val sourceType: String,
         private val processorFactories: List<FileProcessorFactory>,
         private val client: UploadBackendClient,
         private val logRepository: LogRepository,
-        private val avroData: AvroData = AvroData(20)
+        private val avroData: AvroData = AvroData(AvroDataConfig.Builder()
+                .with(AvroDataConfig.CONNECT_META_DATA_CONFIG, false)
+                .with(AvroDataConfig.SCHEMAS_CACHE_SIZE_CONFIG, 20)
+                .with(AvroDataConfig.ENHANCED_AVRO_SCHEMA_SUPPORT_CONFIG, true)
+                .build())
 ) : ConverterFactory.Converter {
     override fun convert(record: RecordDTO): List<SourceRecord> {
         val recordId = checkNotNull(record.id)
