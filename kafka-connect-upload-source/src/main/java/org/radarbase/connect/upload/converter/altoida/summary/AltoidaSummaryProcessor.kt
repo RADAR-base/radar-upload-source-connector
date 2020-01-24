@@ -24,7 +24,7 @@ class AltoidaSummaryProcessor : StatelessCsvLineProcessor() {
             "GROUNDTRUTH")
 
     override fun lineConversion(line: Map<String, String>, timeReceived: Double) =
-            TopicData("altoida_trial_summary", AltoidaSummary(
+            TopicData("connect_upload_altoida_summary", AltoidaSummary(
                     timeFieldParser.time(line),
                     timeReceived,
                     line["LABEL"],
