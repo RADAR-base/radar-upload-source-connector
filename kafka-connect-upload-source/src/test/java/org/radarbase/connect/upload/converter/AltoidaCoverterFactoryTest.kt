@@ -87,7 +87,7 @@ class AltoidaCoverterFactoryTest {
         val expectedTopics = listOf(
                 "connect_upload_altoida_bit_metrics",
                 "connect_upload_altoida_dot_metrics",
-                "altoida_trial_summary",
+                "connect_upload_altoida_summary",
                 "connect_upload_altoida_domain_result"
         )
         assertTrue(records.map { it.topic }.containsAll(expectedTopics))
