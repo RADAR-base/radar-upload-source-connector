@@ -35,13 +35,18 @@ import org.radarcns.kafka.ObservationKey
 import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.io.InputStream
+import io.confluent.connect.avro.AvroDataConfig
 
 class RecordConverter(
         override val sourceType: String,
         private val processorFactories: List<FileProcessorFactory>,
         private val client: UploadBackendClient,
         private val logRepository: LogRepository,
-        private val avroData: AvroData = AvroData(20)
+        private val avroData: AvroData = AvroData(AvroDataConfig.Builder()
+                .with(AvroDataConfig.CONNECT_META_DATA_CONFIG, false)
+                .with(AvroDataConfig.SCHEMAS_CACHE_SIZE_CONFIG, 20)
+                .with(AvroDataConfig.ENHANCED_AVRO_SCHEMA_SUPPORT_CONFIG, true)
+                .build())
 ) : ConverterFactory.Converter {
     override fun convert(record: RecordDTO): List<SourceRecord> {
         val recordId = checkNotNull(record.id)
@@ -71,7 +76,7 @@ class RecordConverter(
                             )
                             SourceRecord(getPartition(), offset, topicData.topic, key.schema(), key.value(), valRecord.schema(), valRecord.value())
                         } catch (exe: Exception) {
-                            logger.info("This value {} and schema {}", topicData.value.schema.toString(true))
+                            recordLogger.info("This value ${topicData.value} and schema ${topicData.value.schema.toString(true)} could not be converted")
                             null
                         }
                     }
@@ -82,7 +87,7 @@ class RecordConverter(
         }
     }
 
-    override fun convertFile(record: RecordDTO, contents: ContentsDTO, inputStream: InputStream, recordLogger: RecordLogger): List<FileProcessorFactory.TopicData> {
+    override fun convertFile(record: RecordDTO, contents: ContentsDTO, inputStream: InputStream, recordLogger: RecordLogger): List<TopicData> {
         val processorFactory = processorFactories.firstOrNull { it.matches(contents) }
                 ?: throw ConversionFailedException("Cannot find data processor for record ${record.id} with file ${contents.fileName}")
 

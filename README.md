@@ -73,28 +73,28 @@ enableCors: yes # if you want to enable cors filter to this component specify ye
 clientId: "radar_upload_backend" # configure your oauth client id
 clientSecret: "secret" # configure the client-secret
 sourceTypes: # these are the data source types that are supported to upload data
-  - name: "phone-acceleration"
+  - name: phone-acceleration
     topics:
-      - "android_phone_acceleration"
+      - android_phone_acceleration
     contentTypes:
-      - "text/csv"
+      - text/csv
     timeRequired: false
     sourceIdRequired: false
     configuration:
-      "setting1": "value1"
-      "setting2": "value2"
-  - name: "acceleration-zip"
+      setting1: value1
+      setting2: value2
+  - name: acceleration-zip
     topics:
-      - "android_phone_acceleration"
+      - android_phone_acceleration
     contentTypes:
-      - "application/zip"
+      - application/zip
     timeRequired: false
     sourceIdRequired: false
-  - name: "altoida"
+  - name: altoida
     topics:
-      - "connect_upload_altoida_acceleration"
+      - connect_upload_altoida_acceleration
     contentTypes:
-      - "application/zip"
+      - application/zip
     timeRequired: false
     sourceIdRequired: false
   - name: oxford-wearable-camera
@@ -116,6 +116,21 @@ sourceTypes: # these are the data source types that are supported to upload data
       # keyPassphrase: ...  # SSH key passphrase, if any.
       # root: .  # root folder to store images to. Defaults to login directory.
       advertizedUrl: sftp://<my-hostname>  # advertized URL to reference path from. May include a base path if needed.
+  - name: axivity
+    topics:
+      - connect_upload_axivity_acceleration
+    contentTypes:
+      - application/zip
+    timeRequired: false
+    sourceIdRequired: false
+    configuration:
+      # add additional values as mentioned below to read additional data from .cwa file from axivity
+      # these default to true, set to false to disable them.
+      readLight: "true"
+      readTemperature: "true"
+      readBattery: "true"
+      readMetadata: "true"
+      logEvents: "true"
 ```
 
 #### Adding support to new device type
@@ -124,11 +139,11 @@ A single sourceType entry is defined as below.
 
 ```yaml
 
-- name: "acceleration-zip" # unique identifier of the data source or device (*required)
+- name: acceleration-zip # unique identifier of the data source or device (*required)
     topics: # list of topics to send data
-      - "android_phone_acceleration" 
+      - android_phone_acceleration
     contentTypes: # content types of the data
-      - "application/zip"
+      - application/zip
     timeRequired: false # whether the user should supply a date-time for the upload e.g. when the data is not timestamped. 
     sourceIdRequired: false # if source-id is compulsory to upload data, specify true.    
 ``` 

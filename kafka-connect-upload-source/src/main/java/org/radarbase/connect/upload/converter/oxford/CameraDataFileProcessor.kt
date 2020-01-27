@@ -3,16 +3,15 @@ package org.radarbase.connect.upload.converter.oxford
 import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
 import org.radarbase.connect.upload.converter.FileProcessorFactory
+import org.radarbase.connect.upload.converter.TimeFieldParser
+import org.radarbase.connect.upload.converter.TopicData
 import org.radarcns.connector.upload.oxford.OxfordCameraAxes
 import org.radarcns.connector.upload.oxford.OxfordCameraData
 import org.radarcns.connector.upload.oxford.OxfordCameraRgb
 import java.io.InputStream
 import java.io.InputStreamReader
-import java.time.OffsetDateTime
-import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeFormatterBuilder
-import java.time.temporal.ChronoField
 
 class CameraDataFileProcessor : FileProcessorFactory {
     override fun matches(contents: ContentsDTO) = contents.fileName.endsWith("image_table.txt")
@@ -20,7 +19,7 @@ class CameraDataFileProcessor : FileProcessorFactory {
     override fun createProcessor(record: RecordDTO): FileProcessorFactory.FileProcessor = CameraFileProcessor()
 
     private class CameraFileProcessor : FileProcessorFactory.FileProcessor {
-        override fun processData(contents: ContentsDTO, inputStream: InputStream, timeReceived: Double): List<FileProcessorFactory.TopicData> {
+        override fun processData(contents: ContentsDTO, inputStream: InputStream, timeReceived: Double): List<TopicData> {
             val lines = InputStreamReader(inputStream).use { it.readLines() }
 
             require(lines.size >= 2) { "Image table too short" }
@@ -34,15 +33,13 @@ class CameraDataFileProcessor : FileProcessorFactory {
                                 .mapIndexed { idx, field -> header[idx] to field.trim() }
                                 .toMap()
 
-                        FileProcessorFactory.TopicData(TOPIC,
+                        TopicData(TOPIC,
                                 mapValuesToRecord(values, timeReceived))
                     }
         }
 
         fun mapValuesToRecord(values: Map<String, String>, timeReceived: Double) = OxfordCameraData(
-                TIME_PARSER.parse(values.getValue("dt"))
-                        .getLong(ChronoField.INSTANT_SECONDS)
-                        .toDouble(),
+                TIME_PARSER.time(values),
                 timeReceived,
                 values.getValue("id"),
                 values.getValue("p") == "1",
@@ -75,13 +72,14 @@ class CameraDataFileProcessor : FileProcessorFactory {
     }
 
     companion object {
-        private val TIME_PARSER = DateTimeFormatterBuilder()
+        private val TIME_PARSER = TimeFieldParser.DateFormatParser(DateTimeFormatterBuilder()
                 // date/time
                 .append(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
                 // offset (hhmm - "+0000" when it's zero)
                 .appendOffset("+HHMM", "+0000")
                 // create formatter
-                .toFormatter();
+                .toFormatter(), "dt")
+
         private const val TOPIC = "connect_upload_oxford_camera_data"
         private const val RGB_RANGE: Float = 255f
         private const val LUMINANCE_RANGE: Float = RGB_RANGE * RGB_RANGE * RGB_RANGE

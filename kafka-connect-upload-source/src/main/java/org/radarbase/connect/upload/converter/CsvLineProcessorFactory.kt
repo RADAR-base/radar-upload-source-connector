@@ -26,10 +26,13 @@ interface CsvLineProcessorFactory {
     /** Upper case header list. */
     val header: List<String>
 
+    val fileNameSuffix: String
+        get() = ".csv"
+
     /**
      * Whether the file contents matches this CSV line processor.
      */
-    fun matches(contents: ContentsDTO) = contents.fileName.endsWith(".csv")
+    fun matches(contents: ContentsDTO) = contents.fileName.endsWith(fileNameSuffix, ignoreCase = true)
 
     /**
      * Whether the header matches this CSV line processor. The provided header must be in upper
@@ -72,7 +75,7 @@ interface CsvLineProcessorFactory {
         /**
          * Convert a line from csv to one or more records
          */
-        fun convertToRecord(lineValues: Map<String, String>, timeReceived: Double): List<FileProcessorFactory.TopicData>?
+        fun convertToRecord(lineValues: Map<String, String>, timeReceived: Double): List<TopicData>?
     }
 }
 

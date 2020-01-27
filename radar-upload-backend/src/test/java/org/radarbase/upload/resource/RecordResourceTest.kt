@@ -112,6 +112,8 @@ internal class RecordResourceTest: JerseyTest() {
         val request = okhttp3.Request.Builder()
                 .url(baseUri.resolve("records/${record.id}/contents/test2.jpg").toURL())
                 .header("Authorization", "Bearer abcdef")
+                .header("Content-Type", "image/jpeg")
+                .header("Content-Length", "100")
                 .put(object : RequestBody() {
                     override fun contentType() = "text/plain".toMediaType()
                     override fun writeTo(sink: BufferedSink) {

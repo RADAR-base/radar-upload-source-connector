@@ -26,6 +26,7 @@ import org.radarbase.upload.doa.entity.RecordContent
 import org.radarbase.upload.doa.entity.RecordMetadata
 import org.radarbase.upload.doa.entity.RecordStatus
 import org.radarbase.upload.service.UploadProjectService
+import org.slf4j.LoggerFactory
 import java.net.URLEncoder
 import java.time.Instant
 import javax.ws.rs.BadRequestException
@@ -59,6 +60,7 @@ class RecordMapperImpl(
         return if (userId != null) userId!! else {
             this.externalUserId
                     ?: throw BadRequestException("Missing both user ID and external-user ID")
+            logger.info("Fetching user id by externalId")
             val user = mpService.userByExternalId(this.projectId!!, this.externalUserId!!)
             user ?: throw BadRequestException("Cannot find a user with externalID ${this.externalUserId}")
             return user.id
@@ -126,4 +128,8 @@ class RecordMapperImpl(
                 LogsDto(url = "${cleanBaseUri}/records/${metadata.id}/logs")
             }
     )
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(RecordMapperImpl::class.java)
+    }
 }

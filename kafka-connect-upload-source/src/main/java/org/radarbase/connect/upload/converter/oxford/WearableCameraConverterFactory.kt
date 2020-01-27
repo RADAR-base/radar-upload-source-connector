@@ -9,6 +9,7 @@ import org.radarbase.connect.upload.converter.LogRepository
 import org.radarbase.connect.upload.converter.ZipFileProcessorFactory
 import org.radarbase.connect.upload.io.FileUploader
 import org.radarbase.connect.upload.io.SftpFileUploader
+import org.slf4j.LoggerFactory
 import java.net.URI
 import java.net.URL
 import java.nio.file.Paths
@@ -34,6 +35,8 @@ class WearableCameraConverterFactory : ConverterFactory {
         if (!urlString.endsWith("/")) urlString += "/"
         val advertizedUrl = URI.create(urlString)
 
+        logger.info("Advertised URL of sftp is set to $advertizedUrl")
+        logger.info("Root folder for upload is $root")
         val processors = listOf(
                 CameraDataFileProcessor(),
                 CameraUploadProcessor(logRepository, { sftpUploader.get() }, root, advertizedUrl))
@@ -52,6 +55,7 @@ class WearableCameraConverterFactory : ConverterFactory {
     }
 
     companion object {
+        private val logger = LoggerFactory.getLogger(WearableCameraConverterFactory::class.java)
         private val ignoredFiles = arrayOf(
                 // downsized image directories
                 "/256_192/", "/640_480/",

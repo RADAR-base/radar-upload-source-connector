@@ -16,22 +16,21 @@
 
 package org.radarbase.connect.upload.converter.altoida
 
-import org.radarbase.connect.upload.converter.SimpleCsvLineProcessor
+import org.radarbase.connect.upload.converter.StatelessCsvLineProcessor
+import org.radarbase.connect.upload.converter.TopicData
 import org.radarcns.connector.upload.altoida.AltoidaTap
 
-class AltoidaTapScreenCsvProcessor : AltoidaCsvProcessor() {
+class AltoidaTapScreenCsvProcessor : StatelessCsvLineProcessor() {
     override val fileNameSuffix: String = "_NORMAL.csv"
-
-    override val topic: String = "connect_upload_altoida_tap"
 
     override val header: List<String> = listOf("TIMESTAMP", "X", "Y")
 
-    override fun SimpleCsvLineProcessor.lineConversion(
+    override fun lineConversion(
             line: Map<String, String>,
             timeReceived: Double
-    ) = AltoidaTap(
+    ) = TopicData("connect_upload_altoida_tap", AltoidaTap(
             time(line),
             timeReceived,
             line.getValue("X").toDouble(),
-            line.getValue("Y").toDouble())
+            line.getValue("Y").toDouble()))
 }

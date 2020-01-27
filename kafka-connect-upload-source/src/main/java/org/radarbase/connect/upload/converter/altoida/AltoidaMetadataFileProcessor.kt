@@ -23,6 +23,7 @@ import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
 import org.radarbase.connect.upload.converter.FileProcessorFactory
 import org.radarbase.connect.upload.converter.LogRepository
+import org.radarbase.connect.upload.converter.TopicData
 import org.radarcns.connector.upload.altoida.AltoidaMetadata
 import org.slf4j.LoggerFactory
 import java.io.IOException
@@ -40,7 +41,7 @@ class AltoidaMetadataFileProcessor(
     private inner class AltoidaMetadataProcessor(private val record: RecordDTO) : FileProcessorFactory.FileProcessor {
         val recordLogger = logRepository.createLogger(logger, record.id!!)
 
-        override fun processData(contents: ContentsDTO, inputStream: InputStream, timeReceived: Double): List<FileProcessorFactory.TopicData> {
+        override fun processData(contents: ContentsDTO, inputStream: InputStream, timeReceived: Double): List<TopicData> {
             val version = try {
                 inputStream.bufferedReader().use { reader ->
                     reader.readLine()
@@ -55,14 +56,14 @@ class AltoidaMetadataFileProcessor(
                     ?: emptyList()
         }
 
-        private fun convertVersionToRecord(version: String, timeReceived: Double): FileProcessorFactory.TopicData? {
+        private fun convertVersionToRecord(version: String, timeReceived: Double): TopicData? {
             val time = Instant.now().toEpochMilli() / 1000.0
             val metadata = AltoidaMetadata(
                     time,
                     timeReceived,
                     version)
 
-            return FileProcessorFactory.TopicData(topic, metadata)
+            return TopicData(topic, metadata)
         }
     }
 

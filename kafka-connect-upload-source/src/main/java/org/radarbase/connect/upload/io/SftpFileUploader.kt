@@ -4,8 +4,7 @@ import com.jcraft.jsch.ChannelSftp
 import com.jcraft.jsch.JSch
 import com.jcraft.jsch.Session
 import com.jcraft.jsch.SftpException
-import java.io.Closeable
-import java.io.IOException
+import org.slf4j.LoggerFactory
 import java.io.InputStream
 import java.lang.Exception
 import java.nio.file.Path
@@ -37,6 +36,7 @@ class SftpFileUploader(credentials: SftpCredentials) : FileUploader {
         // copy remote log file to localhost.
         sftpChannel.run {
             try {
+                logger.info("Uploading data to ${path}")
                 put(stream, path.toString())
             } catch (ex: SftpException) {
                 mkdirs(path)
@@ -66,6 +66,7 @@ class SftpFileUploader(credentials: SftpCredentials) : FileUploader {
             val privateKeyPassphrase: String? = null)
 
     companion object {
+        private val logger = LoggerFactory.getLogger(SftpFileUploader::class.java)
         fun ChannelSftp.mkdirs(path: Path) {
             var isMissing = false
             for (i in 1 until path.nameCount) {
@@ -80,6 +81,7 @@ class SftpFileUploader(credentials: SftpCredentials) : FileUploader {
                     }
                 }
                 if (isMissing) {
+                    logger.info("Creating $nextDirectory")
                     mkdir(nextDirectory)
                 }
             }

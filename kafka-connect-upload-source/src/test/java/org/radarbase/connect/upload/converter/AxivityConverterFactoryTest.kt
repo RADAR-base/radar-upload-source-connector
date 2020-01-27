@@ -7,12 +7,14 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.mockito.Mockito
 import org.radarbase.connect.upload.api.*
-import org.radarbase.connect.upload.converter.altoida.AltoidaConverterFactory
-import java.io.File
+import org.radarbase.connect.upload.converter.CwaCsvInputStream.OPTIONS_EVENTS
+import org.radarbase.connect.upload.converter.axivity.AxivityConverterFactory
+import org.radarcns.connector.upload.axivity.AxivityAcceleration
 import java.time.Instant
+import java.util.zip.ZipInputStream
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class AltoidaCoverterFactoryTest {
+class AxivityConverterFactoryTest {
     private lateinit var converter: ConverterFactory.Converter
 
     private lateinit var logRepository: LogRepository
@@ -21,7 +23,7 @@ class AltoidaCoverterFactoryTest {
 
     private val contentsDTO = ContentsDTO(
             contentType = "application/zip",
-            fileName = "TEST_ZIP.zip",
+            fileName = "CWA-DATA.zip",
             createdDate = Instant.now(),
             size = 1L
     )
@@ -33,7 +35,7 @@ class AltoidaCoverterFactoryTest {
                     status = "PROCESSING"
             ),
             data = null,
-            sourceType = "altoida"
+            sourceType = "axivity"
 
     )
 
@@ -41,9 +43,9 @@ class AltoidaCoverterFactoryTest {
     fun setUp() {
         uploadBackendClient = Mockito.mock(UploadBackendClient::class.java)
         logRepository = ConverterLogRepository()
-        val converterFactory = AltoidaConverterFactory()
+        val converterFactory = AxivityConverterFactory()
         val config = SourceTypeDTO(
-                name = "altoida",
+                name = "axivity",
                 configuration = emptyMap(),
                 sourceIdRequired = false,
                 timeRequired = false,
@@ -54,43 +56,29 @@ class AltoidaCoverterFactoryTest {
     }
 
     @Test
-    @DisplayName("Should be able to convert a zip file to TopicRecords")
+    @DisplayName("Should be able to convert a zip file with sample data to TopicRecords")
     fun testValidRawDataProcessing() {
-        val file = File("src/test/resources/TEST_ZIP.zip")
+        val records = requireNotNull(AxivityConverterFactoryTest::class.java.getResourceAsStream("/CWA-DATA.zip")).use { cwaZipFile ->
+            converter.convertFile(record, contentsDTO, cwaZipFile, Mockito.mock(RecordLogger::class.java))
+        }
 
-        val records = converter.convertFile(record, contentsDTO, file.inputStream(), Mockito.mock(RecordLogger::class.java))
+        val accRecords = records.filter { it.value.javaClass == AxivityAcceleration::class.java }
 
-        assertNotNull(record)
+        requireNotNull(AxivityConverterFactoryTest::class.java.getResourceAsStream("/CWA-DATA.zip")).use { cwaZipFile ->
+            ZipInputStream(cwaZipFile).use { zipIn ->
+                assertNotNull(zipIn.nextEntry)
+                CwaCsvInputStream(zipIn, 0, 1, -1, OPTIONS_EVENTS).use { cwaIn ->
+                    cwaIn.bufferedReader().use { it.readLines() }
+                    // without any apparent reason, the CwaCsvInputStream is missing the first block...
+                    assertEquals(cwaIn.line + 80, accRecords.size)
+                }
+            }
+        }
+
+        assertNotNull(records)
         assertTrue(records.size > 1000)
         assertEquals(true, records.last().endOfFileOffSet)
         assertEquals(1, records.filter { it.endOfFileOffSet }.size)
-    }
-
-    @Test
-    @DisplayName("Should be able to convert export.csv to TopicRecords")
-    fun testValidExportCsvProcessing() {
-        val file = File("src/test/resources/export.csv")
-
-        val contentsDTO = ContentsDTO(
-                contentType = "text/csv",
-                fileName = "export.csv",
-                createdDate = Instant.now(),
-                size = 1L
-        )
-        val records = converter.convertFile(record, contentsDTO, file.inputStream(), Mockito.mock(RecordLogger::class.java))
-
-        assertNotNull(record)
-        assertEquals(records.size, 4)
-        assertEquals(true, records.last().endOfFileOffSet)
-        assertEquals(1, records.filter { it.endOfFileOffSet }.size)
-
-        val expectedTopics = listOf(
-                "connect_upload_altoida_bit_metrics",
-                "connect_upload_altoida_dot_metrics",
-                "connect_upload_altoida_summary",
-                "connect_upload_altoida_domain_result"
-        )
-        assertTrue(records.map { it.topic }.containsAll(expectedTopics))
     }
 
 }

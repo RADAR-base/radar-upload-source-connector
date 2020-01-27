@@ -19,26 +19,24 @@
 
 package org.radarbase.connect.upload.converter.altoida
 
-import org.apache.avro.generic.IndexedRecord
-import org.radarbase.connect.upload.converter.SimpleCsvLineProcessor
+import org.radarbase.connect.upload.converter.StatelessCsvLineProcessor
+import org.radarbase.connect.upload.converter.TopicData
 import org.radarcns.connector.upload.altoida.AltoidaAttitude
 
 
-class AltoidaAttitudeCsvProcessor : AltoidaCsvProcessor() {
+class AltoidaAttitudeCsvProcessor : StatelessCsvLineProcessor() {
     override val fileNameSuffix: String = "_ATT.csv"
-
-    override val topic: String = "connect_upload_altoida_attitude"
 
     override val header: List<String> = listOf("TIMESTAMP", "PITCH", "ROLL", "YAW")
 
-    override fun SimpleCsvLineProcessor.lineConversion(
+    override fun lineConversion(
             line: Map<String, String>,
             timeReceived: Double
-    ) = AltoidaAttitude(
+    ) = TopicData("connect_upload_altoida_attitude", AltoidaAttitude(
             time(line),
             timeReceived,
             line.getValue("PITCH").toFloat(),
             line.getValue("ROLL").toFloat(),
-            line.getValue("YAW").toFloat())
+            line.getValue("YAW").toFloat()))
 
 }
