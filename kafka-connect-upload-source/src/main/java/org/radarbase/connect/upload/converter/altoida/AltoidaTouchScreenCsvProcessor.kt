@@ -28,7 +28,7 @@ class AltoidaTouchScreenCsvProcessor : StatelessCsvLineProcessor() {
     override fun lineConversion(
             line: Map<String, String>,
             timeReceived: Double
-    ) = TopicData("connect_upload_altoida_tap", AltoidaTouch(
+    ) = TopicData("connect_upload_altoida_touch", AltoidaTouch(
             time(line),
             timeReceived,
             line.getValue("X").toDouble(),
