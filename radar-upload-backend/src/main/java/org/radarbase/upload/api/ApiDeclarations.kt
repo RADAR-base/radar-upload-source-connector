@@ -72,8 +72,8 @@ data class SourceTypeDTO(
         var contentTypes: Set<String>?,
         var timeRequired: Boolean?,
         var sourceIdRequired: Boolean?,
-        var configuration: Map<String, String>?
-)
+        var configuration: Map<String, String>?,
+        var resetProcessingStatusTimeoutMin: Long? = null)
 
 data class SourceTypeContainerDTO(
         var sourceTypes: List<SourceTypeDTO>)

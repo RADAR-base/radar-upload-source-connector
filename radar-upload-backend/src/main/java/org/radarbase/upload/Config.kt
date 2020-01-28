@@ -44,4 +44,5 @@ data class Config(
         var contentStreamBufferSize: Long = 1048576L,
         var enableCors: Boolean? = false,
         var syncProjectsIntervalMin: Long = 30,
-        var syncParticipantsIntervalMin: Long = 30)
+        var syncParticipantsIntervalMin: Long = 30,
+        var resetProcessingStatusTimeoutMin: Long = 30)

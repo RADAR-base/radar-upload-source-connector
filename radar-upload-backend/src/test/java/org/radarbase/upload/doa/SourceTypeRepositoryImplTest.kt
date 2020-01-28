@@ -34,6 +34,7 @@ import org.radarbase.upload.api.SourceTypeMapperImpl
 import org.radarbase.upload.doa.entity.SourceType
 import org.radarbase.upload.inject.DoaEntityManagerFactoryFactory
 import java.nio.file.Path
+import javax.inject.Provider
 import javax.persistence.EntityManager
 import javax.persistence.EntityManagerFactory
 
@@ -48,7 +49,7 @@ internal class SourceTypeRepositoryImplTest {
     lateinit var tempDir: Path
 
     @Mock
-    lateinit var mockEntityManagerProvider: javax.inject.Provider<EntityManager>
+    lateinit var mockEntityManagerProvider: Provider<EntityManager>
 
     @BeforeEach
     fun setUp() {
