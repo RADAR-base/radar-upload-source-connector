@@ -261,27 +261,19 @@ public class CwaBlock {
 
 
                 if (sum == 0x0000) {
-
-                    int bytesPerSample = 0;
-                    if (((numAxesBPS >> 4) & 0x0f) != NUM_AXES_PER_SAMPLE) {
-                        ;
-                    }    // Unexpected number of axes
+                    int bytesPerSample;
                     if ((numAxesBPS & 0x0f) == 2) {
                         bytesPerSample = 6;
                     }    // 3*16-bit
                     else if ((numAxesBPS & 0x0f) == 0) {
                         bytesPerSample = 4;
                     }    // 3*10-bit + 2
-                    short expectedCount =
-                            (short) ((bytesPerSample != 0) ? 480 / bytesPerSample : 0);
+                    else {
+                        bytesPerSample = 0;
+                    }
+                    short expectedCount = (short) ((bytesPerSample != 0) ? 480 / bytesPerSample : 0);
                     if (sampleCount != expectedCount) {
                         sampleCount = expectedCount;
-                    }
-                    if (sampleCount < 0) {
-                        sampleCount = 0;
-                    }
-                    if (sampleCount > MAX_SAMPLES_PER_BLOCK) {
-                        sampleCount = MAX_SAMPLES_PER_BLOCK;
                     }
 
                     int arraySize = sampleCount * NUM_AXES_PER_SAMPLE;
@@ -291,8 +283,7 @@ public class CwaBlock {
                     }
 
                     long time0 = getTimestamp(blockTimestamp) + (long) (1000 * offsetStart / freq);
-                    long time1 =
-                            time0 + (long) (1000 * sampleCount / freq);        // Packet end time
+                    long time1 = time0 + (long) (1000 * sampleCount / freq); // Packet end time
                     //System.err.println("[" + time0 + " - " + time1 + "]");
                     if (tLast != 0 && time0 - tLast < 1000) {
                         time0 = tLast;
@@ -301,7 +292,6 @@ public class CwaBlock {
                     long timeD = time1 - time0;
 
                     for (int i = 0; i < sampleCount; i++) {
-                        long t = (sampleRate == 0) ? time0 : (time0 + ((i * timeD) / sampleCount));
                         short x, y, z;
 
                         if (bytesPerSample == 4) {
@@ -322,7 +312,9 @@ public class CwaBlock {
                             z = 0;
                         }
 
-                        sampleTimes[i] = t;
+                        sampleTimes[i] = (sampleRate == 0)
+                                ? time0
+                                : time0 + ((i * timeD) / sampleCount);
                         sampleValues[i * NUM_AXES_PER_SAMPLE] = x;
                         sampleValues[i * NUM_AXES_PER_SAMPLE + 1] = y;
                         sampleValues[i * NUM_AXES_PER_SAMPLE + 2] = z;
