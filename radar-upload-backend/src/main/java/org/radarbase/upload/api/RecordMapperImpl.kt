@@ -57,7 +57,7 @@ class RecordMapperImpl(
     }
 
     private fun RecordDataDTO.resolveUserId(): String {
-        return if (userId != null) userId!! else {
+        return if (!userId.isNullOrEmpty()) userId!! else {
             this.externalUserId
                     ?: throw BadRequestException("Missing both user ID and external-user ID")
             logger.info("Fetching user id by externalId")
