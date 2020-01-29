@@ -41,10 +41,12 @@ class WearableCameraConverterFactory : ConverterFactory {
             advertizedUrl = URI.create(urlString)
             uploaderSupplier = { SftpFileUploader(credentials) }
             root = Paths.get(sourceConfig["root"] ?: ".")
+            logger.info("Storing wearable camera images to SFTP server {}", credentials.host)
         } else {
             advertizedUrl = URI.create(sourceConfig["advertizedUrl"] ?: "file://")
             uploaderSupplier = { LocalFileUploader() }
             root = Paths.get(sourceConfig["root"] ?: ".").toAbsolutePath()
+            logger.info("Storing wearable camera images to the local file system")
         }
 
         logger.info("Advertised URL of sftp is set to $advertizedUrl")
