@@ -239,7 +239,7 @@ class RecordResource(
 
         return Response
                 .ok(streamingOutput)
-                .header("Content-type", recordContent.contentType)
+                .header("Content-Type", recordContent.contentType)
                 .header("Content-Length", recordContent.size)
                 .header("Last-Modified", recordContent.createdDate)
                 .build()
