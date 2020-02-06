@@ -41,6 +41,7 @@ class WearableCameraConverterFactory : ConverterFactory {
             advertizedUrl = URI.create(urlString)
             uploaderSupplier = { SftpFileUploader(credentials) }
             root = Paths.get(sourceConfig["root"] ?: ".")
+            logger.info("Advertised URL of sftp is set to $advertizedUrl")
             logger.info("Storing wearable camera images to SFTP server {}", credentials.host)
         } else {
             advertizedUrl = URI.create(sourceConfig["advertizedUrl"] ?: "file://")
@@ -49,7 +50,6 @@ class WearableCameraConverterFactory : ConverterFactory {
             logger.info("Storing wearable camera images to the local file system")
         }
 
-        logger.info("Advertised URL of sftp is set to $advertizedUrl")
         logger.info("Root folder for upload is $root")
         val processors = listOf(
                 CameraDataFileProcessor(),
@@ -64,7 +64,7 @@ class WearableCameraConverterFactory : ConverterFactory {
                 localUploader.remove()
             }
 
-            override fun entryFilter(name: String) = ignoredFiles.none { name.contains(it) }
+            override fun entryFilter(name: String) = ignoredFiles.none { name.contains(it, true) }
         })
     }
 
@@ -74,6 +74,8 @@ class WearableCameraConverterFactory : ConverterFactory {
                 // downsized image directories
                 "/256_192/", "/640_480/",
                 // image binary data table
-                "/.image_table")
+                "/.image_table",
+                // ACTIVITY.CSV no knowledge about the content.
+                "ACTIVITY.CSV")
     }
 }
