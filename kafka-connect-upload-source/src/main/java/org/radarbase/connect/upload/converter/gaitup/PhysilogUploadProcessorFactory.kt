@@ -6,8 +6,9 @@ import org.radarbase.connect.upload.converter.FileProcessorFactory
 import org.radarbase.connect.upload.converter.LogRepository
 import org.radarbase.connect.upload.converter.TopicData
 import org.radarbase.connect.upload.io.FileUploader
-import org.radarcns.connector.upload.oxford.OxfordCameraImage
+import org.radarcns.connector.upload.physilog.PhysilogBinaryData
 import org.slf4j.LoggerFactory
+import java.io.IOException
 import java.io.InputStream
 import java.net.URI
 import java.nio.file.Path
@@ -15,52 +16,61 @@ import java.nio.file.Paths
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoField
 
-class PhysilogUploadProcessor(
+open class PhysilogUploadProcessorFactory(
         private val logRepository: LogRepository,
         private val uploaderCreate: () -> FileUploader,
         private val rootPath: Path,
         private val advertisedUrl: URI) : FileProcessorFactory {
+
+    open fun beforeProcessing(contents: ContentsDTO) = Unit
+
+    open fun afterProcessing(contents: ContentsDTO) = Unit
+
     override fun matches(contents: ContentsDTO) = SUFFIX_REGEX.containsMatchIn(contents.fileName)
 
-    override fun createProcessor(record: RecordDTO): FileProcessorFactory.FileProcessor = FileUploadProcessor(record)
+    override fun createProcessor(record: RecordDTO): FileProcessorFactory.FileProcessor = PhysilogFileUploadProcessor(record)
 
-    private inner class FileUploadProcessor(private val record: RecordDTO) : FileProcessorFactory.FileProcessor {
+    private inner class PhysilogFileUploadProcessor(private val record: RecordDTO) : FileProcessorFactory.FileProcessor {
         private val recordLogger = logRepository.createLogger(logger, record.id!!)
 
         override fun processData(contents: ContentsDTO, inputStream: InputStream, timeReceived: Double): List<TopicData> {
+            beforeProcessing(contents)
             val fileName = contents.fileName
-            val formattedTime = checkNotNull(FILENAME_REGEX.matchEntire(fileName)) { "Image file name $fileName does not match pattern" }
-                    .groupValues[1]
-            val dateTime = fileDateFormatter.parse(formattedTime)
-            val time = dateTime.getLong(ChronoField.INSTANT_SECONDS).toDouble()
+            logger.debug("Processing $fileName")
+            // Create date directory based on uploaded time.
             val dateDirectory = directoryDateFormatter.format(Instant.now())
 
             val projectId = checkNotNull(record.data?.projectId) { "Project ID required to upload image files." }
             val userId = checkNotNull(record.data?.userId) { "Project ID required to upload image files." }
-            val relativePath = Paths.get("$projectId/$userId/$TOPIC/$dateDirectory/$fileName")
+            val relativePath = Paths.get("$projectId/$userId/$TOPIC/${record.id}/$dateDirectory/$fileName")
             val fullPath = rootPath.resolve(relativePath).normalize()
+//            val url = advertisedUrl.resolve(fullPath.toString())
 
-            uploaderCreate().upload(fullPath, inputStream)
+            try {
+                uploaderCreate().upload(fullPath, inputStream)
 
-            val url = advertisedUrl.resolve(relativePath.toString())
-            return listOf(TopicData(TOPIC,
-                    OxfordCameraImage(time, timeReceived, fileName, url.toString())
-                            .also { recordLogger.info("Uploaded file to ${it.getUrl()}") }))
+                return listOf(TopicData(TOPIC,
+                        PhysilogBinaryData(timeReceived, timeReceived, fileName, fullPath.toString())
+                                .also { recordLogger.info("Uploaded file to ${it.getUrl()}") }))
+            } catch (exe: IOException) {
+                logger.error("Could not upload file")
+                throw exe
+            } finally {
+                logger.info("Finalising the upload")
+                afterProcessing(contents)
+            }
+
         }
     }
 
     companion object {
         private const val TOPIC = "connect_upload_physilog_binary_data"
 
-        private val SUFFIX_REGEX = Regex("\\.BIN$", RegexOption.IGNORE_CASE)
-        private val FILENAME_REGEX = Regex("^[^_]+_[^_]+_([0-9]+_[0-9]+)E.*")
-        private val fileDateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")
-                .withZone(ZoneId.of("UTC"))
+        private val SUFFIX_REGEX = Regex("\\.zip|\\.tar.gz$", RegexOption.IGNORE_CASE)
         private val directoryDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
                 .withZone(ZoneId.of("UTC"))
 
-        private val logger = LoggerFactory.getLogger(PhysilogUploadProcessor::class.java)
+        private val logger = LoggerFactory.getLogger(PhysilogUploadProcessorFactory::class.java)
     }
 }

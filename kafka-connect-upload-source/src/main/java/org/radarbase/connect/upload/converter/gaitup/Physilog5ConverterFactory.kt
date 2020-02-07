@@ -41,19 +41,19 @@ class Physilog5ConverterFactory : ConverterFactory {
             advertizedUrl = URI.create(urlString)
             uploaderSupplier = { SftpFileUploader(credentials) }
             root = Paths.get(sourceConfig["root"] ?: ".")
-            logger.info("Advertised URL of sftp is set to $advertizedUrl")
-            logger.info("Storing wearable camera images to SFTP server {}", credentials.host)
+            logger.info("Advertised URL of sftp is set to $advertizedUrl and the root for upload is $root")
+            logger.info("Storing physilog4 binary data to SFTP server {}", credentials.host)
         } else {
             advertizedUrl = URI.create(sourceConfig["advertizedUrl"] ?: "file://")
             uploaderSupplier = { LocalFileUploader() }
             root = Paths.get(sourceConfig["root"] ?: ".").toAbsolutePath()
-            logger.info("Storing wearable camera images to the local file system")
+            logger.info("Storing physilog4 binary data to the local file system")
+            logger.info("Advertised URL of local file upload is set to $advertizedUrl and the root for upload is $root")
         }
 
-        logger.info("Root folder for upload is $root")
-        val processors = listOf(
-                PhysilogUploadProcessor(logRepository, { localUploader.get() }, root, advertizedUrl))
-        return listOf(object : ZipFileProcessorFactory(processors, logRepository) {
+
+        return listOf( object :
+                PhysilogUploadProcessorFactory(logRepository, { localUploader.get() }, root, advertizedUrl){
             override fun beforeProcessing(contents: ContentsDTO) {
                 localUploader.set(uploaderSupplier())
             }
@@ -62,8 +62,6 @@ class Physilog5ConverterFactory : ConverterFactory {
                 localUploader.get().closeQuietly()
                 localUploader.remove()
             }
-
-            override fun entryFilter(name: String) = ignoredFiles.none { name.contains(it, true) }
         })
     }
 
