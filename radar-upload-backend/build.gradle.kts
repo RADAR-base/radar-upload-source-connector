@@ -4,9 +4,9 @@ plugins {
     java
     application
     kotlin("jvm")
-    id("org.jetbrains.kotlin.plugin.noarg") version "1.3.41"
-    id("org.jetbrains.kotlin.plugin.jpa") version "1.3.41"
-    id("org.jetbrains.kotlin.plugin.allopen") version "1.3.41"
+    id("org.jetbrains.kotlin.plugin.noarg") version "1.3.61"
+    id("org.jetbrains.kotlin.plugin.jpa") version "1.3.61"
+    id("org.jetbrains.kotlin.plugin.allopen") version "1.3.61"
 }
 
 application {
@@ -21,9 +21,8 @@ project.extra.apply {
     set("slf4jVersion", "1.7.27")
     set("logbackVersion", "1.2.3")
     set("grizzlyVersion", "2.4.4")
-    set("jerseyVersion", "2.29.1")
-    // skip 5.4.5: https://hibernate.atlassian.net/browse/HHH-13625
-    set("hibernateVersion", "5.4.4.Final")
+    set("jerseyVersion", "2.30")
+    set("hibernateVersion", "5.4.10.Final")
 }
 
 repositories {
@@ -34,7 +33,7 @@ repositories {
 }
 
 dependencies {
-    compile(kotlin("stdlib-jdk8"))
+    api(kotlin("stdlib-jdk8"))
 
     implementation("org.radarbase:radar-jersey:${project.extra["radarJerseyVersion"]}")
 
@@ -82,7 +81,6 @@ allOpen {
 }
 
 tasks.register("downloadDependencies") {
-
     configurations["runtimeClasspath"].files
     configurations["compileClasspath"].files
 

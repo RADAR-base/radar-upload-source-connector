@@ -8,6 +8,7 @@ import com.fasterxml.jackson.module.kotlin.KotlinModule
 import okhttp3.OkHttpClient
 import org.glassfish.jersey.internal.inject.AbstractBinder
 import org.glassfish.jersey.internal.inject.PerLookup
+import org.glassfish.jersey.process.internal.RequestScoped
 import org.glassfish.jersey.server.ResourceConfig
 import org.radarbase.jersey.config.ConfigLoader
 import org.radarbase.jersey.config.JerseyResourceEnhancer

@@ -40,9 +40,9 @@ class CameraUploadProcessor(
             val projectId = checkNotNull(record.data?.projectId) { "Project ID required to upload image files." }
             val userId = checkNotNull(record.data?.userId) { "Project ID required to upload image files." }
             val relativePath = Paths.get("$projectId/$userId/$TOPIC/$dateDirectory/$adjustedFilename.jpg")
-            val sftpPath = rootPath.resolve(relativePath).normalize()
+            val fullPath = rootPath.resolve(relativePath).normalize()
 
-            uploaderCreate().upload(sftpPath, inputStream)
+            uploaderCreate().upload(fullPath, inputStream)
 
             val url = advertisedUrl.resolve(relativePath.toString())
             return listOf(TopicData(TOPIC,
