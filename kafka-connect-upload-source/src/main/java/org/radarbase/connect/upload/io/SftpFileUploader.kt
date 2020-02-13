@@ -33,10 +33,9 @@ class SftpFileUploader(credentials: SftpCredentials) : FileUploader {
 
     override fun upload(path: Path, stream: InputStream) {
         // copy remote log file to localhost.
-        // copy remote log file to localhost.
         sftpChannel.run {
             try {
-                logger.info("Uploading data to ${path}")
+                logger.debug("Uploading data to ${path}")
                 put(stream, path.toString())
             } catch (ex: SftpException) {
                 mkdirs(path)

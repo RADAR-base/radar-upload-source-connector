@@ -31,6 +31,7 @@ import org.apache.kafka.common.config.ConfigDef
 import org.radarbase.connect.upload.auth.ClientCredentialsAuthorizer
 import org.radarbase.connect.upload.converter.altoida.AltoidaConverterFactory
 import org.radarbase.connect.upload.converter.axivity.AxivityConverterFactory
+import org.radarbase.connect.upload.converter.gaitup.Physilog5ConverterFactory
 import org.radarbase.connect.upload.converter.oxford.WearableCameraConverterFactory
 import org.radarbase.connect.upload.converter.phone.AcceleratometerZipConverterFactory
 import org.radarbase.connect.upload.converter.phone.AccelerometerConverterFactory
@@ -101,7 +102,8 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
                 AcceleratometerZipConverterFactory::class.java.name,
                 AltoidaConverterFactory::class.java.name,
                 WearableCameraConverterFactory::class.java.name,
-                AxivityConverterFactory::class.java.name)
+                AxivityConverterFactory::class.java.name,
+                Physilog5ConverterFactory::class.java.name)
 
         const val SOURCE_POLL_INTERVAL_CONFIG = "upload.source.poll.interval.ms"
         private const val SOURCE_POLL_INTERVAL_DOC = "How often to poll the source URL."
