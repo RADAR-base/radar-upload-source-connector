@@ -58,8 +58,10 @@ class RecordMapperImpl(
 
     private fun RecordDataDTO.resolveUserId(): String {
         return if (!userId.isNullOrEmpty()) userId!! else {
-            if(this.externalUserId.isNullOrEmpty())
-                    throw BadRequestException("Missing both user ID and external-user ID or they are empty")
+            if (this.externalUserId.isNullOrEmpty()) {
+                throw BadRequestException("Missing both user ID and external-user ID or they are empty")
+            }
+
             logger.info("Fetching user id by externalId ${this.externalUserId}")
             val user = mpService.userByExternalId(this.projectId!!, this.externalUserId!!)
             user ?: throw BadRequestException("Cannot find a user with externalID ${this.externalUserId}")
