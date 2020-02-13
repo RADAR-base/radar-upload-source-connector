@@ -39,7 +39,7 @@ class CameraUploadProcessor(
 
             val projectId = checkNotNull(record.data?.projectId) { "Project ID required to upload image files." }
             val userId = checkNotNull(record.data?.userId) { "Project ID required to upload image files." }
-            val relativePath = Paths.get("$projectId/$userId/$TOPIC/$dateDirectory/$adjustedFilename.jpg")
+            val relativePath = Paths.get("$projectId/$userId/$TOPIC/${record.id}/$dateDirectory/$adjustedFilename.jpg")
             val fullPath = rootPath.resolve(relativePath).normalize()
 
             uploaderCreate().upload(fullPath, inputStream)

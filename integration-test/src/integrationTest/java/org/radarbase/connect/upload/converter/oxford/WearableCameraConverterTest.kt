@@ -102,7 +102,7 @@ class WearableCameraConverterTest {
         (session.openChannel("sftp") as ChannelSftp).run {
             connect()
             // directory entries . and .. plus images.
-            assertEquals(7, ls("upload/p/u/connect_upload_oxford_camera_image/2018-01-02").size)
+            assertEquals(7, ls("upload/p/u/1/connect_upload_oxford_camera_image/2018-01-02").size)
             exit()
         }
         session.disconnect()
