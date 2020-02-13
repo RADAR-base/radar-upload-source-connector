@@ -6,7 +6,7 @@ import org.radarbase.connect.upload.converter.FileProcessorFactory
 import org.radarbase.connect.upload.converter.LogRepository
 import org.radarbase.connect.upload.converter.TopicData
 import org.radarbase.connect.upload.io.FileUploader
-import org.radarcns.connector.upload.physilog.PhysilogBinaryData
+import org.radarcns.connector.upload.physilog.PhysilogBinaryDataReference
 import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.io.InputStream
@@ -51,7 +51,7 @@ open class PhysilogUploadProcessorFactory(
                 uploaderCreate().upload(fullPath, inputStream)
 
                 return listOf(TopicData(TOPIC,
-                        PhysilogBinaryData(timeReceived, timeReceived, fileName, fullPath.toString())
+                        PhysilogBinaryDataReference(timeReceived, timeReceived, fileName, fullPath.toString())
                                 .also { recordLogger.info("Uploaded file to ${it.getUrl()}") }))
             } catch (exe: IOException) {
                 logger.error("Could not upload file")
@@ -65,7 +65,7 @@ open class PhysilogUploadProcessorFactory(
     }
 
     companion object {
-        private const val TOPIC = "connect_upload_physilog_binary_data"
+        private const val TOPIC = "connect_upload_physilog_binary_data_reference"
 
         private val SUFFIX_REGEX = Regex("\\.zip|\\.tar.gz$", RegexOption.IGNORE_CASE)
         private val directoryDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
