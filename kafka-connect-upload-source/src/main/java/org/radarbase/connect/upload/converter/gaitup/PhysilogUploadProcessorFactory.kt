@@ -45,13 +45,13 @@ open class PhysilogUploadProcessorFactory(
             val userId = checkNotNull(record.data?.userId) { "Project ID required to upload image files." }
             val relativePath = Paths.get("$projectId/$userId/$TOPIC/${record.id}/$dateDirectory/$fileName")
             val fullPath = rootPath.resolve(relativePath).normalize()
-//            val url = advertisedUrl.resolve(fullPath.toString())
+            val url = advertisedUrl.resolve(fullPath.toString())
 
             try {
                 uploaderCreate().upload(fullPath, inputStream)
 
                 return listOf(TopicData(TOPIC,
-                        PhysilogBinaryDataReference(timeReceived, timeReceived, fileName, fullPath.toString())
+                        PhysilogBinaryDataReference(timeReceived, timeReceived, fileName, url.toString())
                                 .also { recordLogger.info("Uploaded file to ${it.getUrl()}") }))
             } catch (exe: IOException) {
                 logger.error("Could not upload file")

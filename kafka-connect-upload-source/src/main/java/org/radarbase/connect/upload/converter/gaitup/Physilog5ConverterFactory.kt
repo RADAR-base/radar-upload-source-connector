@@ -6,7 +6,6 @@ import org.radarbase.connect.upload.api.SourceTypeDTO
 import org.radarbase.connect.upload.converter.ConverterFactory
 import org.radarbase.connect.upload.converter.FileProcessorFactory
 import org.radarbase.connect.upload.converter.LogRepository
-import org.radarbase.connect.upload.converter.ZipFileProcessorFactory
 import org.radarbase.connect.upload.io.FileUploader
 import org.radarbase.connect.upload.io.LocalFileUploader
 import org.radarbase.connect.upload.io.SftpFileUploader
@@ -67,12 +66,5 @@ class Physilog5ConverterFactory : ConverterFactory {
 
     companion object {
         private val logger = LoggerFactory.getLogger(Physilog5ConverterFactory::class.java)
-        private val ignoredFiles = arrayOf(
-                // downsized image directories
-                "/256_192/", "/640_480/",
-                // image binary data table
-                "/.image_table",
-                // ACTIVITY.CSV no knowledge about the content.
-                "ACTIVITY.CSV")
     }
 }
