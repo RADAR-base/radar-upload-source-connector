@@ -115,7 +115,7 @@ sourceTypes: # these are the data source types that are supported to upload data
       # If a docker container is used, this key should be mounted in a volume.
       keyFile: </path/to/private/ssh/key>
       # keyPassphrase: ...  # SSH key passphrase, if any.
-      # root: .  # root folder to store images to. Defaults to runtime directory.
+      root: /output/  # root folder to store images to. Defaults to runtime directory.
       advertizedUrl: sftp://<my-hostname>  # advertized URL to reference path from. May include a base path if needed.
   - name: axivity
     topics:

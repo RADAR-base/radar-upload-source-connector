@@ -182,7 +182,7 @@ services:
     build:
       context: .
       dockerfile: kafka-connect-upload-source/Dockerfile
-    image: radarbase/radar-connect-upload-source:0.4.0
+    image: radarbase/radar-connect-upload-source:0.4.1
     restart: on-failure
     volumes:
       - ./etc/source-upload.properties:/etc/kafka-connect/source-upload.properties
@@ -221,7 +221,7 @@ services:
     build:
       context: .
       dockerfile: radar-upload-backend/Dockerfile
-    image: radarbase/radar-upload-backend:0.4.0
+    image: radarbase/radar-upload-connect-backend:0.4.1
     ports:
       - "8085:8085"
     depends_on:
@@ -238,7 +238,7 @@ services:
     build:
       context: radar-upload-frontend
       dockerfile: Dockerfile
-    image: radarbase/radar-upload-frontend:0.4.0
+    image: radarbase/radar-upload-connect-frontend:0.4.1
     depends_on:
       - radar-upload-backend
       - managementportal-app
