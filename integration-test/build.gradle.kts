@@ -16,11 +16,11 @@ project.extra.apply {
 repositories {
     jcenter()
     mavenLocal()
-    maven(url = "http://packages.confluent.io/maven/")
+    maven(url = "https://packages.confluent.io/maven/")
     maven(url = "https://dl.bintray.com/radar-cns/org.radarcns")
     maven(url = "https://dl.bintray.com/radar-base/org.radarbase")
     maven(url = "https://repo.thehyve.nl/content/repositories/snapshots")
-    maven(url = "http://oss.jfrog.org/artifactory/oss-snapshot-local/")
+    maven(url = "https://oss.jfrog.org/artifactory/oss-snapshot-local/")
 }
 
 sourceSets {

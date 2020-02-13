@@ -1,4 +1,4 @@
-package org.radarbase.connect.upload.converter.oxford
+package org.radarbase.connect.upload.converter.gaitup
 
 import okhttp3.internal.closeQuietly
 import org.radarbase.connect.upload.api.ContentsDTO
@@ -6,7 +6,6 @@ import org.radarbase.connect.upload.api.SourceTypeDTO
 import org.radarbase.connect.upload.converter.ConverterFactory
 import org.radarbase.connect.upload.converter.FileProcessorFactory
 import org.radarbase.connect.upload.converter.LogRepository
-import org.radarbase.connect.upload.converter.ZipFileProcessorFactory
 import org.radarbase.connect.upload.io.FileUploader
 import org.radarbase.connect.upload.io.LocalFileUploader
 import org.radarbase.connect.upload.io.SftpFileUploader
@@ -15,8 +14,8 @@ import java.net.URI
 import java.nio.file.Path
 import java.nio.file.Paths
 
-class WearableCameraConverterFactory : ConverterFactory {
-    override val sourceType: String = "oxford-wearable-camera"
+class Physilog5ConverterFactory : ConverterFactory {
+    override val sourceType: String = "physilog5"
 
     private val localUploader = ThreadLocal<FileUploader>()
 
@@ -41,20 +40,19 @@ class WearableCameraConverterFactory : ConverterFactory {
             advertizedUrl = URI.create(urlString)
             uploaderSupplier = { SftpFileUploader(credentials) }
             root = Paths.get(sourceConfig["root"] ?: ".")
-            logger.info("Advertised URL of sftp is set to $advertizedUrl")
-            logger.info("Storing wearable camera images to SFTP server {}", credentials.host)
+            logger.info("Advertised URL of sftp is set to $advertizedUrl and the root for upload is $root")
+            logger.info("Storing physilog4 binary data to SFTP server {}", credentials.host)
         } else {
             advertizedUrl = URI.create(sourceConfig["advertizedUrl"] ?: "file://")
             uploaderSupplier = { LocalFileUploader() }
             root = Paths.get(sourceConfig["root"] ?: ".").toAbsolutePath()
-            logger.info("Storing wearable camera images to the local file system")
+            logger.info("Storing physilog4 binary data to the local file system")
+            logger.info("Advertised URL of local file upload is set to $advertizedUrl and the root for upload is $root")
         }
 
-        logger.info("Root folder for upload is $root")
-        val processors = listOf(
-                CameraDataFileProcessor(),
-                CameraUploadProcessor(logRepository, { localUploader.get() }, root, advertizedUrl))
-        return listOf(object : ZipFileProcessorFactory(processors, logRepository) {
+
+        return listOf( object :
+                PhysilogUploadProcessorFactory(logRepository, { localUploader.get() }, root, advertizedUrl){
             override fun beforeProcessing(contents: ContentsDTO) {
                 localUploader.set(uploaderSupplier())
             }
@@ -63,19 +61,10 @@ class WearableCameraConverterFactory : ConverterFactory {
                 localUploader.get().closeQuietly()
                 localUploader.remove()
             }
-
-            override fun entryFilter(name: String) = ignoredFiles.none { name.contains(it, true) }
         })
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(WearableCameraConverterFactory::class.java)
-        private val ignoredFiles = arrayOf(
-                // downsized image directories
-                "/256_192/", "/640_480/",
-                // image binary data table
-                "/.image_table",
-                // ACTIVITY.CSV no knowledge about the content.
-                "ACTIVITY.CSV")
+        private val logger = LoggerFactory.getLogger(Physilog5ConverterFactory::class.java)
     }
 }

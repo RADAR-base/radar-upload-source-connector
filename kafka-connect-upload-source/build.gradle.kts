@@ -13,15 +13,15 @@ project.extra.apply {
     set("jacksonDataVersion", "2.9.10")
     set("openCsvVersion", "4.6")
     set("confluentVersion", "5.3.0")
-    set("radarSchemaVersion", "0.5.6")
+    set("radarSchemaVersion", "0.5.7")
     set("slf4jVersion", "1.7.27")
 }
 
 repositories {
     jcenter()
-    maven(url = "http://packages.confluent.io/maven/")
+    maven(url = "https://packages.confluent.io/maven/")
     maven(url = "https://dl.bintray.com/radar-cns/org.radarcns")
-    maven(url = "http://oss.jfrog.org/artifactory/oss-snapshot-local/")
+    maven(url = "https://oss.jfrog.org/artifactory/oss-snapshot-local/")
 }
 
 sourceSets {
