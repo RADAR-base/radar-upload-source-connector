@@ -15,12 +15,19 @@ class LocalFileUploader : FileUploader {
                 stream.copyTo(it)
             }
         } catch (ex: NoSuchFileException) {
+            logger.error("Could not write file", ex)
             logger.info("Retrying to create parent directories for ${path.toUri()}")
             if(File(path.toUri()).parentFile.mkdirs()) {
                 logger.info("Created parent directory for ${path.toUri()}")
-                Files.newOutputStream(path).use {
-                    stream.copyTo(it)
+                try {
+                    Files.newOutputStream(path).use {
+                        stream.copyTo(it)
+                    }
+                } catch (ex: Exception) {
+                    logger.error("Could not write file", ex)
+                    throw ex
                 }
+
             } else {
                 logger.error("Could not write to ${path.toUri()}")
                 throw ConversionFailedException("Could not write to ${path.toUri()}", ex)
