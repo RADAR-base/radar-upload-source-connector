@@ -127,12 +127,14 @@ class AltoidaTestMetricsProcessor(private val type: AltoidaTestCategory, val top
 
     override fun lineConversion(line: Map<String, String>, timeReceived: Double) = TopicData(
             topic,
-            getTestMetrics(line))
+            getTestMetrics(line, timeReceived))
 
-    private fun getTestMetrics(line: Map<String, String>): IndexedRecord {
+    private fun getTestMetrics(line: Map<String, String>, timeReceived: Double): IndexedRecord {
         val prefix = type.prefix
 
         return AltoidaSummaryMetrics(
+                time(line),
+                timeReceived,
                 line.getValue("${prefix}PLAYHIGHREACTIONTIMES").toFloat(),
                 line.getValue("${prefix}PLAYHIGHACCURACY").toFloat(),
                 line.getValue("${prefix}PLAYLOWREACTIONS").toInt(),
