@@ -25,12 +25,9 @@ import javax.annotation.Resource
 import javax.inject.Singleton
 import javax.ws.rs.*
 import javax.ws.rs.core.Context
-import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
-@Path("health")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
+@Path("status")
 @Resource
 @Singleton
 class HealthCheckResource(
@@ -39,8 +36,8 @@ class HealthCheckResource(
 ) {
     @GET
     fun check(): Response {
-        sourceTypeRepository.readAll(10)
-        return Response.ok().build()
+        sourceTypeRepository.readAll(5)
+        return Response.ok("Initialized project-service and made a sample query...").build()
     }
 }
 
