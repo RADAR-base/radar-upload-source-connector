@@ -91,6 +91,12 @@ internal class RecordResourceTest: JerseyTest() {
 
     @Test
     fun create() {
+        target("status")
+                .request()
+                .get().use{ response ->
+            assertThat(response.status, equalTo(Response.Status.OK.statusCode))
+        }
+
         authQueue.add(Pair(auth, true))
         val record = target("records")
                 .request()
