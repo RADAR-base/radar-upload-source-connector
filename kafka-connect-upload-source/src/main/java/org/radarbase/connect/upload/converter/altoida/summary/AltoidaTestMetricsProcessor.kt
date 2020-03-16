@@ -2,6 +2,7 @@ package org.radarbase.connect.upload.converter.altoida.summary
 
 import org.apache.avro.generic.IndexedRecord
 import org.radarbase.connect.upload.converter.StatelessCsvLineProcessor
+import org.radarbase.connect.upload.converter.TimeFieldParser
 import org.radarbase.connect.upload.converter.TopicData
 import org.radarbase.connect.upload.converter.altoida.summary.AltoidaTestMetricsProcessor.AltoidaTappingTestTypes.RandomTapping
 import org.radarbase.connect.upload.converter.altoida.summary.AltoidaTestMetricsProcessor.AltoidaTappingTestTypes.Tapping
@@ -13,6 +14,8 @@ import org.radarcns.connector.upload.altoida.AltoidaWalkingTestAggregate
 
 class AltoidaTestMetricsProcessor(private val type: AltoidaTestCategory, val topic: String) : StatelessCsvLineProcessor() {
     override val fileNameSuffix: String = "export.csv"
+
+    override val timeFieldParser: TimeFieldParser = AltoidaSummaryProcessor.defaultTimeFormatter
 
     override val header: List<String> = listOf(
             "${type.prefix}PLAYHIGHREACTIONTIMES",
