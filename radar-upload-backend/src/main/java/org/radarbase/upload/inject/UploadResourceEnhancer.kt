@@ -43,14 +43,14 @@ class UploadResourceEnhancer(private val config: Config): JerseyResourceEnhancer
                     ConfigLoader.Filters.cors)
         } else {
             arrayOf(
-                    ConfigLoader.Filters.logResponse
-            )
+                    ConfigLoader.Filters.logResponse)
         }
     }
 
     override val packages: Array<String> = arrayOf(
             "org.radarbase.upload.exception",
             "org.radarbase.upload.filter",
+            "org.radarbase.upload.lifecycle",
             "org.radarbase.upload.resource")
 
     override fun ResourceConfig.enhance() {

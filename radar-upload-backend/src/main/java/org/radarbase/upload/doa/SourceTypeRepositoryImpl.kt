@@ -24,14 +24,16 @@ import org.radarbase.upload.api.SourceTypeDTO
 import org.radarbase.upload.api.SourceTypeMapper
 import org.radarbase.upload.doa.entity.SourceType
 import org.slf4j.LoggerFactory
+import javax.inject.Provider
 import javax.persistence.EntityManager
 import javax.ws.rs.core.Context
 
 
 class SourceTypeRepositoryImpl(
-        @Context private var em: javax.inject.Provider<EntityManager>,
+        @Context private var em: Provider<EntityManager>,
         @Context private var config: Config,
-        @Context private val sourceTypeMapper: SourceTypeMapper) : SourceTypeRepository {
+        @Context private val sourceTypeMapper: SourceTypeMapper
+) : SourceTypeRepository {
 
     init {
         if (!isInitialized) {

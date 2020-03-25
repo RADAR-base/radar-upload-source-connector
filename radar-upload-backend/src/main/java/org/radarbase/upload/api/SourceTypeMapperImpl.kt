@@ -28,7 +28,8 @@ class SourceTypeMapperImpl : SourceTypeMapper {
             contentTypes = sourceType.contentTypes,
             timeRequired = sourceType.timeRequired,
             sourceIdRequired = sourceType.sourceIdRequired,
-            configuration = sourceType.configuration)
+            configuration = sourceType.configuration,
+            resetProcessingStatusTimeoutMin = null)
 
     override fun fromSourceTypes(sourceTypes: List<SourceType>) = SourceTypeContainerDTO(
             sourceTypes = sourceTypes.map(::fromSourceType))

@@ -38,6 +38,7 @@ import java.io.ByteArrayInputStream
 import java.nio.file.Path
 import java.time.Instant
 import java.time.LocalDateTime
+import javax.inject.Provider
 import javax.persistence.EntityManager
 import javax.persistence.EntityManagerFactory
 import kotlin.text.Charsets.UTF_8
@@ -53,7 +54,7 @@ internal class RecordRepositoryImplTest {
     lateinit var tempDir: Path
 
     @Mock
-    lateinit var mockEntityManagerProvider: javax.inject.Provider<EntityManager>
+    lateinit var mockEntityManagerProvider: Provider<EntityManager>
 
     @BeforeEach
     fun setUp() {
