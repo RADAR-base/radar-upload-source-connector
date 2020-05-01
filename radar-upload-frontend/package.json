@@ -8,7 +8,9 @@
     "lint": "vue-cli-service lint",
     "test:e2e": "vue-cli-service test:e2e",
     "test:unit": "vue-cli-service test:unit --no-cache",
-    "unit:watch": "vue-cli-service test:unit --watch --no-cache"
+    "unit:watch": "vue-cli-service test:unit --watch --no-cache",
+    "snyk-protect": "snyk protect",
+    "prepare": "npm run snyk-protect"
   },
   "dependencies": {
     "axios": "^0.19.0",
@@ -19,7 +21,8 @@
     "vue-router": "^3.0.3",
     "vue-upload-component": "^2.8.20",
     "vuetify": "^2.1.9",
-    "vuex": "^3.0.1"
+    "vuex": "^3.0.1",
+    "snyk": "^1.316.1"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^3.9.0",
@@ -42,5 +45,6 @@
     "vue-template-compiler": "^2.6.10",
     "vuetify-loader": "^1.2.2",
     "vuex-mock-store": "0.0.7"
-  }
+  },
+  "snyk": true
 }
