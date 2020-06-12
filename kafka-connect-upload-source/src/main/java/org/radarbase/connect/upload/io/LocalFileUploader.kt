@@ -4,11 +4,16 @@ import org.radarbase.connect.upload.exception.ConversionFailedException
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.InputStream
+import java.net.URI
 import java.nio.file.Files
 import java.nio.file.NoSuchFileException
 import java.nio.file.Path
 
-class LocalFileUploader : FileUploader {
+class LocalFileUploader( override val config: FileUploaderFactory.FileUploaderConfig) : FileUploaderFactory.FileUploader {
+    override val type: String
+        get() = "local"
+
+
     override fun upload(path: Path, stream: InputStream) {
         try {
             Files.newOutputStream(path).use {

@@ -55,14 +55,7 @@ class WearableCameraConverterTest {
         val converterFactory = WearableCameraConverterFactory()
         val config = SourceTypeDTO(
                 name = "oxford-wearable-camera",
-                configuration = mapOf(
-                        "host" to HOST,
-                        "port" to PORT.toString(),
-                        "user" to USER,
-                        "password" to PASSWORD,
-                        "root" to "upload",
-                        "advertizedUrl" to ADVERTIZED_URL
-                ),
+                configuration = emptyMap(),
                 sourceIdRequired = false,
                 timeRequired = false,
                 topics = setOf(
@@ -70,7 +63,16 @@ class WearableCameraConverterTest {
                         "connect_upload_oxford_camera_data"),
                 contentTypes = setOf("application/zip")
         )
-        converter = converterFactory.converter(emptyMap(), config, uploadBackendClient, logRepository)
+
+        val settings = mapOf(
+                "upload.source.file.uploader.type" to "sftp",
+                "upload.source.file.uploader.target.endpoint" to "sftp://$HOST:$PORT",
+                "upload.source.file.uploader.target.root.directory" to "root",
+                "upload.source.file.uploader.username" to USER,
+                "upload.source.file.uploader.password" to PASSWORD
+        )
+
+        converter = converterFactory.converter(settings, config, uploadBackendClient, logRepository)
     }
 
     @Test

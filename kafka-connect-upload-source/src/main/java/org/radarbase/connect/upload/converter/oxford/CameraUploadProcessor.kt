@@ -5,7 +5,7 @@ import org.radarbase.connect.upload.api.RecordDTO
 import org.radarbase.connect.upload.converter.FileProcessorFactory
 import org.radarbase.connect.upload.converter.LogRepository
 import org.radarbase.connect.upload.converter.TopicData
-import org.radarbase.connect.upload.io.FileUploader
+import org.radarbase.connect.upload.io.FileUploaderFactory
 import org.radarcns.connector.upload.oxford.OxfordCameraImage
 import org.slf4j.LoggerFactory
 import java.io.InputStream
@@ -18,7 +18,7 @@ import java.time.temporal.ChronoField
 
 class CameraUploadProcessor(
         private val logRepository: LogRepository,
-        private val uploaderCreate: () -> FileUploader,
+        private val uploaderCreate: () -> FileUploaderFactory.FileUploader,
         private val rootPath: Path,
         private val advertisedUrl: URI) : FileProcessorFactory {
     override fun matches(contents: ContentsDTO) = SUFFIX_REGEX.containsMatchIn(contents.fileName)
