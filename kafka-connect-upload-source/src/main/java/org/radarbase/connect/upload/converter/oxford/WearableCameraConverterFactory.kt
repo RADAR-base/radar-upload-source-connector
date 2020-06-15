@@ -21,10 +21,6 @@ class WearableCameraConverterFactory : ConverterFactory {
     override fun fileProcessorFactories(settings: Map<String, String>, connectorConfig: SourceTypeDTO, logRepository: LogRepository): List<FileProcessorFactory> {
 
         val uploaderSupplier = FileUploaderFactory(settings).fileUploader()
-//        val uploadConfig = uploaderSupplier.config
-//        val root: Path = Paths.get(uploaderSupplier.config.targetRoot)
-//        val target = if (uploadConfig.targetEndpoint.endsWith("/")) uploadConfig.targetEndpoint else "${uploadConfig.targetEndpoint}/"
-//        val advertisedUrl = URI(target)
 
         logger.info("Target endpoint is ${uploaderSupplier.advertisedTargetUri()} and Root folder for upload is ${uploaderSupplier.rootDirectory()}")
         val processors = listOf(

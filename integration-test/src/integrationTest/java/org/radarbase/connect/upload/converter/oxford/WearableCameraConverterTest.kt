@@ -67,7 +67,7 @@ class WearableCameraConverterTest {
         val settings = mapOf(
                 "upload.source.file.uploader.type" to "sftp",
                 "upload.source.file.uploader.target.endpoint" to "sftp://$HOST:$PORT/",
-                "upload.source.file.uploader.target.root.directory" to "upload",
+                "upload.source.file.uploader.target.root.directory" to "/upload",
                 "upload.source.file.uploader.username" to USER,
                 "upload.source.file.uploader.password" to PASSWORD
         )
@@ -116,7 +116,7 @@ class WearableCameraConverterTest {
         private const val USER = "connect"
         private const val PASSWORD = "pass"
         private const val ADVERTIZED_URL = "sftp://server/upload"
-        private val URL_REGEX = Regex("sftp://server/upload/p/u/connect_upload_oxford_camera_image/1/2018-01-02/B0000000[0-9]_[^_]*_20180102_12[0-9]*E\\.jpg")
+        private val URL_REGEX = Regex("sftp://localhost:2222/upload/p/u/connect_upload_oxford_camera_image/1/2018-01-02/B0000000[0-9]_[^_]*_20180102_12[0-9]*E\\.jpg")
         private val logger = LoggerFactory.getLogger(WearableCameraConverterTest::class.java)
     }
 }

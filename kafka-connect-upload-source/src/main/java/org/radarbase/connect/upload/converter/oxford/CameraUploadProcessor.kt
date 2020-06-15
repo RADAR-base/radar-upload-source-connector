@@ -41,7 +41,7 @@ class CameraUploadProcessor(
             val relativePath = Paths.get("$projectId/$userId/$TOPIC/${record.id}/$dateDirectory/$adjustedFilename.jpg")
             val fullPath = uploaderCreate().rootDirectory().resolve(relativePath).normalize()
 
-            val url = uploaderCreate().advertisedTargetUri().resolve(relativePath.toString())
+            val url = uploaderCreate().advertisedTargetUri().resolve(fullPath.toString())
             uploaderCreate().upload(fullPath, inputStream, contents.size)
 
             return listOf(TopicData(TOPIC,
