@@ -249,6 +249,12 @@ services:
       VUE_APP_AUTH_CALLBACK: "http://localhost:8080/upload/login"
       VUE_APP_CLIENT_ID: "radar_upload_frontend"
 
+  minio:
+    image: minio/minio
+    command:
+      - server
+      - /data
+
   webserver:
     image: nginx:1.17.3-alpine
     ports:
