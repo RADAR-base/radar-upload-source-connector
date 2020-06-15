@@ -69,7 +69,7 @@ The following tables shows the all properties.
 <tr>
 <td>upload.source.file.uploader.type</td></td><td>What type of file uploader should be used for direct file uploads. Specify a value from `s3`, `sftp` or `local`. </td></td><td>s3</td></td><td>sftp</td></td>local</tr>
 <tr>
-<td>upload.source.file.uploader.target.endpoint</td></td><td>Advertised URL Endpoint of the file upload target.</td></td><td>http://minio:9000/</td></td><td>sftp://localhost:22/</td></td><td>file://</td></td></tr>
+<td>upload.source.file.uploader.target.endpoint</td></td><td>Advertised URL Endpoint of the file upload target. For sftp, specify advertised url in sftp://host:port format. If port is not specified default port 22 will be used.</td></td><td>http://minio:9000/</td></td><td>sftp://hostname:port/ </td></td><td>file://</td></td></tr>
 <tr>
 <td>upload.source.file.uploader.target.root.directory</td></td><td>Target root directory or a s3 bucket name where files should be uploaded to.</td></td><td>radar-output-storage</td></td><td>/output</td></td>/output</tr>
 <tr>

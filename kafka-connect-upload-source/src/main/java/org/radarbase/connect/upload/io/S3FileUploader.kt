@@ -4,6 +4,7 @@ import io.minio.MinioClient
 import io.minio.PutObjectOptions
 import org.slf4j.LoggerFactory
 import java.io.InputStream
+import java.net.ConnectException
 import java.nio.file.Path
 
 class S3FileUploader(override val config: FileUploaderFactory.FileUploaderConfig) : FileUploaderFactory.FileUploader {
@@ -12,6 +13,10 @@ class S3FileUploader(override val config: FileUploaderFactory.FileUploaderConfig
     private val s3Client: MinioClient
     private val bucket: String
     init {
+        if (config.targetEndpoint.isEmpty()) throw ConnectException("upload.source.file.target.endpoint should have a valid url of an S3 storage")
+        config.username ?: throw ConnectException("upload.source.file.uploader.username must be configured for one or more of the selected converters")
+        config.password ?: throw ConnectException("upload.source.file.uploader.password must be configured for one or more of the selected converters")
+
         s3Client = try {
             MinioClient(config.targetEndpoint, config.username, config.password)
         } catch (ex: IllegalArgumentException) {

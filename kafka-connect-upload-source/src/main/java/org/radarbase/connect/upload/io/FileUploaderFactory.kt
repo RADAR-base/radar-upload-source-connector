@@ -2,16 +2,11 @@ package org.radarbase.connect.upload.io
 
 import org.apache.kafka.connect.errors.ConnectException
 import org.radarbase.connect.upload.UploadSourceConnectorConfig
-import org.radarbase.connect.upload.api.RecordDTO
-import org.slf4j.LoggerFactory
 import java.io.Closeable
 import java.io.InputStream
 import java.net.URI
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 
 
 class FileUploaderFactory(private val config: Map<String, String>) {
@@ -26,27 +21,6 @@ class FileUploaderFactory(private val config: Map<String, String>) {
             UploadType.LOCAL -> LocalFileUploader(uploaderConfig)
             UploadType.SFTP -> SftpFileUploader(uploaderConfig)
             UploadType.S3 -> S3FileUploader(uploaderConfig)
-        }
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(LocalFileUploader::class.java)
-
-
-        private val directoryDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-                .withZone(ZoneId.of("UTC"))
-
-        fun resolveUploadPath(fileName: String, topic: String, config: FileUploaderConfig, record: RecordDTO) : Path {
-            logger.debug("Processing $fileName")
-            val root = Paths.get(config.targetRoot)
-            // Create date directory based on uploaded time.
-            val dateDirectory = directoryDateFormatter.format(Instant.now())
-
-            val projectId = checkNotNull(record.data?.projectId) { "Project ID required to upload image files." }
-            val userId = checkNotNull(record.data?.userId) { "Project ID required to upload image files." }
-            val relativePath = Paths.get("$projectId/$userId/$topic/${record.id}/$dateDirectory/$fileName")
-            return root.resolve(relativePath).normalize()
-
         }
     }
 

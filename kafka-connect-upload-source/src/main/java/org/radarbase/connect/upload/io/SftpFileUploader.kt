@@ -7,6 +7,7 @@ import com.jcraft.jsch.SftpException
 import org.slf4j.LoggerFactory
 import java.io.InputStream
 import java.lang.Exception
+import java.net.ConnectException
 import java.net.URI
 import java.nio.file.Path
 import java.util.*
@@ -20,6 +21,9 @@ class SftpFileUploader(override val config: FileUploaderFactory.FileUploaderConf
     private val sftpChannel: ChannelSftp
 
     init {
+        if (config.targetEndpoint.isEmpty()) throw ConnectException("upload.source.file.target.endpoint should have a valid url with format sftp://hostname or sftp://hostname:port")
+        config.username ?: throw ConnectException("upload.source.file.uploader.username must be configured for one or more of the selected converters")
+        config.password ?: throw ConnectException("upload.source.file.uploader.password must be configured for one or more of the selected converters")
 
         logger.info("Initializing sftp file uploader")
         val endpoint = URI(config.targetEndpoint)
