@@ -9,8 +9,6 @@ import org.radarbase.connect.upload.io.FileUploaderFactory
 import org.radarcns.connector.upload.oxford.OxfordCameraImage
 import org.slf4j.LoggerFactory
 import java.io.InputStream
-import java.net.URI
-import java.nio.file.Path
 import java.nio.file.Paths
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter

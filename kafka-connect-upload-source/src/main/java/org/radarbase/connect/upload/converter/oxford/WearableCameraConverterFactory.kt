@@ -9,9 +9,6 @@ import org.radarbase.connect.upload.converter.LogRepository
 import org.radarbase.connect.upload.converter.ZipFileProcessorFactory
 import org.radarbase.connect.upload.io.FileUploaderFactory
 import org.slf4j.LoggerFactory
-import java.net.URI
-import java.nio.file.Path
-import java.nio.file.Paths
 
 class WearableCameraConverterFactory : ConverterFactory {
     override val sourceType: String = "oxford-wearable-camera"

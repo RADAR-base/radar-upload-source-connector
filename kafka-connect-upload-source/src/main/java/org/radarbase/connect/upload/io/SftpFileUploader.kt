@@ -43,7 +43,7 @@ class SftpFileUploader(override val config: FileUploaderFactory.FileUploaderConf
         // copy remote log file to localhost.
         sftpChannel.run {
             try {
-                logger.debug("Uploading data to ${path}")
+                logger.info("Uploading data to ${path}")
                 put(stream, path.toString())
             } catch (ex: SftpException) {
                 logger.error("Could not upload file... Retrying", ex)
