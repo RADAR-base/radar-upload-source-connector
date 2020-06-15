@@ -25,7 +25,7 @@ class FileUploaderFactory(private val config: Map<String, String>) {
         return when (uploadType) {
             UploadType.LOCAL -> LocalFileUploader(uploaderConfig)
             UploadType.SFTP -> SftpFileUploader(uploaderConfig)
-            UploadType.S3 -> LocalFileUploader(uploaderConfig)
+            UploadType.S3 -> S3FileUploader(uploaderConfig)
         }
     }
 
@@ -36,7 +36,7 @@ class FileUploaderFactory(private val config: Map<String, String>) {
         private val directoryDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
                 .withZone(ZoneId.of("UTC"))
 
-        fun resolve(fileName: String, topic: String, config: FileUploaderConfig, record: RecordDTO) : Path {
+        fun resolveUploadPath(fileName: String, topic: String, config: FileUploaderConfig, record: RecordDTO) : Path {
             logger.debug("Processing $fileName")
             val root = Paths.get(config.targetRoot)
             // Create date directory based on uploaded time.
@@ -50,23 +50,24 @@ class FileUploaderFactory(private val config: Map<String, String>) {
         }
     }
 
-
-
-
     interface FileUploader: Closeable {
         val type: String
 
         val config: FileUploaderConfig
 
-        fun upload(path: Path, stream: InputStream)
+        fun advertisedTargetUri(): URI = URI(if (config.targetEndpoint.endsWith("/")) config.targetEndpoint else "${config.targetEndpoint}/")
+
+        fun rootDirectory(): Path = Paths.get(config.targetRoot.ifEmpty {"."})
+
+        fun upload(path: Path, stream: InputStream, size: Long?)
 
     }
 
     data class FileUploaderConfig(
-        val targetEndpoint : URI,
+        val targetEndpoint : String,
         val targetRoot: String,
-        val username: String,
-        val password: String,
+        val username: String?,
+        val password: String?,
         val sshPrivateKey: String?,
         val sshPassPhrase: String?
 

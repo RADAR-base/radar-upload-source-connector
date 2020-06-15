@@ -14,7 +14,7 @@ class LocalFileUploader( override val config: FileUploaderFactory.FileUploaderCo
         get() = "local"
 
 
-    override fun upload(path: Path, stream: InputStream) {
+    override fun upload(path: Path, stream: InputStream, size: Long?) {
         try {
             Files.newOutputStream(path).use {
                 stream.copyTo(it)

@@ -66,8 +66,8 @@ class WearableCameraConverterTest {
 
         val settings = mapOf(
                 "upload.source.file.uploader.type" to "sftp",
-                "upload.source.file.uploader.target.endpoint" to "sftp://$HOST:$PORT",
-                "upload.source.file.uploader.target.root.directory" to "root",
+                "upload.source.file.uploader.target.endpoint" to "sftp://$HOST:$PORT/",
+                "upload.source.file.uploader.target.root.directory" to "upload",
                 "upload.source.file.uploader.username" to USER,
                 "upload.source.file.uploader.password" to PASSWORD
         )

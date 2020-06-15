@@ -22,8 +22,6 @@ class Physilog5ConverterFactory : ConverterFactory {
     override fun fileProcessorFactories(settings: Map<String, String>, connectorConfig: SourceTypeDTO, logRepository: LogRepository): List<FileProcessorFactory> {
 
         val uploaderSupplier = FileUploaderFactory(settings).fileUploader()
-        val advertisedUrl: URI = uploaderSupplier.config.targetEndpoint
-        val root: Path = Paths.get(uploaderSupplier.config.targetRoot)
 
 //        if ("host" in sourceConfig) {
 //            val credentials = SftpFileUploader.SftpCredentials(
@@ -49,9 +47,9 @@ class Physilog5ConverterFactory : ConverterFactory {
 //            logger.info("Advertised URL of local file upload is set to $advertizedUrl and the root for upload is $root")
 //        }
 
-        logger.info("Physilog data will be uploaded using ${uploaderSupplier.type} to $advertisedUrl and $root")
+        logger.info("Physilog data will be uploaded using ${uploaderSupplier.type} to ${uploaderSupplier.advertisedTargetUri()} and ${uploaderSupplier.rootDirectory()}")
         return listOf( object :
-                PhysilogUploadProcessorFactory(logRepository, { localUploader.get() }, root, advertisedUrl){
+                PhysilogUploadProcessorFactory(logRepository, { localUploader.get() }){
             override fun beforeProcessing(contents: ContentsDTO) {
                 localUploader.set(uploaderSupplier)
             }

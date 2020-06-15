@@ -22,8 +22,7 @@ class SftpFileUploader(override val config: FileUploaderFactory.FileUploaderConf
     init {
 
         logger.info("Initializing sftp file uploader")
-        val endpoint: URI = config.targetEndpoint
-
+        val endpoint = URI(config.targetEndpoint)
         config.sshPrivateKey?.let {
             jsch.addIdentity(it, config.sshPassPhrase)
         }
@@ -40,7 +39,7 @@ class SftpFileUploader(override val config: FileUploaderFactory.FileUploaderConf
         logger.info("Files will be uploaded using SFTP to $endpoint and root directory ${config.targetRoot}")
     }
 
-    override fun upload(path: Path, stream: InputStream) {
+    override fun upload(path: Path, stream: InputStream, size: Long?) {
         // copy remote log file to localhost.
         sftpChannel.run {
             try {

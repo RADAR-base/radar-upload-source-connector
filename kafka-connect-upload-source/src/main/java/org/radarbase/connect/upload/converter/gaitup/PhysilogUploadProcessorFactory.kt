@@ -10,8 +10,6 @@ import org.radarcns.connector.upload.physilog.PhysilogBinaryDataReference
 import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.io.InputStream
-import java.net.URI
-import java.nio.file.Path
 import java.nio.file.Paths
 import java.time.Instant
 import java.time.ZoneId
@@ -19,9 +17,8 @@ import java.time.format.DateTimeFormatter
 
 open class PhysilogUploadProcessorFactory(
         private val logRepository: LogRepository,
-        private val uploaderCreate: () -> FileUploaderFactory.FileUploader,
-        private val rootPath: Path,
-        private val advertisedUrl: URI) : FileProcessorFactory {
+        private val uploaderCreate: () -> FileUploaderFactory.FileUploader
+) : FileProcessorFactory {
 
     open fun beforeProcessing(contents: ContentsDTO) = Unit
 
@@ -44,17 +41,17 @@ open class PhysilogUploadProcessorFactory(
             val projectId = checkNotNull(record.data?.projectId) { "Project ID required to upload image files." }
             val userId = checkNotNull(record.data?.userId) { "Project ID required to upload image files." }
             val relativePath = Paths.get("$projectId/$userId/$TOPIC/${record.id}/$dateDirectory/$fileName")
-            val fullPath = rootPath.resolve(relativePath).normalize()
-            val url = advertisedUrl.resolve(fullPath.toString())
+            val fullPath = uploaderCreate().rootDirectory().resolve(relativePath).normalize()
+            val url = uploaderCreate().advertisedTargetUri().resolve(fullPath.toString())
 
             try {
-                uploaderCreate().upload(fullPath, inputStream)
+                uploaderCreate().upload(fullPath, inputStream, contents.size)
 
                 return listOf(TopicData(TOPIC,
                         PhysilogBinaryDataReference(timeReceived, timeReceived, fileName, url.toString())
                                 .also { recordLogger.info("Uploaded file to ${it.getUrl()}") }))
             } catch (exe: IOException) {
-                logger.error("Could not upload file")
+                logger.error("Could not upload file", exe)
                 throw exe
             } finally {
                 logger.info("Finalising the upload")

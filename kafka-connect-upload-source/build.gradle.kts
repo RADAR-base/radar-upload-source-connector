@@ -15,6 +15,7 @@ project.extra.apply {
     set("confluentVersion", "5.3.0")
     set("radarSchemaVersion", "0.5.8-SNAPSHOT")
     set("slf4jVersion", "1.7.27")
+    set("minioVersion", "7.0.1")
 }
 
 repositories {
@@ -46,6 +47,7 @@ dependencies {
     implementation("com.opencsv:opencsv:${project.extra["openCsvVersion"]}")
 
     implementation("com.jcraft:jsch:0.1.55")
+    implementation("io.minio:minio:${project.extra["minioVersion"]}")
 
     // Included in connector runtime
     compileOnly("org.apache.kafka:connect-api:${project.extra["kafkaVersion"]}")
