@@ -149,12 +149,12 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
         private const val UPLOAD_FILE_UPLOADER_PASSWORD_DISPLAY = "File Uploader password"
         private val UPLOAD_FILE_UPLOADER_PASSWORD_DEFAULT: String? = null
 
-        private const val UPLOAD_FILE_UPLOADER_SSH_PRIVATE_KEY_FILE_CONFIG = "upload.source.file.uploader.ssh.private.key.file"
+        private const val UPLOAD_FILE_UPLOADER_SSH_PRIVATE_KEY_FILE_CONFIG = "upload.source.file.uploader.sftp.private.key.file"
         private const val UPLOAD_FILE_UPLOADER_SSH_PRIVATE_KEY_FILE_DOC = "Path of private-key file if using private key for uploading files using sftp."
         private const val UPLOAD_FILE_UPLOADER_SSH_PRIVATE_KEY_FILE_DISPLAY = "Sftp private key file path."
         private val UPLOAD_FILE_UPLOADER_SSH_PRIVATE_KEY_FILE_DEFAULT: String? = null
 
-        private const val UPLOAD_FILE_UPLOADER_SSH_PASSPHRASE_CONFIG = "upload.source.file.uploader.ssh.passphrase"
+        private const val UPLOAD_FILE_UPLOADER_SSH_PASSPHRASE_CONFIG = "upload.source.file.uploader.sftp.passphrase"
         private const val UPLOAD_FILE_UPLOADER_SSH_PASSPHRASE_DOC = "Passphrase of the private-key file if using private key for uploading files using sftp."
         private const val UPLOAD_FILE_UPLOADER_SSH_PASSPHRASE_DISPLAY = "Pass phrase for private key."
         private val UPLOAD_FILE_UPLOADER_SSH_PASSPHRASE_DEFAULT: String? = null
