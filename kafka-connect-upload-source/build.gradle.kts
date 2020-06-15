@@ -7,13 +7,13 @@ plugins {
 }
 
 project.extra.apply {
-    set("kafkaVersion", "2.3.0")
-    set("okhttpVersion", "4.2.0")
-    set("jacksonVersion", "2.9.10")
-    set("jacksonDataVersion", "2.9.10")
-    set("openCsvVersion", "4.6")
+    set("kafkaVersion", "2.5.0")
+    set("okhttpVersion", "4.7.2")
+    set("jacksonVersion", "2.11.0")
+    set("jacksonDataVersion", "2.11.0")
+    set("openCsvVersion", "5.2")
     set("confluentVersion", "5.3.0")
-    set("radarSchemaVersion", "0.5.8-SNAPSHOT")
+    set("radarSchemaVersion", "0.5.9")
     set("slf4jVersion", "1.7.27")
     set("minioVersion", "7.0.1")
 }
