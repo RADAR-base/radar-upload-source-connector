@@ -22,7 +22,7 @@ class WearableCameraConverterFactory : ConverterFactory {
         logger.info("Target endpoint is ${uploaderSupplier.advertisedTargetUri()} and Root folder for upload is ${uploaderSupplier.rootDirectory()}")
         val processors = listOf(
                 CameraDataFileProcessor(),
-                CameraUploadProcessor(logRepository, localUploader.get()))
+                CameraUploadProcessor(logRepository, { localUploader.get() }))
         return listOf(object : ZipFileProcessorFactory(processors, logRepository) {
             override fun beforeProcessing(contents: ContentsDTO) {
                 localUploader.set(uploaderSupplier)
