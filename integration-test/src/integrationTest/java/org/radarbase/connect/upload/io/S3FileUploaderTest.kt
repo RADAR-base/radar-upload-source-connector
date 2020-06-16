@@ -1,8 +1,7 @@
-package org.radarbase.connect.upload.converter.oxford
+package org.radarbase.connect.upload.io
 
-import com.jcraft.jsch.ChannelSftp
-import com.jcraft.jsch.JSch
 import com.nhaarman.mockitokotlin2.mock
+import io.minio.MinioClient
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.DisplayName
@@ -12,6 +11,7 @@ import org.radarbase.connect.upload.api.*
 import org.radarbase.connect.upload.converter.ConverterFactory
 import org.radarbase.connect.upload.converter.ConverterLogRepository
 import org.radarbase.connect.upload.converter.LogRepository
+import org.radarbase.connect.upload.converter.oxford.WearableCameraConverterFactory
 import org.radarcns.connector.upload.oxford.OxfordCameraImage
 import org.slf4j.LoggerFactory
 import java.time.Instant
@@ -19,7 +19,7 @@ import java.util.*
 
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class WearableCameraConverterTest {
+class S3FileUploaderTest {
     private lateinit var converter: ConverterFactory.Converter
 
     private lateinit var logRepository: LogRepository
@@ -55,14 +55,7 @@ class WearableCameraConverterTest {
         val converterFactory = WearableCameraConverterFactory()
         val config = SourceTypeDTO(
                 name = "oxford-wearable-camera",
-                configuration = mapOf(
-                        "host" to HOST,
-                        "port" to PORT.toString(),
-                        "user" to USER,
-                        "password" to PASSWORD,
-                        "root" to "upload",
-                        "advertizedUrl" to ADVERTIZED_URL
-                ),
+                configuration = emptyMap(),
                 sourceIdRequired = false,
                 timeRequired = false,
                 topics = setOf(
@@ -70,11 +63,20 @@ class WearableCameraConverterTest {
                         "connect_upload_oxford_camera_data"),
                 contentTypes = setOf("application/zip")
         )
-        converter = converterFactory.converter(emptyMap(), config, uploadBackendClient, logRepository)
+
+        val settings = mapOf(
+                "upload.source.file.uploader.type" to "s3",
+                "upload.source.file.uploader.target.endpoint" to ADVERTIZED_URL,
+                "upload.source.file.uploader.target.root.directory" to ROOT,
+                "upload.source.file.uploader.username" to USER,
+                "upload.source.file.uploader.password" to PASSWORD
+        )
+
+        converter = converterFactory.converter(settings, config, uploadBackendClient, logRepository)
     }
 
     @Test
-    @DisplayName("Should be able to convert a zip file to TopicRecords")
+    @DisplayName("Should be able upload files to S3 bucket")
     fun testValidRawDataProcessing() {
         val zipName = "oxford-camera-sample.zip"
 
@@ -91,30 +93,23 @@ class WearableCameraConverterTest {
             assertTrue(URL_REGEX.matchEntire(it.getUrl()) != null, "URL ${it.getUrl()} does not match regex $URL_REGEX")
         }
 
-        val jsch = JSch()
-        val session = jsch.getSession(USER, HOST, PORT)
-        session.setPassword(PASSWORD)
+        val s3Client = MinioClient(ADVERTIZED_URL, USER, PASSWORD)
+        val isExist: Boolean = s3Client.bucketExists(ROOT)
+        assertTrue(isExist)
 
-        val config = Properties()
-        config["StrictHostKeyChecking"] = "no"
-        session.setConfig(config)
-        session.connect()
-        (session.openChannel("sftp") as ChannelSftp).run {
-            connect()
-            // directory entries . and .. plus images.
-            assertEquals(7, ls("upload/p/u/connect_upload_oxford_camera_image/1/2018-01-02").size)
-            exit()
+        s3Client.listObjects(ROOT).forEach {
+            assertTrue(OBJECT_NAME_REGEX.matchEntire(it.get().objectName()) != null, "URL ${it.get().objectName()} does not match regex $OBJECT_NAME_REGEX")
+
         }
-        session.disconnect()
     }
 
     companion object {
-        private const val HOST = "localhost"
-        private const val PORT = 2222
-        private const val USER = "connect"
-        private const val PASSWORD = "pass"
-        private const val ADVERTIZED_URL = "sftp://server/upload"
-        private val URL_REGEX = Regex("sftp://server/upload/p/u/connect_upload_oxford_camera_image/1/2018-01-02/B0000000[0-9]_[^_]*_20180102_12[0-9]*E\\.jpg")
-        private val logger = LoggerFactory.getLogger(WearableCameraConverterTest::class.java)
+        private const val ROOT = "target"
+        private const val USER = "minioadmin"
+        private const val PASSWORD = "minioadmin"
+        private const val ADVERTIZED_URL = "http://localhost:9000/"
+        private val URL_REGEX = Regex("http://localhost:9000/target/p/u/connect_upload_oxford_camera_image/1/2018-01-02/B0000000[0-9]_[^_]*_20180102_12[0-9]*E\\.jpg")
+        private val OBJECT_NAME_REGEX = Regex("p/u/connect_upload_oxford_camera_image/1/2018-01-02/B0000000[0-9]_[^_]*_20180102_12[0-9]*E\\.jpg")
+        private val logger = LoggerFactory.getLogger(S3FileUploaderTest::class.java)
     }
 }
