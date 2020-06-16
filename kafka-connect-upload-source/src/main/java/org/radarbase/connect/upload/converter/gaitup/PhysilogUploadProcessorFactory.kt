@@ -18,7 +18,7 @@ import java.time.format.DateTimeFormatter
 
 open class PhysilogUploadProcessorFactory(
         private val logRepository: LogRepository,
-        private val uploaderCreate: () -> FileUploaderFactory.FileUploader
+        private val uploaderCreate: FileUploaderFactory.FileUploader
 ) : FileProcessorFactory {
 
     open fun beforeProcessing(contents: ContentsDTO) = Unit
@@ -42,16 +42,9 @@ open class PhysilogUploadProcessorFactory(
             val projectId = checkNotNull(record.data?.projectId) { "Project ID required to upload image files." }
             val userId = checkNotNull(record.data?.userId) { "Project ID required to upload image files." }
             val relativePath = Paths.get("$projectId/$userId/$TOPIC/${record.id}/$dateDirectory/$fileName")
-            val fullPath = uploaderCreate().rootDirectory().resolve(relativePath).normalize()
-            val url = uploaderCreate().advertisedTargetUri().resolve(fullPath.toString())
 
             try {
-                if(uploaderCreate() is S3FileUploader) {
-                    uploaderCreate().upload(relativePath, inputStream, contents.size)
-                }
-                else {
-                    uploaderCreate().upload(fullPath, inputStream, contents.size)
-                }
+                val url = uploaderCreate.upload(relativePath, inputStream, contents.size)
                 return listOf(TopicData(TOPIC,
                         PhysilogBinaryDataReference(timeReceived, timeReceived, fileName, url.toString())
                                 .also { recordLogger.info("Uploaded file to ${it.getUrl()}") }))

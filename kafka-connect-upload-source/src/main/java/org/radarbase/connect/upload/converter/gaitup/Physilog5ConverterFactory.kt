@@ -25,7 +25,7 @@ class Physilog5ConverterFactory : ConverterFactory {
 
         logger.info("Physilog data will be uploaded using ${uploaderSupplier.type} to ${uploaderSupplier.advertisedTargetUri()} and ${uploaderSupplier.rootDirectory()}")
         return listOf( object :
-                PhysilogUploadProcessorFactory(logRepository, { localUploader.get() }){
+                PhysilogUploadProcessorFactory(logRepository, localUploader.get()){
             override fun beforeProcessing(contents: ContentsDTO) {
                 localUploader.set(uploaderSupplier)
             }

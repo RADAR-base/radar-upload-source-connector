@@ -43,18 +43,20 @@ class SftpFileUploader(override val config: FileUploaderFactory.FileUploaderConf
         logger.info("Files will be uploaded using SFTP to $endpoint and root directory ${config.targetRoot}")
     }
 
-    override fun upload(path: Path, stream: InputStream, size: Long?) {
+    override fun upload(relativePath: Path, stream: InputStream, size: Long?): URI {
         // copy remote log file to localhost.
+        val filePath = rootDirectory().resolve(relativePath)
         sftpChannel.run {
             try {
-                logger.info("Uploading data to ${path}")
-                put(stream, path.toString())
+                logger.info("Uploading data to ${filePath}")
+                put(stream, filePath.toString())
             } catch (ex: SftpException) {
                 logger.error("Could not upload file... Retrying", ex)
-                mkdirs(path)
-                put(stream, path.toString())
+                mkdirs(filePath)
+                put(stream, filePath.toString())
             }
         }
+        return advertisedTargetUri().resolve(filePath.toString())
     }
 
     override fun close() {

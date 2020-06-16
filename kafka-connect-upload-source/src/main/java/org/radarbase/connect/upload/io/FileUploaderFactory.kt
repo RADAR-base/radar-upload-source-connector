@@ -33,7 +33,7 @@ class FileUploaderFactory(private val config: Map<String, String>) {
 
         fun rootDirectory(): Path = Paths.get(config.targetRoot.ifEmpty {"."})
 
-        fun upload(path: Path, stream: InputStream, size: Long?)
+        fun upload(relativePath: Path, stream: InputStream, size: Long?) : URI
 
     }
 

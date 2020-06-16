@@ -17,7 +17,7 @@ import java.time.temporal.ChronoField
 
 class CameraUploadProcessor(
         private val logRepository: LogRepository,
-        private val uploaderCreate: () -> FileUploaderFactory.FileUploader
+        private val uploaderCreate: FileUploaderFactory.FileUploader
 ) : FileProcessorFactory {
     override fun matches(contents: ContentsDTO) = SUFFIX_REGEX.containsMatchIn(contents.fileName)
 
@@ -38,15 +38,8 @@ class CameraUploadProcessor(
             val projectId = checkNotNull(record.data?.projectId) { "Project ID required to upload image files." }
             val userId = checkNotNull(record.data?.userId) { "Project ID required to upload image files." }
             val relativePath = Paths.get("$projectId/$userId/$TOPIC/${record.id}/$dateDirectory/$adjustedFilename.jpg")
-            val fullPath = uploaderCreate().rootDirectory().resolve(relativePath).normalize()
 
-            val url = uploaderCreate().advertisedTargetUri().resolve(fullPath.toString())
-            if(uploaderCreate() is S3FileUploader) {
-                uploaderCreate().upload(relativePath, inputStream, contents.size)
-            }
-            else {
-                uploaderCreate().upload(fullPath, inputStream, contents.size)
-            }
+            val url = uploaderCreate.upload(relativePath, inputStream, contents.size)
 
             return listOf(TopicData(TOPIC,
                     OxfordCameraImage(time, timeReceived, adjustedFilename, url.toString())

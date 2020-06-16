@@ -5,6 +5,7 @@ import io.minio.PutObjectOptions
 import org.slf4j.LoggerFactory
 import java.io.InputStream
 import java.net.ConnectException
+import java.net.URI
 import java.nio.file.Path
 
 class S3FileUploader(override val config: FileUploaderFactory.FileUploaderConfig) : FileUploaderFactory.FileUploader {
@@ -37,10 +38,11 @@ class S3FileUploader(override val config: FileUploaderFactory.FileUploaderConfig
         }
     }
 
-    override fun upload(path: Path, stream: InputStream, size: Long?) {
-        logger.info("Uploading object ${path} to $bucket")
+    override fun upload(relativePath: Path, stream: InputStream, size: Long?) : URI {
+        logger.info("Uploading object ${relativePath} to $bucket")
         val putObjectOptions = if (size == null) PutObjectOptions(-1, (5*1024*2014)) else PutObjectOptions(size, -1)
-        s3Client.putObject(bucket, path.toString(), stream, putObjectOptions)
+        s3Client.putObject(bucket, relativePath.toString(), stream, putObjectOptions)
+        return advertisedTargetUri().resolve(rootDirectory().resolve(relativePath).toString())
     }
 
     override fun close() {
