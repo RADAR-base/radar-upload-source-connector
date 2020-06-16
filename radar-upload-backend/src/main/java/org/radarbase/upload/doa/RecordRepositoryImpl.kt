@@ -32,8 +32,10 @@ import org.slf4j.LoggerFactory
 import java.io.InputStream
 import java.io.Reader
 import java.sql.Blob
+import java.time.Duration
 import java.time.Instant
 import java.util.*
+import javax.inject.Provider
 import javax.persistence.EntityManager
 import javax.persistence.LockModeType
 import javax.persistence.PessimisticLockScope
@@ -42,8 +44,9 @@ import kotlin.collections.HashSet
 import kotlin.streams.toList
 
 
-class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<EntityManager>) : RecordRepository {
-
+class RecordRepositoryImpl(
+        @Context private var em: Provider<EntityManager>
+) : RecordRepository {
     override fun updateLogs(id: Long, logsData: String): RecordMetadata = em.get().transact {
         val logs = find(RecordLogs::class.java, id)
         val metadataToSave = if (logs == null) {
@@ -331,6 +334,16 @@ class RecordRepositoryImpl(@Context private var em: javax.inject.Provider<Entity
     }
 
     override fun readMetadata(id: Long): RecordMetadata? = em.get().transact { find(RecordMetadata::class.java, id) }
+
+    override fun resetStaleProcessing(sourceType: String, age: Duration): Int = em.get().transact {
+        val now = Instant.now()
+        createQuery("UPDATE RecordMetadata metadata SET metadata.status = :newStatus, metadata.revision = metadata.revision + 1, metadata.modifiedDate = :now WHERE metadata.status = :currentStatus AND metadata.modifiedDate < :staleDate")
+                .setParameter("newStatus", RecordStatus.READY)
+                .setParameter("currentStatus", RecordStatus.PROCESSING)
+                .setParameter("now", now)
+                .setParameter("staleDate", now.minus(age))
+                .executeUpdate()
+    }
 
     companion object {
         private val logger = LoggerFactory.getLogger(RecordRepositoryImpl::class.java)

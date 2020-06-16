@@ -65,7 +65,7 @@ internal class RecordResourceTest: JerseyTest() {
                 baseUri = URI.create("http://localhost:10313/upload/api/"),
                 jdbcUrl = "jdbc:h2:file:${tempDir.resolve("db.h2")};DB_CLOSE_DELAY=-1",
                 sourceTypes = listOf(
-                        SourceTypeDTO("type1", null, null, null, null, null)
+                        SourceTypeDTO("type1", null, null, null, null, null, null)
                 ))
         authQueue = ArrayDeque()
         val radarToken = mock<RadarToken> {
@@ -91,6 +91,12 @@ internal class RecordResourceTest: JerseyTest() {
 
     @Test
     fun create() {
+        target("status")
+                .request()
+                .get().use{ response ->
+            assertThat(response.status, equalTo(Response.Status.OK.statusCode))
+        }
+
         authQueue.add(Pair(auth, true))
         val record = target("records")
                 .request()

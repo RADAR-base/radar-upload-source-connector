@@ -5,12 +5,11 @@ import org.radarbase.connect.upload.api.RecordDTO
 import org.radarbase.connect.upload.converter.FileProcessorFactory
 import org.radarbase.connect.upload.converter.LogRepository
 import org.radarbase.connect.upload.converter.TopicData
-import org.radarbase.connect.upload.io.FileUploader
+import org.radarbase.connect.upload.io.FileUploaderFactory
+import org.radarbase.connect.upload.io.S3FileUploader
 import org.radarcns.connector.upload.oxford.OxfordCameraImage
 import org.slf4j.LoggerFactory
 import java.io.InputStream
-import java.net.URI
-import java.nio.file.Path
 import java.nio.file.Paths
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -18,9 +17,8 @@ import java.time.temporal.ChronoField
 
 class CameraUploadProcessor(
         private val logRepository: LogRepository,
-        private val uploaderCreate: () -> FileUploader,
-        private val rootPath: Path,
-        private val advertisedUrl: URI) : FileProcessorFactory {
+        private val uploaderCreate: () -> FileUploaderFactory.FileUploader
+) : FileProcessorFactory {
     override fun matches(contents: ContentsDTO) = SUFFIX_REGEX.containsMatchIn(contents.fileName)
 
     override fun createProcessor(record: RecordDTO): FileProcessorFactory.FileProcessor = FileUploadProcessor(record)
@@ -40,11 +38,9 @@ class CameraUploadProcessor(
             val projectId = checkNotNull(record.data?.projectId) { "Project ID required to upload image files." }
             val userId = checkNotNull(record.data?.userId) { "Project ID required to upload image files." }
             val relativePath = Paths.get("$projectId/$userId/$TOPIC/${record.id}/$dateDirectory/$adjustedFilename.jpg")
-            val fullPath = rootPath.resolve(relativePath).normalize()
 
-            uploaderCreate().upload(fullPath, inputStream)
+            val url = uploaderCreate().upload(relativePath, inputStream, contents.size)
 
-            val url = advertisedUrl.resolve(relativePath.toString())
             return listOf(TopicData(TOPIC,
                     OxfordCameraImage(time, timeReceived, adjustedFilename, url.toString())
                             .also { recordLogger.info("Uploaded file to ${it.getUrl()}") }))

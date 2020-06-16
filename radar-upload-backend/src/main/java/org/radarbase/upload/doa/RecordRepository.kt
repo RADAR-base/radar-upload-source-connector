@@ -29,6 +29,7 @@ import org.radarbase.upload.doa.entity.RecordMetadata
 import java.io.Closeable
 import java.io.InputStream
 import java.io.Reader
+import java.time.Duration
 
 interface RecordRepository {
     fun create(record: Record, metadata: RecordMetadata? = null, contents: Set<ContentsDTO>? = null): Record
@@ -46,6 +47,7 @@ interface RecordRepository {
     fun poll(limit: Int, supportedConverters: Set<String>): List<Record>
     fun readRecordContent(recordId: Long, fileName: String): RecordContent?
     fun deleteContents(record: Record, fileName: String)
+    fun resetStaleProcessing(sourceType: String, age: Duration): Int
 
     interface BlobReader : Closeable {
         val stream: InputStream

@@ -58,3 +58,11 @@ services:
     ports:
       - "2222:22"
     command: ["connect:pass:::upload"]
+
+  minio:
+    image: minio/minio
+    ports:
+      - "9000:9000"
+    command:
+      - server
+      - /data

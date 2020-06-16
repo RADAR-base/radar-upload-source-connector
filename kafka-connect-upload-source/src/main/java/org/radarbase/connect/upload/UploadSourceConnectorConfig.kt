@@ -35,8 +35,11 @@ import org.radarbase.connect.upload.converter.gaitup.Physilog5ConverterFactory
 import org.radarbase.connect.upload.converter.oxford.WearableCameraConverterFactory
 import org.radarbase.connect.upload.converter.phone.AcceleratometerZipConverterFactory
 import org.radarbase.connect.upload.converter.phone.AccelerometerConverterFactory
+import org.radarbase.connect.upload.io.FileUploaderFactory
+import org.radarbase.connect.upload.io.UploadType
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.net.URI
 import java.util.concurrent.TimeUnit
 
 class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, String>) :
@@ -67,6 +70,17 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
     val uploadBackendBaseUrl: String = getString(UPLOAD_SOURCE_SERVER_BASE_URL_CONFIG)
 
     val converterClasses: List<String> = getList(UPLOAD_SOURCE_CONVERTERS_CONFIG)
+
+    val fileUploaderType: UploadType? = UploadType.valueOf(getString(UPLOAD_FILE_UPLOADER_TYPE_CONFIG).toUpperCase())
+
+    val fileUploadConfig: FileUploaderFactory.FileUploaderConfig = FileUploaderFactory.FileUploaderConfig(
+            targetEndpoint = getString(UPLOAD_FILE_UPLOADER_TARGET_ENDPOINT_URL_CONFIG),
+            targetRoot = getString(UPLOAD_FILE_UPLOADER_TARGET_ROOT_DIRECTORY_CONFIG),
+            username = getString(UPLOAD_FILE_UPLOADER_USERNAME_CONFIG),
+            password = getPassword(UPLOAD_FILE_UPLOADER_PASSWORD_CONFIG)?.value(),
+            sshPrivateKey = getString(UPLOAD_FILE_UPLOADER_SSH_PRIVATE_KEY_FILE_CONFIG),
+            sshPassPhrase = getPassword(UPLOAD_FILE_UPLOADER_SSH_PASSPHRASE_CONFIG)?.value()
+    )
 
     val httpClient: OkHttpClient
         get() = globalHttpClient
@@ -109,6 +123,41 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
         private const val SOURCE_POLL_INTERVAL_DOC = "How often to poll the source URL."
         private const val SOURCE_POLL_INTERVAL_DISPLAY = "Polling interval"
         private const val SOURCE_POLL_INTERVAL_DEFAULT = 60000L
+
+        private const val UPLOAD_FILE_UPLOADER_TYPE_CONFIG = "upload.source.file.uploader.type"
+        private const val UPLOAD_FILE_UPLOADER_TYPE_DOC = "Choose which type of file uploader should be used to upload files to target location from local, sftp, s3."
+        private const val UPLOAD_FILE_UPLOADER_TYPE_DISPLAY = "File uploader type"
+        private val UPLOAD_FILE_UPLOADER_TYPE_DEFAULT: String = "s3"
+
+        private const val UPLOAD_FILE_UPLOADER_TARGET_ENDPOINT_URL_CONFIG = "upload.source.file.uploader.target.endpoint"
+        private const val UPLOAD_FILE_UPLOADER_TARGET_ENDPOINT_URL_DOC = "Advertised URL Endpoint of the file upload target."
+        private const val UPLOAD_FILE_UPLOADER_TARGET_ENDPOINT_URL_DISPLAY = "File upload target endpoint"
+        private val UPLOAD_FILE_UPLOADER_TARGET_ENDPOINT_URL_DEFAULT: String = "http://minio:9000/"
+
+        private const val UPLOAD_FILE_UPLOADER_TARGET_ROOT_DIRECTORY_CONFIG = "upload.source.file.uploader.target.root.directory"
+        private const val UPLOAD_FILE_UPLOADER_TARGET_ROOT_DIRECTORY_DOC = "Target root directory or s3 bucket where files should be uploaded to."
+        private const val UPLOAD_FILE_UPLOADER_TARGET_ROOT_DIRECTORY_DISPLAY = "Root directory/bucket to upload files"
+        private val UPLOAD_FILE_UPLOADER_TARGET_ROOT_DIRECTORY_DEFAULT: String = "radar-output-storage"
+
+        private const val UPLOAD_FILE_UPLOADER_USERNAME_CONFIG = "upload.source.file.uploader.username"
+        private const val UPLOAD_FILE_UPLOADER_USERNAME_DOC = "Username to upload files to the target."
+        private const val UPLOAD_FILE_UPLOADER_USERNAME_DISPLAY = "File Uploader username"
+        private val UPLOAD_FILE_UPLOADER_USERNAME_DEFAULT: String? = null
+
+        private const val UPLOAD_FILE_UPLOADER_PASSWORD_CONFIG = "upload.source.file.uploader.password"
+        private const val UPLOAD_FILE_UPLOADER_PASSWORD_DOC = "Password to upload files to the target."
+        private const val UPLOAD_FILE_UPLOADER_PASSWORD_DISPLAY = "File Uploader password"
+        private val UPLOAD_FILE_UPLOADER_PASSWORD_DEFAULT: String? = null
+
+        private const val UPLOAD_FILE_UPLOADER_SSH_PRIVATE_KEY_FILE_CONFIG = "upload.source.file.uploader.sftp.private.key.file"
+        private const val UPLOAD_FILE_UPLOADER_SSH_PRIVATE_KEY_FILE_DOC = "Path of private-key file if using private key for uploading files using sftp."
+        private const val UPLOAD_FILE_UPLOADER_SSH_PRIVATE_KEY_FILE_DISPLAY = "Sftp private key file path."
+        private val UPLOAD_FILE_UPLOADER_SSH_PRIVATE_KEY_FILE_DEFAULT: String? = null
+
+        private const val UPLOAD_FILE_UPLOADER_SSH_PASSPHRASE_CONFIG = "upload.source.file.uploader.sftp.passphrase"
+        private const val UPLOAD_FILE_UPLOADER_SSH_PASSPHRASE_DOC = "Passphrase of the private-key file if using private key for uploading files using sftp."
+        private const val UPLOAD_FILE_UPLOADER_SSH_PASSPHRASE_DISPLAY = "Pass phrase for private key."
+        private val UPLOAD_FILE_UPLOADER_SSH_PASSPHRASE_DEFAULT: String? = null
 
         var mapper: ObjectMapper = ObjectMapper()
                 .registerModule(KotlinModule())
@@ -180,6 +229,77 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
                             ++orderInGroup,
                             ConfigDef.Width.LONG,
                             UPLOAD_SOURCE_CONVERTERS_DISPLAY)
+
+                    .define(UPLOAD_FILE_UPLOADER_TYPE_CONFIG,
+                            ConfigDef.Type.STRING,
+                            UPLOAD_FILE_UPLOADER_TYPE_DEFAULT,
+                            ConfigDef.Importance.LOW,
+                            UPLOAD_FILE_UPLOADER_TYPE_DOC,
+                            groupName,
+                            ++orderInGroup,
+                            ConfigDef.Width.LONG,
+                            UPLOAD_FILE_UPLOADER_TYPE_DISPLAY)
+
+                    .define(UPLOAD_FILE_UPLOADER_TARGET_ENDPOINT_URL_CONFIG,
+                            ConfigDef.Type.STRING,
+                            UPLOAD_FILE_UPLOADER_TARGET_ENDPOINT_URL_DEFAULT,
+                            ConfigDef.Importance.LOW,
+                            UPLOAD_FILE_UPLOADER_TARGET_ENDPOINT_URL_DOC,
+                            groupName,
+                            ++orderInGroup,
+                            ConfigDef.Width.MEDIUM,
+                            UPLOAD_FILE_UPLOADER_TARGET_ENDPOINT_URL_DISPLAY)
+
+                    .define(UPLOAD_FILE_UPLOADER_TARGET_ROOT_DIRECTORY_CONFIG,
+                            ConfigDef.Type.STRING,
+                            UPLOAD_FILE_UPLOADER_TARGET_ROOT_DIRECTORY_DEFAULT,
+                            ConfigDef.Importance.LOW,
+                            UPLOAD_FILE_UPLOADER_TARGET_ROOT_DIRECTORY_DOC,
+                            groupName,
+                            ++orderInGroup,
+                            ConfigDef.Width.SHORT,
+                            UPLOAD_FILE_UPLOADER_TARGET_ROOT_DIRECTORY_DISPLAY)
+
+                    .define(UPLOAD_FILE_UPLOADER_USERNAME_CONFIG,
+                            ConfigDef.Type.STRING,
+                            UPLOAD_FILE_UPLOADER_USERNAME_DEFAULT,
+                            ConfigDef.Importance.LOW,
+                            UPLOAD_FILE_UPLOADER_USERNAME_DOC,
+                            groupName,
+                            ++orderInGroup,
+                            ConfigDef.Width.MEDIUM,
+                            UPLOAD_FILE_UPLOADER_USERNAME_DISPLAY)
+
+                    .define(UPLOAD_FILE_UPLOADER_PASSWORD_CONFIG,
+                            ConfigDef.Type.PASSWORD,
+                            UPLOAD_FILE_UPLOADER_PASSWORD_DEFAULT,
+                            ConfigDef.Importance.LOW,
+                            UPLOAD_FILE_UPLOADER_PASSWORD_DOC,
+                            groupName,
+                            ++orderInGroup,
+                            ConfigDef.Width.MEDIUM,
+                            UPLOAD_FILE_UPLOADER_PASSWORD_DISPLAY)
+
+                    .define(UPLOAD_FILE_UPLOADER_SSH_PRIVATE_KEY_FILE_CONFIG,
+                            ConfigDef.Type.STRING,
+                            UPLOAD_FILE_UPLOADER_SSH_PRIVATE_KEY_FILE_DEFAULT,
+                            ConfigDef.Importance.LOW,
+                            UPLOAD_FILE_UPLOADER_SSH_PRIVATE_KEY_FILE_DOC,
+                            groupName,
+                            ++orderInGroup,
+                            ConfigDef.Width.MEDIUM,
+                            UPLOAD_FILE_UPLOADER_SSH_PRIVATE_KEY_FILE_DISPLAY)
+
+                    .define(UPLOAD_FILE_UPLOADER_SSH_PASSPHRASE_CONFIG,
+                            ConfigDef.Type.PASSWORD,
+                            UPLOAD_FILE_UPLOADER_SSH_PASSPHRASE_DEFAULT,
+                            ConfigDef.Importance.LOW,
+                            UPLOAD_FILE_UPLOADER_SSH_PASSPHRASE_DOC,
+                            groupName,
+                            ++orderInGroup,
+                            ConfigDef.Width.MEDIUM,
+                            UPLOAD_FILE_UPLOADER_SSH_PASSPHRASE_DISPLAY)
+
         }
 
         private val globalHttpClient = OkHttpClient.Builder()

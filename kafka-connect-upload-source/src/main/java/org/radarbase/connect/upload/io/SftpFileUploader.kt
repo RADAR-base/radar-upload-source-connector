@@ -7,44 +7,60 @@ import com.jcraft.jsch.SftpException
 import org.slf4j.LoggerFactory
 import java.io.InputStream
 import java.lang.Exception
+import java.net.ConnectException
+import java.net.URI
 import java.nio.file.Path
 import java.util.*
 
 
-class SftpFileUploader(credentials: SftpCredentials) : FileUploader {
+class SftpFileUploader(override val config: FileUploaderFactory.FileUploaderConfig) : FileUploaderFactory.FileUploader {
+    override val type: String
+        get() = "sftp"
     private val jsch = JSch()
     private val session: Session
     private val sftpChannel: ChannelSftp
 
     init {
-        credentials.privateKeyFile?.let {
-            jsch.addIdentity(it, credentials.privateKeyPassphrase)
-        }
-        session = jsch.getSession(credentials.username, credentials.host, credentials.port)
-        session.setPassword(credentials.password)
+        if (config.targetEndpoint.isEmpty()) throw ConnectException("upload.source.file.target.endpoint should have a valid url with format sftp://hostname or sftp://hostname:port")
+        config.username ?: throw ConnectException("upload.source.file.uploader.username must be configured for one or more of the selected converters")
+        config.password ?: throw ConnectException("upload.source.file.uploader.password must be configured for one or more of the selected converters")
 
-        val config = Properties()
-        config["StrictHostKeyChecking"] = "no"
-        session.setConfig(config)
+        logger.info("Initializing sftp file uploader")
+        val endpoint = URI(config.targetEndpoint)
+        config.sshPrivateKey?.let {
+            jsch.addIdentity(it, config.sshPassPhrase)
+        }
+        session = jsch.getSession(config.username, endpoint.host, if (endpoint.port == -1) 22 else endpoint.port)
+        session.setPassword(config.password)
+
+        val sessionConfig = Properties()
+        sessionConfig["StrictHostKeyChecking"] = "no"
+        session.setConfig(sessionConfig)
         session.connect()
         sftpChannel = session.openChannel("sftp") as ChannelSftp
         sftpChannel.connect()
+        logger.info("SftpFileUploader Connection established ...")
+        logger.info("Files will be uploaded using SFTP to $endpoint and root directory ${config.targetRoot}")
     }
 
-    override fun upload(path: Path, stream: InputStream) {
+    override fun upload(relativePath: Path, stream: InputStream, size: Long?): URI {
         // copy remote log file to localhost.
+        val filePath = rootDirectory().resolve(relativePath)
         sftpChannel.run {
             try {
-                logger.debug("Uploading data to ${path}")
-                put(stream, path.toString())
+                logger.info("Uploading data to ${filePath}")
+                put(stream, filePath.toString())
             } catch (ex: SftpException) {
-                mkdirs(path)
-                put(stream, path.toString())
+                logger.error("Could not upload file... Retrying", ex)
+                mkdirs(filePath)
+                put(stream, filePath.toString())
             }
         }
+        return advertisedTargetUri().resolve(filePath.toString())
     }
 
     override fun close() {
+        logger.debug("Closing SftpFileUploader")
         var exception: Exception? = null
         try {
             sftpChannel.disconnect()
@@ -56,13 +72,6 @@ class SftpFileUploader(credentials: SftpCredentials) : FileUploader {
         exception?.let { throw it }
     }
 
-    data class SftpCredentials(
-            val host: String,
-            val port: Int = 22,
-            val username: String,
-            val privateKeyFile: String? = null,
-            val password: String? = null,
-            val privateKeyPassphrase: String? = null)
 
     companion object {
         private val logger = LoggerFactory.getLogger(SftpFileUploader::class.java)
