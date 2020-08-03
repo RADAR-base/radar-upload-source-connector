@@ -80,15 +80,6 @@ tasks.withType<Test> {
         events("passed", "skipped", "failed")
     }
 }
-val compileKotlin: KotlinCompile by tasks
-compileKotlin.kotlinOptions {
-    jvmTarget = "1.8"
-}
-val compileTestKotlin: KotlinCompile by tasks
-compileTestKotlin.kotlinOptions {
-    jvmTarget = "1.8"
-}
-
 
 tasks.register<Copy>("copyDependencies") {
     from(configurations.runtimeClasspath.get().files)
@@ -96,7 +87,6 @@ tasks.register<Copy>("copyDependencies") {
 }
 
 tasks.register("downloadDependencies") {
-
     configurations["runtimeClasspath"].files
     configurations["compileClasspath"].files
 
