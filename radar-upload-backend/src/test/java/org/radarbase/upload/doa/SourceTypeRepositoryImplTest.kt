@@ -54,7 +54,9 @@ internal class SourceTypeRepositoryImplTest {
     @BeforeEach
     fun setUp() {
         MockitoAnnotations.initMocks(this)
-        val config = Config(jdbcUrl = "jdbc:h2:file:${tempDir.resolve("db.h2")};DB_CLOSE_DELAY=-1;MVCC=true")
+        val config = Config(
+                jdbcUrl = "jdbc:h2:file:${tempDir.resolve("db.h2")};DB_CLOSE_DELAY=-1",
+                hibernateDialect = "org.hibernate.dialect.H2Dialect")
         doaEMFFactory = DoaEntityManagerFactoryFactory(config)
         doaEMF = doaEMFFactory.get()
         entityManager = doaEMF.createEntityManager()

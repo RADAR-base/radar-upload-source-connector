@@ -39,7 +39,8 @@ class DoaEntityManagerFactoryFactory(@Context config: Config) : DisposableSuppli
                     "javax.persistence.jdbc.driver" to config.jdbcDriver,
                     "javax.persistence.jdbc.url" to config.jdbcUrl,
                     "javax.persistence.jdbc.user" to config.jdbcUser,
-                    "javax.persistence.jdbc.password" to config.jdbcPassword)
+                    "javax.persistence.jdbc.password" to config.jdbcPassword,
+                    "hibernate.dialect" to config.hibernateDialect)
                     + (config.additionalPersistenceConfig ?: emptyMap()))
             .filterValues { it != null } as Map<String, String>
 
