@@ -25,6 +25,13 @@ import org.slf4j.LoggerFactory
 abstract class StatelessCsvLineProcessor: CsvLineProcessorFactory {
     private val logger = LoggerFactory.getLogger(javaClass)
 
+    override val fileNameSuffixes: List<String>
+        get() = listOf(fileNameSuffix)
+
+    open val fileNameSuffix: String = ".csv"
+
+    override val optional: Boolean = false
+
     open val timeFieldParser: TimeFieldParser = TimeFieldParser.EpochMillisParser()
 
     fun time(line: Map<String, String>): Double = timeFieldParser.time(line)

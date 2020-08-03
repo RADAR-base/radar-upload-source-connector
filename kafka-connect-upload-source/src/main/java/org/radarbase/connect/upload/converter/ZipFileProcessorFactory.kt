@@ -59,7 +59,9 @@ open class ZipFileProcessorFactory(
                                 val entryName = zippedEntry.name.trim()
                                 recordLogger.debug("Processing entry $entryName from record ${record.id}")
 
-                                val entryContents = ContentsDTO(fileName = entryName)
+                                val entryContents = ContentsDTO(
+                                        fileName = entryName,
+                                        size = zippedEntry.size)
 
                                 val processor = entryProcessors.find { it.matches(entryContents) }
                                         ?: throw DataProcessorNotFoundException("Could not find registered processor for zipped entry $entryName")

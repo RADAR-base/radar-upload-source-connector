@@ -23,16 +23,24 @@ import org.radarbase.connect.upload.api.RecordDTO
  * Processor for processing single lines of CSV file.
  */
 interface CsvLineProcessorFactory {
+    /**
+     * Whether the given file is allowed to be empty. It will not be used
+     * in that case.
+     */
+    val optional: Boolean
+
     /** Upper case header list. */
     val header: List<String>
 
-    val fileNameSuffix: String
-        get() = ".csv"
+    val fileNameSuffixes: List<String>
+        get() = listOf(".csv")
 
     /**
      * Whether the file contents matches this CSV line processor.
      */
-    fun matches(contents: ContentsDTO) = contents.fileName.endsWith(fileNameSuffix, ignoreCase = true)
+    fun matches(contents: ContentsDTO) = fileNameSuffixes.any {
+        contents.fileName.endsWith(it, ignoreCase = true)
+    }
 
     /**
      * Whether the header matches this CSV line processor. The provided header must be in upper
