@@ -4,7 +4,7 @@ plugins {
 
 subprojects {
     group = "org.radarbase"
-    version = "0.5.1-SNOPSHOT"
+    version = "0.5.1"
 }
 
 tasks.wrapper {
