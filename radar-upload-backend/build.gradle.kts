@@ -4,9 +4,9 @@ plugins {
     java
     application
     kotlin("jvm")
-    id("org.jetbrains.kotlin.plugin.noarg") version "1.3.61"
-    id("org.jetbrains.kotlin.plugin.jpa") version "1.3.61"
-    id("org.jetbrains.kotlin.plugin.allopen") version "1.3.61"
+    id("org.jetbrains.kotlin.plugin.noarg") version "1.3.72"
+    id("org.jetbrains.kotlin.plugin.jpa") version "1.3.72"
+    id("org.jetbrains.kotlin.plugin.allopen") version "1.3.72"
 }
 
 application {
@@ -14,15 +14,18 @@ application {
 }
 
 project.extra.apply {
-    set("okhttpVersion", "4.2.0")
-    set("radarJerseyVersion", "0.2.2.3")
-    set("radarCommonsVersion", "0.12.2")
-    set("jacksonVersion", "2.9.10")
-    set("slf4jVersion", "1.7.27")
+    set("okhttpVersion", "4.8.0")
+    set("radarJerseyVersion", "0.2.3")
+    set("radarCommonsVersion", "0.13.0")
+    set("jacksonVersion", "2.11.1")
+    set("slf4jVersion", "1.7.30")
     set("logbackVersion", "1.2.3")
     set("grizzlyVersion", "2.4.4")
-    set("jerseyVersion", "2.30")
-    set("hibernateVersion", "5.4.10.Final")
+    set("jerseyVersion", "2.31")
+    set("hibernateVersion", "5.4.19.Final")
+    set("postgresqlVersion", "42.2.14")
+    set("h2Version", "1.4.200")
+    set("liquibaseVersion", "3.10.2")
 }
 
 repositories {
@@ -45,12 +48,12 @@ dependencies {
 
     implementation("org.hibernate:hibernate-core:${project.extra["hibernateVersion"]}")
     implementation("org.hibernate:hibernate-c3p0:${project.extra["hibernateVersion"]}")
-    implementation("org.liquibase:liquibase-core:3.5.3")
+    implementation("org.liquibase:liquibase-core:${project.extra["liquibaseVersion"]}")
 
     implementation("com.squareup.okhttp3:okhttp:${project.extra["okhttpVersion"]}")
 
-    runtimeOnly("com.h2database:h2:1.4.199")
-    runtimeOnly("org.postgresql:postgresql:42.2.5")
+    runtimeOnly("com.h2database:h2:${project.extra["h2Version"]}")
+    runtimeOnly("org.postgresql:postgresql:${project.extra["postgresqlVersion"]}")
     runtimeOnly("ch.qos.logback:logback-classic:${project.extra["logbackVersion"]}")
 
 //    testImplementation("com.h2database:h2:1.4.199")

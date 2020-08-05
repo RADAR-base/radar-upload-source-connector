@@ -61,7 +61,9 @@ internal class RecordRepositoryImplTest {
         MockitoAnnotations.initMocks(this)
 
         doaEMFFactory = DoaEntityManagerFactoryFactory(
-                Config(jdbcUrl = "jdbc:h2:file:${tempDir.resolve("db.h2")};DB_CLOSE_DELAY=-1;MVCC=true")
+                Config(
+                        jdbcUrl = "jdbc:h2:file:${tempDir.resolve("db.h2")};DB_CLOSE_DELAY=-1",
+                        hibernateDialect = "org.hibernate.dialect.H2Dialect")
         )
         doaEMF = doaEMFFactory.get()
         entityManager = doaEMF.createEntityManager()

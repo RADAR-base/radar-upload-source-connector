@@ -8,14 +8,14 @@ plugins {
 
 project.extra.apply {
     set("kafkaVersion", "2.5.0")
-    set("okhttpVersion", "4.7.2")
-    set("jacksonVersion", "2.11.0")
-    set("jacksonDataVersion", "2.11.0")
+    set("okhttpVersion", "4.8.0")
+    set("jacksonVersion", "2.11.1")
+    set("jacksonDataVersion", "2.11.1")
     set("openCsvVersion", "5.2")
-    set("confluentVersion", "5.3.0")
-    set("radarSchemaVersion", "0.5.9")
-    set("slf4jVersion", "1.7.27")
-    set("minioVersion", "7.0.1")
+    set("confluentVersion", "5.5.1")
+    set("radarSchemaVersion", "0.5.11.1")
+    set("slf4jVersion", "1.7.30")
+    set("minioVersion", "7.1.0")
 }
 
 repositories {
@@ -80,15 +80,6 @@ tasks.withType<Test> {
         events("passed", "skipped", "failed")
     }
 }
-val compileKotlin: KotlinCompile by tasks
-compileKotlin.kotlinOptions {
-    jvmTarget = "1.8"
-}
-val compileTestKotlin: KotlinCompile by tasks
-compileTestKotlin.kotlinOptions {
-    jvmTarget = "1.8"
-}
-
 
 tasks.register<Copy>("copyDependencies") {
     from(configurations.runtimeClasspath.get().files)
@@ -96,7 +87,6 @@ tasks.register<Copy>("copyDependencies") {
 }
 
 tasks.register("downloadDependencies") {
-
     configurations["runtimeClasspath"].files
     configurations["compileClasspath"].files
 
