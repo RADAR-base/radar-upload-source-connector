@@ -24,6 +24,8 @@ import org.radarbase.connect.upload.converter.TopicData
 import org.radarcns.connector.upload.altoida.AltoidaDiagnostics
 
 class AltoidaDiagnosticsCsvProcessor : StatelessCsvLineProcessor() {
+    override val optional: Boolean = true
+
     override val fileNameSuffix: String = "_DIAG.csv"
 
     override val header: List<String> = listOf("TIMESTAMP", "TAG", "PAYLOAD", "CONTRAST", "MOVEMENT", "ANGLE", "FEATURES")

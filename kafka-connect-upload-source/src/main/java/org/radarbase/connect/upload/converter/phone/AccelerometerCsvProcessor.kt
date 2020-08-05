@@ -19,34 +19,22 @@
 
 package org.radarbase.connect.upload.converter.phone
 
-import org.radarbase.connect.upload.api.RecordDTO
-import org.radarbase.connect.upload.converter.CsvLineProcessorFactory
-import org.radarbase.connect.upload.converter.LogRepository
 import org.radarbase.connect.upload.converter.StatelessCsvLineProcessor
 import org.radarbase.connect.upload.converter.TopicData
 import org.radarcns.passive.phone.PhoneAcceleration
-import org.slf4j.LoggerFactory
 
-class AccelerometerCsvProcessor : CsvLineProcessorFactory {
+class AccelerometerCsvProcessor : StatelessCsvLineProcessor() {
     private val topic: String = "android_phone_acceleration"
 
     override val header: List<String> = listOf("TIMESTAMP", "X", "Y", "Z")
 
-    override fun createLineProcessor(
-            record: RecordDTO,
-            logRepository: LogRepository
-    ): CsvLineProcessorFactory.CsvLineProcessor = StatelessCsvLineProcessor.Processor(
-            logRepository.createLogger(logger, record.id!!)) { line, timeReceived ->
-        listOf(TopicData(topic, PhoneAcceleration(
-                line.getValue("TIMESTAMP").toDouble(),
-                timeReceived,
-                line.getValue("X").toFloat(),
-                line.getValue("Y").toFloat(),
-                line.getValue("Z").toFloat()
-        )))
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(AccelerometerCsvProcessor::class.java)
-    }
+    override fun lineConversion(
+            line: Map<String, String>,
+            timeReceived: Double
+    ) = TopicData(topic, PhoneAcceleration(
+            time(line),
+            timeReceived,
+            line.getValue("X").toFloat(),
+            line.getValue("Y").toFloat(),
+            line.getValue("Z").toFloat()))
 }
