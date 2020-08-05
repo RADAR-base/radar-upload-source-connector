@@ -7,10 +7,10 @@ plugins {
 }
 
 project.extra.apply {
-    set("okhttpVersion", "4.2.0")
-    set("kafkaVersion", "2.3.0")
-    set("jacksonVersion", "2.9.10")
-    set("jacksonDataVersion", "2.9.10")
+    set("okhttpVersion", "4.8.0")
+    set("kafkaVersion", "2.5.0")
+    set("jacksonVersion", "2.11.1")
+    set("jacksonDataVersion", "2.11.1")
 }
 
 repositories {
@@ -44,10 +44,10 @@ dependencies {
 
     testImplementation(project(":radar-upload-backend"))
     testImplementation(project(":kafka-connect-upload-source"))
-    testImplementation("org.junit.jupiter:junit-jupiter:5.4.2")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.6.2")
     testImplementation("org.hamcrest:hamcrest-all:1.3")
     testImplementation("org.apache.kafka:connect-api:${project.extra["kafkaVersion"]}")
-    testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.1.0")
+    testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
 }
 
 tasks.withType<KotlinCompile> {

@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "1.3.61" apply false
+    kotlin("jvm") version "1.3.72" apply false
 }
 
 subprojects {
@@ -8,5 +8,5 @@ subprojects {
 }
 
 tasks.wrapper {
-    gradleVersion = "6.5"
+    gradleVersion = "6.5.1"
 }
