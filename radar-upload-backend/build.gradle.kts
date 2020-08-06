@@ -13,21 +13,6 @@ application {
     mainClassName = "org.radarbase.upload.MainKt"
 }
 
-project.extra.apply {
-    set("okhttpVersion", "4.8.0")
-    set("radarJerseyVersion", "0.2.3")
-    set("radarCommonsVersion", "0.13.0")
-    set("jacksonVersion", "2.11.1")
-    set("slf4jVersion", "1.7.30")
-    set("logbackVersion", "1.2.3")
-    set("grizzlyVersion", "2.4.4")
-    set("jerseyVersion", "2.31")
-    set("hibernateVersion", "5.4.19.Final")
-    set("postgresqlVersion", "42.2.14")
-    set("h2Version", "1.4.200")
-    set("liquibaseVersion", "3.10.2")
-}
-
 repositories {
     jcenter()
     maven(url = "https://dl.bintray.com/radar-base/org.radarbase")

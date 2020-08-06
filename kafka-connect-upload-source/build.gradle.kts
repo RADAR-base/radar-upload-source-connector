@@ -6,18 +6,6 @@ plugins {
     kotlin("jvm")
 }
 
-project.extra.apply {
-    set("kafkaVersion", "2.5.0")
-    set("okhttpVersion", "4.8.0")
-    set("jacksonVersion", "2.11.1")
-    set("jacksonDataVersion", "2.11.1")
-    set("openCsvVersion", "5.2")
-    set("confluentVersion", "5.5.1")
-    set("radarSchemaVersion", "0.5.11.1")
-    set("slf4jVersion", "1.7.30")
-    set("minioVersion", "7.1.0")
-}
-
 repositories {
     jcenter()
     maven(url = "https://packages.confluent.io/maven/")
