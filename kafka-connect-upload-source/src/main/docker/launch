@@ -49,4 +49,4 @@ echo "===> Launching ${COMPONENT} ..."
 export CLASSPATH="/etc/${COMPONENT}/kafka-connect-upload-source/*"
 
 # execute connector in standalone mode
-exec connect-standalone /etc/"${COMPONENT}"/"${COMPONENT}".properties $(find /etc/"${COMPONENT}"/ -type f -name "${CONNECTOR_PROPERTY_FILE_PREFIX}*.properties")
+exec connect-standalone /etc/"${COMPONENT}"/"${COMPONENT}".properties "/etc/${COMPONENT}"/"${CONNECTOR_PROPERTY_FILE_PREFIX}".properties

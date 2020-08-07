@@ -8,7 +8,7 @@ COPY kafka-connect-upload-source/build.gradle.kts  /code/kafka-connect-upload-so
 
 RUN gradle :kafka-connect-upload-source:downloadDependencies kafka-connect-upload-source:copyDependencies
 
-COPY ./kafka-connect-upload-source/src/ /code/kafka-connect-upload-source/src
+COPY ./kafka-connect-upload-source/src/main/java /code/kafka-connect-upload-source/src/main/java
 
 RUN gradle jar
 
