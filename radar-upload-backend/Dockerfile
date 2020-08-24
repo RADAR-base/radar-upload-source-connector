@@ -1,4 +1,4 @@
-FROM gradle:6.5.1-jdk11 as builder
+FROM gradle:6.6-jdk11 as builder
 
 RUN mkdir /code
 WORKDIR /code
