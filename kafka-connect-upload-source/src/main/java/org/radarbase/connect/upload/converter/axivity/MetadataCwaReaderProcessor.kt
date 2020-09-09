@@ -5,7 +5,7 @@ import org.radarbase.connect.upload.converter.axivity.newcastle.CwaReader
 import org.radarcns.connector.upload.axivity.AxivityMetadata
 
 class MetadataCwaReaderProcessor {
-    fun processReader(cwaReader: CwaReader, time: Double, timeReceived: Double): List<TopicData> {
+    fun processReader(cwaReader: CwaReader, time: Double, timeReceived: Double): Sequence<TopicData> {
         val records = mutableListOf<AxivityMetadata>()
 
         cwaReader.deviceId.takeUnless { it == -1 }
@@ -22,6 +22,6 @@ class MetadataCwaReaderProcessor {
             AxivityMetadata(time, timeReceived, it.key, it.value)
         }
 
-        return records.map { TopicData("connect_upload_axivity_metadata", it) }
+        return records.asSequence().map { TopicData("connect_upload_axivity_metadata", it) }
     }
 }
