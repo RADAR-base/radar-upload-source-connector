@@ -72,13 +72,15 @@ tasks.withType<Test> {
 }
 
 tasks.register<Copy>("copyDependencies") {
-    from(configurations.runtimeClasspath.get().files)
+    from(configurations.runtimeClasspath.map { it.files })
     into("${buildDir}/third-party")
 }
 
 tasks.register("downloadDependencies") {
-    configurations["runtimeClasspath"].files
-    configurations["compileClasspath"].files
+    doFirst {
+        configurations["runtimeClasspath"].files
+        configurations["compileClasspath"].files
+    }
 
     doLast {
         println("Downloaded all dependencies")
