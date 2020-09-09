@@ -50,20 +50,20 @@ open class UploadBackendClient(
         uploadBackendBaseUrl = uploadBackendBaseUrl.trimEnd('/')
     }
 
-    fun pollRecords(configuration: PollDTO): RecordContainerDTO = httpClient.executeRequest {
+    open fun pollRecords(configuration: PollDTO): RecordContainerDTO = httpClient.executeRequest {
         url("$uploadBackendBaseUrl/records/poll")
         post(configuration.toJsonBody())
     }
 
-    fun requestConnectorConfig(name: String): SourceTypeDTO = httpClient.executeRequest {
+    open fun requestConnectorConfig(name: String): SourceTypeDTO = httpClient.executeRequest {
         url("$uploadBackendBaseUrl/source-types/${name}/")
     }
 
-    fun requestAllConnectors(): SourceTypeContainerDTO = httpClient.executeRequest {
+    open fun requestAllConnectors(): SourceTypeContainerDTO = httpClient.executeRequest {
         url("$uploadBackendBaseUrl/source-types")
     }
 
-    fun <T> retrieveFile(record: RecordDTO, fileName: String, handling: (ResponseBody) -> T): T {
+    open fun <T> retrieveFile(record: RecordDTO, fileName: String, handling: (ResponseBody) -> T): T {
         return httpClient.executeRequest({
             url("$uploadBackendBaseUrl/records/${record.id}/contents/$fileName")
         }) {
@@ -71,16 +71,16 @@ open class UploadBackendClient(
         }
     }
 
-    fun retrieveRecordMetadata(recordId: Long): RecordMetadataDTO = httpClient.executeRequest {
+    open fun retrieveRecordMetadata(recordId: Long): RecordMetadataDTO = httpClient.executeRequest {
         url("$uploadBackendBaseUrl/records/$recordId/metadata")
     }
 
-    fun updateStatus(recordId: Long, newStatus: RecordMetadataDTO): RecordMetadataDTO = httpClient.executeRequest {
+    open fun updateStatus(recordId: Long, newStatus: RecordMetadataDTO): RecordMetadataDTO = httpClient.executeRequest {
         url("$uploadBackendBaseUrl/records/$recordId/metadata")
         post(newStatus.toJsonBody())
     }
 
-    fun addLogs(log: Log): RecordMetadataDTO = httpClient.executeRequest {
+    open fun addLogs(log: Log): RecordMetadataDTO = httpClient.executeRequest {
         url("$uploadBackendBaseUrl/records/${log.recordId}/logs")
         put(object : RequestBody() {
             override fun contentType() = TEXT_PLAIN

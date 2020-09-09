@@ -19,11 +19,8 @@
 
 package org.radarbase.connect.upload.converter
 
+import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.DisplayName
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 import org.mockito.Mockito.mock
 import org.radarbase.connect.upload.api.*
 import org.radarbase.connect.upload.converter.phone.AcceleratometerZipConverterFactory

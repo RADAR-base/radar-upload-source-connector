@@ -29,14 +29,14 @@ class CwaFileProcessorFactory(
 
             val data = generateSequence { cwaReader.peekBlock() }
                     .flatMap { block -> processBlock(block, timeReceived) }
-                    .toList()
+                    .toMutableList()
 
             val firstTime = data.firstOrNull()?.value?.get(0) as? Double
                     ?: timeReceived
 
-            val metadata = metadataProcessor.processReader(cwaReader, firstTime, timeReceived)
+            data += metadataProcessor.processReader(cwaReader, firstTime, timeReceived)
 
-            return metadata + data
+            return data
         }
 
         private fun processBlock(block: CwaBlock, timeReceived: Double): Sequence<TopicData> {

@@ -213,7 +213,7 @@ class UploadSourceTask : SourceTask() {
     companion object {
         private val logger = LoggerFactory.getLogger(UploadSourceTask::class.java)
 
-        private fun Temporal.untilNow(): Duration = Duration.between(Instant.now(), this)
+        internal fun Temporal.untilNow(): Duration = Duration.between(Instant.now(), this)
         private fun TemporalAmount.fromNow(): Instant = Instant.now().plus(this)
     }
 }

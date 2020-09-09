@@ -79,7 +79,7 @@ class UploadResourceEnhancer(private val config: Config): JerseyResourceEnhancer
 
         bindFactory(DoaEntityManagerFactory::class.java)
                 .to(EntityManager::class.java)
-                .`in`(PerLookup::class.java)
+                .`in`(RequestScoped::class.java)
 
         bind(RecordMapperImpl::class.java)
                 .to(RecordMapper::class.java)

@@ -10,6 +10,7 @@ repositories {
     jcenter()
     maven(url = "https://packages.confluent.io/maven/")
     maven(url = "https://dl.bintray.com/radar-cns/org.radarcns")
+    maven(url = "https://dl.bintray.com/radar-base/org.radarbase")
     maven(url = "https://oss.jfrog.org/artifactory/oss-snapshot-local/")
 }
 
@@ -66,17 +67,20 @@ tasks.withType<Test> {
     useJUnitPlatform()
     testLogging {
         events("passed", "skipped", "failed")
+        setExceptionFormat("full")
     }
 }
 
 tasks.register<Copy>("copyDependencies") {
-    from(configurations.runtimeClasspath.get().files)
+    from(configurations.runtimeClasspath.map { it.files })
     into("${buildDir}/third-party")
 }
 
 tasks.register("downloadDependencies") {
-    configurations["runtimeClasspath"].files
-    configurations["compileClasspath"].files
+    doFirst {
+        configurations["runtimeClasspath"].files
+        configurations["compileClasspath"].files
+    }
 
     doLast {
         println("Downloaded all dependencies")
