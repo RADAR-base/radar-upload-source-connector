@@ -7,18 +7,20 @@ import org.glassfish.jersey.server.monitoring.RequestEvent
 import org.glassfish.jersey.server.monitoring.RequestEventListener
 import org.radarbase.upload.Config
 import org.radarbase.upload.doa.RecordRepository
+import org.radarbase.upload.doa.RecordRepositoryImpl
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.concurrent.Future
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
+import javax.persistence.EntityManagerFactory
 import javax.ws.rs.core.Context
 import javax.ws.rs.ext.Provider
 
 @Provider
 class RecordStateLifecycleManager(
         @BackgroundScheduler @Context private val executor: ScheduledExecutorService,
-        @Context private val recordRepository: RecordRepository,
+        @Context private val entityManagerFactory: EntityManagerFactory,
         @Context config: Config
 ) : ApplicationEventListener {
     private val staleProcessingAge: Map<String, Pair<Duration, Any>>
@@ -67,19 +69,30 @@ class RecordStateLifecycleManager(
                 }
     }
 
+    private inline fun <T> useRecordRepository(method: (RecordRepository) -> T): T {
+        val entityManager = entityManagerFactory.createEntityManager()
+        return try {
+            method(RecordRepositoryImpl(javax.inject.Provider { entityManager }))
+        } finally {
+            entityManager.close()
+        }
+    }
+
     private fun runStaleCheck(source: String, age: Duration, lock: Any) {
-        try {
-            synchronized(lock) {
-                logger.debug("Resetting stale PROCESSING records to READY for source {}.", source)
-                val numUpdated = recordRepository.resetStaleProcessing(source, age)
-                if (numUpdated == 0) {
-                    logger.debug("Did not reset any PROCESSING records to READY for source {}.", source)
-                } else {
-                    logger.info("Reset {} PROCESSING records to READY for source {}.", numUpdated, source)
+        useRecordRepository { recordRepository ->
+            try {
+                synchronized(lock) {
+                    logger.debug("Resetting stale PROCESSING records to READY for source {}.", source)
+                    val numUpdated = recordRepository.resetStaleProcessing(source, age)
+                    if (numUpdated == 0) {
+                        logger.debug("Did not reset any PROCESSING records to READY for source {}.", source)
+                    } else {
+                        logger.info("Reset {} PROCESSING records to READY for source {}.", numUpdated, source)
+                    }
                 }
+            } catch (ex: Exception) {
+                logger.error("Failed to run reset of stale processing", ex)
             }
-        } catch (ex: Exception) {
-            logger.error("Failed to run reset of stale processing", ex)
         }
     }
 
