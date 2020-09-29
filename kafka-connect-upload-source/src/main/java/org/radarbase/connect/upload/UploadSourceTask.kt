@@ -194,7 +194,9 @@ class UploadSourceTask : SourceTask() {
 
         if (endOfRecord) {
             logger.info("Committing last record of Record $recordId, with Revision $revision")
-            val updatedMetadata = uploadClient.updateStatus(recordId.toLong(), RecordMetadataDTO(revision = revision.toInt(), status = "SUCCEEDED", message = "Record has been processed successfully"))
+            val updatedMetadata = uploadClient.updateStatus(
+                    recordId.toLong(),
+                    RecordMetadataDTO(revision = revision.toInt(), status = "SUCCEEDED", message = "Record has been processed successfully"))
 
             if (updatedMetadata.status == "SUCCEEDED") {
                 logger.info("Uploading logs to backend")

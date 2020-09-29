@@ -98,26 +98,28 @@ open class UploadBackendClient(
                 ?: throw IOException("Received invalid response")
     }
 
-    private fun <T> OkHttpClient.executeRequest(requestBuilder: Request.Builder.() -> Request.Builder, handling: (Response) -> T): T {
+    private fun <T> OkHttpClient.executeRequest(
+            requestBuilder: Request.Builder.() -> Request.Builder,
+            handling: (Response) -> T): T {
         val request = Request.Builder().requestBuilder().build()
         return this.newCall(request).execute().use { response ->
             if (response.isSuccessful) {
                 logger.info("Request to ${request.url} is SUCCESSFUL")
-                return handling(response)
+                handling(response)
             } else {
                 logger.info("Request to ${request.url} has FAILED with response-code ${response.code}")
                 when (response.code) {
                     401 -> throw NotAuthorizedException("access token is not provided or is invalid : ${response.message}")
                     403 -> throw NotAuthorizedException("access token is not authorized to perform this request")
                     409 -> throw ConflictException("Conflicting request exception: ${response.message}")
+                    else -> throw BadGatewayException("Failed to make request to ${request.url}: Error code ${response.code}:  ${response.body?.string()}")
                 }
-                throw BadGatewayException("Failed to make request to ${request.url}: Error code ${response.code}:  ${response.body?.string()}")
             }
         }
     }
 
     private fun Any.toJsonBody(mediaType: MediaType = APPLICATION_JSON): RequestBody = mapper
-            .writeValueAsString(this)
+            .writeValueAsBytes(this)
             .toRequestBody(mediaType)
 
     companion object {
