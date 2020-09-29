@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStream
-import java.lang.IllegalArgumentException
 import java.util.*
 
 open class CsvProcessor(
@@ -46,11 +45,11 @@ open class CsvProcessor(
             }
         }
 
-        return readCsv(inputStream.bufferedReader()) { reader ->
+        return inputStream.bufferedReader().toCsvReader().use { reader ->
             val header = reader.readNext()?.map { it.trim().toUpperCase(Locale.US) }
                     ?: if (contentProcessors.all { it.optional }) {
                         logger.debug("Skipping optional file")
-                        return@readCsv emptyList()
+                        return@use emptyList()
                     } else {
                         throw IOException("Cannot read empty CSV file ${contents.fileName}")
                     }
@@ -75,13 +74,9 @@ open class CsvProcessor(
         }
     }
 
-    fun <T> readCsv(
-            inputReader: BufferedReader,
-            action: (reader: CSVReader) -> T
-    ): T = CSVReaderBuilder(inputReader)
+    protected open fun BufferedReader.toCsvReader(): CSVReader = CSVReaderBuilder(this)
             .withCSVParser(CSVParserBuilder().withSeparator(',').build())
             .build()
-            .use { reader -> action(reader) }
 
     companion object {
         private val logger = LoggerFactory.getLogger(CsvProcessor::class.java)
