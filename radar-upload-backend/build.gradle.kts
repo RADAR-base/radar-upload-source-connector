@@ -13,13 +13,6 @@ application {
     mainClassName = "org.radarbase.upload.MainKt"
 }
 
-repositories {
-    jcenter()
-    maven(url = "https://dl.bintray.com/radar-base/org.radarbase")
-    maven(url = "https://dl.bintray.com/radar-cns/org.radarcns")
-    maven(url = "https://repo.thehyve.nl/content/repositories/snapshots")
-}
-
 dependencies {
     api(kotlin("stdlib-jdk8"))
     implementation(kotlin("reflect"))
@@ -51,34 +44,11 @@ dependencies {
 
 // config JVM target to 1.8 for kotlin compilation tasks
 tasks.withType<KotlinCompile> {
-    kotlinOptions {
-        jvmTarget = "11"
-        apiVersion = "1.4"
-        languageVersion = "1.4"
-    }
-}
-
-tasks.withType<Test> {
-    useJUnitPlatform()
-    testLogging {
-        events("passed", "skipped", "failed")
-        setExceptionFormat("full")
-    }
+    kotlinOptions.jvmTarget = "11"
 }
 
 allOpen {
     annotation("javax.persistence.Entity")
     annotation("javax.persistence.MappedSuperclass")
     annotation("javax.persistence.Embeddable")
-}
-
-tasks.register("downloadDependencies") {
-    doFirst {
-        configurations["runtimeClasspath"].files
-        configurations["compileClasspath"].files
-    }
-
-    doLast {
-        println("Downloaded all dependencies")
-    }
 }

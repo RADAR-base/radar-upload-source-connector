@@ -6,14 +6,6 @@ plugins {
     kotlin("jvm")
 }
 
-repositories {
-    jcenter()
-    maven(url = "https://packages.confluent.io/maven/")
-    maven(url = "https://dl.bintray.com/radar-cns/org.radarcns")
-    maven(url = "https://dl.bintray.com/radar-base/org.radarbase")
-    maven(url = "https://oss.jfrog.org/artifactory/oss-snapshot-local/")
-}
-
 sourceSets {
     create("integrationTest") {
         withConvention(KotlinSourceSet::class) {
@@ -53,11 +45,7 @@ dependencies {
 
 // config JVM target to 1.8 for kotlin compilation tasks
 tasks.withType<KotlinCompile> {
-    kotlinOptions {
-        jvmTarget = "1.8"
-        apiVersion = "1.4"
-        languageVersion = "1.4"
-    }
+    kotlinOptions.jvmTarget = "1.8"
 }
 
 task<Test>("integrationTest") {
@@ -68,26 +56,7 @@ task<Test>("integrationTest") {
     mustRunAfter(tasks["test"])
 }
 
-tasks.withType<Test> {
-    useJUnitPlatform()
-    testLogging {
-        events("passed", "skipped", "failed")
-        setExceptionFormat("full")
-    }
-}
-
 tasks.register<Copy>("copyDependencies") {
     from(configurations.runtimeClasspath.map { it.files })
     into("${buildDir}/third-party")
-}
-
-tasks.register("downloadDependencies") {
-    doFirst {
-        configurations["runtimeClasspath"].files
-        configurations["compileClasspath"].files
-    }
-
-    doLast {
-        println("Downloaded all dependencies")
-    }
 }
