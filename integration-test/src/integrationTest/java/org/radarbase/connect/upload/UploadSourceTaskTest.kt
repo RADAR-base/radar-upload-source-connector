@@ -98,6 +98,7 @@ class UploadSourceTaskTest {
 
         val sourceRecords = sourceTask.poll()
         assertNotNull(sourceRecords)
+        sourceRecords ?: return
 
         val metadata = retrieveRecordMetadata(accessToken, createdRecord.id!!)
         assertNotNull(metadata)
@@ -120,8 +121,7 @@ class UploadSourceTaskTest {
         assertNotNull(createdRecord.id)
 
         val sourceRecords = sourceTask.poll()
-        assertNotNull(sourceRecords)
-        assertTrue(sourceRecords.isEmpty())
+        assertNull(sourceRecords)
 
         val metadata = retrieveRecordMetadata(accessToken, createdRecord.id!!)
         assertNotNull(metadata)
@@ -137,8 +137,7 @@ class UploadSourceTaskTest {
         assertNotNull(createdRecord.id)
 
         val sourceRecords = sourceTask.poll()
-        assertNotNull(sourceRecords)
-        assertTrue(sourceRecords.isEmpty())
+        assertNull(sourceRecords)
 
         val metadata = retrieveRecordMetadata(accessToken, createdRecord.id!!)
         assertNotNull(metadata)

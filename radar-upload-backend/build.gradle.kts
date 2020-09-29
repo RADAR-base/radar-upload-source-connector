@@ -4,24 +4,18 @@ plugins {
     java
     application
     kotlin("jvm")
-    id("org.jetbrains.kotlin.plugin.noarg") version "1.3.72"
-    id("org.jetbrains.kotlin.plugin.jpa") version "1.3.72"
-    id("org.jetbrains.kotlin.plugin.allopen") version "1.3.72"
+    id("org.jetbrains.kotlin.plugin.noarg")
+    id("org.jetbrains.kotlin.plugin.jpa")
+    id("org.jetbrains.kotlin.plugin.allopen")
 }
 
 application {
     mainClassName = "org.radarbase.upload.MainKt"
 }
 
-repositories {
-    jcenter()
-    maven(url = "https://dl.bintray.com/radar-base/org.radarbase")
-    maven(url = "https://dl.bintray.com/radar-cns/org.radarcns")
-    maven(url = "https://repo.thehyve.nl/content/repositories/snapshots")
-}
-
 dependencies {
     api(kotlin("stdlib-jdk8"))
+    implementation(kotlin("reflect"))
 
     implementation("org.radarbase:radar-jersey:${project.extra["radarJerseyVersion"]}")
 
@@ -41,7 +35,6 @@ dependencies {
     runtimeOnly("org.postgresql:postgresql:${project.extra["postgresqlVersion"]}")
     runtimeOnly("ch.qos.logback:logback-classic:${project.extra["logbackVersion"]}")
 
-//    testImplementation("com.h2database:h2:1.4.199")
     testImplementation("org.junit.jupiter:junit-jupiter:5.4.2")
     testImplementation("org.hamcrest:hamcrest-all:1.3")
     testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.1.0")
@@ -54,25 +47,8 @@ tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "11"
 }
 
-tasks.withType<Test> {
-    useJUnitPlatform()
-    testLogging {
-        events("passed", "skipped", "failed")
-        setExceptionFormat("full")
-    }
-}
-
 allOpen {
     annotation("javax.persistence.Entity")
     annotation("javax.persistence.MappedSuperclass")
     annotation("javax.persistence.Embeddable")
-}
-
-tasks.register("downloadDependencies") {
-    configurations["runtimeClasspath"].files
-    configurations["compileClasspath"].files
-
-    doLast {
-        println("Downloaded all dependencies")
-    }
 }

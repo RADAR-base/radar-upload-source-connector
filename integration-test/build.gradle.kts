@@ -6,16 +6,6 @@ plugins {
     kotlin("jvm")
 }
 
-repositories {
-    jcenter()
-    mavenLocal()
-    maven(url = "https://packages.confluent.io/maven/")
-    maven(url = "https://dl.bintray.com/radar-cns/org.radarcns")
-    maven(url = "https://dl.bintray.com/radar-base/org.radarbase")
-    maven(url = "https://repo.thehyve.nl/content/repositories/snapshots")
-    maven(url = "https://oss.jfrog.org/artifactory/oss-snapshot-local/")
-}
-
 sourceSets {
     create("integrationTest") {
         withConvention(KotlinSourceSet::class) {

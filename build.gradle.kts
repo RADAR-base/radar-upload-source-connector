@@ -1,10 +1,12 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
-    kotlin("jvm") version "1.3.72" apply false
+    kotlin("jvm") apply false
 }
 
 subprojects {
     group = "org.radarbase"
-    version = "0.5.3"
+    version = "0.5.4"
 
     project.extra.apply {
         set("kafkaVersion", "2.5.1")
@@ -29,8 +31,47 @@ subprojects {
         set("junitVersion", "5.6.2")
         set("mockitoKotlinVersion", "2.2.0")
     }
+
+    repositories {
+        jcenter()
+        maven(url = "https://packages.confluent.io/maven/")
+        maven(url = "https://dl.bintray.com/radar-cns/org.radarcns")
+        maven(url = "https://dl.bintray.com/radar-base/org.radarbase")
+        maven(url = "https://repo.thehyve.nl/content/repositories/snapshots")
+        maven(url = "https://oss.jfrog.org/artifactory/oss-snapshot-local/")
+    }
+
+    val kotlinApiVersion: String by project
+
+    afterEvaluate {
+        tasks.withType<Test> {
+            useJUnitPlatform()
+            testLogging {
+                events("passed", "skipped", "failed")
+                setExceptionFormat("full")
+            }
+        }
+
+        // config JVM target to 1.8 for kotlin compilation tasks
+        tasks.withType<KotlinCompile> {
+            kotlinOptions {
+                apiVersion = kotlinApiVersion
+                languageVersion = kotlinApiVersion
+            }
+        }
+
+
+        tasks.register("downloadDependencies") {
+            configurations["runtimeClasspath"].files
+            configurations["compileClasspath"].files
+
+            doLast {
+                println("Downloaded all dependencies")
+            }
+        }
+    }
 }
 
 tasks.wrapper {
-    gradleVersion = "6.6"
+    gradleVersion = "6.6.1"
 }

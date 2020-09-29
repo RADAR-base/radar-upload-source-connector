@@ -6,14 +6,6 @@ plugins {
     kotlin("jvm")
 }
 
-repositories {
-    jcenter()
-    maven(url = "https://packages.confluent.io/maven/")
-    maven(url = "https://dl.bintray.com/radar-cns/org.radarcns")
-    maven(url = "https://dl.bintray.com/radar-base/org.radarbase")
-    maven(url = "https://oss.jfrog.org/artifactory/oss-snapshot-local/")
-}
-
 sourceSets {
     create("integrationTest") {
         withConvention(KotlinSourceSet::class) {
@@ -41,6 +33,7 @@ dependencies {
     // Included in connector runtime
     compileOnly("org.apache.kafka:connect-api:${project.extra["kafkaVersion"]}")
     implementation(kotlin("stdlib-jdk8"))
+    implementation(kotlin("reflect"))
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.4.2")
     testImplementation("org.hamcrest:hamcrest-all:1.3")
@@ -63,26 +56,7 @@ task<Test>("integrationTest") {
     mustRunAfter(tasks["test"])
 }
 
-tasks.withType<Test> {
-    useJUnitPlatform()
-    testLogging {
-        events("passed", "skipped", "failed")
-        setExceptionFormat("full")
-    }
-}
-
 tasks.register<Copy>("copyDependencies") {
     from(configurations.runtimeClasspath.map { it.files })
     into("${buildDir}/third-party")
-}
-
-tasks.register("downloadDependencies") {
-    doFirst {
-        configurations["runtimeClasspath"].files
-        configurations["compileClasspath"].files
-    }
-
-    doLast {
-        println("Downloaded all dependencies")
-    }
 }
