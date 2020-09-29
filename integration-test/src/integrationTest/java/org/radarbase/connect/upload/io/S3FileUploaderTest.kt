@@ -99,7 +99,6 @@ class S3FileUploaderTest {
 
         s3Client.listObjects(ROOT).forEach {
             assertTrue(OBJECT_NAME_REGEX.matchEntire(it.get().objectName()) != null, "URL ${it.get().objectName()} does not match regex $OBJECT_NAME_REGEX")
-
         }
     }
 
