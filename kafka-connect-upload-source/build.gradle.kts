@@ -41,6 +41,7 @@ dependencies {
     // Included in connector runtime
     compileOnly("org.apache.kafka:connect-api:${project.extra["kafkaVersion"]}")
     implementation(kotlin("stdlib-jdk8"))
+    implementation(kotlin("reflect"))
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.4.2")
     testImplementation("org.hamcrest:hamcrest-all:1.3")
@@ -52,7 +53,11 @@ dependencies {
 
 // config JVM target to 1.8 for kotlin compilation tasks
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions {
+        jvmTarget = "1.8"
+        apiVersion = "1.4"
+        languageVersion = "1.4"
+    }
 }
 
 task<Test>("integrationTest") {
