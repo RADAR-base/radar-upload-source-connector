@@ -22,6 +22,7 @@ repositories {
 
 dependencies {
     api(kotlin("stdlib-jdk8"))
+    implementation(kotlin("reflect"))
 
     implementation("org.radarbase:radar-jersey:${project.extra["radarJerseyVersion"]}")
 
@@ -50,7 +51,11 @@ dependencies {
 
 // config JVM target to 1.8 for kotlin compilation tasks
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "11"
+    kotlinOptions {
+        jvmTarget = "11"
+        apiVersion = "1.4"
+        languageVersion = "1.4"
+    }
 }
 
 tasks.withType<Test> {
