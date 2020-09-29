@@ -1,7 +1,8 @@
-FROM gradle:6.6-jdk11 as builder
+FROM gradle:6.6.1-jdk11 as builder
 
 RUN mkdir /code
 WORKDIR /code
+ENV GRADLE_USER_HOME=/code/.gradlecache
 
 COPY ./build.gradle.kts ./settings.gradle /code/
 COPY kafka-connect-upload-source/build.gradle.kts  /code/kafka-connect-upload-source/
