@@ -4,7 +4,7 @@ plugins {
 
 subprojects {
     group = "org.radarbase"
-    version = "0.5.3"
+    version = "0.5.4-SNAPSHOT"
 
     project.extra.apply {
         set("kafkaVersion", "2.5.1")
