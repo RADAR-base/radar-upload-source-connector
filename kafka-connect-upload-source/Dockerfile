@@ -4,7 +4,7 @@ RUN mkdir /code
 WORKDIR /code
 ENV GRADLE_USER_HOME=/code/.gradlecache
 
-COPY ./build.gradle.kts ./settings.gradle /code/
+COPY ./build.gradle.kts ./settings.gradle.kts ./gradle.properties /code/
 COPY kafka-connect-upload-source/build.gradle.kts  /code/kafka-connect-upload-source/
 
 RUN gradle :kafka-connect-upload-source:downloadDependencies kafka-connect-upload-source:copyDependencies
