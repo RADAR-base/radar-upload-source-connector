@@ -16,7 +16,7 @@ RUN mkdir /code
 WORKDIR /code
 ENV GRADLE_USER_HOME=/code/.gradlecache
 
-COPY ./build.gradle.kts ./settings.gradle /code/
+COPY ./build.gradle.kts ./settings.gradle.kts ./gradle.properties /code/
 COPY radar-upload-backend/build.gradle.kts  /code/radar-upload-backend/
 RUN gradle :radar-upload-backend:downloadDependencies
 
