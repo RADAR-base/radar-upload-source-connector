@@ -85,7 +85,11 @@ class MPClient(@Context config: Config, @Context private val auth: Auth) {
     fun readProjects(): List<Project> {
         logger.debug("Requesting for projects")
         val request = Request.Builder().apply {
-            url(baseUrl.resolve("api/projects")!!)
+            url(baseUrl.newBuilder()
+                    .addPathSegments("api/projects")
+                    .addQueryParameter("page", "0")
+                    .addQueryParameter("size", Int.MAX_VALUE.toString())
+                    .build())
             header("Authorization", "Bearer ${ensureToken()}")
         }.build()
 
@@ -112,7 +116,11 @@ class MPClient(@Context config: Config, @Context private val auth: Auth) {
 
     fun readParticipants(projectId: String): List<User> {
         val request = Request.Builder().apply {
-            url(baseUrl.resolve("api/projects/$projectId/subjects")!!)
+            url(baseUrl.newBuilder()
+                    .addPathSegments("api/projects/$projectId/subjects")
+                    .addQueryParameter("page", "0")
+                    .addQueryParameter("size", Int.MAX_VALUE.toString())
+                    .build())
             header("Authorization", "Bearer ${ensureToken()}")
         }.build()
 
