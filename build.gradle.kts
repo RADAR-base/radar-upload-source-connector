@@ -7,27 +7,23 @@ plugins {
 
 subprojects {
     group = "org.radarbase"
-    version = "0.5.4-SNAPSHOT"
+    version = "0.5.6-SNAPSHOT"
 
     project.extra.apply {
         set("kafkaVersion", "2.5.1")
-        set("okhttpVersion", "4.8.1")
-        set("jacksonVersion", "2.11.2")
-        set("jacksonDataVersion", "2.11.2")
-        set("openCsvVersion", "5.2")
-        set("confluentVersion", "5.5.1")
-        set("radarSchemaVersion", "0.5.11.1")
+        set("okhttpVersion", "4.9.0")
+        set("jacksonVersion", "2.11.3")
+        set("jacksonDataVersion", "2.11.3")
+        set("openCsvVersion", "5.3")
+        set("confluentVersion", "5.5.2")
+        set("radarSchemaVersion", "0.5.14")
         set("slf4jVersion", "1.7.30")
-        set("minioVersion", "7.1.0")
-        set("radarJerseyVersion", "0.2.3")
+        set("minioVersion", "7.1.4")
+        set("radarJerseyVersion", "0.4.2.1")
         set("radarCommonsVersion", "0.13.0")
         set("logbackVersion", "1.2.3")
-        set("grizzlyVersion", "2.4.4")
-        set("jerseyVersion", "2.31")
-        set("hibernateVersion", "5.4.19.Final")
-        set("postgresqlVersion", "42.2.16")
+        set("jerseyVersion", "2.32")
         set("h2Version", "1.4.200")
-        set("liquibaseVersion", "3.10.2")
 
         set("junitVersion", "5.6.2")
         set("mockitoKotlinVersion", "2.2.0")
@@ -50,6 +46,7 @@ subprojects {
             testLogging {
                 events("passed", "skipped", "failed")
                 setExceptionFormat("full")
+                showStandardStreams = true
             }
         }
 

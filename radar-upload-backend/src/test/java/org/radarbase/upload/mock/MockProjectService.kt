@@ -2,27 +2,27 @@ package org.radarbase.upload.mock
 
 import org.radarbase.jersey.auth.Auth
 import org.radarbase.jersey.exception.HttpNotFoundException
-import org.radarbase.upload.dto.Project
-import org.radarbase.upload.dto.User
-import org.radarbase.upload.service.UploadProjectService
+import org.radarbase.jersey.service.managementportal.MPProject
+import org.radarbase.jersey.service.managementportal.MPUser
+import org.radarbase.jersey.service.managementportal.RadarProjectService
+import org.radarcns.auth.authorization.Permission
 
-class MockProjectService(private val projects: Map<String, List<String>>) : UploadProjectService {
-
-    override fun userByExternalId(projectId: String, externalUserId: String): User? {
-        return User(projectId = projectId, id = "something", externalId = externalUserId, status = "ACTIVATED")
+class MockProjectService(private val projects: Map<String, List<String>>) : RadarProjectService {
+    override fun userByExternalId(projectId: String, externalUserId: String): MPUser? {
+        return MPUser(projectId = projectId, id = "something", externalId = externalUserId, status = "ACTIVATED")
     }
 
-    override fun project(projectId: String): Project {
+    override fun project(projectId: String): MPProject {
         ensureProject(projectId)
-        return Project(id = projectId)
+        return MPProject(id = projectId)
     }
 
-    override fun userProjects(auth: Auth) = projects.keys.map { Project(id = it) }
+    override fun userProjects(auth: Auth, permission: Permission): List<MPProject> = projects.keys.map { MPProject(id = it) }
 
-    override fun projectUsers(projectId: String): List<User> {
+    override fun projectUsers(projectId: String): List<MPUser> {
         ensureProject(projectId)
         return projects.getValue(projectId)
-                .map { User(projectId = projectId, id = it, status = "ACTIVATED") }
+                .map { MPUser(projectId = projectId, id = it, status = "ACTIVATED") }
     }
 
     override fun ensureProject(projectId: String) {
@@ -31,4 +31,16 @@ class MockProjectService(private val projects: Map<String, List<String>>) : Uplo
         }
     }
 
+    override fun ensureUser(projectId: String, userId: String) {
+        ensureProject(projectId)
+
+        if (userId !in projects.getValue(projectId)) {
+            throw HttpNotFoundException("user_not_found", "User $userId does not exist in project $projectId")
+        }
+    }
+
+    override fun getUser(projectId: String, userId: String): MPUser? {
+        ensureUser(projectId, userId)
+        return MPUser(projectId = projectId, id = userId, status = "ACTIVATED")
+    }
 }

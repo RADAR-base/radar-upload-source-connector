@@ -19,45 +19,57 @@
 
 package org.radarbase.upload.inject
 
-import org.glassfish.jersey.internal.inject.AbstractBinder
 import org.radarbase.jersey.auth.AuthConfig
-import org.radarbase.jersey.auth.ProjectService
+import org.radarbase.jersey.auth.MPConfig
 import org.radarbase.jersey.config.ConfigLoader
 import org.radarbase.jersey.config.EnhancerFactory
 import org.radarbase.jersey.config.JerseyResourceEnhancer
+import org.radarbase.jersey.hibernate.config.DatabaseConfig
+import org.radarbase.jersey.hibernate.config.HibernateResourceEnhancer
 import org.radarbase.upload.Config
-import org.radarbase.upload.service.UploadProjectService
-import org.radarbase.upload.service.managementportal.MPClient
-import org.radarbase.upload.service.managementportal.MPProjectService
-import javax.inject.Singleton
+import org.radarbase.upload.doa.entity.Record
+import org.radarbase.upload.doa.entity.RecordContent
+import org.radarbase.upload.doa.entity.RecordLogs
+import org.radarbase.upload.doa.entity.RecordMetadata
+import org.radarbase.upload.doa.entity.SourceType
+import kotlin.reflect.jvm.jvmName
 
 /** This binder needs to register all non-Jersey classes, otherwise initialization fails. */
 class ManagementPortalEnhancerFactory(private val config: Config) : EnhancerFactory {
-    override fun createEnhancers(): List<JerseyResourceEnhancer> = listOf(
-            UploadResourceEnhancer(config),
-            MPClientResourceEnhancer(),
-            ConfigLoader.Enhancers.radar(AuthConfig(
-                    managementPortalUrl = config.managementPortalUrl,
-                    jwtResourceName = "res_upload")),
-            ConfigLoader.Enhancers.managementPortal,
-            ConfigLoader.Enhancers.generalException,
-            ConfigLoader.Enhancers.httpException)
-
-    class MPClientResourceEnhancer: JerseyResourceEnhancer {
-        override fun enhanceBinder(binder: AbstractBinder) {
-            binder.apply {
-                bind(MPClient::class.java)
-                        .to(MPClient::class.java)
-                        .`in`(Singleton::class.java)
-
-                bind(ProjectServiceWrapper::class.java)
-                        .to(ProjectService::class.java)
-                        .`in`(Singleton::class.java)
-
-                bind(MPProjectService::class.java)
-                        .to(UploadProjectService::class.java)
-                        .`in`(Singleton::class.java)
-            }
-        }
+    override fun createEnhancers(): List<JerseyResourceEnhancer> {
+        val authConfig = AuthConfig(
+                managementPortal = MPConfig(
+                        url = config.managementPortalUrl,
+                        clientId = config.clientId,
+                        clientSecret = config.clientSecret
+                ),
+                jwtResourceName = config.jwtResourceName,
+                jwtIssuer = config.jwtIssuer,
+                jwtECPublicKeys = config.jwtECPublicKeys,
+                jwtRSAPublicKeys = config.jwtRSAPublicKeys,
+        )
+        val dbConfig = DatabaseConfig(
+                managedClasses = listOf(
+                        Record::class.jvmName,
+                        RecordMetadata::class.jvmName,
+                        RecordLogs::class.jvmName,
+                        RecordContent::class.jvmName,
+                        SourceType::class.jvmName,
+                ),
+                url = config.jdbcUrl,
+                driver = config.jdbcDriver,
+                user = config.jdbcUser,
+                password = config.jdbcPassword,
+                dialect = config.hibernateDialect,
+                properties = config.additionalPersistenceConfig ?: emptyMap(),
+        )
+        return listOf(
+                UploadResourceEnhancer(config),
+                ConfigLoader.Enhancers.radar(authConfig),
+                ConfigLoader.Enhancers.managementPortal(authConfig),
+                ConfigLoader.Enhancers.health,
+                HibernateResourceEnhancer(dbConfig),
+                ConfigLoader.Enhancers.generalException,
+                ConfigLoader.Enhancers.httpException)
     }
 }

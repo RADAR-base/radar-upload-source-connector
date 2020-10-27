@@ -19,6 +19,9 @@
 
 package org.radarbase.upload.doa
 
+import com.nhaarman.mockitokotlin2.doReturn
+import com.nhaarman.mockitokotlin2.mock
+import org.glassfish.jersey.server.monitoring.ApplicationEvent
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
 import org.junit.jupiter.api.AfterEach
@@ -28,19 +31,22 @@ import org.junit.jupiter.api.io.TempDir
 import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.MockitoAnnotations
+import org.radarbase.jersey.hibernate.DatabaseInitialization
+import org.radarbase.jersey.hibernate.RadarEntityManagerFactoryFactory
+import org.radarbase.jersey.hibernate.config.DatabaseConfig
 import org.radarbase.upload.Config
 import org.radarbase.upload.api.SourceTypeMapper
 import org.radarbase.upload.api.SourceTypeMapperImpl
-import org.radarbase.upload.doa.entity.SourceType
-import org.radarbase.upload.inject.DoaEntityManagerFactoryFactory
+import org.radarbase.upload.doa.entity.*
 import java.nio.file.Path
 import javax.inject.Provider
 import javax.persistence.EntityManager
 import javax.persistence.EntityManagerFactory
+import kotlin.reflect.jvm.jvmName
 
 internal class SourceTypeRepositoryImplTest {
     private lateinit var repository: SourceTypeRepository
-    private lateinit var doaEMFFactory: DoaEntityManagerFactoryFactory
+    private lateinit var doaEMFFactory: RadarEntityManagerFactoryFactory
     private lateinit var doaEMF: EntityManagerFactory
     private lateinit var sourceTypeMapper: SourceTypeMapper
     private lateinit var entityManager: EntityManager
@@ -54,14 +60,25 @@ internal class SourceTypeRepositoryImplTest {
     @BeforeEach
     fun setUp() {
         MockitoAnnotations.initMocks(this)
-        val config = Config(
-                jdbcUrl = "jdbc:h2:file:${tempDir.resolve("db.h2")};DB_CLOSE_DELAY=-1",
-                hibernateDialect = "org.hibernate.dialect.H2Dialect")
-        doaEMFFactory = DoaEntityManagerFactoryFactory(config)
+        val config = DatabaseConfig(
+                managedClasses = listOf(
+                        Record::class.jvmName,
+                        RecordMetadata::class.jvmName,
+                        RecordLogs::class.jvmName,
+                        RecordContent::class.jvmName,
+                        SourceType::class.jvmName,
+                ),
+                url = "jdbc:h2:file:${tempDir.resolve("db.h2")};DB_CLOSE_DELAY=-1",
+                dialect = "org.hibernate.dialect.H2Dialect")
+        doaEMFFactory = RadarEntityManagerFactoryFactory(config)
         doaEMF = doaEMFFactory.get()
+        val eventStart = mock<ApplicationEvent> {
+            on(ApplicationEvent::getType) doReturn ApplicationEvent.Type.INITIALIZATION_APP_FINISHED
+        }
+        DatabaseInitialization({ doaEMF }, config).onEvent(eventStart)
         entityManager = doaEMF.createEntityManager()
         sourceTypeMapper = SourceTypeMapperImpl()
-        repository = SourceTypeRepositoryImpl(mockEntityManagerProvider, config, sourceTypeMapper)
+        repository = SourceTypeRepositoryImpl(mockEntityManagerProvider, Config(), sourceTypeMapper)
         Mockito.`when`(mockEntityManagerProvider.get()).thenReturn(entityManager)
     }
 

@@ -6,15 +6,16 @@ import org.hamcrest.Matchers
 import org.radarbase.jersey.auth.Auth
 import org.radarbase.jersey.auth.AuthConfig
 import org.radarbase.jersey.auth.AuthValidator
-import org.radarbase.jersey.auth.ProjectService
 import org.radarbase.jersey.config.ConfigLoader
 import org.radarbase.jersey.config.EnhancerFactory
 import org.radarbase.jersey.config.JerseyResourceEnhancer
 import org.radarbase.jersey.exception.HttpUnauthorizedException
+import org.radarbase.jersey.hibernate.config.DatabaseConfig
+import org.radarbase.jersey.hibernate.config.HibernateResourceEnhancer
+import org.radarbase.jersey.service.ProjectService
+import org.radarbase.jersey.service.managementportal.RadarProjectService
 import org.radarbase.upload.Config
-import org.radarbase.upload.inject.ProjectServiceWrapper
 import org.radarbase.upload.inject.UploadResourceEnhancer
-import org.radarbase.upload.service.UploadProjectService
 import java.util.*
 import javax.inject.Singleton
 import javax.ws.rs.container.ContainerRequestContext
@@ -22,25 +23,30 @@ import javax.ws.rs.container.ContainerRequestContext
 class MockResourceEnhancerFactory(
         private val config: Config,
         private val authQueue: Queue<Pair<Auth?, Boolean>>,
-        private val projects: Map<String, List<String>>
+        private val projects: Map<String, List<String>>,
+        private val dbConfig: DatabaseConfig,
 ): EnhancerFactory {
     override fun createEnhancers(): List<JerseyResourceEnhancer> {
         val projectService = MockProjectService(projects)
         return listOf(
                 UploadResourceEnhancer(config),
-                ConfigLoader.Enhancers.radar(AuthConfig(jwtResourceName = config.jwtResourceName)),
+                ConfigLoader.Enhancers.radar(
+                        AuthConfig(jwtResourceName = config.jwtResourceName)),
                 object : JerseyResourceEnhancer {
                     override fun AbstractBinder.enhance() {
-                        bind(ProjectServiceWrapper::class.java)
+                        bind(projectService)
+                                .to(RadarProjectService::class.java)
+                                .`in`(Singleton::class.java)
+                        bind(projectService)
                                 .to(ProjectService::class.java)
                                 .`in`(Singleton::class.java)
 
-                        bind(projectService)
-                                .to(UploadProjectService::class.java)
                         bind(MockAuthValidator())
                                 .to(AuthValidator::class.java)
                     }
                 },
+                HibernateResourceEnhancer(dbConfig),
+                ConfigLoader.Enhancers.health,
                 ConfigLoader.Enhancers.httpException,
                 ConfigLoader.Enhancers.generalException)
     }

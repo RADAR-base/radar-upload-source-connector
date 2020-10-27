@@ -1,10 +1,5 @@
 package org.radarbase.upload.resource
 
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.nhaarman.mockitokotlin2.anyOrNull
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
@@ -22,11 +17,15 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.radarbase.jersey.auth.Auth
+import org.radarbase.jersey.auth.AuthConfig
 import org.radarbase.jersey.config.ConfigLoader
+import org.radarbase.jersey.config.RadarJerseyResourceEnhancer
+import org.radarbase.jersey.hibernate.config.DatabaseConfig
 import org.radarbase.upload.Config
 import org.radarbase.upload.api.RecordDTO
 import org.radarbase.upload.api.RecordDataDTO
 import org.radarbase.upload.api.SourceTypeDTO
+import org.radarbase.upload.doa.entity.*
 import org.radarbase.upload.mock.MockResourceEnhancerFactory
 import org.radarcns.auth.token.RadarToken
 import java.io.IOException
@@ -37,6 +36,7 @@ import javax.ws.rs.client.Entity
 import javax.ws.rs.core.Application
 import javax.ws.rs.core.Response
 import javax.ws.rs.ext.ContextResolver
+import kotlin.reflect.jvm.jvmName
 
 internal class RecordResourceTest: JerseyTest() {
     lateinit var config: Config
@@ -48,11 +48,9 @@ internal class RecordResourceTest: JerseyTest() {
     fun doSetup() {
         super.setUp()
         assertThat(client, not(nullValue()))
-        client.register(ContextResolver { ObjectMapper()
-                .registerModule(KotlinModule())
-                .registerModule(JavaTimeModule())
-                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES) })
+        client.register(ContextResolver {
+                RadarJerseyResourceEnhancer(AuthConfig(jwtResourceName = "res_upload")).mapper
+        })
     }
 
     @AfterEach
@@ -63,7 +61,6 @@ internal class RecordResourceTest: JerseyTest() {
     override fun configure(): Application {
         config = Config(
                 baseUri = URI.create("http://localhost:10313/upload/api/"),
-                jdbcUrl = "jdbc:h2:file:${tempDir.resolve("db.h2")};DB_CLOSE_DELAY=-1",
                 sourceTypes = listOf(
                         SourceTypeDTO("type1", null, null, null, null, null, null)
                 ))
@@ -85,13 +82,24 @@ internal class RecordResourceTest: JerseyTest() {
                 "a" to listOf("u1", "u2"),
                 "b" to listOf("u3"))
 
-        val enhancerFactory = MockResourceEnhancerFactory(config, authQueue, projects)
+        val databaseConfig = DatabaseConfig(
+                managedClasses = listOf(
+                        Record::class.jvmName,
+                        RecordMetadata::class.jvmName,
+                        RecordLogs::class.jvmName,
+                        RecordContent::class.jvmName,
+                        SourceType::class.jvmName,
+                ),
+                url = "jdbc:h2:file:${tempDir.resolve("db.h2")};DB_CLOSE_DELAY=-1",
+                dialect = "org.hibernate.dialect.H2Dialect"
+        )
+        val enhancerFactory = MockResourceEnhancerFactory(config, authQueue, projects, databaseConfig)
         return ConfigLoader.createResourceConfig(enhancerFactory.createEnhancers())
     }
 
     @Test
     fun create() {
-        target("status")
+        target("health")
                 .request()
                 .get().use{ response ->
             assertThat(response.status, equalTo(Response.Status.OK.statusCode))

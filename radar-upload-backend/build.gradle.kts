@@ -18,26 +18,17 @@ dependencies {
     implementation(kotlin("reflect"))
 
     implementation("org.radarbase:radar-jersey:${project.extra["radarJerseyVersion"]}")
-
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${project.extra["jacksonVersion"]}")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:${project.extra["jacksonVersion"]}")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:${project.extra["jacksonVersion"]}")
+    implementation("org.radarbase:radar-jersey-hibernate:${project.extra["radarJerseyVersion"]}")
 
     implementation("org.slf4j:slf4j-api:${project.extra["slf4jVersion"]}")
-
-    implementation("org.hibernate:hibernate-core:${project.extra["hibernateVersion"]}")
-    implementation("org.hibernate:hibernate-c3p0:${project.extra["hibernateVersion"]}")
-    implementation("org.liquibase:liquibase-core:${project.extra["liquibaseVersion"]}")
 
     implementation("com.squareup.okhttp3:okhttp:${project.extra["okhttpVersion"]}")
 
     runtimeOnly("com.h2database:h2:${project.extra["h2Version"]}")
-    runtimeOnly("org.postgresql:postgresql:${project.extra["postgresqlVersion"]}")
-    runtimeOnly("ch.qos.logback:logback-classic:${project.extra["logbackVersion"]}")
 
-    testImplementation("org.junit.jupiter:junit-jupiter:5.4.2")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.7.0")
     testImplementation("org.hamcrest:hamcrest-all:1.3")
-    testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.1.0")
+    testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
 
     testImplementation("org.glassfish.jersey.test-framework.providers:jersey-test-framework-provider-grizzly2:${project.extra["jerseyVersion"]}")
 }
