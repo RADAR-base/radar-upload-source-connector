@@ -43,6 +43,11 @@ dependencies {
     testRuntimeOnly("org.slf4j:slf4j-simple:${project.extra["slf4jVersion"]}")
 }
 
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
 // config JVM target to 1.8 for kotlin compilation tasks
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "1.8"
@@ -57,6 +62,6 @@ task<Test>("integrationTest") {
 }
 
 tasks.register<Copy>("copyDependencies") {
-    from(configurations.runtimeClasspath.map { it.files })
+    from({ configurations.runtimeClasspath.get().files })
     into("${buildDir}/third-party")
 }
