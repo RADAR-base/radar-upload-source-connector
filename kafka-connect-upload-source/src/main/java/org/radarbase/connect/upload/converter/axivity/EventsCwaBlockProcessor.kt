@@ -11,7 +11,7 @@ import org.radarcns.connector.upload.axivity.AxivityEventType.*
 class EventsCwaBlockProcessor: CwaFileProcessorFactory.CwaBlockProcessor {
     override fun processBlock(recordLogger: RecordLogger, block: CwaBlock, timeReceived: Double): List<TopicData> {
         return if (block.events == 0.toShort()) {
-            recordLogger.info("No block events")
+            recordLogger.debug("No block events")
             emptyList()
         } else {
             AxivityEventType.values()
