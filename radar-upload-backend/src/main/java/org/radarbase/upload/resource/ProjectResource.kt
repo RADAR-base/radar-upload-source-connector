@@ -22,10 +22,8 @@ package org.radarbase.upload.resource
 import org.radarbase.jersey.auth.Auth
 import org.radarbase.jersey.auth.Authenticated
 import org.radarbase.jersey.auth.NeedsPermission
-import org.radarbase.upload.dto.Project
-import org.radarbase.upload.dto.ProjectList
-import org.radarbase.upload.dto.UserList
-import org.radarbase.upload.service.UploadProjectService
+import org.radarbase.jersey.service.managementportal.RadarProjectService
+import org.radarbase.upload.dto.*
 import org.radarcns.auth.authorization.Permission
 import javax.annotation.Resource
 import javax.inject.Singleton
@@ -40,25 +38,27 @@ import javax.ws.rs.core.MediaType
 @Resource
 @Singleton
 class ProjectResource(
-        @Context private val projectService: UploadProjectService,
+        @Context private val projectService: RadarProjectService,
         @Context private val auth: Auth
 ) {
 
     @GET
     @NeedsPermission(Permission.Entity.PROJECT, Permission.Operation.READ)
-    fun projects() = ProjectList(projectService.userProjects(auth))
+    fun projects() = ProjectList(projectService.userProjects(auth)
+            .map { it.toProject() })
 
     @GET
     @Path("{projectId}/users")
     @NeedsPermission(Permission.Entity.PROJECT, Permission.Operation.READ, "projectId")
     fun users(@PathParam("projectId") projectId: String): UserList {
-        return UserList(projectService.projectUsers(projectId))
+        return UserList(projectService.projectUsers(projectId)
+                .map { it.toUser() })
     }
 
     @GET
     @Path("{projectId}")
     @NeedsPermission(Permission.Entity.PROJECT, Permission.Operation.READ, "projectId")
     fun project(@PathParam("projectId") projectId: String): Project {
-        return projectService.project(projectId)
+        return projectService.project(projectId).toProject()
     }
 }

@@ -6,23 +6,6 @@ plugins {
     kotlin("jvm")
 }
 
-project.extra.apply {
-    set("okhttpVersion", "4.2.0")
-    set("kafkaVersion", "2.3.0")
-    set("jacksonVersion", "2.9.10")
-    set("jacksonDataVersion", "2.9.10")
-}
-
-repositories {
-    jcenter()
-    mavenLocal()
-    maven(url = "https://packages.confluent.io/maven/")
-    maven(url = "https://dl.bintray.com/radar-cns/org.radarcns")
-    maven(url = "https://dl.bintray.com/radar-base/org.radarbase")
-    maven(url = "https://repo.thehyve.nl/content/repositories/snapshots")
-    maven(url = "https://oss.jfrog.org/artifactory/oss-snapshot-local/")
-}
-
 sourceSets {
     create("integrationTest") {
         withConvention(KotlinSourceSet::class) {
@@ -44,10 +27,10 @@ dependencies {
 
     testImplementation(project(":radar-upload-backend"))
     testImplementation(project(":kafka-connect-upload-source"))
-    testImplementation("org.junit.jupiter:junit-jupiter:5.4.2")
+    testImplementation("org.junit.jupiter:junit-jupiter:${project.extra["junitVersion"]}")
     testImplementation("org.hamcrest:hamcrest-all:1.3")
     testImplementation("org.apache.kafka:connect-api:${project.extra["kafkaVersion"]}")
-    testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.1.0")
+    testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:${project.extra["mockitoKotlinVersion"]}")
 }
 
 tasks.withType<KotlinCompile> {

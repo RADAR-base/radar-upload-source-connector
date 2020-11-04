@@ -24,7 +24,9 @@ import org.radarbase.connect.upload.converter.TopicData
 import org.radarcns.connector.upload.altoida.AltoidaObject
 
 class AltoidaObjectCsvProcessor : StatelessCsvLineProcessor() {
-    override val fileNameSuffix: String = "_OBJECTS.csv"
+    override val optional: Boolean = true
+
+    override val fileNameSuffixes = listOf("_OBJECT.csv", "_OBJECTS.csv")
 
     override val header: List<String> = listOf("TIMESTAMP", "OBJ", "X", "Y", "Z")
 

@@ -88,13 +88,15 @@ class RecordConverter(
     }
 
     override fun convertFile(record: RecordDTO, contents: ContentsDTO, inputStream: InputStream, recordLogger: RecordLogger): List<TopicData> {
-        val processorFactory = processorFactories.firstOrNull { it.matches(contents) }
-                ?: throw ConversionFailedException("Cannot find data processor for record ${record.id} with file ${contents.fileName}")
+        val processorFactories = processorFactories.filter { it.matches(contents) }
+        if (processorFactories.isEmpty()) {
+            throw ConversionFailedException("Cannot find data processor for record ${record.id} with file ${contents.fileName}")
+        }
 
         try {
-            return processorFactory
-                    .createProcessor(record)
-                    .processData(contents, inputStream, System.currentTimeMillis() / 1000.0)
+            return processorFactories
+                    .flatMap { it.createProcessor(record)
+                            .processData(contents, inputStream, System.currentTimeMillis() / 1000.0) }
                     .also { it.lastOrNull()?.endOfFileOffSet = true }
         } catch (exe: Exception) {
             recordLogger.error("Could not convert record ${record.id}", exe)

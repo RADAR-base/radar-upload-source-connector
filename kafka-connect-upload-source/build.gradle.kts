@@ -6,25 +6,6 @@ plugins {
     kotlin("jvm")
 }
 
-project.extra.apply {
-    set("kafkaVersion", "2.5.0")
-    set("okhttpVersion", "4.7.2")
-    set("jacksonVersion", "2.11.0")
-    set("jacksonDataVersion", "2.11.0")
-    set("openCsvVersion", "5.2")
-    set("confluentVersion", "5.3.0")
-    set("radarSchemaVersion", "0.5.9")
-    set("slf4jVersion", "1.7.27")
-    set("minioVersion", "7.0.1")
-}
-
-repositories {
-    jcenter()
-    maven(url = "https://packages.confluent.io/maven/")
-    maven(url = "https://dl.bintray.com/radar-cns/org.radarcns")
-    maven(url = "https://oss.jfrog.org/artifactory/oss-snapshot-local/")
-}
-
 sourceSets {
     create("integrationTest") {
         withConvention(KotlinSourceSet::class) {
@@ -52,6 +33,7 @@ dependencies {
     // Included in connector runtime
     compileOnly("org.apache.kafka:connect-api:${project.extra["kafkaVersion"]}")
     implementation(kotlin("stdlib-jdk8"))
+    implementation(kotlin("reflect"))
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.4.2")
     testImplementation("org.hamcrest:hamcrest-all:1.3")
@@ -59,6 +41,11 @@ dependencies {
     testImplementation("org.mockito:mockito-core:2.21.0")
     testImplementation ("org.mockito:mockito-inline:2.21.0")
     testRuntimeOnly("org.slf4j:slf4j-simple:${project.extra["slf4jVersion"]}")
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 }
 
 // config JVM target to 1.8 for kotlin compilation tasks
@@ -74,33 +61,7 @@ task<Test>("integrationTest") {
     mustRunAfter(tasks["test"])
 }
 
-tasks.withType<Test> {
-    useJUnitPlatform()
-    testLogging {
-        events("passed", "skipped", "failed")
-    }
-}
-val compileKotlin: KotlinCompile by tasks
-compileKotlin.kotlinOptions {
-    jvmTarget = "1.8"
-}
-val compileTestKotlin: KotlinCompile by tasks
-compileTestKotlin.kotlinOptions {
-    jvmTarget = "1.8"
-}
-
-
 tasks.register<Copy>("copyDependencies") {
-    from(configurations.runtimeClasspath.get().files)
+    from({ configurations.runtimeClasspath.get().files })
     into("${buildDir}/third-party")
-}
-
-tasks.register("downloadDependencies") {
-
-    configurations["runtimeClasspath"].files
-    configurations["compileClasspath"].files
-
-    doLast {
-        println("Downloaded all dependencies")
-    }
 }

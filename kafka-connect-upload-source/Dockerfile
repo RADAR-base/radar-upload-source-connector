@@ -1,23 +1,19 @@
-FROM azul/zulu-openjdk-debian:8 as builder
+FROM gradle:6.6.1-jdk11 as builder
 
 RUN mkdir /code
 WORKDIR /code
+ENV GRADLE_USER_HOME=/code/.gradlecache
 
-ENV GRADLE_OPTS -Dorg.gradle.daemon=false
-COPY gradle/wrapper /code/gradle/wrapper
-COPY ./gradlew  /code/
-RUN ./gradlew --version
-
-COPY ./build.gradle.kts ./settings.gradle /code/
+COPY ./build.gradle.kts ./settings.gradle.kts ./gradle.properties /code/
 COPY kafka-connect-upload-source/build.gradle.kts  /code/kafka-connect-upload-source/
 
-RUN ./gradlew :kafka-connect-upload-source:downloadDependencies kafka-connect-upload-source:copyDependencies
+RUN gradle :kafka-connect-upload-source:downloadDependencies kafka-connect-upload-source:copyDependencies
 
-COPY ./kafka-connect-upload-source/src/ /code/kafka-connect-upload-source/src
+COPY ./kafka-connect-upload-source/src/main/java /code/kafka-connect-upload-source/src/main/java
 
-RUN ./gradlew jar
+RUN gradle jar
 
-FROM confluentinc/cp-kafka-connect-base:5.3.0
+FROM confluentinc/cp-kafka-connect-base:5.5.2-1-ubi8
 
 MAINTAINER @nivemaham @blootsvoets
 
@@ -35,5 +31,9 @@ COPY ./kafka-connect-upload-source/src/main/docker/kafka-wait /usr/bin/kafka-wai
 # Load modified launcher
 COPY ./kafka-connect-upload-source/src/main/docker/launch /etc/confluent/docker/launch
 
+USER "root"
 # create parent directory for storing offsets in standalone mode
-RUN mkdir -p /var/lib/kafka-connect-upload-source/logs
+RUN mkdir -p /var/lib/kafka-connect-upload-source/logs \
+  && chown -R appuser:appuser /var/lib/kafka-connect-upload-source/logs
+
+USER "appuser"

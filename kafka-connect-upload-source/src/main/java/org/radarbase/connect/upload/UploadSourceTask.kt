@@ -85,7 +85,7 @@ class UploadSourceTask : SourceTask() {
 
     override fun version(): String = VersionUtil.getVersion()
 
-    override fun poll(): List<SourceRecord> {
+    override fun poll(): List<SourceRecord>? {
         val timeout = nextPoll.untilNow().toMillis()
         if (timeout > 0) {
             logger.info("Waiting {} milliseconds for next polling time", timeout)
@@ -95,17 +95,19 @@ class UploadSourceTask : SourceTask() {
         logger.info("Polling new records...")
         val records: List<RecordDTO> = try {
             uploadClient.pollRecords(PollDTO(1, converters.keys)).records
-        } catch (exe: Exception) {
-            logger.info("Could not successfully poll records. Waiting for next polling...")
+        } catch (exe: Throwable) {
+            logger.error("Could not successfully poll records. Waiting for next polling...")
             nextPoll = failedPollInterval.fromNow()
-            return emptyList()
+            return null
         }
 
         nextPoll = pollInterval.fromNow()
 
         logger.info("Received ${records.size} records at $nextPoll")
 
-        return records.flatMap { record -> processRecord(record) ?: emptyList() }
+        return records
+                .flatMap { record -> processRecord(record) ?: emptyList() }
+                .takeIf { it.isNotEmpty() }
     }
 
     private fun processRecord(record: RecordDTO): List<SourceRecord>? {
@@ -117,12 +119,17 @@ class UploadSourceTask : SourceTask() {
 
             converter.convert(record)
         } catch (exe: ConversionFailedException) {
-            logger.error("Could not convert record ${record.id}", exe)
+            logger.error("Could not convert record {}", record.id)
             updateRecordFailure(record, exe)
             null
         } catch (exe: ConversionTemporarilyFailedException) {
-            logger.error("Could not convert record ${record.id} due to temporary failure", exe)
+            logger.error("Could not convert record {} due to temporary failure", record.id)
             updateRecordTemporaryFailure(record, exe)
+            null
+        } catch (exe: Throwable) {
+            logger.error("Could not convert record {} due to application failure", record.id, exe)
+            updateRecordTemporaryFailure(record,
+                    ConversionTemporarilyFailedException("Could not convert record ${record.id} due to application failure", exe))
             null
         }
     }
@@ -144,25 +151,33 @@ class UploadSourceTask : SourceTask() {
         }
     }
 
-    private fun updateRecordFailure(record: RecordDTO, exe: Exception, reason: String = "Could not convert this record. Please refer to the conversion logs for more details") {
-        val recordLogger = logRepository.createLogger(logger, record.id!!)
-        recordLogger.error(reason, exe)
-        val metadata = uploadClient.retrieveRecordMetadata(record.id!!)
-        val updatedMetadata = uploadClient.updateStatus(record.id!!, metadata.copy(
+    private fun updateRecordFailure(
+            record: RecordDTO,
+            exe: Exception,
+            reason: String = "Could not convert this record. Please refer to the conversion logs for more details"
+    ) {
+        val recordId = record.id ?: return
+        val recordLogger = logRepository.createLogger(logger, recordId)
+        recordLogger.error("$reason: ${exe.message}", exe.cause)
+        val metadata = uploadClient.retrieveRecordMetadata(recordId)
+        val updatedMetadata = uploadClient.updateStatus(recordId, metadata.copy(
                 status = "FAILED",
                 message = reason
         ))
 
         if (updatedMetadata.status == "FAILED") {
             logger.info("Uploading logs to backend")
-            uploadLogs(record.id!!)
+            uploadLogs(recordId)
         }
     }
 
-    private fun updateRecordTemporaryFailure(record: RecordDTO, exe: Exception, reason: String = "Temporarily could not convert this record. Please refer to the conversion logs for more details") {
+    private fun updateRecordTemporaryFailure(
+            record: RecordDTO,
+            exe: Exception,
+            reason: String = "Temporarily could not convert this record. Please refer to the conversion logs for more details") {
         logger.info("Update record conversion failure")
         val recordLogger = logRepository.createLogger(logger, record.id!!)
-        recordLogger.error(reason, exe)
+        recordLogger.error("$reason: ${exe.message}", exe.cause)
         val metadata = uploadClient.retrieveRecordMetadata(record.id!!)
         val updatedMetadata = uploadClient.updateStatus(record.id!!, metadata.copy(
                 status = "READY",
@@ -186,7 +201,9 @@ class UploadSourceTask : SourceTask() {
 
         if (endOfRecord) {
             logger.info("Committing last record of Record $recordId, with Revision $revision")
-            val updatedMetadata = uploadClient.updateStatus(recordId.toLong(), RecordMetadataDTO(revision = revision.toInt(), status = "SUCCEEDED", message = "Record has been processed successfully"))
+            val updatedMetadata = uploadClient.updateStatus(
+                    recordId.toLong(),
+                    RecordMetadataDTO(revision = revision.toInt(), status = "SUCCEEDED", message = "Record has been processed successfully"))
 
             if (updatedMetadata.status == "SUCCEEDED") {
                 logger.info("Uploading logs to backend")
@@ -213,7 +230,7 @@ class UploadSourceTask : SourceTask() {
     companion object {
         private val logger = LoggerFactory.getLogger(UploadSourceTask::class.java)
 
-        private fun Temporal.untilNow(): Duration = Duration.between(Instant.now(), this)
+        internal fun Temporal.untilNow(): Duration = Duration.between(Instant.now(), this)
         private fun TemporalAmount.fromNow(): Instant = Instant.now().plus(this)
     }
 }

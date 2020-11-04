@@ -35,6 +35,7 @@ data class Config(
         var jdbcUrl: String? = null,
         var jdbcUser: String? = null,
         var jdbcPassword: String? = null,
+        var hibernateDialect: String = "org.hibernate.dialect.PostgreSQLDialect",
         var jwtECPublicKeys: List<String>? = null,
         var jwtRSAPublicKeys: List<String>? = null,
         var jwtIssuer: String? = null,

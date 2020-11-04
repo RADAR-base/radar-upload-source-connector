@@ -19,13 +19,6 @@ class AltoidaCoverterFactoryTest {
 
     private lateinit var uploadBackendClient: UploadBackendClient
 
-    private val contentsDTO = ContentsDTO(
-            contentType = "application/zip",
-            fileName = "TEST_ZIP.zip",
-            createdDate = Instant.now(),
-            size = 1L
-    )
-
     private val record = RecordDTO(
             id = 1L,
             metadata = RecordMetadataDTO(
@@ -54,13 +47,37 @@ class AltoidaCoverterFactoryTest {
     }
 
     @Test
-    @DisplayName("Should be able to convert a zip file to TopicRecords")
-    fun testValidRawDataProcessing() {
+    @DisplayName("Should be able to convert a iOS zip file to TopicRecords")
+    fun testValidRawIosDataProcessing() {
         val file = File("src/test/resources/TEST_ZIP.zip")
 
-        val records = converter.convertFile(record, contentsDTO, file.inputStream(), Mockito.mock(RecordLogger::class.java))
+        val records = converter.convertFile(record, ContentsDTO(
+                contentType = "application/zip",
+                fileName = "TEST_ZIP.zip",
+                createdDate = Instant.now(),
+                size = 1L
+        ), file.inputStream(), Mockito.mock(RecordLogger::class.java))
 
-        assertNotNull(record)
+        assertNotNull(records)
+        assertTrue(records.size > 1000)
+        assertEquals(true, records.last().endOfFileOffSet)
+        assertEquals(1, records.filter { it.endOfFileOffSet }.size)
+    }
+
+
+    @Test
+    @DisplayName("Should be able to convert an Android zip file to TopicRecords")
+    fun testValidRawAndroidDataProcessing() {
+        val file = File("src/test/resources/ALTOIDA_ANDROID.zip")
+
+        val records = converter.convertFile(record, ContentsDTO(
+                contentType = "application/zip",
+                fileName = "ALTOIDA_ANDROID.zip",
+                createdDate = Instant.now(),
+                size = 1L
+        ), file.inputStream(), Mockito.mock(RecordLogger::class.java))
+
+        assertNotNull(records)
         assertTrue(records.size > 1000)
         assertEquals(true, records.last().endOfFileOffSet)
         assertEquals(1, records.filter { it.endOfFileOffSet }.size)
@@ -79,7 +96,7 @@ class AltoidaCoverterFactoryTest {
         )
         val records = converter.convertFile(record, contentsDTO, file.inputStream(), Mockito.mock(RecordLogger::class.java))
 
-        assertNotNull(record)
+        assertNotNull(records)
         assertEquals(records.size, 4)
         assertEquals(true, records.last().endOfFileOffSet)
         assertEquals(1, records.filter { it.endOfFileOffSet }.size)

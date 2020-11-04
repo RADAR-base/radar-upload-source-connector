@@ -112,7 +112,7 @@ services:
     ports:
       - "8081:8081"
     environment:
-      SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: zookeeper-1:2181,zookeeper-2:2181,zookeeper-3:2181
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://kafka-1:9092,PLAINTEXT://kafka-2:9092,PLAINTEXT://kafka-3:9092
       SCHEMA_REGISTRY_HOST_NAME: schema-registry-1
       SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
       SCHEMA_REGISTRY_AVRO_COMPATIBILITY_LEVEL: none
@@ -182,7 +182,7 @@ services:
     build:
       context: .
       dockerfile: kafka-connect-upload-source/Dockerfile
-    image: radarbase/radar-connect-upload-source:0.4.1
+    image: radarbase/radar-connect-upload-source:0.5.1
     restart: on-failure
     volumes:
       - ./etc/source-upload.properties:/etc/kafka-connect/source-upload.properties
@@ -221,7 +221,7 @@ services:
     build:
       context: .
       dockerfile: radar-upload-backend/Dockerfile
-    image: radarbase/radar-upload-connect-backend:0.4.1
+    image: radarbase/radar-upload-connect-backend:0.5.1
     ports:
       - "8085:8085"
     depends_on:
@@ -238,7 +238,7 @@ services:
     build:
       context: radar-upload-frontend
       dockerfile: Dockerfile
-    image: radarbase/radar-upload-connect-frontend:0.4.1
+    image: radarbase/radar-upload-connect-frontend:0.5.1
     depends_on:
       - radar-upload-backend
       - managementportal-app
