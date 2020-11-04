@@ -32,7 +32,7 @@ class AltoidaTestMetricsProcessor(private val type: AltoidaTestCategory, val top
             "${type.prefix}AR_INTROREADTIME2",
             "${type.prefix}AR_PLACEDELAYSAVERAGE",
             "${type.prefix}AR_PLACEDURATIONSAVERAGE",
-            "${type.prefix}AR_PLACEDURATIONBOJ1",
+            "${type.prefix}AR_PLACEDURATIONOBJ1",
             "${type.prefix}AR_PLACEDURATIONOBJ2",
             "${type.prefix}AR_PLACEDURATIONOBJ3",
             "${type.prefix}AR_SPOTALREADYTAKENCOUNT",
@@ -65,7 +65,7 @@ class AltoidaTestMetricsProcessor(private val type: AltoidaTestCategory, val top
             "${type.prefix}AR_ACCVARIANCEX",
             "${type.prefix}AR_ACCVARIANCEY",
             "${type.prefix}AR_ACCVARIANCEZ",
-            "${type.prefix}DOMINANTHAND",
+            "DOMINANTHAND",
             "${type.prefix}MOTOR_CIRCLE_DEVIATIONMEAN",
             "${type.prefix}MOTOR_CIRCLE_DEVIATIONVARIANCE",
             "${type.prefix}MOTOR_CIRCLE_TIMERATIOWITHIN",
@@ -169,7 +169,7 @@ class AltoidaTestMetricsProcessor(private val type: AltoidaTestCategory, val top
                 line.getValue("${prefixAR}ACCVARIANCEX").toFloat(),
                 line.getValue("${prefixAR}ACCVARIANCEY").toFloat(),
                 line.getValue("${prefixAR}ACCVARIANCEZ").toFloat(),
-                line.getValue("${prefix}DOMINANTHAND").toFloat(),
+                line.getValue("DOMINANTHAND").toFloat(),
                 line.getWalkingTestAggregate(prefixMotor, Circle),
                 line.getWalkingTestAggregate(prefixMotor, Square),
                 line.getWalkingTestAggregate(prefixMotor, Serpentine),
@@ -182,7 +182,7 @@ class AltoidaTestMetricsProcessor(private val type: AltoidaTestCategory, val top
     private fun Map<String, String>.getTrails(prefix: String): List<AltoidaTrial> {
         return listOf("1", "2", "3").map { testIndex ->
             AltoidaTrial(
-                    this.getValue("${prefix}PLACEDURATIONBOJ${testIndex}").toFloat(),
+                    this.getValue("${prefix}PLACEDURATIONOBJ${testIndex}").toFloat(),
                     this.getValue("${prefix}FINDDURATIONOBJ${testIndex}").toFloat(),
                     this.getValue("${prefix}ANGULARCHANGEFINDOBJ${testIndex}").toFloat(),
                     this.getValue("${prefix}WALKTURNANALYSISFINDOBJ${testIndex}").toFloat(),
@@ -222,7 +222,7 @@ class AltoidaTestMetricsProcessor(private val type: AltoidaTestCategory, val top
     }
 
     private fun Map<String, String>.getTappingTestAggregate(prefix: String, type: AltoidaTappingTestTypes): AltoidaTappingTestAggregate {
-        val testPrefix = "${prefix}MOTOR_${type.testName}_"
+        val testPrefix = "${prefix}${type.testName}_"
 
         return AltoidaTappingTestAggregate(
                 this.getValue("${testPrefix}DEVIATIONMEAN").toFloat(),
