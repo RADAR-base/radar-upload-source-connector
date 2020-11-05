@@ -20,7 +20,6 @@ class AltoidaTestMetricsProcessor(private val type: AltoidaTestCategory, val top
     override val header: List<String> = listOf(
             "${type.prefix}AR_HIGHTONEREACTIONTIMES",
             "${type.prefix}AR_HIGHTONETOUCHACCURACY",
-            "${type.prefix}AR_NMRREACTIONSTOLOWTONE",
             "${type.prefix}AR_IGNOREDHIGHTONEPERCENTAGE",
             "${type.prefix}AR_PREMATURETONEBUTTONPRESSES",
             "${type.prefix}AR_RANDOMSCREENPRESSESDURINGPLACEMENT",
@@ -134,13 +133,14 @@ class AltoidaTestMetricsProcessor(private val type: AltoidaTestCategory, val top
         val prefix = type.prefix
         val prefixAR = "${prefix}AR_"
         val prefixMotor = "${prefix}MOTOR_"
+        val defaultVal = "0"
 
         return AltoidaSummaryMetrics(
                 time(line),
                 timeReceived,
                 line.getValue("${prefixAR}HIGHTONEREACTIONTIMES").toFloat(),
                 line.getValue("${prefixAR}HIGHTONETOUCHACCURACY").toFloat(),
-                line.getValue("${prefixAR}NMRREACTIONSTOLOWTONE").toInt(),
+                line.getOrDefault("${prefixAR}NMRREACTIONSTOLOWTONE", defaultVal).toInt(),
                 line.getValue("${prefixAR}IGNOREDHIGHTONEPERCENTAGE").toFloat(),
                 line.getValue("${prefixAR}PREMATURETONEBUTTONPRESSES").toInt(),
                 line.getValue("${prefixAR}RANDOMSCREENPRESSESDURINGPLACEMENT").toInt(),
@@ -188,7 +188,7 @@ class AltoidaTestMetricsProcessor(private val type: AltoidaTestCategory, val top
                     this.getValue("${prefix}WALKTURNANALYSISFINDOBJ${testIndex}").toFloat(),
                     this.getValue("${prefix}PATHCOMPLEXITYFINDOBJ${testIndex}").toFloat()
                     )
-        } 
+        }
     }
 
     private fun Map<String, String>.getTrailMeans(prefix: String): AltoidaTrial {
