@@ -7,6 +7,7 @@ import org.radarbase.connect.upload.converter.TopicData
 import org.radarbase.connect.upload.converter.altoida.summary.AltoidaTestMetricsProcessor.AltoidaTappingTestTypes.RandomTapping
 import org.radarbase.connect.upload.converter.altoida.summary.AltoidaTestMetricsProcessor.AltoidaTappingTestTypes.Tapping
 import org.radarbase.connect.upload.converter.altoida.summary.AltoidaTestMetricsProcessor.AltoidaWalkingTestTypes.*
+import org.radarbase.connect.upload.converter.altoida.summary.AltoidaTestMetricsProcessor.AltoidaTestCategory.*
 import org.radarcns.connector.upload.altoida.AltoidaSummaryMetrics
 import org.radarcns.connector.upload.altoida.AltoidaTappingTestAggregate
 import org.radarcns.connector.upload.altoida.AltoidaTrial
@@ -133,14 +134,13 @@ class AltoidaTestMetricsProcessor(private val type: AltoidaTestCategory, val top
         val prefix = type.prefix
         val prefixAR = "${prefix}AR_"
         val prefixMotor = "${prefix}MOTOR_"
-        val defaultVal = "0"
 
         return AltoidaSummaryMetrics(
                 time(line),
                 timeReceived,
                 line.getValue("${prefixAR}HIGHTONEREACTIONTIMES").toFloat(),
                 line.getValue("${prefixAR}HIGHTONETOUCHACCURACY").toFloat(),
-                line.getOrDefault("${prefixAR}NMRREACTIONSTOLOWTONE", defaultVal).toInt(),
+                if (type === DOT) line.getValue("${prefixAR}NMRREACTIONSTOLOWTONE").toInt() else null,
                 line.getValue("${prefixAR}IGNOREDHIGHTONEPERCENTAGE").toFloat(),
                 line.getValue("${prefixAR}PREMATURETONEBUTTONPRESSES").toInt(),
                 line.getValue("${prefixAR}RANDOMSCREENPRESSESDURINGPLACEMENT").toInt(),
