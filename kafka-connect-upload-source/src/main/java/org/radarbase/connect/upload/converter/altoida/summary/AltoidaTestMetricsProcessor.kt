@@ -152,8 +152,8 @@ class AltoidaTestMetricsProcessor(private val type: AltoidaTestCategory, val top
                 line.getValue("${prefixAR}INTROREADTIME2").toFloat(),
                 line.getValue("${prefixAR}PLACEDELAYSAVERAGE").toFloat(),
                 line.getValue("${prefixAR}SPOTALREADYTAKENCOUNT").toInt(),
-                line.getTrails(prefixAR),
-                line.getTrailMeans(prefixAR),
+                line.getTrials(prefixAR),
+                line.getTrialMeans(prefixAR),
                 line.getValue("${prefixAR}FINDFAILCOUNT").toFloat(),
                 line.getValue("${prefixAR}FINDSKIPDURATIONS").toFloat(),
                 line.getValue("${prefixAR}SKIPBUTTONCOUNT").toFloat(),
@@ -179,7 +179,7 @@ class AltoidaTestMetricsProcessor(private val type: AltoidaTestCategory, val top
         )
     }
 
-    private fun Map<String, String>.getTrails(prefix: String): List<AltoidaTrial> {
+    private fun Map<String, String>.getTrials(prefix: String): List<AltoidaTrial> {
         return listOf("1", "2", "3").map { testIndex ->
             AltoidaTrial(
                     this.getValue("${prefix}PLACEDURATIONOBJ${testIndex}").toFloat(),
@@ -191,7 +191,7 @@ class AltoidaTestMetricsProcessor(private val type: AltoidaTestCategory, val top
         }
     }
 
-    private fun Map<String, String>.getTrailMeans(prefix: String): AltoidaTrial {
+    private fun Map<String, String>.getTrialMeans(prefix: String): AltoidaTrial {
         return AltoidaTrial(
                 this.getValue("${prefix}PLACEDURATIONSAVERAGE").toFloat(),
                 this.getValue("${prefix}FINDDURATIONSAVERAGE").toFloat(),
