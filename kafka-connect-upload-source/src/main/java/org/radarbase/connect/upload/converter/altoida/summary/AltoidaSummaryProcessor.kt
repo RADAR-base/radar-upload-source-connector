@@ -6,7 +6,6 @@ import org.radarbase.connect.upload.converter.TopicData
 import org.radarcns.connector.upload.altoida.AltoidaSummary
 import org.radarcns.connector.upload.altoida.Classification
 import org.radarcns.connector.upload.altoida.GenderType
-import org.radarcns.connector.upload.altoida.GroundTruth
 
 class AltoidaSummaryProcessor : StatelessCsvLineProcessor() {
     override val fileNameSuffix: String = "export.csv"
@@ -20,8 +19,7 @@ class AltoidaSummaryProcessor : StatelessCsvLineProcessor() {
             "YEARSOFEDUCATION",
             "GENDER",
             "CLASS",
-            "NMI",
-            "GROUNDTRUTH")
+            "NMI")
 
     override fun lineConversion(line: Map<String, String>, timeReceived: Double) =
             TopicData("connect_upload_altoida_summary", AltoidaSummary(
@@ -32,8 +30,7 @@ class AltoidaSummaryProcessor : StatelessCsvLineProcessor() {
                     line.getValue("YEARSOFEDUCATION").toInt(),
                     line.getValue("GENDER").toInt().toGender(),
                     line.getValue("CLASS").toInt().classify(),
-                    line.getValue("NMI").toDouble(),
-                    line.getValue("GROUNDTRUTH").toInt().toGroundTruth())
+                    line.getValue("NMI").toDouble())
             )
 
     private fun Int.toGender() : GenderType {
@@ -51,17 +48,6 @@ class AltoidaSummaryProcessor : StatelessCsvLineProcessor() {
             1 -> Classification.AT_RISK
             2 -> Classification.MCI_DUE_TO_AD
             else -> null
-        }
-    }
-
-    private fun Int.toGroundTruth() : GroundTruth {
-        return when (this) {
-            -1 -> GroundTruth.UNKNOWN
-            0 -> GroundTruth.HEALTHY
-            1 -> GroundTruth.AT_RISK
-            2 -> GroundTruth.MCI_OR_AB_PLUS
-            3 -> GroundTruth.MCI_OR_AB_MINUS
-            else -> GroundTruth.UNKNOWN
         }
     }
 
