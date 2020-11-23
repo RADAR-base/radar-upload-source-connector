@@ -16,7 +16,7 @@ subprojects {
         set("jacksonDataVersion", "2.11.3")
         set("openCsvVersion", "5.3")
         set("confluentVersion", "5.5.2")
-        set("radarSchemaVersion", "0.5.14")
+        set("radarSchemaVersion", "0.5.15")
         set("slf4jVersion", "1.7.30")
         set("minioVersion", "7.1.4")
         set("radarJerseyVersion", "0.4.2.1")
