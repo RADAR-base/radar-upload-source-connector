@@ -57,7 +57,7 @@ interface RecordLogger {
     /** Print an warn log message. */
     fun warn(logMessage: String)
     /** Print an error log message. The stack trace of the exception is included. */
-    fun error(logMessage: String, exe: Exception? = null)
+    fun error(logMessage: String, exe: Throwable? = null)
 }
 
 enum class LogLevel {

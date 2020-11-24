@@ -71,7 +71,7 @@ class ConverterLogRepository : LogRepository {
             logger.warn("[record {}] {}", recordId, logMessage)
         }
 
-        override fun error(logMessage: String, exe: Exception?) {
+        override fun error(logMessage: String, exe: Throwable?) {
             val message = if (exe != null) {
                 val trace = ByteArrayOutputStream().use { byteOut ->
                     PrintStream(byteOut).use { printOut ->

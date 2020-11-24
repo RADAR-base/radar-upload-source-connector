@@ -25,13 +25,13 @@ import org.radarbase.jersey.auth.NeedsPermission
 import org.radarbase.jersey.exception.HttpBadRequestException
 import org.radarbase.jersey.exception.HttpConflictException
 import org.radarbase.jersey.exception.HttpNotFoundException
+import org.radarbase.jersey.service.managementportal.RadarProjectService
 import org.radarbase.upload.api.*
 import org.radarbase.upload.doa.RecordRepository
 import org.radarbase.upload.doa.SourceTypeRepository
 import org.radarbase.upload.doa.entity.Record
 import org.radarbase.upload.doa.entity.RecordStatus
 import org.radarbase.upload.dto.CallbackManager
-import org.radarbase.upload.service.UploadProjectService
 import org.radarcns.auth.authorization.Permission
 import org.radarcns.auth.authorization.Permission.*
 import org.slf4j.LoggerFactory
@@ -57,7 +57,7 @@ class RecordResource(
         @Context private val recordMapper: RecordMapper,
         @Context private val auth: Auth,
         @Context private val sourceTypeRepository: SourceTypeRepository,
-        @Context private val projectService: UploadProjectService
+        @Context private val projectService: RadarProjectService,
 ) {
 
     @GET

@@ -24,6 +24,7 @@ import org.hibernate.engine.jdbc.ClobProxy
 import org.radarbase.jersey.exception.HttpBadRequestException
 import org.radarbase.jersey.exception.HttpConflictException
 import org.radarbase.jersey.exception.HttpNotFoundException
+import org.radarbase.jersey.hibernate.HibernateRepository
 import org.radarbase.upload.api.ContentsDTO
 import org.radarbase.upload.api.Page
 import org.radarbase.upload.api.RecordMetadataDTO
@@ -45,9 +46,9 @@ import kotlin.streams.toList
 
 
 class RecordRepositoryImpl(
-        @Context private var em: Provider<EntityManager>
-) : RecordRepository {
-    override fun updateLogs(id: Long, logsData: String): RecordMetadata = em.get().transact {
+        @Context em: Provider<EntityManager>,
+) : HibernateRepository(em), RecordRepository {
+    override fun updateLogs(id: Long, logsData: String): RecordMetadata = transact {
         val logs = find(RecordLogs::class.java, id)
         val metadataToSave = if (logs == null) {
             val metadataFromDb = find(RecordMetadata::class.java, id)
@@ -71,7 +72,8 @@ class RecordRepositoryImpl(
             logs.metadata
         }
 
-        modifyNow(metadataToSave)
+        metadataToSave.update()
+        merge(metadataToSave)
     }
 
     override fun query(page: Page, projectId: String, userId: String?, status: String?, sourceType: String?): Pair<List<Record>, Page> {
@@ -93,7 +95,7 @@ class RecordRepositoryImpl(
 
         val actualPage = page.createValid(maximum = 100)
 
-        return em.get().transact {
+        return transact {
             val query = createQuery(queryString, Record::class.java)
                     .setParameter("projectId", projectId)
                     .setFirstResult(actualPage.offset)
@@ -121,11 +123,11 @@ class RecordRepositoryImpl(
         }
     }
 
-    override fun readLogs(id: Long): RecordLogs? = em.get().transact {
+    override fun readLogs(id: Long): RecordLogs? = transact {
         find(RecordLogs::class.java, id)
     }
 
-    override fun readLogContents(id: Long): RecordRepository.ClobReader? = em.get().createTransaction { transaction ->
+    override fun readLogContents(id: Long): RecordRepository.ClobReader? = createTransaction { transaction ->
         val logs = find(RecordLogs::class.java, id)?.logs ?: return@createTransaction null
 
         object : RecordRepository.ClobReader {
@@ -138,7 +140,7 @@ class RecordRepositoryImpl(
         }
     }
 
-    override fun updateContent(record: Record, fileName: String, contentType: String, stream: InputStream, length: Long): RecordContent = em.get().transact {
+    override fun updateContent(record: Record, fileName: String, contentType: String, stream: InputStream, length: Long): RecordContent = transact {
         val existingContent = record.contents?.find { it.fileName == fileName }
 
         val result = existingContent?.apply {
@@ -165,7 +167,7 @@ class RecordRepositoryImpl(
     }
 
 
-    override fun deleteContents(record: Record, fileName: String): Unit = em.get().transact {
+    override fun deleteContents(record: Record, fileName: String): Unit = transact {
         refresh(record)
         if (record.metadata.status != RecordStatus.INCOMPLETE) {
             throw HttpConflictException("incompatible_status", "Cannot delete file contents from record ${record.id} that is already saved with status ${record.metadata.status}.")
@@ -176,7 +178,7 @@ class RecordRepositoryImpl(
         merge(record)
     }
 
-    override fun poll(limit: Int, supportedConverters: Set<String>): List<Record> = em.get().transact {
+    override fun poll(limit: Int, supportedConverters: Set<String>): List<Record> = transact {
         setProperty("javax.persistence.lock.scope", PessimisticLockScope.EXTENDED)
 
         var queryString = "SELECT r FROM Record r WHERE r.metadata.status = :status "
@@ -208,7 +210,7 @@ class RecordRepositoryImpl(
                 .toList()
     }
 
-    override fun readRecordContent(recordId: Long, fileName: String): RecordContent? = em.get().transact {
+    override fun readRecordContent(recordId: Long, fileName: String): RecordContent? = transact {
         val queryString = "SELECT rc from RecordContent rc WHERE rc.record.id = :id AND rc.fileName = :fileName"
 
         createQuery(queryString, RecordContent::class.java)
@@ -217,7 +219,7 @@ class RecordRepositoryImpl(
                 .resultList.firstOrNull()
     }
 
-    override fun readFileContent(id: Long, revision: Int, fileName: String, range: LongRange?): RecordRepository.BlobReader? = em.get().createTransaction { transaction ->
+    override fun readFileContent(id: Long, revision: Int, fileName: String, range: LongRange?): RecordRepository.BlobReader? = createTransaction { transaction ->
         val queryString = "SELECT rc.content from RecordContent rc WHERE rc.record.id = :id AND rc.fileName = :fileName"
 
         val blob = createQuery(queryString, Blob::class.java)
@@ -243,7 +245,7 @@ class RecordRepositoryImpl(
         }
     }
 
-    override fun create(record: Record, metadata: RecordMetadata?, contents: Set<ContentsDTO>?): Record = em.get().transact {
+    override fun create(record: Record, metadata: RecordMetadata?, contents: Set<ContentsDTO>?): Record = transact {
         persist(record)
 
         record.contents = contents
@@ -280,9 +282,9 @@ class RecordRepositoryImpl(
         record
     }
 
-    override fun read(id: Long): Record? = em.get().transact { find(Record::class.java, id) }
+    override fun read(id: Long): Record? = transact { find(Record::class.java, id) }
 
-    override fun update(record: Record): Record = em.get().transact {
+    override fun update(record: Record): Record = transact {
         record.metadata.update()
         merge<Record>(record)
     }
@@ -292,12 +294,7 @@ class RecordRepositoryImpl(
         this.modifiedDate = Instant.now()
     }
 
-    private fun modifyNow(metadata: RecordMetadata): RecordMetadata {
-        metadata.update()
-        return em.get().merge<RecordMetadata>(metadata)
-    }
-
-    override fun updateMetadata(id: Long, metadata: RecordMetadataDTO): RecordMetadata = em.get().transact {
+    override fun updateMetadata(id: Long, metadata: RecordMetadataDTO): RecordMetadata = transact {
         val existingMetadata = find(RecordMetadata::class.java, id,  LockModeType.PESSIMISTIC_WRITE,
                 mapOf("javax.persistence.lock.scope" to PessimisticLockScope.EXTENDED))
                 ?: throw HttpNotFoundException("record_not_found", "RecordMetadata with ID $id does not exist")
@@ -319,10 +316,10 @@ class RecordRepositoryImpl(
             message = metadata.message ?: defaultStatusMessage.get(status)
         }.update()
 
-        merge<RecordMetadata>(existingMetadata)
+        merge(existingMetadata)
     }
 
-    override fun delete(record: Record, revision: Int) = em.get().transact {
+    override fun delete(record: Record, revision: Int) = transact {
         refresh(record)
         if (record.metadata.revision != revision) {
             throw HttpConflictException("incompatible_revision", "Revision in metadata ${record.metadata.revision} does not match provided revision $revision")
@@ -333,9 +330,9 @@ class RecordRepositoryImpl(
         remove(record)
     }
 
-    override fun readMetadata(id: Long): RecordMetadata? = em.get().transact { find(RecordMetadata::class.java, id) }
+    override fun readMetadata(id: Long): RecordMetadata? = transact { find(RecordMetadata::class.java, id) }
 
-    override fun resetStaleProcessing(sourceType: String, age: Duration): Int = em.get().transact {
+    override fun resetStaleProcessing(sourceType: String, age: Duration): Int = transact {
         val now = Instant.now()
         createQuery("UPDATE RecordMetadata metadata SET metadata.status = :newStatus, metadata.revision = metadata.revision + 1, metadata.modifiedDate = :now WHERE metadata.status = :currentStatus AND metadata.modifiedDate < :staleDate")
                 .setParameter("newStatus", RecordStatus.READY)

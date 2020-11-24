@@ -19,6 +19,7 @@
 
 package org.radarbase.upload.doa
 
+import org.radarbase.jersey.hibernate.HibernateRepository
 import org.radarbase.upload.Config
 import org.radarbase.upload.api.SourceTypeDTO
 import org.radarbase.upload.api.SourceTypeMapper
@@ -28,12 +29,11 @@ import javax.inject.Provider
 import javax.persistence.EntityManager
 import javax.ws.rs.core.Context
 
-
 class SourceTypeRepositoryImpl(
-        @Context private var em: Provider<EntityManager>,
+        @Context em: Provider<EntityManager>,
         @Context private var config: Config,
         @Context private val sourceTypeMapper: SourceTypeMapper
-) : SourceTypeRepository {
+) : HibernateRepository(em), SourceTypeRepository {
 
     init {
         if (!isInitialized) {
@@ -42,10 +42,11 @@ class SourceTypeRepositoryImpl(
     }
 
     private fun List<SourceTypeDTO>.storeSourceTypesFromConfigs() {
-        this.forEach {
-            logger.info("Initializing source-type repository")
-            val sourceType = sourceTypeMapper.toSourceType(it)
-            em.get().transact {
+        val sourceTypes = map { sourceTypeMapper.toSourceType(it) }
+
+        transact {
+            sourceTypes.forEach { sourceType ->
+                logger.info("Initializing source-type repository")
                 val queryString = "SELECT s FROM SourceType s LEFT JOIN FETCH s.configuration WHERE s.name = :name"
 
                 val result = createQuery(queryString, SourceType::class.java).run {
@@ -54,7 +55,7 @@ class SourceTypeRepositoryImpl(
                 }
                 if (result != null) {
                     logger.info("Updating source-type with name ${sourceType.name}")
-                    merge<SourceType>(result.copy(sourceType))
+                    merge(result.copy(sourceType))
                 } else {
                     logger.info("Creating source-type with name ${sourceType.name}")
                     persist(sourceType)
@@ -74,7 +75,7 @@ class SourceTypeRepositoryImpl(
     }
 
 
-    override fun create(record: SourceType) = em.get().transact { persist(record) }
+    override fun create(record: SourceType) = transact { persist(record) }
 
     override fun readAll(limit: Int?, lastId: Long?, detailed: Boolean): List<SourceType> {
         var queryString = "SELECT s FROM SourceType s"
@@ -86,7 +87,7 @@ class SourceTypeRepositoryImpl(
         }
         queryString += " ORDER BY s.id"
 
-        return em.get().transact {
+        return transact {
             createQuery(queryString, SourceType::class.java).run {
                 limit?.let {
                     maxResults = it
@@ -100,7 +101,7 @@ class SourceTypeRepositoryImpl(
         }
     }
 
-    override fun read(name: String): SourceType? = em.get().transact {
+    override fun read(name: String): SourceType? = transact {
         val queryString = "SELECT s FROM SourceType s LEFT JOIN FETCH s.configuration WHERE s.name = :name"
 
         createQuery(queryString, SourceType::class.java).run {
@@ -110,9 +111,9 @@ class SourceTypeRepositoryImpl(
         }
     }
 
-    override fun update(record: SourceType): SourceType = em.get().transact { merge<SourceType>(record) }
+    override fun update(record: SourceType): SourceType = transact { merge(record) }
 
-    override fun delete(record: SourceType) = em.get().transact { remove(record) }
+    override fun delete(record: SourceType) = transact { remove(record) }
 
     companion object {
         private val logger = LoggerFactory.getLogger(SourceTypeRepositoryImpl::class.java)
