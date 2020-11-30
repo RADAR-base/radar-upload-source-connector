@@ -27,7 +27,9 @@
 
     <changeSet id="0" author="joris" dbms="h2,postgresql">
         <preConditions onFail="MARK_RAN">
-            <sequenceExists sequenceName="hibernate_sequence"/>
+            <not>
+                <sequenceExists sequenceName="hibernate_sequence"/>
+            </not>
         </preConditions>
         <createSequence sequenceName="hibernate_sequence" startValue="1" incrementBy="1"/>
     </changeSet>
