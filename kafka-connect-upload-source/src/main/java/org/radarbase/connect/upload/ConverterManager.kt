@@ -41,11 +41,10 @@ class ConverterManager(
         val convertedRecords: Sequence<SourceRecord> = sequenceOf()
 
         convertedRecords.forEach {
-            queue.put(it)
+            queue.put(it)  // this will block if too many records are already present
         }
     }
 
-    // TODO
     private fun processRecord(record: RecordDTO): Sequence<SourceRecord>? {
         return try {
             val converter = converters[record.sourceType]
@@ -113,7 +112,7 @@ class ConverterManager(
         exe: Exception,
         reason: String = "Temporarily could not convert this record. Please refer to the conversion logs for more details") {
         logger.info("Update record conversion failure")
-        val recordLogger = logRepository.createLogger(UploadSourceTask.logger, record.id!!)
+        val recordLogger = logRepository.createLogger(logger, record.id!!)
         recordLogger.error("$reason: ${exe.message}", exe.cause)
         val metadata = uploadClient.retrieveRecordMetadata(record.id!!)
         val updatedMetadata = uploadClient.updateStatus(record.id!!, metadata.copy(

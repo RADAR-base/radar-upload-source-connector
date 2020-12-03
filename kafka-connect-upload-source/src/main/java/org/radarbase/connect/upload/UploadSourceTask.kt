@@ -46,6 +46,7 @@ import java.util.concurrent.BlockingQueue
 import java.util.concurrent.TimeUnit
 
 class UploadSourceTask : SourceTask() {
+    private var queueSize: Int = 1000
     private var pollInterval = Duration.ofMinutes(1)
     private var failedPollInterval = Duration.ofSeconds(6)
     private lateinit var uploadClient: UploadBackendClient
@@ -76,7 +77,9 @@ class UploadSourceTask : SourceTask() {
         pollInterval = Duration.ofMillis(connectConfig.getLong(SOURCE_POLL_INTERVAL_CONFIG))
         failedPollInterval = pollInterval.dividedBy(10)
 
-        queue = ArrayBlockingQueue(1000)
+        // TODO: make queue size a variable
+        queueSize = 1000
+        queue = ArrayBlockingQueue(queueSize)
         converterManager = ConverterManager(queue, converters, uploadClient, logRepository, pollInterval)
 
         logger.info("Poll with interval $pollInterval milliseconds")
@@ -93,10 +96,13 @@ class UploadSourceTask : SourceTask() {
     override fun version(): String = VersionUtil.getVersion()
 
     override fun poll(): List<SourceRecord>? {
-        val records = generateSequence { queue.poll() }.toList()
+        val records = generateSequence { queue.poll() }  // this will retrieve all non-blocking elements
+            .take(queueSize) // don't process more than queueSize records at once
+            .toList()
         return if (records.isNotEmpty()) {
             records
         } else {
+            // if no non-blocking elements are available, it's ok to wait for them for a bit.
             queue.poll(pollInterval.toMillis(), TimeUnit.MILLISECONDS)
                 ?.let { listOf(it) }
         }
@@ -106,6 +112,8 @@ class UploadSourceTask : SourceTask() {
 //            logger.info("Waiting {} milliseconds for next polling time", timeout)
 //            Thread.sleep(timeout)
 //        }
+
+        // TODO: retrieve data and convert it in ConverterManager instead
 //
 //        logger.info("Polling new records...")
 //        val records: List<RecordDTO> = try {
