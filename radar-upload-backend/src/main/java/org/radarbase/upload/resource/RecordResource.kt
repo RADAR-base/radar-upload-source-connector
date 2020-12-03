@@ -281,6 +281,20 @@ class RecordResource(
                 .also { callbackManager.callback(it) }
     }
 
+    @POST
+    @Path("{recordId}/retry")
+    fun resetRecordStatus(
+            @PathParam("recordId") recordId: Long,
+            @Context callbackManager: CallbackManager): RecordMetadataDTO {
+        val record = ensureRecord(recordId)
+        val recordDto = recordMapper.fromRecord(record)
+        recordDto.metadata?.status = RecordStatus.READY.toString()
+
+        val updatedRecord = recordRepository.updateMetadata(recordId, recordDto.metadata!!)
+        return recordMapper.fromMetadata(updatedRecord)
+                .also { callbackManager.callback(it) }
+    }
+
     @GET
     @Path("{recordId}/logs")
     fun getRecordLogs(
