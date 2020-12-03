@@ -22,7 +22,6 @@ package org.radarbase.connect.upload
 import org.apache.kafka.connect.source.SourceRecord
 import org.apache.kafka.connect.source.SourceTask
 import org.radarbase.connect.upload.UploadSourceConnectorConfig.Companion.SOURCE_POLL_INTERVAL_CONFIG
-import org.radarbase.connect.upload.api.PollDTO
 import org.radarbase.connect.upload.api.RecordDTO
 import org.radarbase.connect.upload.api.RecordMetadataDTO
 import org.radarbase.connect.upload.api.UploadBackendClient
@@ -42,6 +41,9 @@ import java.time.Duration
 import java.time.Instant
 import java.time.temporal.Temporal
 import java.time.temporal.TemporalAmount
+import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.BlockingQueue
+import java.util.concurrent.TimeUnit
 
 class UploadSourceTask : SourceTask() {
     private var pollInterval = Duration.ofMinutes(1)
@@ -49,6 +51,8 @@ class UploadSourceTask : SourceTask() {
     private lateinit var uploadClient: UploadBackendClient
     private lateinit var converters: Map<String, Converter>
     private lateinit var logRepository: LogRepository
+    private lateinit var queue: BlockingQueue<SourceRecord>
+    private lateinit var converterManager: ConverterManager
 
     private lateinit var nextPoll: Instant
 
@@ -72,13 +76,16 @@ class UploadSourceTask : SourceTask() {
         pollInterval = Duration.ofMillis(connectConfig.getLong(SOURCE_POLL_INTERVAL_CONFIG))
         failedPollInterval = pollInterval.dividedBy(10)
 
+        queue = ArrayBlockingQueue(1000)
+        converterManager = ConverterManager(queue, converters, uploadClient, logRepository, pollInterval)
+
         logger.info("Poll with interval $pollInterval milliseconds")
         logger.info("Initialized ${converters.size} converters...")
     }
 
     override fun stop() {
         logger.debug("Stopping source task")
-        uploadAllLogs()
+        converterManager.close()
         uploadClient.close()
         converters.values.forEach(Converter::close)
     }
@@ -86,108 +93,36 @@ class UploadSourceTask : SourceTask() {
     override fun version(): String = VersionUtil.getVersion()
 
     override fun poll(): List<SourceRecord>? {
-        val timeout = nextPoll.untilNow().toMillis()
-        if (timeout > 0) {
-            logger.info("Waiting {} milliseconds for next polling time", timeout)
-            Thread.sleep(timeout)
+        val records = generateSequence { queue.poll() }.toList()
+        return if (records.isNotEmpty()) {
+            records
+        } else {
+            queue.poll(pollInterval.toMillis(), TimeUnit.MILLISECONDS)
+                ?.let { listOf(it) }
         }
 
-        logger.info("Polling new records...")
-        val records: List<RecordDTO> = try {
-            uploadClient.pollRecords(PollDTO(1, converters.keys)).records
-        } catch (exe: Throwable) {
-            logger.error("Could not successfully poll records. Waiting for next polling...")
-            nextPoll = failedPollInterval.fromNow()
-            return null
-        }
-
-        nextPoll = pollInterval.fromNow()
-
-        logger.info("Received ${records.size} records at $nextPoll")
-
-        return records
-                .flatMap { record -> processRecord(record) ?: emptyList() }
-                .takeIf { it.isNotEmpty() }
-    }
-
-    private fun processRecord(record: RecordDTO): List<SourceRecord>? {
-        return try {
-            val converter = converters[record.sourceType]
-                    ?: throw ConversionTemporarilyFailedException("Could not find converter ${record.sourceType} for record ${record.id}")
-
-            markProcessing(record) ?: return null
-
-            converter.convert(record)
-        } catch (exe: ConversionFailedException) {
-            logger.error("Could not convert record {}", record.id)
-            updateRecordFailure(record, exe)
-            null
-        } catch (exe: ConversionTemporarilyFailedException) {
-            logger.error("Could not convert record {} due to temporary failure", record.id)
-            updateRecordTemporaryFailure(record, exe)
-            null
-        } catch (exe: Throwable) {
-            logger.error("Could not convert record {} due to application failure", record.id, exe)
-            updateRecordTemporaryFailure(record,
-                    ConversionTemporarilyFailedException("Could not convert record ${record.id} due to application failure", exe))
-            null
-        }
-    }
-
-    private fun markProcessing(record: RecordDTO): RecordDTO? {
-        return try {
-            record.apply {
-                metadata = uploadClient.updateStatus(
-                        record.id!!,
-                        record.metadata!!.copy(status = "PROCESSING")
-                )
-                logger.debug("Updated metadata $id to PROCESSING")
-            }
-        } catch (exe: ConflictException) {
-            logger.warn("Conflicting request was made. Skipping this record")
-            null
-        } catch (exe: Exception) {
-            throw ConversionTemporarilyFailedException("Cannot update record metadata", exe)
-        }
-    }
-
-    private fun updateRecordFailure(
-            record: RecordDTO,
-            exe: Exception,
-            reason: String = "Could not convert this record. Please refer to the conversion logs for more details"
-    ) {
-        val recordId = record.id ?: return
-        val recordLogger = logRepository.createLogger(logger, recordId)
-        recordLogger.error("$reason: ${exe.message}", exe.cause)
-        val metadata = uploadClient.retrieveRecordMetadata(recordId)
-        val updatedMetadata = uploadClient.updateStatus(recordId, metadata.copy(
-                status = "FAILED",
-                message = reason
-        ))
-
-        if (updatedMetadata.status == "FAILED") {
-            logger.info("Uploading logs to backend")
-            uploadLogs(recordId)
-        }
-    }
-
-    private fun updateRecordTemporaryFailure(
-            record: RecordDTO,
-            exe: Exception,
-            reason: String = "Temporarily could not convert this record. Please refer to the conversion logs for more details") {
-        logger.info("Update record conversion failure")
-        val recordLogger = logRepository.createLogger(logger, record.id!!)
-        recordLogger.error("$reason: ${exe.message}", exe.cause)
-        val metadata = uploadClient.retrieveRecordMetadata(record.id!!)
-        val updatedMetadata = uploadClient.updateStatus(record.id!!, metadata.copy(
-                status = "READY",
-                message = reason
-        ))
-
-        if (updatedMetadata.status == "READY") {
-            logger.info("Uploading logs to backend")
-            uploadLogs(record.id!!)
-        }
+//        val timeout = nextPoll.untilNow().toMillis()
+//        if (timeout > 0) {
+//            logger.info("Waiting {} milliseconds for next polling time", timeout)
+//            Thread.sleep(timeout)
+//        }
+//
+//        logger.info("Polling new records...")
+//        val records: List<RecordDTO> = try {
+//            uploadClient.pollRecords(PollDTO(1, converters.keys)).records
+//        } catch (exe: Throwable) {
+//            logger.error("Could not successfully poll records. Waiting for next polling...")
+//            nextPoll = failedPollInterval.fromNow()
+//            return null
+//        }
+//
+//        nextPoll = pollInterval.fromNow()
+//
+//        logger.info("Received ${records.size} records at $nextPoll")
+//
+//        return records
+//                .flatMap { record -> processRecord(record) ?: emptyList() }
+//                .takeIf { it.isNotEmpty() }
     }
 
     override fun commitRecord(record: SourceRecord?) {
@@ -207,24 +142,9 @@ class UploadSourceTask : SourceTask() {
 
             if (updatedMetadata.status == "SUCCEEDED") {
                 logger.info("Uploading logs to backend")
-                uploadLogs(recordId.toLong())
+                converterManager.uploadLogs(recordId.toLong())
             }
         }
-    }
-
-    private fun uploadAllLogs(reset: Boolean = true) {
-        logger.info("Uploading all remaining logs")
-        logRepository.recordIds.forEach { r ->
-            logRepository.extract(r, reset)
-                    ?.let { uploadClient.addLogs(it) }
-        }
-        logger.info("All record logs are uploaded")
-    }
-
-    private fun uploadLogs(recordId: Long, reset: Boolean = true) {
-        logger.info("Sending record $recordId logs...")
-        logRepository.extract(recordId, reset)
-                ?.let { uploadClient.addLogs(it) }
     }
 
     companion object {
