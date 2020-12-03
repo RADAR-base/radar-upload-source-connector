@@ -85,6 +85,10 @@ export default {
     return axios.delete(`/records/${recordId}?revision=${revision}`);
   },
 
+  retryRecordUpload({ recordId }) { // retry record upload
+    return axios.post(`/records/${recordId}/retry`);
+  },
+
   deleteFile({ recordId, fileName }) { // delete file only if its records == INCOMPLETE
     return axios.delete(`/records/${recordId}/contents/${fileName}`);
   },
