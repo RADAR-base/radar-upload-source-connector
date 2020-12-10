@@ -6,8 +6,8 @@ import org.radarbase.connect.upload.converter.axivity.newcastle.CwaBlock
 import org.radarcns.connector.upload.axivity.AxivityAcceleration
 
 class AccelerationCwaBlockProcessor: CwaFileProcessorFactory.CwaBlockProcessor {
-    override fun processBlock(recordLogger: RecordLogger, block: CwaBlock, timeReceived: Double): List<TopicData> {
-        return (0 until block.numSamples)
+    override fun processBlock(recordLogger: RecordLogger, block: CwaBlock, timeReceived: Double): Sequence<TopicData> {
+        return (0 until block.numSamples).asSequence()
                 .map { i -> TopicData("connect_upload_axivity_acceleration",
                         AxivityAcceleration(
                                 block.timestampValues[i] / 1000.0,

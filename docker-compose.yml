@@ -182,7 +182,7 @@ services:
     build:
       context: .
       dockerfile: kafka-connect-upload-source/Dockerfile
-    image: radarbase/radar-connect-upload-source:0.5.1
+    image: radarbase/radar-connect-upload-source:0.5.7-rc
     restart: on-failure
     volumes:
       - ./etc/source-upload.properties:/etc/kafka-connect/source-upload.properties

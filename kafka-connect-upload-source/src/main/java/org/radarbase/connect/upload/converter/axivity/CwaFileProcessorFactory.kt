@@ -29,14 +29,11 @@ class CwaFileProcessorFactory(
 
             val data = generateSequence { cwaReader.peekBlock() }
                     .flatMap { block -> processBlock(block, timeReceived) }
-                    .toMutableList()
 
-            val firstTime = data.firstOrNull()?.value?.get(0) as? Double
-                    ?: timeReceived
+//            val firstTime = data.firstOrNull()?.value?.get(0) as? Double
+//                    ?: timeReceived
 
-            data += metadataProcessor.processReader(cwaReader, firstTime, timeReceived)
-
-            return data
+            return data.toList()
         }
 
         private fun processBlock(block: CwaBlock, timeReceived: Double): Sequence<TopicData> {
@@ -52,7 +49,7 @@ class CwaFileProcessorFactory(
     }
 
     interface CwaBlockProcessor {
-        fun processBlock(recordLogger: RecordLogger, block: CwaBlock, timeReceived: Double): List<TopicData>
+        fun processBlock(recordLogger: RecordLogger, block: CwaBlock, timeReceived: Double): Sequence<TopicData>
 
         fun CwaBlock.startTime(): Double = timestampValues[0] / 1000.0
     }

@@ -64,13 +64,19 @@ class AxivityConverterFactoryTest {
 
         val accRecords = records.filter { it.value.javaClass == AxivityAcceleration::class.java }
 
-        requireNotNull(AxivityConverterFactoryTest::class.java.getResourceAsStream("/CWA-DATA.zip")).use { cwaZipFile ->
+        requireNotNull(AxivityConverterFactoryTest::class.java.getResourceAsStream("/06_Axivity_1.zip")).use { cwaZipFile ->
             ZipInputStream(cwaZipFile).use { zipIn ->
                 assertNotNull(zipIn.nextEntry)
-                CwaCsvInputStream(zipIn, 0, 1, -1, OPTIONS_EVENTS).use { cwaIn ->
-                    cwaIn.bufferedReader().use { it.readLines() }
-                    // without any apparent reason, the CwaCsvInputStream is missing the first block...
-                    assertEquals(cwaIn.line + 80, accRecords.size)
+                try {
+
+
+                    CwaCsvInputStream(zipIn, 0, 1, -1, OPTIONS_EVENTS).use { cwaIn ->
+                        cwaIn.bufferedReader().use { it.readLines() }
+                        // without any apparent reason, the CwaCsvInputStream is missing the first block...
+                        assertEquals(cwaIn.line + 80, accRecords.size)
+                    }
+                } catch (e: Throwable) {
+                    throw e
                 }
             }
         }
