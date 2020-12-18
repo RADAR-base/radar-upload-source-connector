@@ -26,7 +26,7 @@ class CameraUploadProcessor(
     private inner class FileUploadProcessor(private val record: RecordDTO) : FileProcessorFactory.FileProcessor {
         private val recordLogger = logRepository.createLogger(logger, record.id!!)
 
-        override fun processData(contents: ContentsDTO, inputStream: InputStream, timeReceived: Double): List<TopicData> {
+        override fun processData(contents: ContentsDTO, inputStream: InputStream, timeReceived: Double): Sequence<TopicData> {
             val fileName = contents.fileName.split('/').last()
             val adjustedFilename = SUFFIX_REGEX.replace(fileName, "")
             val formattedTime = checkNotNull(FILENAME_REGEX.matchEntire(fileName)) { "Image file name $fileName does not match pattern" }
@@ -41,7 +41,7 @@ class CameraUploadProcessor(
 
             val url = uploaderCreate().upload(relativePath, inputStream, contents.size)
 
-            return listOf(TopicData(TOPIC,
+            return sequenceOf(TopicData(TOPIC,
                     OxfordCameraImage(time, timeReceived, adjustedFilename, url.toString())
                             .also { recordLogger.info("Uploaded file to ${it.getUrl()}") }))
         }

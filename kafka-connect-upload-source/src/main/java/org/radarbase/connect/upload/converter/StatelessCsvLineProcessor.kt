@@ -54,7 +54,7 @@ abstract class StatelessCsvLineProcessor: CsvLineProcessorFactory {
         override fun convertToRecord(
                 lineValues: Map<String, String>,
                 timeReceived: Double
-        ): List<TopicData>? = conversion(lineValues, timeReceived)
+        ): Sequence<TopicData>? = conversion(lineValues, timeReceived)?.asSequence()
     }
 }
 

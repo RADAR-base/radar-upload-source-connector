@@ -114,7 +114,7 @@ class UploadBackendClientIntegrationTest {
 
         val recordToProcess = records.records.first { recordDTO -> recordDTO.sourceType == sourceTypeName }
         createdRecord.metadata = uploadBackendClient.updateStatus(recordToProcess.id!!, recordToProcess.metadata!!.copy(status = "PROCESSING", message = "The record is being processed"))
-        val convertedRecords = converter.convert(records.records.first())
+        val convertedRecords = converter.convert(records.records.first()).toList()
         assertThat(convertedRecords, not(nullValue()))
         assertThat(convertedRecords, not(empty()))
     }

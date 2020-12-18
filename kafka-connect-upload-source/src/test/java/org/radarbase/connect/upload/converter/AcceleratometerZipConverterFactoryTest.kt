@@ -76,7 +76,7 @@ class AcceleratometerZipConverterFactoryTest {
     fun testValidDataProcessing() {
         val accFile = File("src/test/resources/_ACC.zip")
 
-        val records = converter.convertFile(record, contentsDTO, accFile.inputStream(), mock(RecordLogger::class.java))
+        val records = converter.convertFile(record, contentsDTO, accFile.inputStream(), mock(RecordLogger::class.java)).toList()
 
         assertNotNull(record)
         assertEquals(6, records.size)

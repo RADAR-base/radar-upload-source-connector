@@ -19,14 +19,14 @@ class CameraDataFileProcessor : FileProcessorFactory {
     override fun createProcessor(record: RecordDTO): FileProcessorFactory.FileProcessor = CameraFileProcessor()
 
     private class CameraFileProcessor : FileProcessorFactory.FileProcessor {
-        override fun processData(contents: ContentsDTO, inputStream: InputStream, timeReceived: Double): List<TopicData> {
+        override fun processData(contents: ContentsDTO, inputStream: InputStream, timeReceived: Double): Sequence<TopicData> {
             val lines = InputStreamReader(inputStream).use { it.readLines() }
 
             require(lines.size >= 2) { "Image table too short" }
 
             val header = lines[1].substring(1).split(",").map { it.trim() }
 
-            return lines.subList(2, lines.size)
+            return lines.subList(2, lines.size).asSequence()
                     .map { line ->
                         val values = line
                                 .split(",")

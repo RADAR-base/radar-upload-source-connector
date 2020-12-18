@@ -82,7 +82,7 @@ class AccelerometerCsvRecordConverterTest {
         val accFile = File("src/test/resources/ACC.csv")
 
         val contents = ContentsDTO(fileName = "ACC.csv")
-        val records = converter.convertFile(record, contents, accFile.inputStream(), mock(RecordLogger::class.java))
+        val records = converter.convertFile(record, contents, accFile.inputStream(), mock(RecordLogger::class.java)).toList()
 
         assertNotNull(record)
         assertEquals(6, records.size)

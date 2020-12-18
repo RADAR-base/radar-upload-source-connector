@@ -59,7 +59,7 @@ class PhysilogConverterFactoryTest {
     @DisplayName("Should be able to convert a zip file with sample data to TopicRecords")
     fun testValidRawDataProcessing() {
         val records = requireNotNull(PhysilogConverterFactoryTest::class.java.getResourceAsStream("/CWA-DATA.zip")).use { cwaZipFile ->
-            converter.convertFile(record, contentsDTO, cwaZipFile, Mockito.mock(RecordLogger::class.java))
+            converter.convertFile(record, contentsDTO, cwaZipFile, Mockito.mock(RecordLogger::class.java)).toList()
         }
 
         val accRecords = records.filter { it.value.javaClass == AxivityAcceleration::class.java }

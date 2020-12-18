@@ -18,7 +18,7 @@ open class CsvProcessor(
         private val processorFactories: List<CsvLineProcessorFactory>): FileProcessorFactory.FileProcessor {
     private val recordLogger = logRepository.createLogger(logger, record.id!!)
 
-    override fun processData(contents: ContentsDTO, inputStream: InputStream, timeReceived: Double): List<TopicData> {
+    override fun processData(contents: ContentsDTO, inputStream: InputStream, timeReceived: Double): Sequence<TopicData> {
         return try {
             convertLines(contents, inputStream, timeReceived)
         } catch (exe: IOException) {
@@ -32,14 +32,14 @@ open class CsvProcessor(
     open fun convertLines(
             contents: ContentsDTO,
             inputStream: InputStream,
-            timeReceived: Double): List<TopicData> {
+            timeReceived: Double): Sequence<TopicData> {
         val contentProcessors = processorFactories
                 .filter { it.matches(contents) }
 
         if (contents.size == 0L) {
             if (contentProcessors.all { it.optional }) {
                 logger.debug("Skipping optional file")
-                return emptyList()
+                return emptySequence()
             } else {
                 throw IOException("Cannot read empty CSV file ${contents.fileName}")
             }
@@ -49,7 +49,7 @@ open class CsvProcessor(
             val header = reader.readNext()?.map { it.trim().toUpperCase(Locale.US) }
                     ?: if (contentProcessors.all { it.optional }) {
                         logger.debug("Skipping optional file")
-                        return@use emptyList()
+                        return@use emptySequence()
                     } else {
                         throw IOException("Cannot read empty CSV file ${contents.fileName}")
                     }
@@ -66,10 +66,10 @@ open class CsvProcessor(
                         processors.flatMap { processor ->
                             processor.takeIf { it.isLineValid(header, line) }
                                     ?.convertToRecord(lineMap, timeReceived)
-                                    ?: emptyList()
+                                    ?: emptySequence()
                         }
                     }
-                    .toList()
+                    .asSequence()
                     .flatten()
         }
     }

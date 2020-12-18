@@ -24,7 +24,7 @@ class CwaFileProcessorFactory(
     inner class CwaProcessor(record: RecordDTO) : FileProcessorFactory.FileProcessor {
         val recordLogger = logRepository.createLogger(logger, record.id!!)
 
-        override fun processData(contents: ContentsDTO, inputStream: InputStream, timeReceived: Double): List<TopicData> {
+        override fun processData(contents: ContentsDTO, inputStream: InputStream, timeReceived: Double): Sequence<TopicData> {
             val cwaReader = CwaReader(inputStream)
 
             val data = generateSequence { cwaReader.peekBlock() }
@@ -33,7 +33,7 @@ class CwaFileProcessorFactory(
 //            val firstTime = data.firstOrNull()?.value?.get(0) as? Double
 //                    ?: timeReceived
 
-            return data.toList()
+            return data
         }
 
         private fun processBlock(block: CwaBlock, timeReceived: Double): Sequence<TopicData> {

@@ -80,9 +80,9 @@ interface ConverterFactory {
         val sourceType: String
 
         // convert and add logs return result
-        fun convert(record: RecordDTO): List<SourceRecord>
+        fun convert(record: RecordDTO): Sequence<SourceRecord>
 
-        fun convertFile(record: RecordDTO, contents: ContentsDTO, inputStream: InputStream, recordLogger: RecordLogger): List<TopicData>
+        fun convertFile(record: RecordDTO, contents: ContentsDTO, inputStream: InputStream, recordLogger: RecordLogger): Sequence<TopicData>
 
         fun getPartition(): MutableMap<String, Any>
 

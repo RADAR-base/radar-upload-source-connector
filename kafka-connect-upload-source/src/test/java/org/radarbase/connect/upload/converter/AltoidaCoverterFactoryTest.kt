@@ -56,7 +56,7 @@ class AltoidaCoverterFactoryTest {
                 fileName = "TEST_ZIP.zip",
                 createdDate = Instant.now(),
                 size = 1L
-        ), file.inputStream(), Mockito.mock(RecordLogger::class.java))
+        ), file.inputStream(), Mockito.mock(RecordLogger::class.java)).toList()
 
         assertNotNull(records)
         assertTrue(records.size > 1000)
@@ -75,7 +75,7 @@ class AltoidaCoverterFactoryTest {
                 fileName = "ALTOIDA_ANDROID.zip",
                 createdDate = Instant.now(),
                 size = 1L
-        ), file.inputStream(), Mockito.mock(RecordLogger::class.java))
+        ), file.inputStream(), Mockito.mock(RecordLogger::class.java)).toList()
 
         assertNotNull(records)
         assertTrue(records.size > 1000)
@@ -94,7 +94,7 @@ class AltoidaCoverterFactoryTest {
                 createdDate = Instant.now(),
                 size = 1L
         )
-        val records = converter.convertFile(record, contentsDTO, file.inputStream(), Mockito.mock(RecordLogger::class.java))
+        val records = converter.convertFile(record, contentsDTO, file.inputStream(), Mockito.mock(RecordLogger::class.java)).toList()
 
         assertNotNull(records)
         assertEquals(records.size, 4)
