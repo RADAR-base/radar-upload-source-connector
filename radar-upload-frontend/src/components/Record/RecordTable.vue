@@ -141,7 +141,7 @@
       </v-icon>
       <v-icon
         color="success"
-        @click="retryRecordUpload({recordId: item.id})"
+        @click="retryRecordUpload({recordId: item.id, revision: item. revision})"
         :disabled="item.status=='PROCESSING'"
         class="pa-0"
         >
@@ -305,12 +305,12 @@ export default {
       });
       this.recordList.splice(recordIndex, 1);
     },
-    retryRecordUpload({ recordId }) {
+    retryRecordUpload({ recordId, revision }) {
       const recordIndex = this.recordList.findIndex(re => re.id === recordId);
       fileAPI.retryRecordUpload({
-        recordId
-      });
-      this.getRecordList();
+        recordId,
+        revision
+      }).then(() =>this.getRecordList());
     },
     finishEditRecord({ record }) {
       const recordIndex = this.recordList.findIndex(re => re.id === record.id);
