@@ -3,7 +3,6 @@ package org.radarbase.connect.upload.converter
 import com.opencsv.CSVParserBuilder
 import com.opencsv.CSVReader
 import com.opencsv.CSVReaderBuilder
-import org.apache.commons.beanutils.ConversionException
 import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
 import org.radarbase.connect.upload.exception.InvalidFormatException
@@ -60,9 +59,9 @@ open class CsvProcessor(
                         when {
                             it.matches(header) -> true
                             it.conditionalMatchOnHeader -> false
-                            else -> throw ConversionException(
+                            else -> throw InvalidFormatException(
                                 """
-                                    Header of record ${record.id} did not match processor ${it.javaClass}
+                                    CSV header of file ${contents.fileName} in record ${record.id} did not match processor ${it.javaClass}
                                         Found:    $header
                                         Expected: ${it.header}
                                 """.trimIndent()
@@ -71,7 +70,7 @@ open class CsvProcessor(
                     }
                     .map { it.createLineProcessor(record, logRepository) }
                     .takeIf { it.isNotEmpty() }
-                    ?: throw InvalidFormatException("In record ${record.id}, cannot find CSV processor that matches header $header")
+                    ?: throw InvalidFormatException("For file ${contents.fileName} in record ${record.id}, cannot find CSV processor that matches header $header")
 
             generateSequence { reader.readNext() }
                     .map { line ->
