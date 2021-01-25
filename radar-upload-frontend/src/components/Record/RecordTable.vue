@@ -310,7 +310,7 @@ export default {
       fileAPI.retryRecordUpload({
         recordId,
         revision
-      }).then(() =>this.getRecordList());
+      }).then(() => this.getRecordList());
     },
     finishEditRecord({ record }) {
       const recordIndex = this.recordList.findIndex(re => re.id === record.id);
