@@ -29,6 +29,9 @@ interface CsvLineProcessorFactory {
      */
     val optional: Boolean
 
+    /** Whether this factory should also match the header before selection. */
+    val conditionalMatchOnHeader: Boolean
+
     /** Upper case header list. */
     val header: List<String>
 
