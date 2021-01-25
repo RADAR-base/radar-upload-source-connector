@@ -139,6 +139,14 @@
       >
         mdi-close-circle
       </v-icon>
+      <v-icon
+        color="success"
+        @click="retryRecordUpload({recordId: item.id, revision: item. revision})"
+        :disabled="item.status=='PROCESSING'"
+        class="pa-0"
+        >
+        mdi-replay
+      </v-icon>
     </template>
     <!-- file list -->
     <template #expanded-item="{item}">
@@ -296,6 +304,13 @@ export default {
         revision,
       });
       this.recordList.splice(recordIndex, 1);
+    },
+    retryRecordUpload({ recordId, revision }) {
+      const recordIndex = this.recordList.findIndex(re => re.id === recordId);
+      fileAPI.retryRecordUpload({
+        recordId,
+        revision
+      }).then(() => this.getRecordList());
     },
     finishEditRecord({ record }) {
       const recordIndex = this.recordList.findIndex(re => re.id === record.id);
