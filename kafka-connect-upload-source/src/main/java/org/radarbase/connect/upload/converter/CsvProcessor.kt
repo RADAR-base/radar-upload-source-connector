@@ -58,14 +58,14 @@ open class CsvProcessor(
                     .filter {
                         when {
                             it.matches(header) -> true
-                            it.conditionalMatchOnHeader -> false
-                            else -> throw InvalidFormatException(
+                            it.headerMustMatch -> throw InvalidFormatException(
                                 """
                                     CSV header of file ${contents.fileName} in record ${record.id} did not match processor ${it.javaClass}
                                         Found:    $header
                                         Expected: ${it.header}
                                 """.trimIndent()
                             )
+                            else -> false
                         }
                     }
                     .map { it.createLineProcessor(record, logRepository) }
