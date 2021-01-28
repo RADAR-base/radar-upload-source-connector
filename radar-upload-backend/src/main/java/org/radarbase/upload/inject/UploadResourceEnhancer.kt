@@ -20,11 +20,15 @@ class UploadResourceEnhancer(private val config: Config): JerseyResourceEnhancer
     override val classes: Array<Class<*>>  get() {
         return if (config.enableCors == true) {
             arrayOf(
-                    ConfigLoader.Filters.logResponse,
-                    ConfigLoader.Filters.cors)
+                ConfigLoader.Filters.logResponse,
+                ConfigLoader.Filters.cache,
+                ConfigLoader.Filters.cors,
+            )
         } else {
             arrayOf(
-                    ConfigLoader.Filters.logResponse)
+                ConfigLoader.Filters.logResponse,
+                ConfigLoader.Filters.cache,
+            )
         }
     }
 
