@@ -1,9 +1,9 @@
 /* eslint-disable no-undef */
 import { shallowMount } from '@vue/test-utils';
 import flushPromises from 'flush-promises';
-import index from '../index.vue';
 import patientAPI from '@/axios/patient';
 import fileAPI from '@/axios/file.js';
+import index from '../index.vue';
 
 // mock api
 const sourceTypeList = [
@@ -34,13 +34,11 @@ describe('Upload', () => {
     stubs: ['v-dialog'],
   });
 
-
   it('getsourceTypeList', async () => {
     wrapper.vm.getsourceTypeList();
     await flushPromises();
-    expect(wrapper.vm.sourceTypeList).toEqual(sourceTypeList.map(el => el.name));
+    expect(wrapper.vm.sourceTypeList).toEqual(sourceTypeList.map((el) => el.name));
   });
-
 
   it('getPatientList: SUCCESS', async () => {
     wrapper.setData({ patientList: ['value'] });
@@ -54,7 +52,7 @@ describe('Upload', () => {
     expect(patientAPI.filteredPatients).toBeCalledWith(projectId);
     expect(wrapper.vm.patientList)
       .toEqual(patientListResolved
-        .map(patient => ({ text: patient.patientName, value: patient.patientId })));
+        .map((patient) => ({ text: patient.patientName, value: patient.patientId })));
     patientAPI.filteredPatients.mockClear();
   });
 
@@ -72,7 +70,6 @@ describe('Upload', () => {
     expect(getPatientList).toBeCalledWith(wrapper.vm.currentProject);
     expect(getsourceTypeList).toBeCalled();
   });
-
 
   it('removeData', () => {
     wrapper.setData({ patientList: ['value'], loading: true, dialog: true });

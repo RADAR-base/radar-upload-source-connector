@@ -55,7 +55,7 @@ export default {
   }),
   computed: {
     ...mapState({
-      message: state => state.message,
+      message: (state) => state.message,
     }),
   },
 };

@@ -47,9 +47,9 @@
 </template>
 
 <script>
-import UploadForm from './UploadForm.vue';
 import patientAPI from '@/axios/patient';
 import fileAPI from '@/axios/file.js';
+import UploadForm from './UploadForm.vue';
 
 export default {
   props: {
@@ -111,14 +111,14 @@ export default {
   methods: {
     async getsourceTypeList() {
       const res = await fileAPI.getSourceTypes();
-      this.sourceTypeList = res.map(el => el.name);
+      this.sourceTypeList = res.map((el) => el.name);
     },
     async getPatientList(projectId) {
       this.patientList = [];
       this.loading = true;
       const patientList = await patientAPI.filteredPatients(projectId).catch(() => ([]));
       this.patientList = patientList
-        .map(patient => ({ text: patient.patientName, value: patient.patientId }));
+        .map((patient) => ({ text: patient.patientName, value: patient.patientId }));
       this.loading = false;
     },
     closeDialog() {

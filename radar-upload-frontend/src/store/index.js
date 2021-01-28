@@ -9,5 +9,5 @@ files.keys().forEach((fileName) => {
   };
 });
 // remove index.js in file list
-export const fileList = files.keys().filter(el => !el.includes('index.js'));
+export const fileList = files.keys().filter((el) => !el.includes('index.js'));
 export default modules;

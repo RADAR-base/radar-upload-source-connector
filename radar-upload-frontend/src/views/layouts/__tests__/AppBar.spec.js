@@ -1,8 +1,7 @@
 /* eslint-disable no-undef */
 import { shallowMount } from '@vue/test-utils';
-import AppBar from '../AppBar.vue';
 import auth from '@/axios/auth';
-
+import AppBar from '../AppBar.vue';
 
 describe('AppBar', () => {
   // call this api when component is created
@@ -22,7 +21,7 @@ describe('AppBar', () => {
     auth.logout = jest.fn();
     // eslint-disable-next-line no-proto
     wrapper.vm.logout();
-    expect(wrapper.vm.$router.replace).toBeCalledWith({name: 'Login'});
+    expect(wrapper.vm.$router.replace).toBeCalledWith({ name: 'Login' });
     expect(auth.logout).toBeCalled();
   });
 });
