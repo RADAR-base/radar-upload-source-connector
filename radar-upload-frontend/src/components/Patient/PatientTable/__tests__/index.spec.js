@@ -2,9 +2,9 @@
 import { shallowMount } from '@vue/test-utils';
 import flushPromises from 'flush-promises';
 import { Store } from 'vuex-mock-store';
-import index from '../index.vue';
 import patientAPI from '@/axios/patient';
 import fileAPI from '@/axios/file';
+import index from '../index.vue';
 
 describe.only('index', () => {
   // call this api when component is created
@@ -93,7 +93,6 @@ describe.only('index', () => {
     expect(wrapper.vm.patientRecords).toEqual([]);
   });
 
-
   it('resetData', () => {
     wrapper.vm.resetData();
     expect(wrapper.vm.loading).toBe(false);
@@ -102,7 +101,6 @@ describe.only('index', () => {
     expect(wrapper.vm.items).toEqual([]);
     expect(wrapper.vm.patientRecords).toEqual([]);
   });
-
 
   it('expandRow', async () => {
     const getPatientRecords = jest.spyOn(wrapper.vm, 'getPatientRecords');

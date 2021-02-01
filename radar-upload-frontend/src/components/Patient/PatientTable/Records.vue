@@ -174,7 +174,6 @@
   </v-list>
 </template>
 
-
 <script>
 import fileAPI from '@/axios/file';
 import Upload from '@/components/Upload';
@@ -208,7 +207,7 @@ export default {
   watch: {
     patientRecords: {
       handler(propsRecords) {
-        this.records = propsRecords.map(record => ({ active: false, ...record }));
+        this.records = propsRecords.map((record) => ({ active: false, ...record }));
       },
       deep: true,
     },
@@ -231,7 +230,7 @@ export default {
       this.records.splice(recordIndex, 1);
     },
     finishEditRecord({ record }) {
-      const recordIndex = this.records.findIndex(re => re.id === record.id);
+      const recordIndex = this.records.findIndex((re) => re.id === record.id);
       this.records.splice(recordIndex, 1, record);
     },
   },

@@ -12,7 +12,7 @@ export default {
   methods: {
     async getProjects() {
       this.loading = true;
-      const projects = await api.getProjects().catch((e) => {
+      const projects = await api.getProjects().catch(() => {
         this.errorMessage = 'Loading project failed, please try again later';
         return [];
       });

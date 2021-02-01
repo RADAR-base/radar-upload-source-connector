@@ -30,7 +30,6 @@
       </v-tabs>
     </v-card>
 
-
     <v-card
       class="mt-2"
       outlined

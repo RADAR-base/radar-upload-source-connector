@@ -144,7 +144,7 @@
         @click="retryRecordUpload({recordId: item.id, revision: item. revision})"
         :disabled="item.status=='PROCESSING'"
         class="pa-0"
-        >
+      >
         mdi-replay
       </v-icon>
     </template>
@@ -295,10 +295,10 @@ export default {
     },
     async getsourceTypeList() {
       const res = await fileAPI.getSourceTypes();
-      this.sourceTypeList = res.map(el => el.name);
+      this.sourceTypeList = res.map((el) => el.name);
     },
     deleteRecord({ recordId, revision }) {
-      const recordIndex = this.recordList.findIndex(re => re.id === recordId);
+      const recordIndex = this.recordList.findIndex((re) => re.id === recordId);
       fileAPI.deleteRecord({
         recordId,
         revision,
@@ -306,14 +306,13 @@ export default {
       this.recordList.splice(recordIndex, 1);
     },
     retryRecordUpload({ recordId, revision }) {
-      const recordIndex = this.recordList.findIndex(re => re.id === recordId);
       fileAPI.retryRecordUpload({
         recordId,
-        revision
+        revision,
       }).then(() => this.getRecordList());
     },
     finishEditRecord({ record }) {
-      const recordIndex = this.recordList.findIndex(re => re.id === record.id);
+      const recordIndex = this.recordList.findIndex((re) => re.id === record.id);
       this.recordList.splice(recordIndex, 1, record);
     },
   },

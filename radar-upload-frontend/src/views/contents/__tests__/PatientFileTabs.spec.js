@@ -3,7 +3,6 @@ import { shallowMount } from '@vue/test-utils';
 import { Store } from 'vuex-mock-store';
 import PatientFileTabs from '../PatientFileTabs.vue';
 
-
 describe('PatientFileTabs', () => {
   // call this api when component is created
   const CURRENT_PROJECT = { text: 'xxxxx', value: 1 };
@@ -35,7 +34,6 @@ describe('PatientFileTabs', () => {
       'v-card-title',
     ],
   });
-
 
   it('display current selected project', () => {
     expect(wrapper.text()).toContain(CURRENT_PROJECT.text);

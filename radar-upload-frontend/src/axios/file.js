@@ -24,7 +24,7 @@ export default {
   }
    */
   getSourceTypes() {
-    return axios.get('source-types').then(res => res.sourceTypes.map(el => ({
+    return axios.get('source-types').then((res) => res.sourceTypes.map((el) => ({
       name: el.name,
       contentTypes: el.contentTypes,
     })));
@@ -51,7 +51,7 @@ export default {
       sourceType,
     };
     return axios.post('records', payload)
-      .then(record => ({
+      .then((record) => ({
         ...record.metadata,
         files: record.data.contents,
         id: record.id,
@@ -70,7 +70,7 @@ export default {
       file,
       {
         headers,
-        onUploadProgress: progressEvent => onUploadProgress(progressEvent),
+        onUploadProgress: (progressEvent) => onUploadProgress(progressEvent),
       });
   },
 
@@ -86,13 +86,12 @@ export default {
   },
 
   retryRecordUpload({ recordId, revision }) { // retry record upload
-    return this.markRecord({ recordId, revision })
+    return this.markRecord({ recordId, revision });
   },
 
   deleteFile({ recordId, fileName }) { // delete file only if its records == INCOMPLETE
     return axios.delete(`/records/${recordId}/contents/${fileName}`);
   },
-
 
   async filterRecords({
     projectId, size, page, sourceType = '', status = '', userId = '',
@@ -104,10 +103,10 @@ export default {
 
     const res = await axios.get(endpoint).catch((error) => { throw new Error(error); });
     const tableData = res.records
-      .map(record => ({
+      .map((record) => ({
         ...record.metadata,
         files: record.data.contents
-          .map(file => ({ ...file, uploadFailed: false, uploading: false })),
+          .map((file) => ({ ...file, uploadFailed: false, uploading: false })),
         id: record.id,
         sourceType: record.sourceType,
         userId: record.data.userId,
