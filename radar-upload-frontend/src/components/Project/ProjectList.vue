@@ -50,7 +50,7 @@ export default {
     selectProjectFromRoute() {
       const { projectId } = this.$route.params;
       if (projectId) {
-        const selectedProject = this.projects.find(project => project.value === projectId);
+        const selectedProject = this.projects.find((project) => project.value === projectId);
         if (selectedProject) {
           this.selectProject(selectedProject);
           return;

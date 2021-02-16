@@ -6,7 +6,7 @@ jest.mock('axios');
 
 describe('axios/projects', () => {
   it('return correct projects payload', () => {
-    const projects = [{ text: '', value: '' }].map(el => ({
+    const projects = [{ text: '', value: '' }].map((el) => ({
       text: el.name || el.id,
       value: el.id,
       ...el,

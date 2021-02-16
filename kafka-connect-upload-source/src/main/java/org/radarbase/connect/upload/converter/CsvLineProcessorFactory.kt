@@ -29,6 +29,11 @@ interface CsvLineProcessorFactory {
      */
     val optional: Boolean
 
+    /**
+     * Whether this factory must match the header of a CSV file if the file name matched.
+     */
+    val headerMustMatch: Boolean
+
     /** Upper case header list. */
     val header: List<String>
 

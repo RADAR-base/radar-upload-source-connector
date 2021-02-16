@@ -1,8 +1,8 @@
 /* eslint-disable no-undef */
 import flushPromise from 'flush-promises';
 import { shallowMount } from '@vue/test-utils';
-import projectMixin from '../projectMixin';
 import api from '@/axios/project.js';
+import projectMixin from '../projectMixin';
 
 const mockComponent = { template: '<div></div>' };
 

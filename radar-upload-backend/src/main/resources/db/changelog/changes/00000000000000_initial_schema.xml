@@ -22,14 +22,47 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
-    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.10.xsd">
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.10.xsd">
     <property name="autoIncrement" value="true" dbms="mysql,h2,postgresql,oracle,mssql"/>
 
     <changeSet id="0" author="joris" dbms="h2,postgresql">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists sequenceName="hibernate_sequence"/>
+            </not>
+        </preConditions>
         <createSequence sequenceName="hibernate_sequence" startValue="1" incrementBy="1"/>
     </changeSet>
 
     <changeSet id="1" author="joris">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <not>
+                    <tableExists tableName="record"/>
+                </not>
+                <not>
+                    <tableExists tableName="record_metadata"/>
+                </not>
+                <not>
+                    <tableExists tableName="record_logs"/>
+                </not>
+                <not>
+                    <tableExists tableName="record_content"/>
+                </not>
+                <not>
+                    <tableExists tableName="source_type"/>
+                </not>
+                <not>
+                    <tableExists tableName="source_type_topics"/>
+                </not>
+                <not>
+                    <tableExists tableName="source_type_content_types"/>
+                </not>
+                <not>
+                    <tableExists tableName="source_type_configuration"/>
+                </not>
+            </and>
+        </preConditions>
         <comment>Create Record table</comment>
         <createTable tableName="record">
             <column name="id" type="bigint" autoIncrement="${autoIncrement}">

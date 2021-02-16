@@ -7,19 +7,19 @@ plugins {
 
 subprojects {
     group = "org.radarbase"
-    version = "0.5.6"
+    version = "0.5.7"
 
     project.extra.apply {
         set("kafkaVersion", "2.5.1")
         set("okhttpVersion", "4.9.0")
-        set("jacksonVersion", "2.11.3")
-        set("jacksonDataVersion", "2.11.3")
+        set("jacksonVersion", "2.11.4")
+        set("jacksonDataVersion", "2.11.4")
         set("openCsvVersion", "5.3")
         set("confluentVersion", "5.5.2")
         set("radarSchemaVersion", "0.5.15")
         set("slf4jVersion", "1.7.30")
         set("minioVersion", "7.1.4")
-        set("radarJerseyVersion", "0.4.2.1")
+        set("radarJerseyVersion", "0.4.3")
         set("radarCommonsVersion", "0.13.0")
         set("logbackVersion", "1.2.3")
         set("jerseyVersion", "2.32")

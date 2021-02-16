@@ -2,9 +2,8 @@
 import { shallowMount } from '@vue/test-utils';
 import flushPromises from 'flush-promises';
 import { Store } from 'vuex-mock-store';
-import UploadForm from '../UploadForm.vue';
 import fileAPI from '@/axios/file.js';
-
+import UploadForm from '../UploadForm.vue';
 
 const recordInfo = {
   recordId: 'recordId',
@@ -59,7 +58,6 @@ describe('UploadForm', () => {
     });
   });
 
-
   it('closeDialog', () => {
     fileAPI.deleteRecord = jest.fn();
     wrapper.setProps({ isNewRecord: false });
@@ -75,7 +73,6 @@ describe('UploadForm', () => {
     expect(removeData).toBeCalled();
     expect(fileAPI.deleteRecord).toBeCalledWith({ recordId: 'recordId', revision: 1 });
   });
-
 
   it('removeData', () => {
     wrapper.vm.removeData();

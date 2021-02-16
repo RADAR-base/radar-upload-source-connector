@@ -1,8 +1,8 @@
 /* eslint-disable no-undef */
 import { shallowMount } from '@vue/test-utils';
 import flushPromises from 'flush-promises';
-import Records from '../Records.vue';
 import fileAPI from '@/axios/file';
+import Records from '../Records.vue';
 // eslint-disable-next-line no-undef
 describe('Records', () => {
   const patientRecords = [
@@ -86,7 +86,6 @@ describe('Records', () => {
     expect(fileAPI.getRecordLog).toBeCalledWith(url);
     expect(wrapper.vm.recordLogs).toBe(logs);
     expect(wrapper.vm.loadingLog).toBe(false);
-
 
     // fail case;
     fileAPI.getRecordLog.mockClear();

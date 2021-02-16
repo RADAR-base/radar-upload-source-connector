@@ -8,7 +8,8 @@ services:
   - docker
 
 env:
-  - DOCKER_COMPOSE_FILE=integration-test/docker-compose.yml
+  global:
+    - DOCKER_COMPOSE_FILE=integration-test/docker-compose.yml
 
 cache:
   directories:
@@ -21,6 +22,7 @@ cache:
     - $HOME/build/RADAR-base/radar-upload-source-connector/radar-upload-frontend/node_modules/
 
 before_install:
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
   - docker-compose --version
   - nvm install
 

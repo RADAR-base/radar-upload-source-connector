@@ -2,8 +2,8 @@
 import { shallowMount } from '@vue/test-utils';
 import { Store } from 'vuex-mock-store';
 import flushPromises from 'flush-promises';
-import ProjectList from '../ProjectList.vue';
 import api from '@/axios/project.js';
+import ProjectList from '../ProjectList.vue';
 
 const projectId = 'id1';
 const projectName = 'name1';
@@ -16,13 +16,11 @@ api.getProjects = jest.fn().mockResolvedValue([{
   description: 'my test project',
 }]);
 
-
 describe('ProjectList', () => {
   const $store = new Store();
   afterEach(() => {
     api.getProjects.mockClear();
   });
-
 
   const wrapper = shallowMount(ProjectList, {
     mocks: {

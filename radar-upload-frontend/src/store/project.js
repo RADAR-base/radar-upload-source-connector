@@ -18,5 +18,4 @@ export const state = initialState();
 
 export const actions = {};
 
-
 export default { mutations, state, actions };

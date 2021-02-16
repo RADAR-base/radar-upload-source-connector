@@ -1,26 +1,22 @@
 /* eslint-disable no-undef */
 import { shallowMount } from '@vue/test-utils';
 import flushPromises from 'flush-promises';
-import index from '../index.vue';
 import patientAPI from '@/axios/patient';
 import fileAPI from '@/axios/file.js';
+import index from '../index.vue';
 
-// mock api
 const sourceTypeList = [
   {
     name: 'audioMp3',
     sourceType: ['audio/mp3'],
   },
 ];
-fileAPI.getSourceTypes = jest.fn().mockReturnValue(sourceTypeList);
-
 const patientListResolved = [{ patientName: '', patientValue: '' }];
-patientAPI.filteredPatients = jest.fn().mockResolvedValueOnce(patientListResolved);
+
 describe('Upload', () => {
   // call this api when component is created
   const wrapper = shallowMount(index, {
     mocks: {
-      $success: jest.fn(),
       $store: {
         state: {
           project: {
@@ -33,14 +29,19 @@ describe('Upload', () => {
     },
     stubs: ['v-dialog'],
   });
-
-
+  beforeEach(() => {
+    // mock api
+    fileAPI.getSourceTypes = jest.fn().mockResolvedValue(sourceTypeList);
+    patientAPI.filteredPatients = jest.fn().mockResolvedValue(patientListResolved);
+  });
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
   it('getsourceTypeList', async () => {
     wrapper.vm.getsourceTypeList();
     await flushPromises();
-    expect(wrapper.vm.sourceTypeList).toEqual(sourceTypeList.map(el => el.name));
+    expect(wrapper.vm.sourceTypeList).toEqual(sourceTypeList.map((el) => el.name));
   });
-
 
   it('getPatientList: SUCCESS', async () => {
     wrapper.setData({ patientList: ['value'] });
@@ -54,8 +55,7 @@ describe('Upload', () => {
     expect(patientAPI.filteredPatients).toBeCalledWith(projectId);
     expect(wrapper.vm.patientList)
       .toEqual(patientListResolved
-        .map(patient => ({ text: patient.patientName, value: patient.patientId })));
-    patientAPI.filteredPatients.mockClear();
+        .map((patient) => ({ text: patient.patientName, value: patient.patientId })));
   });
 
   it('getPatientList: ERROR', async () => {
@@ -64,15 +64,16 @@ describe('Upload', () => {
     expect(wrapper.vm.patientList).toEqual([]);
   });
 
-  it('watch:dialog => call getPatientList', () => {
+  it('watch:dialog => call getPatientList', async () => {
     const getPatientList = jest.spyOn(wrapper.vm, 'getPatientList');
     const getsourceTypeList = jest.spyOn(wrapper.vm, 'getsourceTypeList');
     wrapper.setData({ dialog: false });
+    await flushPromises();
     wrapper.setData({ dialog: true });
+    await flushPromises();
     expect(getPatientList).toBeCalledWith(wrapper.vm.currentProject);
     expect(getsourceTypeList).toBeCalled();
   });
-
 
   it('removeData', () => {
     wrapper.setData({ patientList: ['value'], loading: true, dialog: true });
