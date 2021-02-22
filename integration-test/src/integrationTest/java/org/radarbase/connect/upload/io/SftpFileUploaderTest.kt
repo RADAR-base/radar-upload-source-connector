@@ -84,12 +84,11 @@ class SftpFileUploaderTest {
         val records = converter.convertFile(record, contentsDTO, javaClass.getResourceAsStream(zipName), ConverterLogRepository.QueueRecordLogger(logger, 1L, LinkedList()))
 
         assertNotNull(record)
-        assertEquals(10, records.size) // 5 images, 5x upload + 5x metadata
+        assertEquals(10, records.count()) // 5 images, 5x upload + 5x metadata
         assertEquals(true, records.last().endOfFileOffSet)
-        assertEquals(1, records.filter { it.endOfFileOffSet }.size)
-        val imageRecords = records.filter { it.value is OxfordCameraImage }
-                .map { it.value as OxfordCameraImage }
-        assertEquals(5, imageRecords.size)
+        assertEquals(1, records.count { it.endOfFileOffSet })
+        val imageRecords = records.filterIsInstance<OxfordCameraImage>()
+        assertEquals(5, imageRecords.count())
         imageRecords.forEach {
             assertTrue(URL_REGEX.matchEntire(it.getUrl()) != null, "URL ${it.getUrl()} does not match regex $URL_REGEX")
         }

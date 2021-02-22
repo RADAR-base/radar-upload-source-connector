@@ -10,6 +10,7 @@ import org.radarbase.connect.upload.api.*
 import org.radarbase.connect.upload.converter.CwaCsvInputStream.OPTIONS_EVENTS
 import org.radarbase.connect.upload.converter.axivity.AxivityConverterFactory
 import org.radarcns.connector.upload.axivity.AxivityAcceleration
+import java.io.InputStream
 import java.time.Instant
 import java.util.zip.ZipInputStream
 
@@ -58,27 +59,28 @@ class PhysilogConverterFactoryTest {
     @Test
     @DisplayName("Should be able to convert a zip file with sample data to TopicRecords")
     fun testValidRawDataProcessing() {
-        val records = requireNotNull(PhysilogConverterFactoryTest::class.java.getResourceAsStream("/CWA-DATA.zip")).use { cwaZipFile ->
-            converter.convertFile(record, contentsDTO, cwaZipFile, Mockito.mock(RecordLogger::class.java))
+        val logger = Mockito.mock(RecordLogger::class.java)
+        val records = requireNotNull(javaClass.getResourceAsStream("/CWA-DATA.zip")).use { cwaZipFile ->
+            converter.convertFile(record, contentsDTO, cwaZipFile, logger)
         }
 
         val accRecords = records.filter { it.value.javaClass == AxivityAcceleration::class.java }
 
-        requireNotNull(PhysilogConverterFactoryTest::class.java.getResourceAsStream("/CWA-DATA.zip")).use { cwaZipFile ->
+        requireNotNull(javaClass.getResourceAsStream("/CWA-DATA.zip")).use { cwaZipFile ->
             ZipInputStream(cwaZipFile).use { zipIn ->
                 assertNotNull(zipIn.nextEntry)
                 CwaCsvInputStream(zipIn, 0, 1, -1, OPTIONS_EVENTS).use { cwaIn ->
                     cwaIn.bufferedReader().use { it.readLines() }
                     // without any apparent reason, the CwaCsvInputStream is missing the first block...
-                    assertEquals(cwaIn.line + 80, accRecords.size)
+                    assertEquals(cwaIn.line + 80, accRecords.count())
                 }
             }
         }
 
         assertNotNull(records)
-        assertTrue(records.size > 1000)
+        assertTrue(records.count() > 1000)
         assertEquals(true, records.last().endOfFileOffSet)
-        assertEquals(1, records.filter { it.endOfFileOffSet }.size)
+        assertEquals(1, records.count { it.endOfFileOffSet })
     }
 
 }

@@ -59,9 +59,9 @@ class AltoidaCoverterFactoryTest {
         ), file.inputStream(), Mockito.mock(RecordLogger::class.java))
 
         assertNotNull(records)
-        assertTrue(records.size > 1000)
+        assertTrue(records.count() > 1000)
         assertEquals(true, records.last().endOfFileOffSet)
-        assertEquals(1, records.filter { it.endOfFileOffSet }.size)
+        assertEquals(1, records.count { it.endOfFileOffSet })
     }
 
 
@@ -78,9 +78,9 @@ class AltoidaCoverterFactoryTest {
         ), file.inputStream(), Mockito.mock(RecordLogger::class.java))
 
         assertNotNull(records)
-        assertTrue(records.size > 1000)
+        assertTrue(records.count() > 1000)
         assertEquals(true, records.last().endOfFileOffSet)
-        assertEquals(1, records.filter { it.endOfFileOffSet }.size)
+        assertEquals(1, records.count { it.endOfFileOffSet })
     }
 
     @Test
@@ -97,9 +97,9 @@ class AltoidaCoverterFactoryTest {
         val records = converter.convertFile(record, contentsDTO, file.inputStream(), Mockito.mock(RecordLogger::class.java))
 
         assertNotNull(records)
-        assertEquals(records.size, 4)
+        assertEquals(records.count(), 4)
         assertEquals(true, records.last().endOfFileOffSet)
-        assertEquals(1, records.filter { it.endOfFileOffSet }.size)
+        assertEquals(1, records.count { it.endOfFileOffSet })
 
         val expectedTopics = listOf(
                 "connect_upload_altoida_bit_metrics",
