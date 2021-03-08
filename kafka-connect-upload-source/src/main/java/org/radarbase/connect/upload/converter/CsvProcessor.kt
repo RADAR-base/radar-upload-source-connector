@@ -58,9 +58,9 @@ open class CsvProcessor(
                     }
 
 
-            logger.info("Processing header...")
-            logger.info(header.toString())
-            logger.info(headerProcessors.toString())
+            headerProcessors?.map {
+                header = it.process(header)
+            }
 
             val processors = contentProcessors
                     .filter {
@@ -79,8 +79,6 @@ open class CsvProcessor(
                     .map { it.createLineProcessor(record, logRepository) }
                     .takeIf { it.isNotEmpty() }
                     ?: throw InvalidFormatException("For file ${contents.fileName} in record ${record.id}, cannot find CSV processor that matches header $header")
-
-            logger.info(processors.toString())
 
             generateSequence { reader.readNext() }
                     .map { line ->
