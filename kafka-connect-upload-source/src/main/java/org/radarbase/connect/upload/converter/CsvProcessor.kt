@@ -15,8 +15,9 @@ import java.util.*
 open class CsvProcessor(
         private val record: RecordDTO,
         private val logRepository: LogRepository,
+        private val headerProcessorFactories: List<CsvHeaderProcessorFactory>?,
         private val processorFactories: List<CsvLineProcessorFactory>): FileProcessorFactory.FileProcessor {
-    private val recordLogger = logRepository.createLogger(logger, record.id!!)
+        private val recordLogger = logRepository.createLogger(logger, record.id!!)
 
     override fun processData(contents: ContentsDTO, inputStream: InputStream, timeReceived: Double): List<TopicData> {
         return try {
@@ -36,17 +37,19 @@ open class CsvProcessor(
         val contentProcessors = processorFactories
                 .filter { it.matches(contents) }
 
-        if (contents.size == 0L) {
-            if (contentProcessors.all { it.optional }) {
-                logger.debug("Skipping optional file")
-                return emptyList()
-            } else {
-                throw IOException("Cannot read empty CSV file ${contents.fileName}")
-            }
-        }
+                if (contents.size == 0L) {
+                    if (contentProcessors.all { it.optional }) {
+                        logger.debug("Skipping optional file")
+                        return emptyList()
+                    } else {
+                        throw IOException("Cannot read empty CSV file ${contents.fileName}")
+                    }
+                }
+
+        val headerProcessors = headerProcessorFactories?.filter { it.matches(contents)}
 
         return inputStream.bufferedReader().toCsvReader().use { reader ->
-            val header = reader.readNext()?.map { it.trim().toUpperCase(Locale.US) }
+            var header = reader.readNext()?.map { it.trim().toUpperCase(Locale.US) }
                     ?: if (contentProcessors.all { it.optional }) {
                         logger.debug("Skipping optional file")
                         return@use emptyList()
@@ -54,16 +57,25 @@ open class CsvProcessor(
                         throw IOException("Cannot read empty CSV file ${contents.fileName}")
                     }
 
+
+            logger.info("Processing header...")
+            logger.info(header.toString())
+            logger.info(headerProcessors.toString())
+
             val processors = contentProcessors
                     .filter { it.matches(header) }
-                    .map { it.createLineProcessor(record, logRepository) }
+                    .map {
+                        it.createLineProcessor(record, logRepository)
+                    }
                     .takeIf { it.isNotEmpty() }
                     ?: throw InvalidFormatException("In record ${record.id}, cannot find CSV processor that matches header $header")
+
+            logger.info(processors.toString())
 
             generateSequence { reader.readNext() }
                     .map { line ->
                         val lineMap = header.zip(line).toMap()
-                        processors.flatMap { processor ->
+                        processors.flatMap { processor: CsvLineProcessorFactory.CsvLineProcessor ->
                             processor.takeIf { it.isLineValid(header, line) }
                                     ?.convertToRecord(lineMap, timeReceived)
                                     ?: emptyList()
