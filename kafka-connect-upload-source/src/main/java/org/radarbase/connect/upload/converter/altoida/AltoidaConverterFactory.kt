@@ -22,6 +22,7 @@ package org.radarbase.connect.upload.converter.altoida
 import org.radarbase.connect.upload.api.SourceTypeDTO
 import org.radarbase.connect.upload.converter.*
 import org.radarbase.connect.upload.converter.altoida.summary.AltoidaDomainResultProcessor
+import org.radarbase.connect.upload.converter.altoida.summary.AltoidaHeaderProcessor
 import org.radarbase.connect.upload.converter.altoida.summary.AltoidaSummaryProcessor
 import org.radarbase.connect.upload.converter.altoida.summary.AltoidaTestMetricsProcessor
 
@@ -54,13 +55,18 @@ class AltoidaConverterFactory : ConverterFactory {
                 AltoidaTestMetricsProcessor(AltoidaTestMetricsProcessor.AltoidaTestCategory.BIT, "connect_upload_altoida_bit_metrics"),
                 AltoidaTestMetricsProcessor(AltoidaTestMetricsProcessor.AltoidaTestCategory.DOT, "connect_upload_altoida_dot_metrics"))
 
+        val csvExportHeaderProcessors = listOf(
+                AltoidaHeaderProcessor()
+        )
+
         val fileProcessors = listOf(
-                CsvFileProcessorFactory(csvLineProcessors, logRepository),
+                CsvFileProcessorFactory(processorFactories = csvLineProcessors, logRepository = logRepository),
                 AltoidaMetadataFileProcessor(logRepository))
 
         return listOf(
                 ZipFileProcessorFactory(fileProcessors, logRepository),
-                CsvFileProcessorFactory(csvExportProcessors, logRepository))
+                CsvFileProcessorFactory(csvExportHeaderProcessors, csvExportProcessors, logRepository)
+        )
     }
 }
 
