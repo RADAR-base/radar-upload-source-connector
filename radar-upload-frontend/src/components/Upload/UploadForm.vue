@@ -213,7 +213,7 @@ export default {
   },
   data() {
     return {
-      files: this.oldFiles.map(file => ({
+      files: this.oldFiles.map((file) => ({
         ...file, success: true, error: '', name: file.fileName,
       })),
       sourceType: this.oldSourceType,
@@ -234,14 +234,14 @@ export default {
     },
     totalFileSize() {
       return this.files.length === 0 ? 0
-        : this.files.map(file => file.size)
+        : this.files.map((file) => file.size)
           .reduce((preVal, currentVal) => Number(preVal) + Number(currentVal));
     },
     allFilesUploaded() {
-      return this.files.length && this.files.findIndex(file => !file.success) === -1;
+      return this.files.length && this.files.findIndex((file) => !file.success) === -1;
     },
     hasUploadingFile() {
-      return this.files.length && this.files.findIndex(file => file.active) > 0;
+      return this.files.length && this.files.findIndex((file) => file.active) > 0;
     },
   },
   methods: {
@@ -265,7 +265,7 @@ export default {
     },
     filterUploadingFiles(newFile, oldFile, prevent) {
       if (newFile) {
-        const newFileIndex = this.files.findIndex(file => file.name === newFile.name);
+        const newFileIndex = this.files.findIndex((file) => file.name === newFile.name);
         if (newFileIndex > -1) {
           this.$error(`File ${newFile.name} is duplicated`);
           prevent();
@@ -273,7 +273,7 @@ export default {
       }
     },
     async removeFile(removedFile) {
-      const fileIndex = this.files.findIndex(file => file.name === removedFile.name);
+      const fileIndex = this.files.findIndex((file) => file.name === removedFile.name);
       if (!removedFile.success) { // file not yet uploaded
         this.files.splice(fileIndex, 1);
       } else if (this.activeRecord.status === 'INCOMPLETE') {
@@ -299,14 +299,14 @@ export default {
     startUpload() {
       // filter out error and uploaded files
       this.files
-        .filter(file => !file.success && !file.error)
+        .filter((file) => !file.success && !file.error)
         .forEach((file) => {
           this.processUpload(file);
         });
     },
     async processUpload(fileObject) {
       // only newly pushed files have id
-      const fileIndex = this.files.findIndex(file => file.id === fileObject.id);
+      const fileIndex = this.files.findIndex((file) => file.id === fileObject.id);
       const self = this;
       const onUploadProgress = (progressEvent) => {
         const percentCompleted = Math.floor((progressEvent.loaded * 100) / progressEvent.total);

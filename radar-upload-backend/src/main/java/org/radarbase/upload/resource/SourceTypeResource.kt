@@ -19,6 +19,7 @@
 
 package org.radarbase.upload.resource
 
+import org.radarbase.jersey.cache.Cache
 import org.radarbase.upload.api.SourceTypeContainerDTO
 import org.radarbase.upload.api.SourceTypeDTO
 import org.radarbase.upload.api.SourceTypeMapper
@@ -35,15 +36,18 @@ import javax.ws.rs.core.MediaType
 @Resource
 @Singleton
 class SourceTypeResource(
-        @Context private var sourceTypeRepository: SourceTypeRepository,
-        @Context private var sourceTypeMapper: SourceTypeMapper
+    @Context private var sourceTypeRepository: SourceTypeRepository,
+    @Context private var sourceTypeMapper: SourceTypeMapper,
 ) {
     @GET
-    fun query(@DefaultValue("20") @QueryParam("limit") limit: Int,
-              @QueryParam("lastId") lastId: Long?): SourceTypeContainerDTO {
+    @Cache(maxAge = 300)
+    fun query(
+        @DefaultValue("20") @QueryParam("limit") limit: Int,
+        @QueryParam("lastId") lastId: Long?,
+    ): SourceTypeContainerDTO {
         val imposedLimit = limit
-                .coerceAtLeast(1)
-                .coerceAtMost(100)
+            .coerceAtLeast(1)
+            .coerceAtMost(100)
 
         val records = sourceTypeRepository.readAll(imposedLimit, lastId)
 
@@ -51,12 +55,14 @@ class SourceTypeResource(
     }
 
     @GET
+    @Cache(maxAge = 3600)
     @Path("{name}")
     fun getSourceType(
-            @PathParam("name") name: String): SourceTypeDTO {
+            @PathParam("name") name: String,
+    ): SourceTypeDTO {
 
         val record = sourceTypeRepository.read(name)
-                ?: throw NotFoundException("Source type with name $name not found")
+            ?: throw NotFoundException("Source type with name $name not found")
 
         return sourceTypeMapper.fromSourceType(record)
     }

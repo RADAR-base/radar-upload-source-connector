@@ -63,12 +63,22 @@ open class CsvProcessor(
             logger.info(headerProcessors.toString())
 
             val processors = contentProcessors
-                    .filter { it.matches(header) }
-                    .map {
-                        it.createLineProcessor(record, logRepository)
+                    .filter {
+                        when {
+                            it.matches(header) -> true
+                            it.headerMustMatch -> throw InvalidFormatException(
+                                """
+                                    CSV header of file ${contents.fileName} in record ${record.id} did not match processor ${it.javaClass}
+                                        Found:    $header
+                                        Expected: ${it.header}
+                                """.trimIndent()
+                            )
+                            else -> false
+                        }
                     }
+                    .map { it.createLineProcessor(record, logRepository) }
                     .takeIf { it.isNotEmpty() }
-                    ?: throw InvalidFormatException("In record ${record.id}, cannot find CSV processor that matches header $header")
+                    ?: throw InvalidFormatException("For file ${contents.fileName} in record ${record.id}, cannot find CSV processor that matches header $header")
 
             logger.info(processors.toString())
 

@@ -357,13 +357,13 @@ class RecordRepositoryImpl(
                     ?: throw HttpBadRequestException("unknown_status", "Record status $from is not a known status. Use one of: ${RecordStatus.values().joinToString()}.")
         }
 
-        private val allowedStateTransitions: Map<RecordStatus, Set<RecordStatus>> = EnumMap<RecordStatus, Set<RecordStatus>>(RecordStatus::class.java).apply {
+        private val allowedStateTransitions: Map<RecordStatus, Set<RecordStatus>> = EnumMap<RecordStatus, Set<RecordStatus>>(RecordStatus::class.java).apply {   
             this[RecordStatus.INCOMPLETE] = setOf(RecordStatus.READY, RecordStatus.FAILED)
             this[RecordStatus.READY] = setOf(RecordStatus.QUEUED, RecordStatus.FAILED)
             this[RecordStatus.QUEUED] = setOf(RecordStatus.PROCESSING, RecordStatus.READY, RecordStatus.FAILED)
             this[RecordStatus.PROCESSING] = setOf(RecordStatus.READY, RecordStatus.SUCCEEDED, RecordStatus.FAILED)
-            this[RecordStatus.FAILED] = setOf()
-            this[RecordStatus.SUCCEEDED] = setOf()
+            this[RecordStatus.FAILED] = setOf(RecordStatus.READY)
+            this[RecordStatus.SUCCEEDED] = setOf(RecordStatus.READY)
         }
 
         private val defaultStatusMessage: Map<RecordStatus, String> = EnumMap<RecordStatus, String>(RecordStatus::class.java).apply {

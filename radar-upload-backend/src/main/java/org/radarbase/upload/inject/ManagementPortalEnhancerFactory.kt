@@ -38,38 +38,39 @@ import kotlin.reflect.jvm.jvmName
 class ManagementPortalEnhancerFactory(private val config: Config) : EnhancerFactory {
     override fun createEnhancers(): List<JerseyResourceEnhancer> {
         val authConfig = AuthConfig(
-                managementPortal = MPConfig(
-                        url = config.managementPortalUrl,
-                        clientId = config.clientId,
-                        clientSecret = config.clientSecret
-                ),
-                jwtResourceName = config.jwtResourceName,
-                jwtIssuer = config.jwtIssuer,
-                jwtECPublicKeys = config.jwtECPublicKeys,
-                jwtRSAPublicKeys = config.jwtRSAPublicKeys,
+            managementPortal = MPConfig(
+                url = config.managementPortalUrl,
+                clientId = config.clientId,
+                clientSecret = config.clientSecret,
+            ),
+            jwtResourceName = config.jwtResourceName,
+            jwtIssuer = config.jwtIssuer,
+            jwtECPublicKeys = config.jwtECPublicKeys,
+            jwtRSAPublicKeys = config.jwtRSAPublicKeys,
         )
         val dbConfig = DatabaseConfig(
-                managedClasses = listOf(
-                        Record::class.jvmName,
-                        RecordMetadata::class.jvmName,
-                        RecordLogs::class.jvmName,
-                        RecordContent::class.jvmName,
-                        SourceType::class.jvmName,
-                ),
-                url = config.jdbcUrl,
-                driver = config.jdbcDriver,
-                user = config.jdbcUser,
-                password = config.jdbcPassword,
-                dialect = config.hibernateDialect,
-                properties = config.additionalPersistenceConfig ?: emptyMap(),
+            managedClasses = listOf(
+                Record::class.jvmName,
+                RecordMetadata::class.jvmName,
+                RecordLogs::class.jvmName,
+                RecordContent::class.jvmName,
+                SourceType::class.jvmName,
+            ),
+            url = config.jdbcUrl,
+            driver = config.jdbcDriver,
+            user = config.jdbcUser,
+            password = config.jdbcPassword,
+            dialect = config.hibernateDialect,
+            properties = config.additionalPersistenceConfig ?: emptyMap(),
         )
         return listOf(
-                UploadResourceEnhancer(config),
-                ConfigLoader.Enhancers.radar(authConfig),
-                ConfigLoader.Enhancers.managementPortal(authConfig),
-                ConfigLoader.Enhancers.health,
-                HibernateResourceEnhancer(dbConfig),
-                ConfigLoader.Enhancers.generalException,
-                ConfigLoader.Enhancers.httpException)
+            UploadResourceEnhancer(config),
+            ConfigLoader.Enhancers.radar(authConfig),
+            ConfigLoader.Enhancers.managementPortal(authConfig),
+            ConfigLoader.Enhancers.health,
+            HibernateResourceEnhancer(dbConfig),
+            ConfigLoader.Enhancers.generalException,
+            ConfigLoader.Enhancers.httpException,
+        )
     }
 }
