@@ -46,8 +46,6 @@ open class CsvProcessor(
             }
         }
 
-        val headerProcessors = headerProcessorFactories?.filter { it.matches(contents)}
-
         return inputStream.bufferedReader().toCsvReader().use { reader ->
             var header = reader.readNext()?.map { it.trim().toUpperCase(Locale.US) }
                     ?: if (contentProcessors.all { it.optional }) {
@@ -56,10 +54,6 @@ open class CsvProcessor(
                     } else {
                         throw IOException("Cannot read empty CSV file ${contents.fileName}")
                     }
-
-            headerProcessors?.map {
-                header = it.process(header)
-            }
 
             val processors = contentProcessors
                     .filter {
