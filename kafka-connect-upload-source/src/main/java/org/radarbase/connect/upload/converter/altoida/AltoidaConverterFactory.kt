@@ -63,9 +63,14 @@ class AltoidaConverterFactory : ConverterFactory {
                 CsvFileProcessorFactory(processorFactories = csvLineProcessors, logRepository = logRepository),
                 AltoidaMetadataFileProcessor(logRepository))
 
+        val filePreProcessors = listOf(
+                AltoidaCsvFilePreProcessor(logRepository)
+        )
+
         return listOf(
                 ZipFileProcessorFactory(fileProcessors, logRepository),
-                CsvFileProcessorFactory(csvExportHeaderProcessors, csvExportProcessors, logRepository)
+                CsvFileProcessorFactory(csvExportHeaderProcessors, csvExportProcessors, logRepository),
+                FilePreProcessorFactory(filePreProcessors, logRepository)
         )
     }
 }
