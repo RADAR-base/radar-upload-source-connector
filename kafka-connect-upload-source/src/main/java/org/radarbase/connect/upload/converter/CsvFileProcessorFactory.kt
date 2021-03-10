@@ -20,7 +20,6 @@ import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
 
 open class CsvFileProcessorFactory(
-        open val headerProcessorFactories: List<CsvHeaderProcessorFactory>? = emptyList(),
         open val processorFactories: List<CsvLineProcessorFactory>,
         open val logRepository: LogRepository
 ) : FileProcessorFactory {
@@ -29,6 +28,5 @@ open class CsvFileProcessorFactory(
     override fun createProcessor(record: RecordDTO) = CsvProcessor(
             record,
             logRepository,
-            headerProcessorFactories,
             processorFactories)
 }

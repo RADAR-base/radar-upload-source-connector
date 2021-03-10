@@ -15,7 +15,6 @@ import java.util.*
 open class CsvProcessor(
         private val record: RecordDTO,
         private val logRepository: LogRepository,
-        private val headerProcessorFactories: List<CsvHeaderProcessorFactory>?,
         private val processorFactories: List<CsvLineProcessorFactory>): FileProcessorFactory.FileProcessor {
     private val recordLogger = logRepository.createLogger(logger, record.id!!)
 
