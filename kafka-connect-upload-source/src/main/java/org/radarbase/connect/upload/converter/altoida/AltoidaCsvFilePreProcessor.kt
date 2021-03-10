@@ -27,7 +27,6 @@ import org.radarbase.connect.upload.converter.LogRepository
 import org.radarbase.connect.upload.converter.TopicData
 import org.slf4j.LoggerFactory
 import java.io.*
-import java.nio.charset.StandardCharsets
 
 class AltoidaCsvFilePreProcessor(
         private val logRepository: LogRepository) : FileProcessorFactory {
@@ -41,10 +40,6 @@ class AltoidaCsvFilePreProcessor(
         }
 
         override fun preProcessFile(contents: ContentsDTO, inputStream: InputStream): InputStream {
-            return convertLines(inputStream)
-        }
-
-        open fun convertLines(inputStream: InputStream): InputStream {
             logger.info("Converting input stream..")
 
             return inputStream.bufferedReader().toCsvReader().use { reader ->
