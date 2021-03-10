@@ -99,8 +99,8 @@ class RecordConverter(
             return processorFactories
                     .flatMap {
                         it.createProcessor(record)
-                            .processData(contents, inputStream, System.currentTimeMillis() / 1000.0)                    
-                        }
+                            .processData(contents, inputStream, System.currentTimeMillis() / 1000.0)
+                    }
                     .also { it.lastOrNull()?.endOfFileOffSet = true }
         } catch (exe: Exception) {
             recordLogger.error("Could not convert record ${record.id}", exe)
