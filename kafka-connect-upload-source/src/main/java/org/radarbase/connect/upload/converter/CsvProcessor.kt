@@ -46,7 +46,7 @@ open class CsvProcessor(
         }
 
         return inputStream.bufferedReader().toCsvReader().use { reader ->
-            var header = reader.readNext()?.map { it.trim().toUpperCase(Locale.US) }
+            val header = reader.readNext()?.map { it.trim().toUpperCase(Locale.US) }
                     ?: if (contentProcessors.all { it.optional }) {
                         logger.debug("Skipping optional file")
                         return@use emptyList()

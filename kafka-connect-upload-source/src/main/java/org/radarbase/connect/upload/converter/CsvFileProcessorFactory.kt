@@ -25,8 +25,5 @@ open class CsvFileProcessorFactory(
 ) : FileProcessorFactory {
     override fun matches(contents: ContentsDTO) = processorFactories.any { it.matches(contents) }
 
-    override fun createProcessor(record: RecordDTO) = CsvProcessor(
-            record,
-            logRepository,
-            processorFactories)
+    override fun createProcessor(record: RecordDTO) = CsvProcessor(record, logRepository, processorFactories)
 }

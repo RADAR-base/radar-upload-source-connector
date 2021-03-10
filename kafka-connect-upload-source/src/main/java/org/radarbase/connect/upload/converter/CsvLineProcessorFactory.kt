@@ -74,7 +74,7 @@ interface CsvLineProcessorFactory {
                     false
                 }
                 header.size != line.size -> {
-                    recordLogger.warn("Line size ${line.size} does not match with header size ${header.size}")
+                    recordLogger.warn("Line size ${line.size} does not match with header size ${header.size}. Skipping this line")
                     false
                 }
                 line.any { it.isEmpty() } -> {
