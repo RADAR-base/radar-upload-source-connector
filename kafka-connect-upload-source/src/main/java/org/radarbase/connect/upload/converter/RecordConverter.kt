@@ -99,7 +99,7 @@ class RecordConverter(
             return processorFactories
                     .flatMap {
                         it.createProcessor(record)
-                            .processData(contents, inputStream, System.currentTimeMillis() / 1000.0)
+                            .processData(contents, processedInputStream, System.currentTimeMillis() / 1000.0)
                     }
                     .also { it.lastOrNull()?.endOfFileOffSet = true }
         } catch (exe: Exception) {

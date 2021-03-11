@@ -21,9 +21,7 @@ package org.radarbase.connect.upload.converter.altoida
 
 import org.radarbase.connect.upload.api.SourceTypeDTO
 import org.radarbase.connect.upload.converter.*
-import org.radarbase.connect.upload.converter.altoida.summary.AltoidaDomainResultProcessor
-import org.radarbase.connect.upload.converter.altoida.summary.AltoidaSummaryProcessor
-import org.radarbase.connect.upload.converter.altoida.summary.AltoidaTestMetricsProcessor
+import org.radarbase.connect.upload.converter.altoida.summary.*
 
 class AltoidaConverterFactory : ConverterFactory {
     override val sourceType: String = "altoida"
@@ -59,7 +57,7 @@ class AltoidaConverterFactory : ConverterFactory {
                 AltoidaMetadataFileProcessor(logRepository))
 
         val filePreProcessors = listOf(
-                AltoidaCsvFilePreProcessor(logRepository)
+                AltoidaSummaryCsvPreProcessor(logRepository)
         )
 
         return listOf(
