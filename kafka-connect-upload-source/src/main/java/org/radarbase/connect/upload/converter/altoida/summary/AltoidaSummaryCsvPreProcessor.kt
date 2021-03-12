@@ -19,16 +19,30 @@
 
 package org.radarbase.connect.upload.converter.altoida.summary
 
-import com.opencsv.*
+import com.opencsv.CSVParserBuilder
+import com.opencsv.CSVReader
+import com.opencsv.CSVReaderBuilder
+import com.opencsv.CSVWriter
 import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
 import org.radarbase.connect.upload.converter.FileProcessorFactory
 import org.radarbase.connect.upload.converter.LogRepository
 import org.radarbase.connect.upload.converter.TopicData
 import org.slf4j.LoggerFactory
-import java.io.*
+import java.io.BufferedReader
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.InputStream
 import java.nio.charset.StandardCharsets
 
+
+/**
+ * AltoidaSummaryCsvPreProcesor allows the preprocessing of the export.csv InputStream
+ * before the data is converted into kafka records. This is needed because many export.csv files
+ * have incorrect headers (some header fields are empty or incorrectly matched with the values),
+ * even when the content/values are correct. This replaces the whole header and replaces it with
+ * the correct expected header.
+ */
 class AltoidaSummaryCsvPreProcessor(
         private val logRepository: LogRepository) : FileProcessorFactory {
     override fun matches(contents: ContentsDTO): Boolean = contents.fileName.endsWith("export.csv")
@@ -50,19 +64,17 @@ class AltoidaSummaryCsvPreProcessor(
 
                 if (header.size < fileHeader.size) header = fileHeader
                 val line = reader.readNext()
-                val file = File.createTempFile("export", ".csv")
-                val outputStream = FileOutputStream(file)
-                val writer = CSVWriter(outputStream.bufferedWriter(StandardCharsets.UTF_8))
+                val outputStream =  ByteArrayOutputStream()
+                val writer = CSVWriter(outputStream.writer(StandardCharsets.UTF_8))
 
                 writer.writeNext(header.toTypedArray())
                 writer.writeNext(line)
                 writer.flush()
                 writer.close()
-
                 outputStream.flush()
                 outputStream.close()
 
-                file.inputStream()
+                ByteArrayInputStream(outputStream.toByteArray())
             }
         }
 
