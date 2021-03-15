@@ -92,12 +92,14 @@ class RecordConverter(
         if (processorFactories.isEmpty()) {
             throw ConversionFailedException("Cannot find data processor for record ${record.id} with file ${contents.fileName}")
         }
-
+        var processedInputStream = inputStream
         try {
+            processorFactories.map { processedInputStream = it.createProcessor(record).preProcessFile(contents, processedInputStream) }
+
             return processorFactories
                     .flatMap {
                         it.createProcessor(record)
-                            .processData(contents, inputStream, System.currentTimeMillis() / 1000.0)
+                            .processData(contents, processedInputStream, System.currentTimeMillis() / 1000.0)
                     }
                     .also { it.lastOrNull()?.endOfFileOffSet = true }
         } catch (exe: Exception) {
