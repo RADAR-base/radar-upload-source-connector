@@ -2,8 +2,8 @@
 import { shallowMount } from '@vue/test-utils';
 import flushPromises from 'flush-promises';
 import { Store } from 'vuex-mock-store';
-import RecordTable from '../RecordTable.vue';
 import fileAPI from '@/axios/file';
+import RecordTable from '../RecordTable.vue';
 
 describe('RecordTable', () => {
   // call this api when component is created

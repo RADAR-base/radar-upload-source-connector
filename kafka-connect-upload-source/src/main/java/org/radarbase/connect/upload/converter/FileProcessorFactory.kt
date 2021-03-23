@@ -46,5 +46,10 @@ interface FileProcessorFactory {
                 inputStream: InputStream,
                 timeReceived: Double
         ): Sequence<TopicData>
+
+        fun preProcessFile(
+                contents: ContentsDTO,
+                inputStream: InputStream,
+        ): InputStream = inputStream
     }
 }

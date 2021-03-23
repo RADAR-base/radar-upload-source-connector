@@ -25,7 +25,7 @@ const ApiService = {
   axiosInit(baseURL, store, router) {
     axios.defaults.baseURL = baseURL;
     axios.interceptors.response.use(
-      response => response.data,
+      (response) => response.data,
       // eslint-disable-next-line func-names
       async (error) => {
         if (error.response.status === 401) {

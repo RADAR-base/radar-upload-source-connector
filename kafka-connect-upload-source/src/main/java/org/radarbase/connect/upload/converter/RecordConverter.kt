@@ -98,13 +98,19 @@ class RecordConverter(
         if (processorFactories.isEmpty()) {
             throw ConversionFailedException("Cannot find data processor for record ${record.id} with file ${contents.fileName}")
         }
-
         try {
+            val processedInputStream = processorFactories.fold(inputStream) { stream, factory ->
+                factory.createProcessor(record)
+                    .preProcessFile(contents, stream)
+            }
+
             return processorFactories
                 .asSequence()
-                    .flatMap { it.createProcessor(record)
-                            .processData(contents, inputStream, System.currentTimeMillis() / 1000.0) }
-                    .also { it.lastOrNull()?.endOfFileOffSet = true }
+                .flatMap { factory ->
+                    factory.createProcessor(record)
+                        .processData(contents, processedInputStream, System.currentTimeMillis() / 1000.0)
+                }
+                .also { it.lastOrNull()?.endOfFileOffSet = true }
         } catch (exe: Exception) {
             recordLogger.error("Could not convert record ${record.id}", exe)
             throw ConversionFailedException("Could not convert record ${record.id}",exe)

@@ -39,7 +39,7 @@
       </td>
     </template>
 
-    <template #expanded-item="{item}">
+    <template #expanded-item="{}">
       <td
         :colspan="$vuetify.breakpoint.name==='xs' ? 0 :12"
         class="pa-2"
@@ -56,9 +56,9 @@
 
 <script>
 import { mapState } from 'vuex';
-import Records from './Records';
 import patientAPI from '@/axios/patient';
 import fileAPI from '@/axios/file';
+import Records from './Records';
 
 export default {
   components: {
@@ -84,7 +84,7 @@ export default {
   },
   computed: {
     ...mapState('project', {
-      currentProject: state => state.currentProject.value,
+      currentProject: (state) => state.currentProject.value,
     }),
   },
   watch: {

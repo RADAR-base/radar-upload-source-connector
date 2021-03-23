@@ -30,6 +30,9 @@ abstract class StatelessCsvLineProcessor: CsvLineProcessorFactory {
 
     open val fileNameSuffix: String = ".csv"
 
+    override val headerMustMatch: Boolean
+        get() = fileNameSuffixes != listOf(".csv")
+
     override val optional: Boolean = false
 
     open val timeFieldParser: TimeFieldParser = TimeFieldParser.EpochMillisParser()

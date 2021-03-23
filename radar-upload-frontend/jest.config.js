@@ -30,4 +30,5 @@ module.exports = {
     'jest-watch-typeahead/testname',
   ],
   collectCoverage: true,
+  setupFiles: ['<rootDir>/tests/setup.js'],
 };
