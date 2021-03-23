@@ -24,26 +24,43 @@ class CwaFileProcessorFactory(
     inner class CwaProcessor(record: RecordDTO) : FileProcessorFactory.FileProcessor {
         val recordLogger = logRepository.createLogger(logger, record.id!!)
 
-        override fun processData(contents: ContentsDTO, inputStream: InputStream, timeReceived: Double): List<TopicData> {
+        override fun processData(
+            contents: ContentsDTO,
+            inputStream: InputStream,
+            timeReceived: Double,
+        ): Sequence<TopicData> {
             val cwaReader = CwaReader(inputStream)
 
-            val data = generateSequence { cwaReader.peekBlock() }
+            return sequence {
+                var firstTime = timeReceived
+
+                generateSequence { cwaReader.peekBlock() }
                     .flatMap { block -> processBlock(block, timeReceived) }
-                    .toMutableList()
+                    .forEachIndexed { idx, data ->
+                        if (idx == 0) {
+                            val timeValue = data.value.get(0) as? Double
+                            if (timeValue != null) {
+                                firstTime = timeValue
+                            }
+                        }
+                        yield(data)
+                    }
 
-            val firstTime = data.firstOrNull()?.value?.get(0) as? Double
-                    ?: timeReceived
-
-            data += metadataProcessor.processReader(cwaReader, firstTime, timeReceived)
-
-            return data
+                metadataProcessor.processReader(cwaReader, firstTime, timeReceived)
+                    .forEach { yield(it) }
+            }
         }
 
-        private fun processBlock(block: CwaBlock, timeReceived: Double): Sequence<TopicData> {
+        private fun processBlock(
+            block: CwaBlock,
+            timeReceived: Double,
+        ): Sequence<TopicData> {
             val result = if (block.isDataBlock) {
-                dataBlockProcessors.flatMap { processor ->
-                    processor.processBlock(recordLogger, block, timeReceived)
-                }.asSequence()
+                dataBlockProcessors
+                    .asSequence()
+                    .flatMap { processor ->
+                        processor.processBlock(recordLogger, block, timeReceived)
+                    }.asSequence()
             } else emptySequence()
 
             block.invalidate()
@@ -52,7 +69,11 @@ class CwaFileProcessorFactory(
     }
 
     interface CwaBlockProcessor {
-        fun processBlock(recordLogger: RecordLogger, block: CwaBlock, timeReceived: Double): List<TopicData>
+        fun processBlock(
+            recordLogger: RecordLogger,
+            block: CwaBlock,
+            timeReceived: Double,
+        ): Sequence<TopicData>
 
         fun CwaBlock.startTime(): Double = timestampValues[0] / 1000.0
     }

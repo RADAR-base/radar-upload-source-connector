@@ -81,7 +81,12 @@ class SftpFileUploaderTest {
     fun testValidRawDataProcessing() {
         val zipName = "oxford-camera-sample.zip"
 
-        val records = converter.convertFile(record, contentsDTO, javaClass.getResourceAsStream(zipName), ConverterLogRepository.QueueRecordLogger(logger, 1L, LinkedList()))
+        val records = converter.convertFile(
+            record,
+            contentsDTO,
+            javaClass.getResourceAsStream(zipName),
+            ConverterLogRepository.QueueRecordLogger(logger, 1L, LinkedList())
+        ).toList()
 
         assertNotNull(record)
         assertEquals(10, records.size) // 5 images, 5x upload + 5x metadata

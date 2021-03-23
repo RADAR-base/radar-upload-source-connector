@@ -36,25 +36,32 @@ abstract class StatelessCsvLineProcessor: CsvLineProcessorFactory {
 
     fun time(line: Map<String, String>): Double = timeFieldParser.time(line)
 
-    open fun lineConversion(line: Map<String, String>, timeReceived: Double): TopicData? = null
+    open fun lineConversion(
+        line: Map<String, String>,
+        timeReceived: Double
+    ): TopicData? = null
 
     open fun lineConversions(
-            line: Map<String, String>,
-            timeReceived: Double): List<TopicData>? = lineConversion(line, timeReceived)?.let { listOf(it) }
+        line: Map<String, String>,
+        timeReceived: Double
+    ): Sequence<TopicData>? = lineConversion(line, timeReceived)?.let { sequenceOf(it) }
 
-    override fun createLineProcessor(record: RecordDTO, logRepository: LogRepository): CsvLineProcessorFactory.CsvLineProcessor {
+    override fun createLineProcessor(
+        record: RecordDTO,
+        logRepository: LogRepository
+    ): CsvLineProcessorFactory.CsvLineProcessor {
         val recordLogger = logRepository.createLogger(logger, record.id!!)
         return Processor(recordLogger) { l, t -> lineConversions(l, t) }
     }
 
     internal class Processor(
-            override val recordLogger: RecordLogger,
-            private val conversion: Processor.(lineValues: Map<String, String>, timeReceived: Double) -> List<TopicData>?
+        override val recordLogger: RecordLogger,
+        private val conversion: Processor.(lineValues: Map<String, String>, timeReceived: Double) -> Sequence<TopicData>?
     ) : CsvLineProcessorFactory.CsvLineProcessor {
         override fun convertToRecord(
                 lineValues: Map<String, String>,
                 timeReceived: Double
-        ): List<TopicData>? = conversion(lineValues, timeReceived)
+        ): Sequence<TopicData>? = conversion(lineValues, timeReceived)
     }
 }
 

@@ -45,6 +45,6 @@ interface FileProcessorFactory {
                 contents: ContentsDTO,
                 inputStream: InputStream,
                 timeReceived: Double
-        ): List<TopicData>
+        ): Sequence<TopicData>
     }
 }

@@ -1,6 +1,7 @@
 package org.radarbase.connect.upload
 
 import org.apache.kafka.connect.source.SourceRecord
+import org.radarbase.connect.upload.api.PollDTO
 import org.radarbase.connect.upload.api.RecordDTO
 import org.radarbase.connect.upload.api.UploadBackendClient
 import org.radarbase.connect.upload.converter.ConverterFactory
@@ -36,12 +37,15 @@ class ConverterManager(
 
     private fun poll() {
         // TODO: download new record from backend
-
-        // TODO: result of actual conversion, i.e. processRecord
-        val convertedRecords: Sequence<SourceRecord> = sequenceOf()
-
-        convertedRecords.forEach {
-            queue.put(it)  // this will block if too many records are already present
+        logger.info("Polling new records...")
+        try {
+            uploadClient.pollRecords(PollDTO(1, converters.keys))
+                .records
+                .asSequence()
+                .flatMap { processRecord(it) ?: emptySequence() }
+                .forEach { queue.put(it) }
+        } catch (exe: Throwable) {
+            logger.error("Could not successfully poll records. Waiting for next polling...", exe)
         }
     }
 
@@ -52,8 +56,7 @@ class ConverterManager(
 
             markProcessing(record) ?: return null
 
-            // TODO: Have a proper convert method that returns a sequence
-            converter.convert(record).asSequence()
+            converter.convert(record)
         } catch (exe: ConversionFailedException) {
             logger.error("Could not convert record {}", record.id)
             updateRecordFailure(record, exe)

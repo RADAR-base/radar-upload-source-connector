@@ -77,7 +77,6 @@ class UploadSourceTask : SourceTask() {
         pollInterval = Duration.ofMillis(connectConfig.getLong(SOURCE_POLL_INTERVAL_CONFIG))
         failedPollInterval = pollInterval.dividedBy(10)
 
-        // TODO: make queue size a variable
         queueSize = 1000
         queue = ArrayBlockingQueue(queueSize)
         converterManager = ConverterManager(queue, converters, uploadClient, logRepository, pollInterval)
@@ -99,38 +98,18 @@ class UploadSourceTask : SourceTask() {
         val records = generateSequence { queue.poll() }  // this will retrieve all non-blocking elements
             .take(queueSize) // don't process more than queueSize records at once
             .toList()
-        return if (records.isNotEmpty()) {
-            records
+
+        if (records.isNotEmpty()) {
+            return records
         } else {
             // if no non-blocking elements are available, it's ok to wait for them for a bit.
-            queue.poll(pollInterval.toMillis(), TimeUnit.MILLISECONDS)
-                ?.let { listOf(it) }
+            val polledValue = queue.poll(pollInterval.toMillis(), TimeUnit.MILLISECONDS)
+                ?: return null
+
+            return mutableListOf(polledValue).apply {
+                this += generateSequence { queue.poll() }.take(queueSize - 1)
+            }
         }
-
-//        val timeout = nextPoll.untilNow().toMillis()
-//        if (timeout > 0) {
-//            logger.info("Waiting {} milliseconds for next polling time", timeout)
-//            Thread.sleep(timeout)
-//        }
-
-        // TODO: retrieve data and convert it in ConverterManager instead
-//
-//        logger.info("Polling new records...")
-//        val records: List<RecordDTO> = try {
-//            uploadClient.pollRecords(PollDTO(1, converters.keys)).records
-//        } catch (exe: Throwable) {
-//            logger.error("Could not successfully poll records. Waiting for next polling...")
-//            nextPoll = failedPollInterval.fromNow()
-//            return null
-//        }
-//
-//        nextPoll = pollInterval.fromNow()
-//
-//        logger.info("Received ${records.size} records at $nextPoll")
-//
-//        return records
-//                .flatMap { record -> processRecord(record) ?: emptyList() }
-//                .takeIf { it.isNotEmpty() }
     }
 
     override fun commitRecord(record: SourceRecord?) {

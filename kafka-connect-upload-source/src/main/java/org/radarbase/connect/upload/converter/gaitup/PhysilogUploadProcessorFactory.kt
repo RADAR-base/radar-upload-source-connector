@@ -32,7 +32,7 @@ open class PhysilogUploadProcessorFactory(
     private inner class PhysilogFileUploadProcessor(private val record: RecordDTO) : FileProcessorFactory.FileProcessor {
         private val recordLogger = logRepository.createLogger(logger, record.id!!)
 
-        override fun processData(contents: ContentsDTO, inputStream: InputStream, timeReceived: Double): List<TopicData> {
+        override fun processData(contents: ContentsDTO, inputStream: InputStream, timeReceived: Double): Sequence<TopicData> {
             beforeProcessing(contents)
             val fileName = contents.fileName
             logger.debug("Processing $fileName")
@@ -45,7 +45,7 @@ open class PhysilogUploadProcessorFactory(
 
             try {
                 val url = uploaderCreate().upload(relativePath, inputStream, contents.size)
-                return listOf(TopicData(TOPIC,
+                return sequenceOf(TopicData(TOPIC,
                         PhysilogBinaryDataReference(timeReceived, timeReceived, fileName, url.toString())
                                 .also { recordLogger.info("Uploaded file to ${it.getUrl()}") }))
             } catch (exe: IOException) {
