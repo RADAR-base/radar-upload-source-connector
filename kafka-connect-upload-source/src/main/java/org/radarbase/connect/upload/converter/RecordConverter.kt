@@ -38,17 +38,17 @@ import java.io.InputStream
 import io.confluent.connect.avro.AvroDataConfig
 
 class RecordConverter(
-        override val sourceType: String,
-        private val processorFactories: List<FileProcessorFactory>,
-        private val client: UploadBackendClient,
-        private val logRepository: LogRepository,
-        private val avroData: AvroData = AvroData(AvroDataConfig.Builder()
-                .with(AvroDataConfig.CONNECT_META_DATA_CONFIG, false)
-                .with(AvroDataConfig.SCHEMAS_CACHE_SIZE_CONFIG, 20)
-                .with(AvroDataConfig.ENHANCED_AVRO_SCHEMA_SUPPORT_CONFIG, true)
-                .build())
+    override val sourceType: String,
+    private val processorFactories: List<FileProcessorFactory>,
+    private val client: UploadBackendClient,
+    private val logRepository: LogRepository,
+    private val avroData: AvroData = AvroData(AvroDataConfig.Builder()
+        .with(AvroDataConfig.CONNECT_META_DATA_CONFIG, false)
+        .with(AvroDataConfig.SCHEMAS_CACHE_SIZE_CONFIG, 20)
+        .with(AvroDataConfig.ENHANCED_AVRO_SCHEMA_SUPPORT_CONFIG, true)
+        .build())
 ) : ConverterFactory.Converter {
-    override fun convert(record: RecordDTO): List<SourceRecord> {
+    override fun convert(record: RecordDTO): Sequence<SourceRecord> {
         val recordId = checkNotNull(record.id)
         val recordLogger = logRepository.createLogger(logger, recordId)
         recordLogger.info("Converting record: record-id $recordId")
@@ -61,25 +61,26 @@ class RecordConverter(
             val key = recordData.computeObservationKey(avroData)
 
             val sourceRecords = recordFileNames
-                    .flatMap { contents ->
-                        client.retrieveFile(record, contents.fileName) { body ->
-                            convertFile(record, contents, body.byteStream(), recordLogger)
-                        }
+                .flatMap { contents ->
+                    client.retrieveFile(record, contents.fileName) { body ->
+                        convertFile(record, contents, body.byteStream(), recordLogger)
                     }
-                    .map { topicData ->
-                        try {
-                            val valRecord = avroData.toConnectData(topicData.value.schema, topicData.value)
-                            val offset = mutableMapOf(
-                                    END_OF_RECORD_KEY to topicData.endOfFileOffSet,
-                                    RECORD_ID_KEY to recordId,
-                                    REVISION_KEY to recordMetadata.revision
-                            )
-                            SourceRecord(getPartition(), offset, topicData.topic, key.schema(), key.value(), valRecord.schema(), valRecord.value())
-                        } catch (exe: Exception) {
-                            recordLogger.info("This value ${topicData.value} and schema ${topicData.value.schema.toString(true)} could not be converted")
-                            null
-                        }
+                }
+                .asSequence()
+                .map { topicData ->
+                    try {
+                        val valRecord = avroData.toConnectData(topicData.value.schema, topicData.value)
+                        val offset = mutableMapOf(
+                            END_OF_RECORD_KEY to topicData.endOfFileOffSet,
+                            RECORD_ID_KEY to recordId,
+                            REVISION_KEY to recordMetadata.revision
+                        )
+                        SourceRecord(getPartition(), offset, topicData.topic, key.schema(), key.value(), valRecord.schema(), valRecord.value())
+                    } catch (exe: Exception) {
+                        recordLogger.info("This value ${topicData.value} and schema ${topicData.value.schema.toString(true)} could not be converted")
+                        null
                     }
+                }
             return sourceRecords.filterNotNull()
         } catch (exe: IOException) {
             recordLogger.error("Temporarily could not convert record $recordId", exe)
@@ -95,11 +96,11 @@ class RecordConverter(
 
         try {
             return processorFactories
-                    .flatMap {
-                        it.createProcessor(record)
-                            .processData(contents, inputStream, System.currentTimeMillis() / 1000.0)
-                    }
-                    .also { it.lastOrNull()?.endOfFileOffSet = true }
+                .flatMap {
+                    it.createProcessor(record)
+                        .processData(contents, inputStream, System.currentTimeMillis() / 1000.0)
+                }
+                .also { it.lastOrNull()?.endOfFileOffSet = true }
         } catch (exe: Exception) {
             recordLogger.error("Could not convert record ${record.id}", exe)
             throw ConversionFailedException("Could not convert record ${record.id}",exe)
@@ -114,12 +115,12 @@ class RecordConverter(
 
     private fun RecordDataDTO.computeObservationKey(avroData: AvroData): SchemaAndValue {
         return avroData.toConnectData(
-                ObservationKey.getClassSchema(),
-                ObservationKey(
-                        projectId,
-                        userId,
-                        sourceId
-                )
+            ObservationKey.getClassSchema(),
+            ObservationKey(
+                projectId,
+                userId,
+                sourceId
+            )
         )
     }
 

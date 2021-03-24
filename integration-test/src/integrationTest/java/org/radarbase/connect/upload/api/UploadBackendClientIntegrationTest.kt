@@ -116,7 +116,7 @@ class UploadBackendClientIntegrationTest {
         createdRecord.metadata = uploadBackendClient.updateStatus(recordToProcess.id!!, recordToProcess.metadata!!.copy(status = "PROCESSING", message = "The record is being processed"))
         val convertedRecords = converter.convert(records.records.first())
         assertThat(convertedRecords, not(nullValue()))
-        assertThat(convertedRecords, not(empty()))
+        assertThat(convertedRecords.count(), greaterThan(0))
     }
 
     private fun pollRecords(): RecordContainerDTO {
@@ -125,11 +125,11 @@ class UploadBackendClientIntegrationTest {
                 supportedConverters = setOf(sourceType))
         val records = uploadBackendClient.pollRecords(pollConfig)
         assertNotNull(records)
-        assertThat(records.records.size, greaterThan(0))
+        assertThat(records.records.count(), greaterThan(0))
         records.records.forEach { recordDTO ->
             assertThat(recordDTO.metadata?.status, equalTo(RecordStatus.QUEUED.toString()))
         }
-        println("Polled ${records.records.size} records")
+        println("Polled ${records.records.count()} records")
         return records
     }
 

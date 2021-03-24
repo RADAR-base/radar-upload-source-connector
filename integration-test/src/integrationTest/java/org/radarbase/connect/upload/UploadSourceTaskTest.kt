@@ -72,6 +72,7 @@ class UploadSourceTaskTest {
                 "upload.source.client.tokenUrl" to tokenUrl,
                 "upload.source.backend.baseUrl" to baseUri,
                 "upload.source.poll.interval.ms" to "10000",
+                "upload.source.queue.size" to "1000",
                 "upload.source.record.converter.classes" to listOf(
                         AccelerometerConverterFactory::class.java.name,
                         AltoidaConverterFactory::class.java.name
@@ -98,7 +99,6 @@ class UploadSourceTaskTest {
 
         val sourceRecords = sourceTask.poll()
         assertNotNull(sourceRecords)
-        sourceRecords ?: return
 
         val metadata = retrieveRecordMetadata(accessToken, createdRecord.id!!)
         assertNotNull(metadata)
@@ -121,7 +121,8 @@ class UploadSourceTaskTest {
         assertNotNull(createdRecord.id)
 
         val sourceRecords = sourceTask.poll()
-        assertNull(sourceRecords)
+        assertNotNull(sourceRecords)
+        assertTrue(sourceRecords.isEmpty())
 
         val metadata = retrieveRecordMetadata(accessToken, createdRecord.id!!)
         assertNotNull(metadata)
@@ -137,7 +138,8 @@ class UploadSourceTaskTest {
         assertNotNull(createdRecord.id)
 
         val sourceRecords = sourceTask.poll()
-        assertNull(sourceRecords)
+        assertNotNull(sourceRecords)
+        assertTrue(sourceRecords.isEmpty())
 
         val metadata = retrieveRecordMetadata(accessToken, createdRecord.id!!)
         assertNotNull(metadata)
