@@ -2,6 +2,7 @@ package org.radarbase.connect.upload.converter.gaitup
 
 import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
+import org.radarbase.connect.upload.converter.ConverterFactory
 import org.radarbase.connect.upload.converter.FileProcessorFactory
 import org.radarbase.connect.upload.converter.LogRepository
 import org.radarbase.connect.upload.converter.TopicData
@@ -20,9 +21,9 @@ open class PhysilogUploadProcessorFactory(
         private val uploaderCreate: () -> FileUploaderFactory.FileUploader
 ) : FileProcessorFactory {
 
-    open fun beforeProcessing(contents: ContentsDTO) = Unit
+    open fun beforeProcessing(context: ConverterFactory.ContentsContext) = Unit
 
-    open fun afterProcessing(contents: ContentsDTO) = Unit
+    open fun afterProcessing(context: ConverterFactory.ContentsContext) = Unit
 
     override fun matches(contents: ContentsDTO) = SUFFIX_REGEX.containsMatchIn(contents.fileName)
 
@@ -32,13 +33,13 @@ open class PhysilogUploadProcessorFactory(
         private val recordLogger = logRepository.createLogger(logger, record.id!!)
 
         override fun processData(
-            contents: ContentsDTO,
+            context: ConverterFactory.ContentsContext,
             inputStream: InputStream,
             timeReceived: Double,
             produce: (TopicData) -> Unit
         ) {
-            beforeProcessing(contents)
-            val fileName = contents.fileName
+            beforeProcessing(context)
+            val fileName = context.fileName
             logger.debug("Processing $fileName")
             // Create date directory based on uploaded time.
             val dateDirectory = directoryDateFormatter.format(Instant.now())
@@ -48,7 +49,7 @@ open class PhysilogUploadProcessorFactory(
             val relativePath = Paths.get("$projectId/$userId/$TOPIC/${record.id}/$dateDirectory/$fileName")
 
             try {
-                val url = uploaderCreate().upload(relativePath, inputStream, contents.size)
+                val url = uploaderCreate().upload(relativePath, inputStream, context.contents.size)
                 produce(TopicData(
                     TOPIC,
                     PhysilogBinaryDataReference(timeReceived, timeReceived, fileName, url.toString())
@@ -59,7 +60,7 @@ open class PhysilogUploadProcessorFactory(
                 throw exe
             } finally {
                 logger.info("Finalising the upload")
-                afterProcessing(contents)
+                afterProcessing(context)
             }
 
         }

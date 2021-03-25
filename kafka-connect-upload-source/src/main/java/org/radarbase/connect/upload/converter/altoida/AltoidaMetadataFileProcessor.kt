@@ -21,6 +21,7 @@ package org.radarbase.connect.upload.converter.altoida
 
 import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
+import org.radarbase.connect.upload.converter.ConverterFactory
 import org.radarbase.connect.upload.converter.FileProcessorFactory
 import org.radarbase.connect.upload.converter.LogRepository
 import org.radarbase.connect.upload.converter.TopicData
@@ -38,7 +39,7 @@ class AltoidaMetadataFileProcessor(
 
     private inner class AltoidaMetadataProcessor : FileProcessorFactory.FileProcessor {
         override fun processData(
-            contents: ContentsDTO,
+            context: ConverterFactory.ContentsContext,
             inputStream: InputStream,
             timeReceived: Double,
             produce: (TopicData) -> Unit

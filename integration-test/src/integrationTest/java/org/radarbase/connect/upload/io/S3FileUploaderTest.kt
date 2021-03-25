@@ -7,11 +7,9 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.mockito.Mockito
 import org.radarbase.connect.upload.api.*
-import org.radarbase.connect.upload.converter.ConverterFactory
-import org.radarbase.connect.upload.converter.ConverterLogRepository
-import org.radarbase.connect.upload.converter.LogRepository
-import org.radarbase.connect.upload.converter.TopicData
+import org.radarbase.connect.upload.converter.*
 import org.radarbase.connect.upload.converter.oxford.WearableCameraConverterFactory
 import org.radarcns.connector.upload.oxford.OxfordCameraImage
 import org.slf4j.LoggerFactory
@@ -82,13 +80,15 @@ class S3FileUploaderTest {
         val zipName = "oxford-camera-sample.zip"
 
         val records = mutableListOf<TopicData>()
-        converter.convertFile(
+        val context = ConverterFactory.ContentsContext.create(
             record,
             contentsDTO,
-            javaClass.getResourceAsStream(zipName),
-            ConverterLogRepository.QueueRecordLogger(logger, 1L, LinkedList()),
-            records::add,
+            Mockito.mock(RecordLogger::class.java),
+            RecordConverter.createAvroData(),
         )
+        requireNotNull(javaClass.getResourceAsStream(zipName)).use { zipStream ->
+            converter.convertFile(context, zipStream, records::add)
+        }
 
         assertNotNull(record)
         assertEquals(10, records.size) // 5 images, 5x upload + 5x metadata

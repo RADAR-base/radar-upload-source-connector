@@ -2,10 +2,7 @@ package org.radarbase.connect.upload.converter.axivity
 
 import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
-import org.radarbase.connect.upload.converter.FileProcessorFactory
-import org.radarbase.connect.upload.converter.LogRepository
-import org.radarbase.connect.upload.converter.RecordLogger
-import org.radarbase.connect.upload.converter.TopicData
+import org.radarbase.connect.upload.converter.*
 import org.radarbase.connect.upload.converter.axivity.newcastle.CwaBlock
 import org.radarbase.connect.upload.converter.axivity.newcastle.CwaReader
 import org.slf4j.LoggerFactory
@@ -25,10 +22,10 @@ class CwaFileProcessorFactory(
         val recordLogger = logRepository.createLogger(logger, record.id!!)
 
         override fun processData(
-            contents: ContentsDTO,
+            context: ConverterFactory.ContentsContext,
             inputStream: InputStream,
             timeReceived: Double,
-            produce: (TopicData) -> Unit,
+            produce: (TopicData) -> Unit
         ) {
             val cwaReader = CwaReader(inputStream)
 

@@ -8,14 +8,11 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.mockito.Mockito
 import org.radarbase.connect.upload.api.*
-import org.radarbase.connect.upload.converter.ConverterFactory
-import org.radarbase.connect.upload.converter.ConverterLogRepository
-import org.radarbase.connect.upload.converter.LogRepository
-import org.radarbase.connect.upload.converter.TopicData
+import org.radarbase.connect.upload.converter.*
 import org.radarbase.connect.upload.converter.oxford.WearableCameraConverterFactory
 import org.radarcns.connector.upload.oxford.OxfordCameraImage
-import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.util.*
 
@@ -84,14 +81,15 @@ class SftpFileUploaderTest {
 
         val records = mutableListOf<TopicData>()
 
-        converter.convertFile(
+        val context = ConverterFactory.ContentsContext.create(
             record,
             contentsDTO,
-            javaClass.getResourceAsStream(zipName),
-            ConverterLogRepository.QueueRecordLogger(logger, 1L, LinkedList()),
-            records::add,
+            Mockito.mock(RecordLogger::class.java),
+            RecordConverter.createAvroData(),
         )
-
+        requireNotNull(javaClass.getResourceAsStream(zipName)).use { zipStream ->
+            converter.convertFile(context, zipStream, records::add)
+        }
         assertNotNull(record)
         assertEquals(10, records.size) // 5 images, 5x upload + 5x metadata
         val imageRecords = records.filter { it.value is OxfordCameraImage }
@@ -124,6 +122,5 @@ class SftpFileUploaderTest {
         private const val USER = "connect"
         private const val PASSWORD = "pass"
         private val URL_REGEX = Regex("sftp://localhost:2222/upload/p/u/connect_upload_oxford_camera_image/1/2018-01-02/B0000000[0-9]_[^_]*_20180102_12[0-9]*E\\.jpg")
-        private val logger = LoggerFactory.getLogger(SftpFileUploaderTest::class.java)
     }
 }

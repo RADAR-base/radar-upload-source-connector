@@ -41,14 +41,14 @@ interface FileProcessorFactory {
     /** Processor to process a single file in a record. */
     interface FileProcessor {
         fun processData(
-            contents: ContentsDTO,
+            context: ConverterFactory.ContentsContext,
             inputStream: InputStream,
             timeReceived: Double,
             produce: (TopicData) -> Unit
         )
 
         fun preProcessFile(
-            contents: ContentsDTO,
+            context: ConverterFactory.ContentsContext,
             inputStream: InputStream,
         ): InputStream = inputStream
     }

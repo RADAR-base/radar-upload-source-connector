@@ -37,18 +37,21 @@ open class FilePreProcessorFactory(
 
     inner class FilePreProcessor(private val record: RecordDTO): FileProcessorFactory.FileProcessor {
         override fun processData(
-            contents: ContentsDTO,
+            context: ConverterFactory.ContentsContext,
             inputStream: InputStream,
             timeReceived: Double,
-            produce: (TopicData) -> Unit,
+            produce: (TopicData) -> Unit
         ) = Unit
 
-        override fun preProcessFile(contents: ContentsDTO, inputStream: InputStream): InputStream {
-            val processor = preProcessors.find { it.matches(contents) }
+        override fun preProcessFile(
+            context: ConverterFactory.ContentsContext,
+            inputStream: InputStream
+        ): InputStream {
+            val processor = preProcessors.find { it.matches(context.contents) }
                 ?: throw DataProcessorNotFoundException("Could not find registered processor")
 
             return processor.createProcessor(record)
-                .preProcessFile(contents, inputStream)
+                .preProcessFile(context, inputStream)
         }
     }
 }

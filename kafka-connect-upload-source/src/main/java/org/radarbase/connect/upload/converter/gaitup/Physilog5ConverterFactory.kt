@@ -19,18 +19,21 @@ class Physilog5ConverterFactory : ConverterFactory {
 
     private val localUploader = ThreadLocal<FileUploaderFactory.FileUploader>()
 
-    override fun fileProcessorFactories(settings: Map<String, String>, connectorConfig: SourceTypeDTO, logRepository: LogRepository): List<FileProcessorFactory> {
-
+    override fun fileProcessorFactories(
+        settings: Map<String, String>,
+        connectorConfig: SourceTypeDTO,
+        logRepository: LogRepository,
+    ): List<FileProcessorFactory> {
         val uploaderSupplier = FileUploaderFactory(settings).fileUploader()
 
         logger.info("Physilog data will be uploaded using ${uploaderSupplier.type} to ${uploaderSupplier.advertisedTargetUri()} and ${uploaderSupplier.rootDirectory()}")
-        return listOf( object :
+        return listOf(object :
                 PhysilogUploadProcessorFactory(logRepository, { localUploader.get() }){
-            override fun beforeProcessing(contents: ContentsDTO) {
+            override fun beforeProcessing(context: ConverterFactory.ContentsContext) {
                 localUploader.set(uploaderSupplier)
             }
 
-            override fun afterProcessing(contents: ContentsDTO) {
+            override fun afterProcessing(context: ConverterFactory.ContentsContext) {
                 localUploader.get().closeQuietly()
                 localUploader.remove()
             }

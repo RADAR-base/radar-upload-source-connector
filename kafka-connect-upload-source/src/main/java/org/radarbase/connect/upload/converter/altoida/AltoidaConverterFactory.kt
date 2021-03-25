@@ -61,7 +61,7 @@ class AltoidaConverterFactory : ConverterFactory {
         )
 
         return listOf(
-                ZipFileProcessorFactory(sourceType, fileProcessors, logRepository),
+                ZipFileProcessorFactory(sourceType, fileProcessors),
                 CsvFileProcessorFactory(csvExportProcessors, logRepository),
                 FilePreProcessorFactory(filePreProcessors)
         )

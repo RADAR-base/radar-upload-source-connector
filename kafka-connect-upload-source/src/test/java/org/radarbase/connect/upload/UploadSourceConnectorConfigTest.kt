@@ -48,7 +48,7 @@ class UploadSourceConnectorConfigTest {
         assertEquals("radar_upload_connect", config.oauthClientId)
         assertEquals("test_secret", config.oauthClientSecret)
         assertEquals("http://managementportal-app:8080/managementportal/oauth/token", config.tokenRequestUrl)
-        assertNotNull(config.getAuthenticator())
+        assertNotNull(config.authenticator)
         assertEquals(2, config.converterClasses.size)
     }
 }

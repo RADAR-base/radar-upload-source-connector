@@ -1,7 +1,6 @@
 package org.radarbase.connect.upload.converter.oxford
 
 import okhttp3.internal.closeQuietly
-import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.SourceTypeDTO
 import org.radarbase.connect.upload.converter.ConverterFactory
 import org.radarbase.connect.upload.converter.FileProcessorFactory
@@ -27,12 +26,12 @@ class WearableCameraConverterFactory : ConverterFactory {
             CameraDataFileProcessor(),
             CameraUploadProcessor(logRepository) { localUploader.get() },
         )
-        return listOf(object : ZipFileProcessorFactory(sourceType, processors, logRepository) {
-            override fun beforeProcessing(contents: ContentsDTO) {
+        return listOf(object : ZipFileProcessorFactory(sourceType, processors) {
+            override fun beforeProcessing(contents: ConverterFactory.ContentsContext) {
                 localUploader.set(uploaderSupplier)
             }
 
-            override fun afterProcessing(contents: ContentsDTO) {
+            override fun afterProcessing(contents: ConverterFactory.ContentsContext) {
                 localUploader.get().closeQuietly()
                 localUploader.remove()
             }

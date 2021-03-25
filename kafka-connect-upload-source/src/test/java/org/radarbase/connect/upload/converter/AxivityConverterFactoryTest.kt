@@ -1,6 +1,5 @@
 package org.radarbase.connect.upload.converter
 
-import org.apache.kafka.connect.source.SourceRecord
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.DisplayName
@@ -35,8 +34,12 @@ class AxivityConverterFactoryTest {
                     revision = 1,
                     status = "PROCESSING"
             ),
-            data = null,
-            sourceType = "axivity"
+            data = RecordDataDTO(
+                projectId = "testProject",
+                userId = "testUser",
+                sourceId = "testSource",
+            ),
+        sourceType = "axivity"
 
     )
 
@@ -59,10 +62,16 @@ class AxivityConverterFactoryTest {
     @Test
     @DisplayName("Should be able to convert a zip file with sample data to TopicRecords")
     fun testValidRawDataProcessing() {
-        val records = mutableListOf<TopicData>()
+        val context = ConverterFactory.ContentsContext.create(
+            record,
+            contentsDTO,
+            Mockito.mock(RecordLogger::class.java),
+            RecordConverter.createAvroData(),
+        )
 
+        val records = mutableListOf<TopicData>()
         requireNotNull(AxivityConverterFactoryTest::class.java.getResourceAsStream("/CWA-DATA.zip")).use { cwaZipFile ->
-            converter.convertFile(record, contentsDTO, cwaZipFile, Mockito.mock(RecordLogger::class.java), records::add)
+            converter.convertFile(context, cwaZipFile, records::add)
         }
 
         val accRecords = records.filter { it.value.javaClass == AxivityAcceleration::class.java }

@@ -33,7 +33,7 @@ class AccelerometerZipConverterFactory : ConverterFactory {
         val csvProcessors = listOf(CsvFileProcessorFactory(csvLineProcessors, logRepository))
 
         return listOf(
-            ZipFileProcessorFactory(sourceType, csvProcessors, logRepository),
+            ZipFileProcessorFactory(sourceType, csvProcessors),
         )
     }
 }

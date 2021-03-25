@@ -2,6 +2,7 @@ package org.radarbase.connect.upload.converter.oxford
 
 import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
+import org.radarbase.connect.upload.converter.ConverterFactory
 import org.radarbase.connect.upload.converter.FileProcessorFactory
 import org.radarbase.connect.upload.converter.LogRepository
 import org.radarbase.connect.upload.converter.TopicData
@@ -28,12 +29,12 @@ class CameraUploadProcessor(
         private val recordLogger = logRepository.createLogger(logger, record.id!!)
 
         override fun processData(
-            contents: ContentsDTO,
+            context: ConverterFactory.ContentsContext,
             inputStream: InputStream,
             timeReceived: Double,
             produce: (TopicData) -> Unit
         ) {
-            val fileName = contents.fileName.split('/').last()
+            val fileName = context.fileName.split('/').last()
             val adjustedFilename = SUFFIX_REGEX.replace(fileName, "")
             val formattedTime = checkNotNull(FILENAME_REGEX.matchEntire(fileName)) { "Image file name $fileName does not match pattern" }
                     .groupValues[1]
@@ -45,7 +46,7 @@ class CameraUploadProcessor(
             val userId = checkNotNull(record.data?.userId) { "Project ID required to upload image files." }
             val relativePath = Paths.get("$projectId/$userId/$TOPIC/${record.id}/$dateDirectory/$adjustedFilename.jpg")
 
-            val url = uploaderCreate().upload(relativePath, inputStream, contents.size)
+            val url = uploaderCreate().upload(relativePath, inputStream, context.contents.size)
 
             produce(TopicData(
                 TOPIC,

@@ -32,6 +32,7 @@ import java.time.Instant
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AccelerometerZipConverterFactoryTest {
+    private lateinit var context: ConverterFactory.ContentsContext
     private lateinit var converter: ConverterFactory.Converter
 
     private lateinit var logRepository: LogRepository
@@ -79,7 +80,12 @@ class AccelerometerZipConverterFactoryTest {
             sourceType = "phone-acceleration"
 
         )
-
+        context = ConverterFactory.ContentsContext.create(
+            record,
+            contentsDTO,
+            mock(RecordLogger::class.java),
+            RecordConverter.createAvroData(),
+        )
         converter = converterFactory.converter(emptyMap(), config, uploadBackendClient, logRepository)
     }
 
@@ -94,7 +100,7 @@ class AccelerometerZipConverterFactoryTest {
         val records = mutableListOf<SourceRecord>()
         converter.convertStream(
             record,
-            useStream = { _, _, processStream ->
+            useStream = { _, processStream ->
                 processStream(accFile.inputStream())
             },
             records::add,
@@ -112,7 +118,7 @@ class AccelerometerZipConverterFactoryTest {
         val accFile = File("src/test/resources/ACC.csv")
 
         val exception = assertThrows(ConversionFailedException::class.java) {
-            converter.convertFile(record, contentsDTO, accFile.inputStream(), mock(RecordLogger::class.java)) {}
+            converter.convertFile(context, accFile.inputStream()) {}
         }
         assertNotNull(exception)
     }

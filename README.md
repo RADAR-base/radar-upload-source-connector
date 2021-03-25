@@ -172,6 +172,8 @@ Please copy `etc/source-upload.properties.template` to `etc/source-upload.proper
 <tr>
 <td>upload.source.poll.interval.ms</td></td><td>How often to poll the records to process.</td></td><td>long</td></td><td>60000</td></td><td></td></td><td>low</td></td></tr>
 <tr>
+<td>upload.source.queue.size</td></td><td>Capacity of the records queue.</td></td><td>int</td></td><td>1000</td></td><td></td></td><td>high</td></tr>
+<tr>
 <td>upload.source.client.id</td></td><td>OAuth Client-id of the upload kafka connector.</td></td><td>string</td></td><td>radar-upload-connector-client</td></td><td></td></td><td>high</td></td></tr>
 <tr>
 <td>upload.source.client.secret</td></td><td>OAuth client-secret of the upload kafka connector.</td></td><td>string</td></td><td></td></td><td></td></td><td>high</td></td></tr>

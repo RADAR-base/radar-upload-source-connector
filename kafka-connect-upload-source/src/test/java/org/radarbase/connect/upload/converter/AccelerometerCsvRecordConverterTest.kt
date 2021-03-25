@@ -19,6 +19,7 @@
 
 package org.radarbase.connect.upload.converter
 
+import io.confluent.connect.avro.AvroData
 import org.apache.kafka.connect.source.SourceRecord
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeAll
@@ -27,6 +28,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.mockito.Mockito.mock
 import org.radarbase.connect.upload.api.*
+import org.radarbase.connect.upload.converter.RecordConverter.Companion.createAvroData
 import org.radarbase.connect.upload.converter.phone.AccelerometerConverterFactory
 import org.radarbase.connect.upload.exception.ConversionFailedException
 import java.io.File
@@ -34,7 +36,7 @@ import java.time.Instant
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AccelerometerCsvRecordConverterTest {
-
+    private lateinit var context: ConverterFactory.ContentsContext
     private lateinit var converter: ConverterFactory.Converter
 
     private lateinit var logRepository: LogRepository
@@ -83,6 +85,12 @@ class AccelerometerCsvRecordConverterTest {
                 logRepository = logRepository,
                 settings = emptyMap()
         )
+        context = ConverterFactory.ContentsContext.create(
+            record,
+            contentsDTO,
+            mock(RecordLogger::class.java),
+            createAvroData(),
+        )
     }
 
 
@@ -94,7 +102,7 @@ class AccelerometerCsvRecordConverterTest {
         val records = mutableListOf<SourceRecord>()
         converter.convertStream(
             record,
-            useStream = { _, _, processStream ->
+            useStream = { _, processStream ->
                 processStream(accFile.inputStream())
             },
             records::add,
@@ -116,7 +124,7 @@ class AccelerometerCsvRecordConverterTest {
                         .inputStream()
 
         val exception = assertThrows(ConversionFailedException::class.java) {
-            converter.convertFile(record, contentsDTO, stream, mock(RecordLogger::class.java)) {}
+            converter.convertFile(context, stream) {}
         }
         assertNotNull(exception)
     }
@@ -132,7 +140,7 @@ class AccelerometerCsvRecordConverterTest {
                 .inputStream()
 
         val exception = assertThrows(ConversionFailedException::class.java) {
-            converter.convertFile(record, contentsDTO, stream, mock(RecordLogger::class.java)) {}
+            converter.convertFile(context, stream) {}
         }
         assertNotNull(exception)
     }

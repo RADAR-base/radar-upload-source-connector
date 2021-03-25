@@ -20,13 +20,13 @@ open class CsvProcessor(
     private val recordLogger = logRepository.createLogger(logger, record.id!!)
 
     override fun processData(
-        contents: ContentsDTO,
+        context: ConverterFactory.ContentsContext,
         inputStream: InputStream,
         timeReceived: Double,
-        produce: (TopicData) -> Unit,
+        produce: (TopicData) -> Unit
     ) {
         try {
-            convertLines(contents, inputStream, timeReceived, produce)
+            convertLines(context.contents, inputStream, timeReceived, produce)
         } catch (exe: IOException) {
             recordLogger.error("Something went wrong while processing a contents of record ${record.id}: ${exe.message} ")
             throw exe

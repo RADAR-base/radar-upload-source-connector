@@ -71,15 +71,16 @@ class UploadSourceTaskTest {
         server.start()
 
         val settings = mapOf(
-                "upload.source.client.id" to uploadConnectClient,
-                "upload.source.client.secret" to uploadConnectSecret,
-                "upload.source.client.tokenUrl" to tokenUrl,
-                "upload.source.backend.baseUrl" to baseUri,
-                "upload.source.poll.interval.ms" to "2000",
-                "upload.source.record.converter.classes" to listOf(
-                        AccelerometerConverterFactory::class.java.name,
-                        AltoidaConverterFactory::class.java.name
-                ).joinToString(separator=",")
+            "upload.source.client.id" to uploadConnectClient,
+            "upload.source.client.secret" to uploadConnectSecret,
+            "upload.source.client.tokenUrl" to tokenUrl,
+            "upload.source.backend.baseUrl" to baseUri,
+            "upload.source.poll.interval.ms" to "2000",
+            "upload.source.queue.size" to "1000",
+            "upload.source.record.converter.classes" to listOf(
+                    AccelerometerConverterFactory::class.java.name,
+                    AltoidaConverterFactory::class.java.name
+            ).joinToString(separator=",")
         )
 
         sourceTask.start(settings)

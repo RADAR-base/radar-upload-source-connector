@@ -22,7 +22,7 @@ package org.radarbase.connect.upload
 import org.apache.kafka.connect.source.SourceRecord
 import org.apache.kafka.connect.source.SourceTask
 import org.radarbase.connect.upload.UploadSourceConnectorConfig.Companion.SOURCE_POLL_INTERVAL_CONFIG
-import org.radarbase.connect.upload.api.RecordDTO
+import org.radarbase.connect.upload.UploadSourceConnectorConfig.Companion.SOURCE_QUEUE_SIZE_CONFIG
 import org.radarbase.connect.upload.api.RecordMetadataDTO
 import org.radarbase.connect.upload.api.UploadBackendClient
 import org.radarbase.connect.upload.converter.ConverterFactory
@@ -32,9 +32,6 @@ import org.radarbase.connect.upload.converter.ConverterFactory.Converter.Compani
 import org.radarbase.connect.upload.converter.ConverterFactory.Converter.Companion.REVISION_KEY
 import org.radarbase.connect.upload.converter.ConverterLogRepository
 import org.radarbase.connect.upload.converter.LogRepository
-import org.radarbase.connect.upload.exception.ConflictException
-import org.radarbase.connect.upload.exception.ConversionFailedException
-import org.radarbase.connect.upload.exception.ConversionTemporarilyFailedException
 import org.radarbase.connect.upload.util.VersionUtil
 import org.slf4j.LoggerFactory
 import java.time.Duration
@@ -58,12 +55,12 @@ class UploadSourceTask : SourceTask() {
 
     override fun start(props: Map<String, String>?) {
         val connectConfig = UploadSourceConnectorConfig(props!!)
-        val httpClient = connectConfig.httpClient
         nextPoll = Instant.EPOCH
         uploadClient = UploadBackendClient(
-                connectConfig.getAuthenticator(),
-                httpClient,
-                connectConfig.uploadBackendBaseUrl)
+            connectConfig.authenticator,
+            connectConfig.httpClient,
+            connectConfig.uploadBackendBaseUrl,
+        )
 
         logRepository = ConverterLogRepository()
 
@@ -75,7 +72,7 @@ class UploadSourceTask : SourceTask() {
 
         pollInterval = Duration.ofMillis(connectConfig.getLong(SOURCE_POLL_INTERVAL_CONFIG))
 
-        queueSize = 1000
+        queueSize = connectConfig.getInt(SOURCE_QUEUE_SIZE_CONFIG)
         queue = ArrayBlockingQueue(queueSize)
         converterManager = ConverterManager(queue, converters, uploadClient, logRepository, pollInterval)
 

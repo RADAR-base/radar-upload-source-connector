@@ -53,6 +53,8 @@ The following tables shows the all properties.
 <tr>
 <td>upload.source.poll.interval.ms</td></td><td>How often the connector should poll new data from radar-upload-backend to process in millseconds </td></td><td>long</td></td><td>60000</td></td><td></td></td><td>high</td></td></tr>
 <tr>
+<td>upload.source.queue.size</td></td><td>Capacity of the records queue.</td></td><td>int</td></td><td>1000</td></td><td></td></td><td>high</td></tr>
+<tr>
 <td>upload.source.record.converter.classes</td></td><td>List of `ConverterFactory` classes to be enabled, separated by commas.</td></td><td>list</td></td><td></td></td><td></td></td><td>high</td></td></tr>
 <tr>
 </tbody></table>

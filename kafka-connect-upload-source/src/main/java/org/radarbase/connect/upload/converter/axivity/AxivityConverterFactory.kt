@@ -19,7 +19,6 @@ class AxivityConverterFactory : ConverterFactory {
         return listOf(ZipFileProcessorFactory(
             sourceType,
             listOf(CwaFileProcessorFactory(logRepository, processors.toSet())),
-            logRepository,
         ))
     }
 
