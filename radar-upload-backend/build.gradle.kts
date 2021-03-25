@@ -37,7 +37,6 @@ dependencies {
     testImplementation("org.glassfish.jersey.test-framework.providers:jersey-test-framework-provider-grizzly2:${project.extra["jerseyVersion"]}")
 }
 
-// config JVM target to 1.8 for kotlin compilation tasks
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "11"
 }

@@ -29,6 +29,7 @@ import org.radarbase.connect.upload.converter.ConverterFactory.Converter.Compani
 import org.radarbase.connect.upload.exception.ConversionFailedException
 import org.radarbase.connect.upload.exception.ConversionTemporarilyFailedException
 import org.radarbase.connect.upload.exception.DataProcessorNotFoundException
+import org.radarbase.connect.upload.io.TempFile.Companion.toTempFile
 import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.io.InputStream
@@ -114,26 +115,21 @@ class RecordConverter(
         }
     }
 
-    private fun convertViaTempFile(
-        processors: List<FileProcessorFactory.FileProcessor>,
+    private fun List<FileProcessorFactory.FileProcessor>.processViaTempFile(
         context: ConverterFactory.ContentsContext,
         inputStream: InputStream,
         timeReceived: Double,
         produce: (TopicData) -> Unit
     ) {
-        val tempFile = Files.createTempFile(tempDir, "record-${context.id}-", ".bin")
-        try {
-            inputStream.copyTo(Files.newOutputStream(tempFile))
-            processors.forEach { processor ->
+        inputStream.toTempFile(tempDir, "record-${context.id}-").use { tempFile ->
+            forEach { processor ->
                 processor.processData(
                     context,
-                    Files.newInputStream(tempFile).buffered(),
+                    tempFile.inputStream().buffered(),
                     timeReceived,
                     produce,
                 )
             }
-        } finally {
-            Files.delete(tempFile)
         }
     }
 
@@ -179,8 +175,7 @@ class RecordConverter(
                     produce,
                 )
             } else {
-                convertViaTempFile(
-                    processors,
+                processors.processViaTempFile(
                     context,
                     stream,
                     timeReceived,

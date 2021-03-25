@@ -23,6 +23,7 @@ import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
 import org.radarbase.connect.upload.converter.RecordConverter.Companion.createProcessors
 import org.radarbase.connect.upload.converter.RecordConverter.Companion.preProcess
+import org.radarbase.connect.upload.io.TempFile.Companion.toTempFile
 import java.io.FilterInputStream
 import java.io.IOException
 import java.io.InputStream
@@ -145,19 +146,15 @@ open class ZipFileProcessorFactory(
             produce: (TopicData) -> Unit
         ) {
             val entryName = context.fileName.replace(nonAlphaNumericRegex, "").takeLast(50)
-            val tempFile = Files.createTempFile(tempDir, "record-entry-${record.id}-$entryName", ".bin")
-            try {
-                inputStream.copyTo(Files.newOutputStream(tempFile))
+            inputStream.toTempFile(tempDir, "record-entry-${record.id}-$entryName").use { tempFile ->
                 forEach { processor ->
                     processor.convertDirectly(
                         context,
                         timeReceived,
-                        Files.newInputStream(tempFile).buffered(),
+                        tempFile.inputStream().buffered(),
                         produce,
                     )
                 }
-            } finally {
-                Files.delete(tempFile)
             }
         }
     }

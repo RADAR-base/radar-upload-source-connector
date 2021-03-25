@@ -37,10 +37,6 @@ dependencies {
     testImplementation("org.mockito:mockito-core:${project.extra["mockitoCoreVersion"]}")
 }
 
-tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "11"
-}
-
 task<Test>("integrationTest") {
     description = "Runs the integration tests"
     group = "verification"
@@ -49,20 +45,8 @@ task<Test>("integrationTest") {
     mustRunAfter(tasks["test"])
 }
 
-tasks.withType<Test> {
-    useJUnitPlatform()
-    testLogging {
-        events("passed", "skipped", "failed", "standard_out", "standard_error")
-        setExceptionFormat("full")
-    }
-}
-val compileKotlin: KotlinCompile by tasks
-compileKotlin.kotlinOptions {
-    jvmTarget = "11"
-}
-val compileTestKotlin: KotlinCompile by tasks
-compileTestKotlin.kotlinOptions {
-    jvmTarget = "11"
+tasks.withType<KotlinCompile> {
+    kotlinOptions.jvmTarget = "11"
 }
 
 dockerCompose {
