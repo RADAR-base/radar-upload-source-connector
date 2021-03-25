@@ -32,6 +32,9 @@ import java.io.IOException
 import java.io.InputStream
 import java.nio.file.Paths
 
+/**
+ * Convert records of a certain type to Avro records.
+ */
 class RecordConverter(
     override val sourceType: String,
     processorFactories: List<FileProcessorFactory>,

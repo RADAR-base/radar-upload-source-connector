@@ -11,6 +11,9 @@ import java.io.IOException
 import java.io.InputStream
 import java.util.*
 
+/**
+ * Base class to process CSV files with multiple possible per-CSV-line processors.
+ */
 open class CsvProcessor(
     private val record: RecordDTO,
     private val processorFactories: List<CsvLineProcessorFactory>,
@@ -21,46 +24,58 @@ open class CsvProcessor(
         inputStream: InputStream,
         produce: (TopicData) -> Unit,
     ) {
-        val contentProcessors = processorFactories
+        val contentProcessorsFactories = processorFactories
             .filter { it.matches(context.contents) }
 
         if (context.contents.size == 0L) {
-            if (contentProcessors.all { it.optional }) {
-                context.logger.debug("Skipping optional file")
-                return
-            } else {
-                throw IOException("Cannot read empty CSV file ${context.fileName}")
-            }
+            checkCsvEmpty(contentProcessorsFactories, context)
+            return
         }
 
         inputStream.bufferedReader().toCsvReader().use { reader ->
-            val header = reader.readNext()?.map { it.trim().toUpperCase(Locale.US) }
-                ?: if (contentProcessors.all { it.optional }) {
-                    context.logger.debug("Skipping optional file")
-                    return@use
-                } else {
-                    throw IOException("Cannot read empty CSV file ${context.fileName}")
-                }
-
-            val processors = contentProcessors
-                .filter { it.checkHeader(context.contents, header) }
-                .map { it.createLineProcessor(context) }
-                .takeIf { it.isNotEmpty() }
-                ?: throw InvalidFormatException("For file ${context.fileName} in record ${context.id}, cannot find CSV processor that matches header $header")
-
-
-            generateSequence { reader.readNext() }
-                .flatMap { line: Array<String> ->
-                    processors
-                        .asSequence()
-                        .filter { it.isLineValid(header, line) }
-                        .map { Pair(it, header.zip(line).toMap()) }
-                }
-                .flatMap { (processor, lineMap) ->
-                    processor.convertToRecord(lineMap, context.timeReceived)
-                }
-                .forEach { produce(it) }
+            processCsv(reader, contentProcessorsFactories, context)
+                .forEach(produce)
         }
+    }
+
+    /**
+     * Check whether having an empty CSV file is allowed.
+     * @throws IOException if the CSV file should have contents.
+     */
+    private fun checkCsvEmpty(
+        contentProcessorsFactories: List<CsvLineProcessorFactory>,
+        context: ConverterFactory.ContentsContext,
+    ) {
+        if (contentProcessorsFactories.all { it.optional }) {
+            context.logger.debug("Skipping optional file")
+        } else {
+            throw IOException("Cannot read empty CSV file ${context.fileName}")
+        }
+    }
+
+    private fun processCsv(
+        reader: CSVReader,
+        contentProcessorsFactories: List<CsvLineProcessorFactory>,
+        context: ConverterFactory.ContentsContext,
+    ): Sequence<TopicData> {
+        val rawHeader = reader.readNext()
+        if (rawHeader == null) {
+            checkCsvEmpty(contentProcessorsFactories, context)
+            return emptySequence()
+        }
+        val header = rawHeader.map { it.trim().toUpperCase(Locale.US) }
+
+        val processors = contentProcessorsFactories.createLineProcessors(context, header)
+
+        return generateSequence { reader.readNext() }
+            .flatMap { line: Array<String> ->
+                val lineMap = header.zip(line).toMap()
+
+                processors
+                    .asSequence()
+                    .filter { it.isLineValid(header, line) }
+                    .flatMap { it.convertToRecord(lineMap, context.timeReceived) }
+            }
     }
 
     protected open fun CsvLineProcessorFactory.checkHeader(
@@ -70,10 +85,10 @@ open class CsvProcessor(
         matches(header) -> true
         headerMustMatch -> throw InvalidFormatException(
             """
-                            CSV header of file ${contents.fileName} in record ${record.id} did not match processor $javaClass
-                                Found:    $header
-                                Expected: ${this.header}
-                        """.trimIndent()
+            CSV header of file ${contents.fileName} in record ${record.id} did not match processor $javaClass
+                Found:    $header
+                Expected: ${this.header}
+            """.trimIndent()
         )
         else -> false
     }
@@ -81,5 +96,19 @@ open class CsvProcessor(
     protected open fun BufferedReader.toCsvReader(): CSVReader = CSVReaderBuilder(this)
             .withCSVParser(CSVParserBuilder().withSeparator(',').build())
             .build()
-}
 
+    private fun List<CsvLineProcessorFactory>.createLineProcessors(
+        context: ConverterFactory.ContentsContext,
+        header: List<String>,
+    ): List<CsvLineProcessorFactory.CsvLineProcessor> {
+        val processors = this
+            .filter { it.checkHeader(context.contents, header) }
+            .map { it.createLineProcessor(context) }
+
+        if (processors.isEmpty()) {
+            throw InvalidFormatException("For file ${context.fileName} in record ${context.id}, cannot find CSV processor that matches header $header")
+        }
+
+        return processors
+    }
+}

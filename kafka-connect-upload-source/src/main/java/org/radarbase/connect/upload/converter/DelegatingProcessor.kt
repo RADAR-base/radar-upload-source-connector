@@ -6,6 +6,9 @@ import java.io.InputStream
 import java.nio.file.Files
 import java.nio.file.Path
 
+/**
+ * Delegate file processing to multiple underlying processors.
+ */
 class DelegatingProcessor(
     val processorFactories: List<FileProcessorFactory>,
     val tempDir: Path,
@@ -38,7 +41,7 @@ class DelegatingProcessor(
                 tempDir,
                 generateTempFilePrefix(context),
             ).use { tempFile ->
-                processors.forEach { it.processStream(tempFile.inputStream().buffered()) }
+                processors.forEach { it.processStream(tempFile.inputStream()) }
             }
         }
     }
