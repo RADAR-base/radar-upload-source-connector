@@ -21,7 +21,6 @@ dependencies {
     api("com.squareup.okhttp3:okhttp:${project.extra["okhttpVersion"]}")
     api("io.confluent:kafka-connect-avro-converter:${project.extra["confluentVersion"]}")
     api("org.radarcns:radar-schemas-commons:${project.extra["radarSchemaVersion"]}")
-    api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.3")
 
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${project.extra["jacksonDataVersion"]}")
     implementation("com.fasterxml.jackson.core:jackson-databind:${project.extra["jacksonVersion"]}")

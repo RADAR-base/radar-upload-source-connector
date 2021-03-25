@@ -23,8 +23,7 @@ class ConverterManager(
     private val uploadClient: UploadBackendClient,
     private val logRepository: LogRepository,
     pollDuration: Duration,
-): Closeable
-{
+): Closeable {
     private val executor = Executors.newSingleThreadScheduledExecutor()
 
     init {
@@ -45,9 +44,7 @@ class ConverterManager(
             for (record in records) {
                 val recordLogger = logRepository.createLogger(logger, requireNotNull(record.id))
                 try {
-                    processRecord(record, recordLogger) {
-                        queue.put(it)
-                    }
+                    processRecord(record, recordLogger, queue::put)
                 } catch (ex: Throwable) {
                     recordLogger.error("Cannot convert record", ex)
                 }
@@ -146,25 +143,18 @@ class ConverterManager(
         }
     }
 
-    fun uploadAllLogs(reset: Boolean = true) {
-        logger.info("Uploading all remaining logs")
-        logRepository.recordIds.forEach { r ->
-            logRepository.extract(r, reset)
-                ?.let { uploadClient.addLogs(it) }
-        }
-        logger.info("All record logs are uploaded")
-    }
-
     fun uploadLogs(recordId: Long, reset: Boolean = true) {
         logger.info("Sending record $recordId logs...")
-        logRepository.extract(recordId, reset)
-            ?.let { uploadClient.addLogs(it) }
+        val logs = logRepository.extract(recordId, reset)
+        if (logs != null) uploadClient.addLogs(logs)
     }
 
     override fun close() {
         // this will trigger a interrupt on the put method
         executor.shutdownNow()
-        uploadAllLogs()
+        logger.info("Uploading all remaining logs")
+        logRepository.recordIds.forEach { r -> uploadLogs(r, reset = true) }
+        logger.info("All record logs are uploaded")
     }
 
     companion object {
