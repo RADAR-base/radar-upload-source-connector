@@ -43,7 +43,6 @@ interface FileProcessorFactory {
         fun processData(
             context: ConverterFactory.ContentsContext,
             inputStream: InputStream,
-            timeReceived: Double,
             produce: (TopicData) -> Unit
         )
 

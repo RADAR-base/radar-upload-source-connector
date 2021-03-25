@@ -19,7 +19,6 @@
 
 package org.radarbase.connect.upload.converter
 
-import io.confluent.connect.avro.AvroData
 import org.apache.kafka.connect.source.SourceRecord
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeAll
@@ -86,10 +85,10 @@ class AccelerometerCsvRecordConverterTest {
                 settings = emptyMap()
         )
         context = ConverterFactory.ContentsContext.create(
-            record,
-            contentsDTO,
-            mock(RecordLogger::class.java),
-            createAvroData(),
+            record = record,
+            contents = contentsDTO,
+            logger = mock(RecordLogger::class.java),
+            avroData = createAvroData(),
         )
     }
 
@@ -102,7 +101,7 @@ class AccelerometerCsvRecordConverterTest {
         val records = mutableListOf<SourceRecord>()
         converter.convertStream(
             record,
-            useStream = { _, processStream ->
+            openStream = { _, processStream ->
                 processStream(accFile.inputStream())
             },
             records::add,

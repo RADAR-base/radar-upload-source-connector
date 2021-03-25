@@ -21,10 +21,10 @@ class TempFile(
     }
 
     companion object {
-        fun InputStream.toTempFile(
+        fun InputStream.copyToTempFile(
             tempDir: Path,
             prefix: String,
-        ): TempFile {
+        ): TempFile = use {
             val tempFile = TempFile(tempDir, prefix)
             copyTo(tempFile.outputStream())
             return tempFile

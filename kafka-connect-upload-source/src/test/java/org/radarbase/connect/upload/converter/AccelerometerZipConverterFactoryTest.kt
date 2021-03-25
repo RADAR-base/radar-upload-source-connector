@@ -81,10 +81,10 @@ class AccelerometerZipConverterFactoryTest {
 
         )
         context = ConverterFactory.ContentsContext.create(
-            record,
-            contentsDTO,
-            mock(RecordLogger::class.java),
-            RecordConverter.createAvroData(),
+            record = record,
+            contents = contentsDTO,
+            logger = mock(RecordLogger::class.java),
+            avroData = RecordConverter.createAvroData(),
         )
         converter = converterFactory.converter(emptyMap(), config, uploadBackendClient, logRepository)
     }
@@ -100,7 +100,7 @@ class AccelerometerZipConverterFactoryTest {
         val records = mutableListOf<SourceRecord>()
         converter.convertStream(
             record,
-            useStream = { _, processStream ->
+            openStream = { _, processStream ->
                 processStream(accFile.inputStream())
             },
             records::add,

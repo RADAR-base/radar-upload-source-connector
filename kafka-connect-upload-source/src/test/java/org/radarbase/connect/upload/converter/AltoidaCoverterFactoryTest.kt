@@ -56,15 +56,15 @@ class AltoidaCoverterFactoryTest {
         val file = File("src/test/resources/TEST_ZIP.zip")
 
         val context = ConverterFactory.ContentsContext.create(
-            record,
-            ContentsDTO(
+            record = record,
+            contents = ContentsDTO(
                 contentType = "application/zip",
                 fileName = "TEST_ZIP.zip",
                 createdDate = Instant.now(),
                 size = 1L
             ),
-            Mockito.mock(RecordLogger::class.java),
-            RecordConverter.createAvroData(),
+            logger = Mockito.mock(RecordLogger::class.java),
+            avroData = RecordConverter.createAvroData(),
         )
 
         val records = mutableListOf<TopicData>()
@@ -81,15 +81,15 @@ class AltoidaCoverterFactoryTest {
         val file = File("src/test/resources/ALTOIDA_ANDROID.zip")
 
         val context = ConverterFactory.ContentsContext.create(
-            record,
-            ContentsDTO(
+            record = record,
+            contents = ContentsDTO(
                 contentType = "application/zip",
                 fileName = "ALTOIDA_ANDROID.zip",
                 createdDate = Instant.now(),
                 size = 1L
             ),
-            Mockito.mock(RecordLogger::class.java),
-            RecordConverter.createAvroData(),
+            logger = Mockito.mock(RecordLogger::class.java),
+            avroData = RecordConverter.createAvroData(),
         )
 
         val records = mutableListOf<TopicData>()
@@ -105,15 +105,15 @@ class AltoidaCoverterFactoryTest {
         val file = File("src/test/resources/export.csv")
 
         val context = ConverterFactory.ContentsContext.create(
-            record,
-            ContentsDTO(
+            record = record,
+            contents = ContentsDTO(
                 contentType = "text/csv",
                 fileName = "export.csv",
                 createdDate = Instant.now(),
                 size = 1L
             ),
-            Mockito.mock(RecordLogger::class.java),
-            RecordConverter.createAvroData(),
+            logger = Mockito.mock(RecordLogger::class.java),
+            avroData = RecordConverter.createAvroData(),
         )
 
         val records = mutableListOf<TopicData>()

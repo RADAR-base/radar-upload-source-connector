@@ -43,16 +43,15 @@ import java.nio.charset.StandardCharsets
  * even when the content/values are correct. This replaces the whole header and replaces it with
  * the correct expected header.
  */
-class AltoidaSummaryCsvPreProcessor : FileProcessorFactory {
+class AltoidaSummaryCsvPreProcessorFactory : FileProcessorFactory {
     override fun matches(contents: ContentsDTO): Boolean = contents.fileName.endsWith("export.csv")
 
-    override fun createProcessor(record: RecordDTO): FileProcessorFactory.FileProcessor = AltoidaCsvPreProcessor(record)
+    override fun createProcessor(record: RecordDTO): FileProcessorFactory.FileProcessor = AltoidaSummaryCsvPreProcessor()
 
-    private inner class AltoidaCsvPreProcessor(private val record: RecordDTO) : FileProcessorFactory.FileProcessor {
+    private inner class AltoidaSummaryCsvPreProcessor : FileProcessorFactory.FileProcessor {
         override fun processData(
             context: ConverterFactory.ContentsContext,
             inputStream: InputStream,
-            timeReceived: Double,
             produce: (TopicData) -> Unit
         ) = Unit
 
@@ -90,7 +89,7 @@ class AltoidaSummaryCsvPreProcessor : FileProcessorFactory {
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(AltoidaSummaryCsvPreProcessor::class.java)
+        private val logger = LoggerFactory.getLogger(AltoidaSummaryCsvPreProcessorFactory::class.java)
 
         /** Expected file header list (uppercase). */
         val fileHeader = listOf(

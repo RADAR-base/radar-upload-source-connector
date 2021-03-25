@@ -1,18 +1,12 @@
 package org.radarbase.connect.upload.converter.gaitup
 
 import okhttp3.internal.closeQuietly
-import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.SourceTypeDTO
 import org.radarbase.connect.upload.converter.ConverterFactory
 import org.radarbase.connect.upload.converter.FileProcessorFactory
 import org.radarbase.connect.upload.converter.LogRepository
 import org.radarbase.connect.upload.io.FileUploaderFactory
-import org.radarbase.connect.upload.io.LocalFileUploader
-import org.radarbase.connect.upload.io.SftpFileUploader
 import org.slf4j.LoggerFactory
-import java.net.URI
-import java.nio.file.Path
-import java.nio.file.Paths
 
 class Physilog5ConverterFactory : ConverterFactory {
     override val sourceType: String = "physilog5"
@@ -28,7 +22,7 @@ class Physilog5ConverterFactory : ConverterFactory {
 
         logger.info("Physilog data will be uploaded using ${uploaderSupplier.type} to ${uploaderSupplier.advertisedTargetUri()} and ${uploaderSupplier.rootDirectory()}")
         return listOf(object :
-                PhysilogUploadProcessorFactory(logRepository, { localUploader.get() }){
+                PhysilogUploadProcessorFactory({ localUploader.get() }){
             override fun beforeProcessing(context: ConverterFactory.ContentsContext) {
                 localUploader.set(uploaderSupplier)
             }

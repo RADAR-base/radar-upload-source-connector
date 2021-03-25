@@ -21,14 +21,9 @@ package org.radarbase.connect.upload.converter
 
 import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
-import org.radarbase.connect.upload.converter.RecordConverter.Companion.createProcessors
-import org.radarbase.connect.upload.converter.RecordConverter.Companion.preProcess
-import org.radarbase.connect.upload.io.TempFile.Companion.toTempFile
 import java.io.FilterInputStream
 import java.io.IOException
 import java.io.InputStream
-import java.nio.file.Files
-import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.zip.ZipInputStream
 
@@ -38,19 +33,18 @@ import java.util.zip.ZipInputStream
  */
 open class ZipFileProcessorFactory(
     sourceType: String,
-    private val entryProcessors: List<FileProcessorFactory>,
+    zipEntryProcessors: List<FileProcessorFactory>,
 ) : FileProcessorFactory {
-    private val tempDir: Path = Paths.get(System.getProperty("java.io.tmpdir"), "upload-connector", "$sourceType-zip-cache")
-
-    init {
-        if (Files.exists(tempDir)) {
-            Files.walk(tempDir)
-                .sorted(Comparator.reverseOrder())
-                .forEach(Files::delete)
-        }
-        Files.createDirectories(tempDir)
-    }
-
+    private val delegatingProcessor = DelegatingProcessor(
+        processorFactories = zipEntryProcessors,
+        tempDir = Paths.get(System.getProperty("java.io.tmpdir"), "upload-connector", "$sourceType-zip-cache"),
+        generateTempFilePrefix = { context ->
+            val safeEntryName = context.fileName
+                .replace(nonAlphaNumericRegex, "")
+                .takeLast(50)
+            "record-entry-${context.id}-$safeEntryName-"
+        },
+    )
 
     open fun entryFilter(name: String): Boolean = true
 
@@ -66,55 +60,32 @@ open class ZipFileProcessorFactory(
         override fun processData(
             context: ConverterFactory.ContentsContext,
             inputStream: InputStream,
-            timeReceived: Double,
             produce: (TopicData) -> Unit
         ) {
             context.logger.info("Retrieved Zip content from filename ${context.fileName}")
             beforeProcessing(context)
             try {
-                ZipInputStream(inputStream).use { zippedInput ->
-                    generateSequence { zippedInput.nextEntry }
+                ZipInputStream(inputStream).use { zipInputStream ->
+                    generateSequence { zipInputStream.nextEntry }
                         .ifEmpty { throw IOException("No zipped entry found from ${context.fileName}") }
                         .filter { !it.isDirectory && entryFilter(it.name.trim()) }
-                        .forEach { zippedEntry ->
-                            val entryName = zippedEntry.name.trim()
-                            context.logger.debug("Processing entry $entryName from record ${record.id}")
-
-                            val entryContext = ConverterFactory.ContentsContext.create(
-                                record,
-                                ContentsDTO(
-                                    fileName = entryName,
-                                    size = zippedEntry.size
+                        .forEach { zipEntry ->
+                            delegatingProcessor.processData(
+                                context = context.copy(
+                                    contents = ContentsDTO(
+                                        fileName = zipEntry.name.trim(),
+                                        size = zipEntry.size
+                                    ),
                                 ),
-                                context.logger,
-                                context.avroData,
+                                inputStream = object : FilterInputStream(zipInputStream) {
+                                    @Throws(IOException::class)
+                                    override fun close() {
+                                        context.logger.debug("Closing entry ${context.fileName}")
+                                        zipInputStream.closeEntry()
+                                    }
+                                },
+                                produce,
                             )
-
-                            val processors = entryProcessors.createProcessors(entryContext)
-
-                            val entryStream: InputStream = object : FilterInputStream(zippedInput) {
-                                @Throws(IOException::class)
-                                override fun close() {
-                                    context.logger.debug("Closing entry $entryName")
-                                    zippedInput.closeEntry()
-                                }
-                            }.preProcess(processors, entryContext)
-
-                            if (processors.size == 1) {
-                                processors.first().convertDirectly(
-                                    entryContext,
-                                    timeReceived,
-                                    entryStream,
-                                    produce,
-                                )
-                            } else {
-                                processors.convertViaTempFile(
-                                    entryContext,
-                                    timeReceived,
-                                    entryStream,
-                                    produce,
-                                )
-                            }
                         }
                 }
             } catch (exe: IOException) {
@@ -125,36 +96,6 @@ open class ZipFileProcessorFactory(
                 throw exe
             } finally {
                 afterProcessing(context)
-            }
-        }
-
-
-        private fun FileProcessorFactory.FileProcessor.convertDirectly(
-            context: ConverterFactory.ContentsContext,
-            timeReceived: Double,
-            inputStream: InputStream,
-            produce: (TopicData) -> Unit,
-        ) {
-            context.logger.debug("Processing ${context.fileName} with ${javaClass.simpleName} processor")
-            processData(context, inputStream, timeReceived, produce)
-        }
-
-        private fun List<FileProcessorFactory.FileProcessor>.convertViaTempFile(
-            context: ConverterFactory.ContentsContext,
-            timeReceived: Double,
-            inputStream: InputStream,
-            produce: (TopicData) -> Unit
-        ) {
-            val entryName = context.fileName.replace(nonAlphaNumericRegex, "").takeLast(50)
-            inputStream.toTempFile(tempDir, "record-entry-${record.id}-$entryName").use { tempFile ->
-                forEach { processor ->
-                    processor.convertDirectly(
-                        context,
-                        timeReceived,
-                        tempFile.inputStream().buffered(),
-                        produce,
-                    )
-                }
             }
         }
     }

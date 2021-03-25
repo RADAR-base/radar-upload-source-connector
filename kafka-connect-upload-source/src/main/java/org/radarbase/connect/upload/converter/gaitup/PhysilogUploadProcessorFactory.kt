@@ -4,7 +4,6 @@ import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
 import org.radarbase.connect.upload.converter.ConverterFactory
 import org.radarbase.connect.upload.converter.FileProcessorFactory
-import org.radarbase.connect.upload.converter.LogRepository
 import org.radarbase.connect.upload.converter.TopicData
 import org.radarbase.connect.upload.io.FileUploaderFactory
 import org.radarcns.connector.upload.physilog.PhysilogBinaryDataReference
@@ -17,8 +16,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 open class PhysilogUploadProcessorFactory(
-        private val logRepository: LogRepository,
-        private val uploaderCreate: () -> FileUploaderFactory.FileUploader
+    private val uploaderCreate: () -> FileUploaderFactory.FileUploader
 ) : FileProcessorFactory {
 
     open fun beforeProcessing(context: ConverterFactory.ContentsContext) = Unit
@@ -30,17 +28,14 @@ open class PhysilogUploadProcessorFactory(
     override fun createProcessor(record: RecordDTO): FileProcessorFactory.FileProcessor = PhysilogFileUploadProcessor(record)
 
     private inner class PhysilogFileUploadProcessor(private val record: RecordDTO) : FileProcessorFactory.FileProcessor {
-        private val recordLogger = logRepository.createLogger(logger, record.id!!)
-
         override fun processData(
             context: ConverterFactory.ContentsContext,
             inputStream: InputStream,
-            timeReceived: Double,
             produce: (TopicData) -> Unit
         ) {
             beforeProcessing(context)
             val fileName = context.fileName
-            logger.debug("Processing $fileName")
+            context.logger.debug("Processing $fileName")
             // Create date directory based on uploaded time.
             val dateDirectory = directoryDateFormatter.format(Instant.now())
 
@@ -49,17 +44,26 @@ open class PhysilogUploadProcessorFactory(
             val relativePath = Paths.get("$projectId/$userId/$TOPIC/${record.id}/$dateDirectory/$fileName")
 
             try {
-                val url = uploaderCreate().upload(relativePath, inputStream, context.contents.size)
+                val url = uploaderCreate()
+                    .upload(relativePath, inputStream, context.contents.size)
+                    .toString()
+
+                context.logger.info("Uploaded file to $url")
+
                 produce(TopicData(
                     TOPIC,
-                    PhysilogBinaryDataReference(timeReceived, timeReceived, fileName, url.toString())
-                        .also { recordLogger.info("Uploaded file to ${it.getUrl()}") },
+                    PhysilogBinaryDataReference(
+                        context.timeReceived,
+                        context.timeReceived,
+                        fileName,
+                        url,
+                    ),
                 ))
             } catch (exe: IOException) {
-                logger.error("Could not upload file", exe)
+                context.logger.error("Could not upload file", exe)
                 throw exe
             } finally {
-                logger.info("Finalising the upload")
+                context.logger.info("Finalising the upload")
                 afterProcessing(context)
             }
 

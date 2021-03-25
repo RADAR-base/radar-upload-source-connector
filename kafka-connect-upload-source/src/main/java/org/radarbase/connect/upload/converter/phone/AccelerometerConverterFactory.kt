@@ -26,7 +26,12 @@ class AccelerometerConverterFactory : ConverterFactory {
     override val sourceType: String = "phone-acceleration"
 
     override fun fileProcessorFactories(settings: Map<String, String>, connectorConfig: SourceTypeDTO, logRepository: LogRepository): List<FileProcessorFactory> {
-        return listOf(CsvFileProcessorFactory(listOf(
-                AccelerometerCsvProcessor()), logRepository))
+        return listOf(
+            CsvFileProcessorFactory(
+                csvProcessorFactories = listOf(
+                    AccelerometerCsvProcessor()
+                ),
+            ),
+        )
     }
 }

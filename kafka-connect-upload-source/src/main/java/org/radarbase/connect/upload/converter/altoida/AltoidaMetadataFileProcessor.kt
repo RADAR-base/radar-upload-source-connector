@@ -23,14 +23,11 @@ import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
 import org.radarbase.connect.upload.converter.ConverterFactory
 import org.radarbase.connect.upload.converter.FileProcessorFactory
-import org.radarbase.connect.upload.converter.LogRepository
 import org.radarbase.connect.upload.converter.TopicData
 import org.radarcns.connector.upload.altoida.AltoidaMetadata
-import org.slf4j.LoggerFactory
 import java.io.InputStream
 
-class AltoidaMetadataFileProcessor(
-        private val logRepository: LogRepository) : FileProcessorFactory {
+class AltoidaMetadataFileProcessor : FileProcessorFactory {
     private val topic = "connect_upload_altoida_metadata"
 
     override fun matches(contents: ContentsDTO): Boolean = contents.fileName.endsWith("VERSION.csv")
@@ -41,7 +38,6 @@ class AltoidaMetadataFileProcessor(
         override fun processData(
             context: ConverterFactory.ContentsContext,
             inputStream: InputStream,
-            timeReceived: Double,
             produce: (TopicData) -> Unit
         ) {
             val version = inputStream.bufferedReader().use { it.readLine() }
@@ -49,14 +45,10 @@ class AltoidaMetadataFileProcessor(
                 topic,
                 AltoidaMetadata(
                     System.currentTimeMillis() / 1000.0,
-                    timeReceived,
+                    context.timeReceived,
                     version,
                 ),
             ))
         }
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(AltoidaMetadataFileProcessor::class.java)
     }
 }

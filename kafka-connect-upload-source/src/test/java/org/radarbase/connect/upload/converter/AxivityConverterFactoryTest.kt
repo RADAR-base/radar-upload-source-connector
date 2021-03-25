@@ -63,10 +63,10 @@ class AxivityConverterFactoryTest {
     @DisplayName("Should be able to convert a zip file with sample data to TopicRecords")
     fun testValidRawDataProcessing() {
         val context = ConverterFactory.ContentsContext.create(
-            record,
-            contentsDTO,
-            Mockito.mock(RecordLogger::class.java),
-            RecordConverter.createAvroData(),
+            record = record,
+            contents = contentsDTO,
+            logger = Mockito.mock(RecordLogger::class.java),
+            avroData = RecordConverter.createAvroData(),
         )
 
         val records = mutableListOf<TopicData>()

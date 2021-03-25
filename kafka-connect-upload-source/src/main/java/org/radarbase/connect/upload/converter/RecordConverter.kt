@@ -22,39 +22,30 @@ package org.radarbase.connect.upload.converter
 import io.confluent.connect.avro.AvroData
 import io.confluent.connect.avro.AvroDataConfig
 import org.apache.kafka.connect.source.SourceRecord
-import org.radarbase.connect.upload.api.*
+import org.radarbase.connect.upload.api.RecordDTO
+import org.radarbase.connect.upload.api.UploadBackendClient
 import org.radarbase.connect.upload.converter.ConverterFactory.Converter.Companion.END_OF_RECORD_KEY
-import org.radarbase.connect.upload.converter.ConverterFactory.Converter.Companion.RECORD_ID_KEY
-import org.radarbase.connect.upload.converter.ConverterFactory.Converter.Companion.REVISION_KEY
 import org.radarbase.connect.upload.exception.ConversionFailedException
 import org.radarbase.connect.upload.exception.ConversionTemporarilyFailedException
-import org.radarbase.connect.upload.exception.DataProcessorNotFoundException
-import org.radarbase.connect.upload.io.TempFile.Companion.toTempFile
 import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.io.InputStream
-import java.nio.file.Files
-import java.nio.file.Path
 import java.nio.file.Paths
 
 class RecordConverter(
     override val sourceType: String,
-    private val processorFactories: List<FileProcessorFactory>,
+    processorFactories: List<FileProcessorFactory>,
     private val client: UploadBackendClient,
     private val logRepository: LogRepository,
     private val avroData: AvroData = createAvroData(),
 ) : ConverterFactory.Converter {
-
-    private val tempDir: Path = Paths.get(System.getProperty("java.io.tmpdir"), "upload-connector", "$sourceType-cache")
-
-    init {
-        if (Files.exists(tempDir)) {
-            Files.walk(tempDir)
-                .sorted(Comparator.reverseOrder())
-                .forEach(Files::delete)
-        }
-        Files.createDirectories(tempDir)
-    }
+    private val delegatingProcessor = DelegatingProcessor(
+        processorFactories = processorFactories,
+        tempDir = Paths.get(System.getProperty("java.io.tmpdir"), "upload-connector", "$sourceType-cache"),
+        generateTempFilePrefix = { context ->
+            "record-${context.id}-"
+        },
+    )
 
     override fun convert(
         record: RecordDTO,
@@ -62,7 +53,7 @@ class RecordConverter(
     ) {
         convertStream(
             record,
-            useStream = { context, mapStream ->
+            openStream = { context, mapStream ->
                 client.retrieveFile(context.record, context.fileName) { body ->
                     mapStream(body.byteStream())
                 }
@@ -73,36 +64,35 @@ class RecordConverter(
 
     override fun convertStream(
         record: RecordDTO,
-        useStream: (ConverterFactory.ContentsContext, (InputStream) -> Unit) -> Unit,
+        openStream: (ConverterFactory.ContentsContext, (InputStream) -> Unit) -> Unit,
         produce: (SourceRecord) -> Unit,
     ) {
         val contexts = ConverterFactory.ContentsContext.createAll(record, logRepository, avroData)
 
         try {
+            // Cannot submit data immediately: we need to mark the last data record
+            // Once a new data point is generated, we can submit the previous data record. After
+            // all data points are mapped, submit the last data record with a key setting it to
+            // end of record.
             var previousData: SourceRecord? = null
 
             contexts.forEach { context ->
                 try {
-                    val produceTopicData: (TopicData) -> Unit = { topicData ->
-                        val currentData = previousData
-                        previousData = topicData.toSourceRecord(context)
-                        if (currentData != null) {
-                            produce(currentData)
+                    openStream(context) { stream ->
+                        convertFile(context, stream) { topicData ->
+                            val currentData = previousData
+                            previousData = topicData.toSourceRecord(context, getPartition())
+                            if (currentData != null) {
+                                produce(currentData)
+                            }
                         }
-                    }
-
-                    useStream(context) { stream ->
-                        convertFile(
-                            context,
-                            stream,
-                            produceTopicData,
-                        )
                     }
                 } catch (exe: IOException) {
                     context.logger.error("Temporarily could not convert record", exe)
                     throw ConversionTemporarilyFailedException("Temporarily could not convert record ${context.id}", exe)
                 }
             }
+
             val lastData = previousData
             if (lastData != null) {
                 @Suppress("UNCHECKED_CAST")
@@ -115,73 +105,13 @@ class RecordConverter(
         }
     }
 
-    private fun List<FileProcessorFactory.FileProcessor>.processViaTempFile(
-        context: ConverterFactory.ContentsContext,
-        inputStream: InputStream,
-        timeReceived: Double,
-        produce: (TopicData) -> Unit
-    ) {
-        inputStream.toTempFile(tempDir, "record-${context.id}-").use { tempFile ->
-            forEach { processor ->
-                processor.processData(
-                    context,
-                    tempFile.inputStream().buffered(),
-                    timeReceived,
-                    produce,
-                )
-            }
-        }
-    }
-
-    private fun TopicData.toSourceRecord(
-        context: ConverterFactory.ContentsContext
-    ): SourceRecord {
-        try {
-            val valRecord = avroData.toConnectData(value.schema, value)
-            val offset = mutableMapOf(
-                END_OF_RECORD_KEY to false,
-                RECORD_ID_KEY to context.id,
-                REVISION_KEY to context.metadata.revision
-            )
-            return SourceRecord(
-                getPartition(),
-                offset,
-                topic,
-                context.key.schema(),
-                context.key.value(),
-                valRecord.schema(),
-                valRecord.value()
-            )
-        } catch (exe: Exception) {
-            context.logger.info("This value $value and schema ${value.schema.toString(true)} could not be converted")
-            throw exe
-        }
-    }
-
     override fun convertFile(
         context: ConverterFactory.ContentsContext,
         inputStream: InputStream,
         produce: (TopicData) -> Unit,
     ) {
         try {
-            val processors = processorFactories.createProcessors(context)
-            val timeReceived = System.currentTimeMillis() / 1000.0
-            val stream = inputStream.preProcess(processors, context)
-            if (processors.size == 1) {
-                processors.first().processData(
-                    context,
-                    inputStream,
-                    timeReceived,
-                    produce,
-                )
-            } else {
-                processors.processViaTempFile(
-                    context,
-                    stream,
-                    timeReceived,
-                    produce,
-                )
-            }
+            delegatingProcessor.processData(context, inputStream, produce)
         } catch (exe: Exception) {
             context.logger.error("Could not convert record ${context.id}", exe)
             throw ConversionFailedException("Could not convert record ${context.id}",exe)
@@ -198,27 +128,6 @@ class RecordConverter(
 
     companion object {
         private val logger = LoggerFactory.getLogger(RecordConverter::class.java)
-
-        fun InputStream.preProcess(
-            processors: List<FileProcessorFactory.FileProcessor>,
-            context: ConverterFactory.ContentsContext,
-        ): InputStream = processors.fold(this) { stream, processor -> processor.preProcessFile(context, stream) }
-
-        fun Iterable<FileProcessorFactory>.createProcessors(
-            context: ConverterFactory.ContentsContext,
-        ): List<FileProcessorFactory.FileProcessor> {
-            val processors = mapNotNull { factory ->
-                if (factory.matches(context.contents)) {
-                    factory.createProcessor(context.record)
-                } else {
-                    null
-                }
-            }
-            if (processors.isEmpty()) {
-                throw DataProcessorNotFoundException("Cannot find data processor for record ${context.id} with file ${context.fileName}")
-            }
-            return processors
-        }
 
         fun createAvroData(): AvroData = AvroData(
             AvroDataConfig.Builder()

@@ -4,11 +4,9 @@ import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
 import org.radarbase.connect.upload.converter.ConverterFactory
 import org.radarbase.connect.upload.converter.FileProcessorFactory
-import org.radarbase.connect.upload.converter.LogRepository
 import org.radarbase.connect.upload.converter.TopicData
 import org.radarbase.connect.upload.io.FileUploaderFactory
 import org.radarcns.connector.upload.oxford.OxfordCameraImage
-import org.slf4j.LoggerFactory
 import java.io.InputStream
 import java.nio.file.Paths
 import java.time.ZoneId
@@ -16,8 +14,7 @@ import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoField
 
 class CameraUploadProcessor(
-        private val logRepository: LogRepository,
-        private val uploaderCreate: () -> FileUploaderFactory.FileUploader
+    private val uploaderCreate: () -> FileUploaderFactory.FileUploader
 ) : FileProcessorFactory {
     override fun matches(contents: ContentsDTO) = SUFFIX_REGEX.containsMatchIn(contents.fileName)
 
@@ -26,12 +23,9 @@ class CameraUploadProcessor(
     private inner class FileUploadProcessor(
         private val record: RecordDTO,
     ) : FileProcessorFactory.FileProcessor {
-        private val recordLogger = logRepository.createLogger(logger, record.id!!)
-
         override fun processData(
             context: ConverterFactory.ContentsContext,
             inputStream: InputStream,
-            timeReceived: Double,
             produce: (TopicData) -> Unit
         ) {
             val fileName = context.fileName.split('/').last()
@@ -46,12 +40,15 @@ class CameraUploadProcessor(
             val userId = checkNotNull(record.data?.userId) { "Project ID required to upload image files." }
             val relativePath = Paths.get("$projectId/$userId/$TOPIC/${record.id}/$dateDirectory/$adjustedFilename.jpg")
 
-            val url = uploaderCreate().upload(relativePath, inputStream, context.contents.size)
+            val url = uploaderCreate()
+                .upload(relativePath, inputStream, context.contents.size)
+                .toString()
+
+            context.logger.info("Uploaded file to $url")
 
             produce(TopicData(
                 TOPIC,
-                OxfordCameraImage(time, timeReceived, adjustedFilename, url.toString())
-                    .also { recordLogger.info("Uploaded file to ${it.getUrl()}") },
+                OxfordCameraImage(time, context.timeReceived, adjustedFilename, url),
             ))
         }
     }
@@ -65,7 +62,5 @@ class CameraUploadProcessor(
                 .withZone(ZoneId.of("UTC"))
         private val directoryDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
                 .withZone(ZoneId.of("UTC"))
-
-        private val logger = LoggerFactory.getLogger(CameraUploadProcessor::class.java)
     }
 }

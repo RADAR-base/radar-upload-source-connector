@@ -65,10 +65,10 @@ class PhysilogConverterFactoryTest {
         val records = mutableListOf<TopicData>()
 
         val context = ConverterFactory.ContentsContext.create(
-            record,
-            contentsDTO,
-            Mockito.mock(RecordLogger::class.java),
-            RecordConverter.createAvroData(),
+            record = record,
+            contents = contentsDTO,
+            logger = Mockito.mock(RecordLogger::class.java),
+            avroData = RecordConverter.createAvroData(),
         )
         requireNotNull(PhysilogConverterFactoryTest::class.java.getResourceAsStream("/CWA-DATA.zip")).use { cwaZipFile ->
             converter.convertFile(context, cwaZipFile, records::add)

@@ -10,7 +10,6 @@ import org.radarcns.connector.upload.oxford.OxfordCameraAxes
 import org.radarcns.connector.upload.oxford.OxfordCameraData
 import org.radarcns.connector.upload.oxford.OxfordCameraRgb
 import java.io.InputStream
-import java.io.InputStreamReader
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeFormatterBuilder
 
@@ -23,7 +22,6 @@ class CameraDataFileProcessor : FileProcessorFactory {
         override fun processData(
             context: ConverterFactory.ContentsContext,
             inputStream: InputStream,
-            timeReceived: Double,
             produce: (TopicData) -> Unit
         ) {
             val lines = inputStream.bufferedReader().use { it.readLines() }
@@ -41,7 +39,7 @@ class CameraDataFileProcessor : FileProcessorFactory {
                 .map { line ->
                     TopicData(
                         TOPIC,
-                        line.toOxfordCameraRecord(header, timeReceived),
+                        line.toOxfordCameraRecord(header, context.timeReceived),
                     )
                 }
                 .forEach(produce)

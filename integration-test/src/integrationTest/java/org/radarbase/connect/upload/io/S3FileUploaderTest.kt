@@ -81,10 +81,10 @@ class S3FileUploaderTest {
 
         val records = mutableListOf<TopicData>()
         val context = ConverterFactory.ContentsContext.create(
-            record,
-            contentsDTO,
-            Mockito.mock(RecordLogger::class.java),
-            RecordConverter.createAvroData(),
+            record = record,
+            contents = contentsDTO,
+            logger = Mockito.mock(RecordLogger::class.java),
+            avroData = RecordConverter.createAvroData(),
         )
         requireNotNull(javaClass.getResourceAsStream(zipName)).use { zipStream ->
             converter.convertFile(context, zipStream, records::add)

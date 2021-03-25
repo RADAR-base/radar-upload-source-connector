@@ -26,14 +26,16 @@ class AccelerometerZipConverterFactory : ConverterFactory {
         settings: Map<String, String>,
         connectorConfig: SourceTypeDTO,
         logRepository: LogRepository
-    ): List<FileProcessorFactory> {
-        val csvLineProcessors  = listOf<CsvLineProcessorFactory>(
-                AccelerometerCsvProcessor())
-
-        val csvProcessors = listOf(CsvFileProcessorFactory(csvLineProcessors, logRepository))
-
-        return listOf(
-            ZipFileProcessorFactory(sourceType, csvProcessors),
-        )
-    }
+    ): List<FileProcessorFactory> = listOf(
+        ZipFileProcessorFactory(
+            sourceType,
+            zipEntryProcessors = listOf(
+                CsvFileProcessorFactory(
+                    csvProcessorFactories = listOf(
+                        AccelerometerCsvProcessor(),
+                    )
+                ),
+            ),
+        ),
+    )
 }

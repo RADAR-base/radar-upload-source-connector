@@ -24,16 +24,15 @@ class CwaFileProcessorFactory(
         override fun processData(
             context: ConverterFactory.ContentsContext,
             inputStream: InputStream,
-            timeReceived: Double,
             produce: (TopicData) -> Unit
         ) {
             val cwaReader = CwaReader(inputStream)
 
             try {
-                var firstTime = timeReceived
+                var firstTime = context.timeReceived
 
                 generateSequence { cwaReader.peekBlock() }
-                    .flatMap { block -> processBlock(block, timeReceived) }
+                    .flatMap { block -> processBlock(block, context.timeReceived) }
                     .forEachIndexed { idx, data ->
                         if (idx == 0) {
                             val timeValue = data.value.get(0) as? Double
@@ -44,7 +43,7 @@ class CwaFileProcessorFactory(
                         produce(data)
                     }
 
-                metadataProcessor.processReader(cwaReader, firstTime, timeReceived)
+                metadataProcessor.processReader(cwaReader, firstTime, context.timeReceived)
                     .forEach { produce(it) }
             } finally {
                 cwaReader.close()

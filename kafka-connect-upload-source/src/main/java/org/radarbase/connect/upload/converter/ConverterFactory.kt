@@ -61,16 +61,16 @@ interface ConverterFactory {
             produce: (SourceRecord) -> Unit,
         )
 
+        fun convertStream(
+            record: RecordDTO,
+            openStream: (ContentsContext, (InputStream) -> Unit) -> Unit,
+            produce: (SourceRecord) -> Unit
+        )
+
         fun convertFile(
             context: ContentsContext,
             inputStream: InputStream,
             produce: (TopicData) -> Unit,
-        )
-
-        fun convertStream(
-            record: RecordDTO,
-            useStream: (ContentsContext, (InputStream) -> Unit) -> Unit,
-            produce: (SourceRecord) -> Unit
         )
 
         fun getPartition(): MutableMap<String, Any>
@@ -82,12 +82,13 @@ interface ConverterFactory {
         }
     }
 
-    class ContentsContext(
+    data class ContentsContext(
         val id: Long,
         val record: RecordDTO,
         val contents: ContentsDTO,
         val metadata: RecordMetadataDTO,
         val data: RecordDataDTO,
+        val timeReceived: Double,
         val logger: RecordLogger,
         val avroData: AvroData,
     ) {
@@ -107,6 +108,7 @@ interface ConverterFactory {
             fun create(
                 record: RecordDTO,
                 contents: ContentsDTO,
+                timeReceived: Double = System.currentTimeMillis() / 1000.0,
                 logger: RecordLogger,
                 avroData: AvroData,
             ): ContentsContext {
@@ -120,6 +122,7 @@ interface ConverterFactory {
                     data = data,
                     contents = contents,
                     metadata = metadata,
+                    timeReceived = timeReceived,
                     logger = logger,
                     avroData = avroData,
                 )
@@ -134,6 +137,7 @@ interface ConverterFactory {
                 val data = checkNotNull(record.data) { "Record data cannot be null" }
                 val metadata = checkNotNull(record.metadata) { "Record meta-data cannot be null" }
                 val logger = logRepository.createLogger(logger, id)
+                val timeReceived = System.currentTimeMillis() / 1000.0
 
                 return checkNotNull(data.contents) { "Record data has empty content" }
                     .map { contents ->
@@ -143,6 +147,7 @@ interface ConverterFactory {
                             data = data,
                             contents = contents,
                             metadata = metadata,
+                            timeReceived = timeReceived,
                             logger = logger,
                             avroData = avroData,
                         )
