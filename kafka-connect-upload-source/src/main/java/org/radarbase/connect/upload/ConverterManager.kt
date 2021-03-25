@@ -6,6 +6,7 @@ import org.radarbase.connect.upload.api.RecordDTO
 import org.radarbase.connect.upload.api.UploadBackendClient
 import org.radarbase.connect.upload.converter.ConverterFactory
 import org.radarbase.connect.upload.converter.LogRepository
+import org.radarbase.connect.upload.converter.RecordLogger
 import org.radarbase.connect.upload.exception.ConflictException
 import org.radarbase.connect.upload.exception.ConversionFailedException
 import org.radarbase.connect.upload.exception.ConversionTemporarilyFailedException
@@ -27,6 +28,7 @@ class ConverterManager(
     private val executor = Executors.newSingleThreadScheduledExecutor()
 
     init {
+        logger.info("Poll with interval {}", pollDuration)
         executor.scheduleAtFixedRate(
             ::poll,
             pollDuration.toMillis() / 2,
@@ -36,54 +38,67 @@ class ConverterManager(
     }
 
     private fun poll() {
-        // TODO: download new record from backend
         logger.info("Polling new records...")
-        try {
-            uploadClient.pollRecords(PollDTO(1, converters.keys))
-                .records
-                .asSequence()
-                .flatMap { processRecord(it) ?: emptySequence() }
-                .forEach { queue.put(it) }
+        val records = try {
+            uploadClient.pollRecords(PollDTO(1, converters.keys)).records
         } catch (exe: Throwable) {
             logger.error("Could not successfully poll records. Waiting for next polling...", exe)
+            return
+        }
+        for (record in records) {
+            val recordLogger = logRepository.createLogger(logger, requireNotNull(record.id))
+            try {
+                processRecord(record, recordLogger) {
+                    queue.put(it)
+                }
+            } catch (ex: Throwable) {
+                recordLogger.error("Cannot convert record", ex)
+            }
         }
     }
 
-    private fun processRecord(record: RecordDTO): Sequence<SourceRecord>? {
-        return try {
+    private fun processRecord(
+        record: RecordDTO,
+        recordLogger: RecordLogger,
+        produce: (SourceRecord) -> Unit,
+    ) {
+        try {
             val converter = converters[record.sourceType]
                 ?: throw ConversionTemporarilyFailedException("Could not find converter ${record.sourceType} for record ${record.id}")
 
-            markProcessing(record) ?: return null
+            markProcessing(record, recordLogger) ?: return
 
-            converter.convert(record)
+            converter.convert(record, produce)
         } catch (exe: ConversionFailedException) {
-            logger.error("Could not convert record {}", record.id)
-            updateRecordFailure(record, exe)
-            null
+            recordLogger.error("Could not convert record")
+            updateRecordFailure(record, recordLogger, exe)
+            throw exe
         } catch (exe: ConversionTemporarilyFailedException) {
-            logger.error("Could not convert record {} due to temporary failure", record.id)
-            updateRecordTemporaryFailure(record, exe)
-            null
+            recordLogger.error("Could not convert record due to temporary failure")
+            updateRecordTemporaryFailure(record, recordLogger, exe)
+            throw exe
         } catch (exe: Throwable) {
-            logger.error("Could not convert record {} due to application failure", record.id, exe)
-            updateRecordTemporaryFailure(record,
+            recordLogger.error("Could not convert record due to application failure", exe)
+            updateRecordTemporaryFailure(record, recordLogger,
                 ConversionTemporarilyFailedException("Could not convert record ${record.id} due to application failure", exe))
-            null
+            throw exe
         }
     }
 
-    private fun markProcessing(record: RecordDTO): RecordDTO? {
+    private fun markProcessing(
+        record: RecordDTO,
+        recordLogger: RecordLogger,
+    ): RecordDTO? {
         return try {
             record.apply {
                 metadata = uploadClient.updateStatus(
                     record.id!!,
                     record.metadata!!.copy(status = "PROCESSING")
                 )
-                logger.debug("Updated metadata $id to PROCESSING")
+                recordLogger.debug("Updated metadata to PROCESSING")
             }
         } catch (exe: ConflictException) {
-            logger.warn("Conflicting request was made. Skipping this record")
+            recordLogger.warn("Conflicting request was made. Skipping this record")
             null
         } catch (exe: Exception) {
             throw ConversionTemporarilyFailedException("Cannot update record metadata", exe)
@@ -92,11 +107,11 @@ class ConverterManager(
 
     private fun updateRecordFailure(
         record: RecordDTO,
+        recordLogger: RecordLogger,
         exe: Exception,
-        reason: String = "Could not convert this record. Please refer to the conversion logs for more details"
+        reason: String = "Could not convert this record. Please refer to the conversion logs for more details",
     ) {
         val recordId = record.id ?: return
-        val recordLogger = logRepository.createLogger(logger, recordId)
         recordLogger.error("$reason: ${exe.message}", exe.cause)
         val metadata = uploadClient.retrieveRecordMetadata(recordId)
         val updatedMetadata = uploadClient.updateStatus(recordId, metadata.copy(
@@ -112,10 +127,11 @@ class ConverterManager(
 
     private fun updateRecordTemporaryFailure(
         record: RecordDTO,
+        recordLogger: RecordLogger,
         exe: Exception,
-        reason: String = "Temporarily could not convert this record. Please refer to the conversion logs for more details") {
+        reason: String = "Temporarily could not convert this record. Please refer to the conversion logs for more details",
+    ) {
         logger.info("Update record conversion failure")
-        val recordLogger = logRepository.createLogger(logger, record.id!!)
         recordLogger.error("$reason: ${exe.message}", exe.cause)
         val metadata = uploadClient.retrieveRecordMetadata(record.id!!)
         val updatedMetadata = uploadClient.updateStatus(record.id!!, metadata.copy(

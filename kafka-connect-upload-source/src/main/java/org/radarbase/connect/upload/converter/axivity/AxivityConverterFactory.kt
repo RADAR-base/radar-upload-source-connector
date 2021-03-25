@@ -17,8 +17,10 @@ class AxivityConverterFactory : ConverterFactory {
         val processors = createProcessors(connectorConfig.configuration ?: emptyMap())
 
         return listOf(ZipFileProcessorFactory(
-                listOf(CwaFileProcessorFactory(logRepository, processors.toSet())),
-                logRepository))
+            sourceType,
+            listOf(CwaFileProcessorFactory(logRepository, processors.toSet())),
+            logRepository,
+        ))
     }
 
     private fun createProcessors(config: Map<String, String>): Set<CwaFileProcessorFactory.CwaBlockProcessor> {

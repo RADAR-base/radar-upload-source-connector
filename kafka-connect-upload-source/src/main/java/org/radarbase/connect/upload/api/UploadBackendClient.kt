@@ -63,7 +63,11 @@ open class UploadBackendClient(
         url("$uploadBackendBaseUrl/source-types")
     }
 
-    open fun <T> retrieveFile(record: RecordDTO, fileName: String, handling: (ResponseBody) -> T): T {
+    open fun <T> retrieveFile(
+        record: RecordDTO,
+        fileName: String,
+        handling: (ResponseBody) -> T,
+    ): T {
         return httpClient.executeRequest({
             url("$uploadBackendBaseUrl/records/${record.id}/contents/$fileName")
         }) {
@@ -93,14 +97,16 @@ open class UploadBackendClient(
     }
 
     private inline fun <reified T: Any> OkHttpClient.executeRequest(
-            noinline requestBuilder: Request.Builder.() -> Request.Builder): T = executeRequest(requestBuilder) { response ->
+        noinline requestBuilder: Request.Builder.() -> Request.Builder,
+    ): T = executeRequest(requestBuilder) { response ->
         mapper.readValue(response.body?.byteStream(), T::class.java)
                 ?: throw IOException("Received invalid response")
     }
 
     private fun <T> OkHttpClient.executeRequest(
-            requestBuilder: Request.Builder.() -> Request.Builder,
-            handling: (Response) -> T): T {
+        requestBuilder: Request.Builder.() -> Request.Builder,
+        handling: (Response) -> T,
+    ): T {
         val request = Request.Builder().requestBuilder().build()
         return this.newCall(request).execute().use { response ->
             if (response.isSuccessful) {

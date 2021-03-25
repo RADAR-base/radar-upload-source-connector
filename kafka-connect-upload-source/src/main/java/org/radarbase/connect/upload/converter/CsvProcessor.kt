@@ -3,6 +3,7 @@ package org.radarbase.connect.upload.converter
 import com.opencsv.CSVParserBuilder
 import com.opencsv.CSVReader
 import com.opencsv.CSVReaderBuilder
+import kotlinx.coroutines.flow.emptyFlow
 import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
 import org.radarbase.connect.upload.exception.InvalidFormatException
@@ -18,9 +19,14 @@ open class CsvProcessor(
         private val processorFactories: List<CsvLineProcessorFactory>): FileProcessorFactory.FileProcessor {
     private val recordLogger = logRepository.createLogger(logger, record.id!!)
 
-    override fun processData(contents: ContentsDTO, inputStream: InputStream, timeReceived: Double): Sequence<TopicData> {
-        return try {
-            convertLines(contents, inputStream, timeReceived)
+    override fun processData(
+        contents: ContentsDTO,
+        inputStream: InputStream,
+        timeReceived: Double,
+        produce: (TopicData) -> Unit,
+    ) {
+        try {
+            convertLines(contents, inputStream, timeReceived, produce)
         } catch (exe: IOException) {
             recordLogger.error("Something went wrong while processing a contents of record ${record.id}: ${exe.message} ")
             throw exe
@@ -32,63 +38,65 @@ open class CsvProcessor(
     open fun convertLines(
         contents: ContentsDTO,
         inputStream: InputStream,
-        timeReceived: Double
-    ): Sequence<TopicData> {
+        timeReceived: Double,
+        produce: (TopicData) -> Unit
+    ) {
         val contentProcessors = processorFactories
                 .filter { it.matches(contents) }
 
         if (contents.size == 0L) {
             if (contentProcessors.all { it.optional }) {
                 logger.debug("Skipping optional file")
-                return emptySequence()
+                return
             } else {
                 throw IOException("Cannot read empty CSV file ${contents.fileName}")
             }
         }
 
-        return inputStream.bufferedReader().toCsvReader()
-            .use { reader ->
-                val header = reader.readNext()?.map { it.trim().toUpperCase(Locale.US) }
-                    ?: if (contentProcessors.all { it.optional }) {
-                        logger.debug("Skipping optional file")
-                        return@use emptySequence()
-                    } else {
-                        throw IOException("Cannot read empty CSV file ${contents.fileName}")
-                    }
-
-                val processors = contentProcessors
-                    .filter {
-                        when {
-                            it.matches(header) -> true
-                            it.headerMustMatch -> throw InvalidFormatException(
-                                """
-                                    CSV header of file ${contents.fileName} in record ${record.id} did not match processor ${it.javaClass}
-                                        Found:    $header
-                                        Expected: ${it.header}
-                                """.trimIndent()
-                            )
-                            else -> false
-                        }
-                    }
-                    .map { it.createLineProcessor(record, logRepository) }
-                    .takeIf { it.isNotEmpty() }
-                    ?: throw InvalidFormatException("For file ${contents.fileName} in record ${record.id}, cannot find CSV processor that matches header $header")
-
-                sequence {
-                    generateSequence { reader.readNext() }
-                        .flatMap<Array<String>, TopicData> { line ->
-                            val lineMap = header.zip(line).toMap()
-                            processors
-                                .asSequence()
-                                .filter { it.isLineValid(header, line) }
-                                .flatMap { processor ->
-                                    processor.convertToRecord(lineMap, timeReceived)
-                                        ?: emptySequence()
-                                }
-                        }
-                        .forEach { yield(it) }
+        inputStream.bufferedReader().toCsvReader().use { reader ->
+            val header = reader.readNext()?.map { it.trim().toUpperCase(Locale.US) }
+                ?: if (contentProcessors.all { it.optional }) {
+                    logger.debug("Skipping optional file")
+                    return@use
+                } else {
+                    throw IOException("Cannot read empty CSV file ${contents.fileName}")
                 }
-            }
+
+            val processors = contentProcessors
+                .filter { it.checkHeader(contents, header) }
+                .map { it.createLineProcessor(record, logRepository) }
+                .takeIf { it.isNotEmpty() }
+                ?: throw InvalidFormatException("For file ${contents.fileName} in record ${record.id}, cannot find CSV processor that matches header $header")
+
+
+            generateSequence { reader.readNext() }
+                .flatMap { line: Array<String> ->
+                    val lineMap = header.zip<String, String>(line).toMap()
+                    processors
+                        .asSequence()
+                        .filter { it.isLineValid(header, line) }
+                        .flatMap { processor ->
+                            processor.convertToRecord(lineMap, timeReceived)
+                                ?: emptySequence()
+                        }
+                }
+                .forEach { produce(it) }
+        }
+    }
+
+    protected open fun CsvLineProcessorFactory.checkHeader(
+        contents: ContentsDTO,
+        header: List<String>,
+    ): Boolean = when {
+        matches(header) -> true
+        headerMustMatch -> throw InvalidFormatException(
+            """
+                            CSV header of file ${contents.fileName} in record ${record.id} did not match processor $javaClass
+                                Found:    $header
+                                Expected: ${this.header}
+                        """.trimIndent()
+        )
+        else -> false
     }
 
     protected open fun BufferedReader.toCsvReader(): CSVReader = CSVReaderBuilder(this)

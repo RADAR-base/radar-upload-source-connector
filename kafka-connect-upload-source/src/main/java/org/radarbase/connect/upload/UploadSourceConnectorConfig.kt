@@ -33,13 +33,12 @@ import org.radarbase.connect.upload.converter.altoida.AltoidaConverterFactory
 import org.radarbase.connect.upload.converter.axivity.AxivityConverterFactory
 import org.radarbase.connect.upload.converter.gaitup.Physilog5ConverterFactory
 import org.radarbase.connect.upload.converter.oxford.WearableCameraConverterFactory
-import org.radarbase.connect.upload.converter.phone.AcceleratometerZipConverterFactory
+import org.radarbase.connect.upload.converter.phone.AccelerometerZipConverterFactory
 import org.radarbase.connect.upload.converter.phone.AccelerometerConverterFactory
 import org.radarbase.connect.upload.io.FileUploaderFactory
 import org.radarbase.connect.upload.io.UploadType
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.net.URI
 import java.util.concurrent.TimeUnit
 
 class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, String>) :
@@ -113,7 +112,7 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
         private const val UPLOAD_SOURCE_CONVERTERS_DISPLAY = "List of record converter factory class"
         private val UPLOAD_SOURCE_CONVERTERS_DEFAULT: List<String> = listOf(
                 AccelerometerConverterFactory::class.java.name,
-                AcceleratometerZipConverterFactory::class.java.name,
+                AccelerometerZipConverterFactory::class.java.name,
                 AltoidaConverterFactory::class.java.name,
                 WearableCameraConverterFactory::class.java.name,
                 AxivityConverterFactory::class.java.name,

@@ -23,10 +23,13 @@ import okhttp3.Call
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody
 import okio.BufferedSink
+import org.apache.kafka.connect.source.SourceRecord
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
+import org.radarbase.connect.upload.converter.ConverterFactory.Converter.Companion.END_OF_RECORD_KEY
 import org.radarbase.connect.upload.converter.altoida.AltoidaConverterFactory
 import org.radarbase.connect.upload.converter.phone.AccelerometerConverterFactory
+import org.radarbase.connect.upload.util.TestBase.Companion.APPLICATION_ZIP
 import org.radarbase.connect.upload.util.TestBase.Companion.baseUri
 import org.radarbase.connect.upload.util.TestBase.Companion.createRecord
 import org.radarbase.connect.upload.util.TestBase.Companion.createRecordAndUploadContent
@@ -43,6 +46,7 @@ import org.radarbase.jersey.GrizzlyServer
 import org.radarbase.jersey.config.ConfigLoader
 import org.radarbase.upload.inject.ManagementPortalEnhancerFactory
 import java.io.IOException
+import java.util.concurrent.TimeUnit
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class UploadSourceTaskTest {
@@ -71,7 +75,7 @@ class UploadSourceTaskTest {
                 "upload.source.client.secret" to uploadConnectSecret,
                 "upload.source.client.tokenUrl" to tokenUrl,
                 "upload.source.backend.baseUrl" to baseUri,
-                "upload.source.poll.interval.ms" to "10000",
+                "upload.source.poll.interval.ms" to "2000",
                 "upload.source.record.converter.classes" to listOf(
                         AccelerometerConverterFactory::class.java.name,
                         AltoidaConverterFactory::class.java.name
@@ -88,17 +92,24 @@ class UploadSourceTaskTest {
     }
 
     @Test
+    @Timeout(value = 8, unit = TimeUnit.SECONDS)
     @DisplayName("Should be able to convert a record with ZIP file")
     fun successfulZipFileConversion() {
         val sourceType = "altoida"
         val fileName = "TEST_ZIP.zip"
-        val createdRecord = createRecordAndUploadContent(accessToken, sourceType, fileName)
+        val createdRecord = createRecordAndUploadContent(accessToken, sourceType, fileName, APPLICATION_ZIP)
         assertNotNull(createdRecord)
         assertNotNull(createdRecord.id)
 
-        val sourceRecords = sourceTask.poll()
-        assertNotNull(sourceRecords)
-        sourceRecords ?: return
+        val sourceRecords = mutableListOf<SourceRecord>()
+
+        Thread.sleep(4_000L)
+        while (!sourceRecords.containsEndOfRecord()) {
+            val newRecords = sourceTask.poll()
+            if (newRecords != null) {
+                sourceRecords += newRecords
+            }
+        }
 
         val metadata = retrieveRecordMetadata(accessToken, createdRecord.id!!)
         assertNotNull(metadata)
@@ -111,15 +122,21 @@ class UploadSourceTaskTest {
         assertEquals("SUCCEEDED", metadataAfterCommit.status)
     }
 
+    private fun List<SourceRecord>.containsEndOfRecord(): Boolean {
+        val last = lastOrNull() ?: return false
+        return last.sourceOffset()[END_OF_RECORD_KEY] == true
+    }
+
     @Test
     @DisplayName("Records of no registered converters should not be polled")
     fun noConverterFound() {
         val sourceType = "acceleration-zip"
         val fileName = "TEST_ACC.zip"
-        val createdRecord = createRecordAndUploadContent(accessToken, sourceType, fileName)
+        val createdRecord = createRecordAndUploadContent(accessToken, sourceType, fileName, APPLICATION_ZIP)
         assertNotNull(createdRecord)
         assertNotNull(createdRecord.id)
 
+        Thread.sleep(4_000L)
         val sourceRecords = sourceTask.poll()
         assertNull(sourceRecords)
 
@@ -133,9 +150,10 @@ class UploadSourceTaskTest {
     fun incorrectSourceTypeForRecord() {
         val sourceType = "phone-acceleration"
         val fileName = "TEST_ACC.zip"
-        val createdRecord = createRecordAndUploadContent(accessToken, sourceType, fileName)
+        val createdRecord = createRecordAndUploadContent(accessToken, sourceType, fileName, APPLICATION_ZIP)
         assertNotNull(createdRecord.id)
 
+        Thread.sleep(4_000L)
         val sourceRecords = sourceTask.poll()
         assertNull(sourceRecords)
 
@@ -179,7 +197,7 @@ class UploadSourceTaskTest {
         body.repetitions = 50
         assertThrows(IOException::class.java) { call.execute() }
 
-        uploadContent(record.id!!, fileName, accessToken)
+        uploadContent(record.id!!, fileName, accessToken, APPLICATION_ZIP)
         markReady(record.id!!, accessToken)
     }
 }

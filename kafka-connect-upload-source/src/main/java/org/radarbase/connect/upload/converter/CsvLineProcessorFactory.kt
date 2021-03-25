@@ -88,7 +88,10 @@ interface CsvLineProcessorFactory {
         /**
          * Convert a line from csv to one or more records
          */
-        fun convertToRecord(lineValues: Map<String, String>, timeReceived: Double): Sequence<TopicData>?
+        fun convertToRecord(
+            lineValues: Map<String, String>,
+            timeReceived: Double,
+        ): Sequence<TopicData>?
     }
 }
 

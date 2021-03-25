@@ -22,11 +22,12 @@ subprojects {
         set("radarJerseyVersion", "0.4.3")
         set("radarCommonsVersion", "0.13.0")
         set("logbackVersion", "1.2.3")
-        set("jerseyVersion", "2.32")
+        set("jerseyVersion", "2.33")
         set("h2Version", "1.4.200")
 
         set("junitVersion", "5.6.2")
         set("mockitoKotlinVersion", "2.2.0")
+        set("mockitoCoreVersion", "3.8.0")
     }
 
     repositories {
@@ -71,5 +72,5 @@ subprojects {
 }
 
 tasks.wrapper {
-    gradleVersion = "6.6.1"
+    gradleVersion = "6.8.3"
 }

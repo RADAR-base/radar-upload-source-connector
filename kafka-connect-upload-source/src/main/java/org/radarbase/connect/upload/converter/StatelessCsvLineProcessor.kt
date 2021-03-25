@@ -62,8 +62,8 @@ abstract class StatelessCsvLineProcessor: CsvLineProcessorFactory {
         private val conversion: Processor.(lineValues: Map<String, String>, timeReceived: Double) -> Sequence<TopicData>?
     ) : CsvLineProcessorFactory.CsvLineProcessor {
         override fun convertToRecord(
-                lineValues: Map<String, String>,
-                timeReceived: Double
+            lineValues: Map<String, String>,
+            timeReceived: Double
         ): Sequence<TopicData>? = conversion(lineValues, timeReceived)
     }
 }

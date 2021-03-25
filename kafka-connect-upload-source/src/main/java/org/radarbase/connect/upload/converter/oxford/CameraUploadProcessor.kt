@@ -6,7 +6,6 @@ import org.radarbase.connect.upload.converter.FileProcessorFactory
 import org.radarbase.connect.upload.converter.LogRepository
 import org.radarbase.connect.upload.converter.TopicData
 import org.radarbase.connect.upload.io.FileUploaderFactory
-import org.radarbase.connect.upload.io.S3FileUploader
 import org.radarcns.connector.upload.oxford.OxfordCameraImage
 import org.slf4j.LoggerFactory
 import java.io.InputStream
@@ -31,8 +30,9 @@ class CameraUploadProcessor(
         override fun processData(
             contents: ContentsDTO,
             inputStream: InputStream,
-            timeReceived: Double
-        ): Sequence<TopicData> {
+            timeReceived: Double,
+            produce: (TopicData) -> Unit
+        ) {
             val fileName = contents.fileName.split('/').last()
             val adjustedFilename = SUFFIX_REGEX.replace(fileName, "")
             val formattedTime = checkNotNull(FILENAME_REGEX.matchEntire(fileName)) { "Image file name $fileName does not match pattern" }
@@ -47,9 +47,11 @@ class CameraUploadProcessor(
 
             val url = uploaderCreate().upload(relativePath, inputStream, contents.size)
 
-            return sequenceOf(TopicData(TOPIC,
-                    OxfordCameraImage(time, timeReceived, adjustedFilename, url.toString())
-                            .also { recordLogger.info("Uploaded file to ${it.getUrl()}") }))
+            produce(TopicData(
+                TOPIC,
+                OxfordCameraImage(time, timeReceived, adjustedFilename, url.toString())
+                    .also { recordLogger.info("Uploaded file to ${it.getUrl()}") },
+            ))
         }
     }
 

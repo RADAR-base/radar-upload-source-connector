@@ -15,15 +15,19 @@ class WearableCameraConverterFactory : ConverterFactory {
 
     private val localUploader = ThreadLocal<FileUploaderFactory.FileUploader>()
 
-    override fun fileProcessorFactories(settings: Map<String, String>, connectorConfig: SourceTypeDTO, logRepository: LogRepository): List<FileProcessorFactory> {
-
+    override fun fileProcessorFactories(
+        settings: Map<String, String>,
+        connectorConfig: SourceTypeDTO,
+        logRepository: LogRepository,
+    ): List<FileProcessorFactory> {
         val uploaderSupplier = FileUploaderFactory(settings).fileUploader()
 
         logger.info("Target endpoint is ${uploaderSupplier.advertisedTargetUri()} and Root folder for upload is ${uploaderSupplier.rootDirectory()}")
         val processors = listOf(
-                CameraDataFileProcessor(),
-                CameraUploadProcessor(logRepository, { localUploader.get() }))
-        return listOf(object : ZipFileProcessorFactory(processors, logRepository) {
+            CameraDataFileProcessor(),
+            CameraUploadProcessor(logRepository) { localUploader.get() },
+        )
+        return listOf(object : ZipFileProcessorFactory(sourceType, processors, logRepository) {
             override fun beforeProcessing(contents: ContentsDTO) {
                 localUploader.set(uploaderSupplier)
             }

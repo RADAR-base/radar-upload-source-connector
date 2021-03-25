@@ -26,9 +26,7 @@ import org.radarbase.connect.upload.converter.LogRepository
 import org.radarbase.connect.upload.converter.TopicData
 import org.radarcns.connector.upload.altoida.AltoidaMetadata
 import org.slf4j.LoggerFactory
-import java.io.IOException
 import java.io.InputStream
-import java.time.Instant
 
 class AltoidaMetadataFileProcessor(
         private val logRepository: LogRepository) : FileProcessorFactory {
@@ -36,34 +34,24 @@ class AltoidaMetadataFileProcessor(
 
     override fun matches(contents: ContentsDTO): Boolean = contents.fileName.endsWith("VERSION.csv")
 
-    override fun createProcessor(record: RecordDTO): FileProcessorFactory.FileProcessor = AltoidaMetadataProcessor(record)
+    override fun createProcessor(record: RecordDTO): FileProcessorFactory.FileProcessor = AltoidaMetadataProcessor()
 
-    private inner class AltoidaMetadataProcessor(private val record: RecordDTO) : FileProcessorFactory.FileProcessor {
-        val recordLogger = logRepository.createLogger(logger, record.id!!)
-
-        override fun processData(contents: ContentsDTO, inputStream: InputStream, timeReceived: Double): Sequence<TopicData> {
-            val version = try {
-                inputStream.bufferedReader().use { reader ->
-                    reader.readLine()
-                }
-            } catch (exe: IOException) {
-                recordLogger.warn("Something went wrong while processing contents of file ${record.id}: ${exe.message}")
-                return emptySequence()
-            }
-
-            return convertVersionToRecord(version, timeReceived)
-                    ?.let { sequenceOf(it) }
-                    ?: emptySequence()
-        }
-
-        private fun convertVersionToRecord(version: String, timeReceived: Double): TopicData? {
-            val time = Instant.now().toEpochMilli() / 1000.0
-            val metadata = AltoidaMetadata(
-                    time,
+    private inner class AltoidaMetadataProcessor : FileProcessorFactory.FileProcessor {
+        override fun processData(
+            contents: ContentsDTO,
+            inputStream: InputStream,
+            timeReceived: Double,
+            produce: (TopicData) -> Unit
+        ) {
+            val version = inputStream.bufferedReader().use { it.readLine() }
+            produce(TopicData(
+                topic,
+                AltoidaMetadata(
+                    System.currentTimeMillis() / 1000.0,
                     timeReceived,
-                    version)
-
-            return TopicData(topic, metadata)
+                    version,
+                ),
+            ))
         }
     }
 

@@ -28,10 +28,11 @@ class CwaFileProcessorFactory(
             contents: ContentsDTO,
             inputStream: InputStream,
             timeReceived: Double,
-        ): Sequence<TopicData> {
+            produce: (TopicData) -> Unit,
+        ) {
             val cwaReader = CwaReader(inputStream)
 
-            return sequence {
+            try {
                 var firstTime = timeReceived
 
                 generateSequence { cwaReader.peekBlock() }
@@ -43,11 +44,13 @@ class CwaFileProcessorFactory(
                                 firstTime = timeValue
                             }
                         }
-                        yield(data)
+                        produce(data)
                     }
 
                 metadataProcessor.processReader(cwaReader, firstTime, timeReceived)
-                    .forEach { yield(it) }
+                    .forEach { produce(it) }
+            } finally {
+                cwaReader.close()
             }
         }
 
@@ -60,7 +63,7 @@ class CwaFileProcessorFactory(
                     .asSequence()
                     .flatMap { processor ->
                         processor.processBlock(recordLogger, block, timeReceived)
-                    }.asSequence()
+                    }
             } else emptySequence()
 
             block.invalidate()

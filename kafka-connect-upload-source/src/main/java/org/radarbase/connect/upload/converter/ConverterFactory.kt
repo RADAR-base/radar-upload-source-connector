@@ -24,6 +24,7 @@ import org.radarbase.connect.upload.api.SourceTypeDTO
 import org.radarbase.connect.upload.api.UploadBackendClient
 import java.io.Closeable
 import java.io.InputStream
+import java.nio.file.Path
 
 /**
  * Converter for each source-type
@@ -32,15 +33,17 @@ interface ConverterFactory {
     val sourceType: String
 
     fun fileProcessorFactories(
-            settings: Map<String, String>,
-            connectorConfig: SourceTypeDTO,
-            logRepository: LogRepository): List<FileProcessorFactory>
+        settings: Map<String, String>,
+        connectorConfig: SourceTypeDTO,
+        logRepository: LogRepository,
+    ): List<FileProcessorFactory>
 
     fun converter(
-            settings: Map<String, String>,
-            connectorConfig: SourceTypeDTO,
-            client: UploadBackendClient,
-            logRepository: LogRepository): Converter {
+        settings: Map<String, String>,
+        connectorConfig: SourceTypeDTO,
+        client: UploadBackendClient,
+        logRepository: LogRepository,
+    ): Converter {
         val processors = fileProcessorFactories(settings, connectorConfig, logRepository)
         return RecordConverter(sourceType, processors, client, logRepository)
     }
@@ -66,7 +69,8 @@ interface ConverterFactory {
         fun createConverter(factoryClassName: String,
                 settings: Map<String, String>,
                 client: UploadBackendClient,
-                logRepository: LogRepository): Converter {
+                logRepository: LogRepository
+        ): Converter {
             val converterFactory = fromClassName(factoryClassName)
             val config = client.requestConnectorConfig(converterFactory.sourceType)
             return converterFactory.converter(settings, config, client, logRepository)
@@ -80,14 +84,18 @@ interface ConverterFactory {
         val sourceType: String
 
         // convert and add logs return result
-        fun convert(record: RecordDTO): Sequence<SourceRecord>
+        fun convert(
+            record: RecordDTO,
+            produce: (SourceRecord) -> Unit,
+        )
 
         fun convertFile(
             record: RecordDTO,
             contents: ContentsDTO,
             inputStream: InputStream,
             recordLogger: RecordLogger,
-        ): Sequence<TopicData>
+            produce: (TopicData) -> Unit,
+        )
 
         fun getPartition(): MutableMap<String, Any>
 
@@ -96,5 +104,11 @@ interface ConverterFactory {
             const val RECORD_ID_KEY = "recordId"
             const val REVISION_KEY = "versionId"
         }
+
+        fun convertStream(
+            record: RecordDTO,
+            useStream: (RecordDTO, ContentsDTO, (InputStream) -> Unit) -> Unit,
+            produce: (SourceRecord) -> Unit
+        )
     }
 }

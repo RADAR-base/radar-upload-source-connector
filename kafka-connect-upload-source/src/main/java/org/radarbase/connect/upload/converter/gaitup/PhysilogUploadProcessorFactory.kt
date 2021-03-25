@@ -6,7 +6,6 @@ import org.radarbase.connect.upload.converter.FileProcessorFactory
 import org.radarbase.connect.upload.converter.LogRepository
 import org.radarbase.connect.upload.converter.TopicData
 import org.radarbase.connect.upload.io.FileUploaderFactory
-import org.radarbase.connect.upload.io.S3FileUploader
 import org.radarcns.connector.upload.physilog.PhysilogBinaryDataReference
 import org.slf4j.LoggerFactory
 import java.io.IOException
@@ -32,7 +31,12 @@ open class PhysilogUploadProcessorFactory(
     private inner class PhysilogFileUploadProcessor(private val record: RecordDTO) : FileProcessorFactory.FileProcessor {
         private val recordLogger = logRepository.createLogger(logger, record.id!!)
 
-        override fun processData(contents: ContentsDTO, inputStream: InputStream, timeReceived: Double): Sequence<TopicData> {
+        override fun processData(
+            contents: ContentsDTO,
+            inputStream: InputStream,
+            timeReceived: Double,
+            produce: (TopicData) -> Unit
+        ) {
             beforeProcessing(contents)
             val fileName = contents.fileName
             logger.debug("Processing $fileName")
@@ -45,9 +49,11 @@ open class PhysilogUploadProcessorFactory(
 
             try {
                 val url = uploaderCreate().upload(relativePath, inputStream, contents.size)
-                return sequenceOf(TopicData(TOPIC,
-                        PhysilogBinaryDataReference(timeReceived, timeReceived, fileName, url.toString())
-                                .also { recordLogger.info("Uploaded file to ${it.getUrl()}") }))
+                produce(TopicData(
+                    TOPIC,
+                    PhysilogBinaryDataReference(timeReceived, timeReceived, fileName, url.toString())
+                        .also { recordLogger.info("Uploaded file to ${it.getUrl()}") },
+                ))
             } catch (exe: IOException) {
                 logger.error("Could not upload file", exe)
                 throw exe

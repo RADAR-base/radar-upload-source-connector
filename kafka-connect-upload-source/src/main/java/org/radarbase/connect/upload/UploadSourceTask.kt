@@ -48,7 +48,6 @@ import java.util.concurrent.TimeUnit
 class UploadSourceTask : SourceTask() {
     private var queueSize: Int = 1000
     private var pollInterval = Duration.ofMinutes(1)
-    private var failedPollInterval = Duration.ofSeconds(6)
     private lateinit var uploadClient: UploadBackendClient
     private lateinit var converters: Map<String, Converter>
     private lateinit var logRepository: LogRepository
@@ -75,13 +74,11 @@ class UploadSourceTask : SourceTask() {
                 .toMap()
 
         pollInterval = Duration.ofMillis(connectConfig.getLong(SOURCE_POLL_INTERVAL_CONFIG))
-        failedPollInterval = pollInterval.dividedBy(10)
 
         queueSize = 1000
         queue = ArrayBlockingQueue(queueSize)
         converterManager = ConverterManager(queue, converters, uploadClient, logRepository, pollInterval)
 
-        logger.info("Poll with interval $pollInterval milliseconds")
         logger.info("Initialized ${converters.size} converters...")
     }
 
@@ -124,8 +121,13 @@ class UploadSourceTask : SourceTask() {
         if (endOfRecord) {
             logger.info("Committing last record of Record $recordId, with Revision $revision")
             val updatedMetadata = uploadClient.updateStatus(
-                    recordId.toLong(),
-                    RecordMetadataDTO(revision = revision.toInt(), status = "SUCCEEDED", message = "Record has been processed successfully"))
+                recordId.toLong(),
+                RecordMetadataDTO(
+                    revision = revision.toInt(),
+                    status = "SUCCEEDED",
+                    message = "Record has been processed successfully",
+                ),
+            )
 
             if (updatedMetadata.status == "SUCCEEDED") {
                 logger.info("Uploading logs to backend")

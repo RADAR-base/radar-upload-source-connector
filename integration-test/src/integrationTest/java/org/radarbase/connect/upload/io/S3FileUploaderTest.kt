@@ -11,6 +11,7 @@ import org.radarbase.connect.upload.api.*
 import org.radarbase.connect.upload.converter.ConverterFactory
 import org.radarbase.connect.upload.converter.ConverterLogRepository
 import org.radarbase.connect.upload.converter.LogRepository
+import org.radarbase.connect.upload.converter.TopicData
 import org.radarbase.connect.upload.converter.oxford.WearableCameraConverterFactory
 import org.radarcns.connector.upload.oxford.OxfordCameraImage
 import org.slf4j.LoggerFactory
@@ -80,17 +81,17 @@ class S3FileUploaderTest {
     fun testValidRawDataProcessing() {
         val zipName = "oxford-camera-sample.zip"
 
-        val records = converter.convertFile(
+        val records = mutableListOf<TopicData>()
+        converter.convertFile(
             record,
             contentsDTO,
             javaClass.getResourceAsStream(zipName),
-            ConverterLogRepository.QueueRecordLogger(logger, 1L, LinkedList())
-        )?.toList()
+            ConverterLogRepository.QueueRecordLogger(logger, 1L, LinkedList()),
+            records::add,
+        )
 
         assertNotNull(record)
         assertEquals(10, records.size) // 5 images, 5x upload + 5x metadata
-        assertEquals(true, records.last().endOfFileOffSet)
-        assertEquals(1, records.filter { it.endOfFileOffSet }.size)
         val imageRecords = records.filter { it.value is OxfordCameraImage }
                 .map { it.value as OxfordCameraImage }
         assertEquals(5, imageRecords.size)

@@ -22,37 +22,33 @@ package org.radarbase.connect.upload.converter
 import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
 import org.radarbase.connect.upload.exception.DataProcessorNotFoundException
-import org.slf4j.LoggerFactory
 import java.io.InputStream
 
 /**
  * Abstract File Pre Processor.
  */
 open class FilePreProcessorFactory(
-        private val preProcessors: List<FileProcessorFactory>,
-        private val logRepository: LogRepository) : FileProcessorFactory {
+    private val preProcessors: List<FileProcessorFactory>
+) : FileProcessorFactory {
 
     override fun matches(contents: ContentsDTO): Boolean = contents.fileName.endsWith(".csv")
 
     override fun createProcessor(record: RecordDTO): FileProcessorFactory.FileProcessor = FilePreProcessor(record)
 
     inner class FilePreProcessor(private val record: RecordDTO): FileProcessorFactory.FileProcessor {
-        private val recordLogger = logRepository.createLogger(logger, record.id!!)
-
-        override fun processData(contents: ContentsDTO, inputStream: InputStream, timeReceived: Double): List<TopicData> {
-            return emptyList()
-        }
+        override fun processData(
+            contents: ContentsDTO,
+            inputStream: InputStream,
+            timeReceived: Double,
+            produce: (TopicData) -> Unit,
+        ) = Unit
 
         override fun preProcessFile(contents: ContentsDTO, inputStream: InputStream): InputStream {
             val processor = preProcessors.find { it.matches(contents) }
-                    ?: throw DataProcessorNotFoundException("Could not find registered processor")
+                ?: throw DataProcessorNotFoundException("Could not find registered processor")
 
             return processor.createProcessor(record)
-                    .preProcessFile(contents, inputStream)
+                .preProcessFile(contents, inputStream)
         }
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(FilePreProcessor::class.java)
     }
 }
