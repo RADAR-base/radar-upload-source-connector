@@ -37,7 +37,6 @@ import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
 import java.time.temporal.Temporal
-import java.time.temporal.TemporalAmount
 import java.util.*
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.BlockingQueue
@@ -58,7 +57,7 @@ class UploadSourceTask : SourceTask() {
     private lateinit var nextPoll: Instant
 
     override fun start(props: Map<String, String>?) {
-        val connectConfig = UploadSourceConnectorConfig(props!!)
+        val connectConfig = UploadSourceConnectorConfig(requireNotNull(props))
         nextPoll = Instant.EPOCH
         uploadClient = UploadBackendClient(
             connectConfig.authenticator,
@@ -114,12 +113,8 @@ class UploadSourceTask : SourceTask() {
             records
         } else {
             // if no non-blocking elements are available, it's ok to wait for them for a bit.
-            val polledValue = queue.poll(pollInterval.toMillis(), TimeUnit.MILLISECONDS)
-                ?: return null
-
-            mutableListOf(polledValue).apply {
-                this += generateSequence { queue.poll() }.take(queueSize - 1)
-            }
+            queue.poll(pollInterval.toMillis(), TimeUnit.MILLISECONDS)
+                ?.let { listOf(it) }
         }
     }
 
@@ -155,6 +150,5 @@ class UploadSourceTask : SourceTask() {
         private val logger = LoggerFactory.getLogger(UploadSourceTask::class.java)
 
         internal fun Temporal.untilNow(): Duration = Duration.between(Instant.now(), this)
-        private fun TemporalAmount.fromNow(): Instant = Instant.now().plus(this)
     }
 }

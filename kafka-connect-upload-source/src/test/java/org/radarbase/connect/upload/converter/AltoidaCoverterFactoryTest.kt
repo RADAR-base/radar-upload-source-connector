@@ -1,5 +1,7 @@
 package org.radarbase.connect.upload.converter
 
+import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers.greaterThan
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.DisplayName
@@ -71,7 +73,7 @@ class AltoidaCoverterFactoryTest {
         converter.convertFile(context, file.inputStream(), records::add)
 
         assertNotNull(records)
-        assertTrue(records.size > 1000)
+        assertThat(records.count(), greaterThan(1000))
     }
 
 
@@ -96,7 +98,7 @@ class AltoidaCoverterFactoryTest {
         converter.convertFile(context, file.inputStream(), records::add)
 
         assertNotNull(records)
-        assertTrue(records.size > 1000)
+        assertThat(records.count(), greaterThan(1000))
     }
 
     @Test
@@ -120,7 +122,7 @@ class AltoidaCoverterFactoryTest {
         converter.convertFile(context, file.inputStream(), records::add)
 
         assertNotNull(records)
-        assertEquals(records.size, 4)
+        assertEquals(records.count(), 4)
 
         val expectedTopics = listOf(
                 "connect_upload_altoida_bit_metrics",

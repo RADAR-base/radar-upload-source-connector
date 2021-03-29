@@ -38,7 +38,6 @@ class ConverterManager(
 
     private fun poll() {
         logger.info("Polling new records...")
-
         val records = try {
             uploadClient.pollRecords(PollDTO(1, converters.keys)).records
         } catch (exe: Throwable) {
@@ -150,8 +149,8 @@ class ConverterManager(
 
     fun uploadLogs(recordId: Long, reset: Boolean = true) {
         logger.info("Sending record $recordId logs...")
-        val logs = logRepository.extract(recordId, reset)
-        if (logs != null) uploadClient.addLogs(logs)
+        logRepository.extract(recordId, reset)
+            ?.let { uploadClient.addLogs(it) }
     }
 
     override fun close() {

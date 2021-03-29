@@ -109,9 +109,9 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
             AccelerometerConverterFactory::class.java.name,
             AccelerometerZipConverterFactory::class.java.name,
             AltoidaConverterFactory::class.java.name,
-            WearableCameraConverterFactory::class.java.name,
             AxivityConverterFactory::class.java.name,
             Physilog5ConverterFactory::class.java.name,
+            WearableCameraConverterFactory::class.java.name,
         )
 
         const val SOURCE_POLL_INTERVAL_CONFIG = "upload.source.poll.interval.ms"

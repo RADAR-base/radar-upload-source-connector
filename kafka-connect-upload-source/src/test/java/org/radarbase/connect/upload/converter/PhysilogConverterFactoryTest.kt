@@ -1,5 +1,7 @@
 package org.radarbase.connect.upload.converter
 
+import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers.greaterThan
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.DisplayName
@@ -76,19 +78,19 @@ class PhysilogConverterFactoryTest {
 
         val accRecords = records.filter { it.value.javaClass == AxivityAcceleration::class.java }
 
-        requireNotNull(PhysilogConverterFactoryTest::class.java.getResourceAsStream("/CWA-DATA.zip")).use { cwaZipFile ->
+        requireNotNull(javaClass.getResourceAsStream("/CWA-DATA.zip")).use { cwaZipFile ->
             ZipInputStream(cwaZipFile).use { zipIn ->
                 assertNotNull(zipIn.nextEntry)
                 CwaCsvInputStream(zipIn, 0, 1, -1, OPTIONS_EVENTS).use { cwaIn ->
                     cwaIn.bufferedReader().use { it.readLines() }
                     // without any apparent reason, the CwaCsvInputStream is missing the first block...
-                    assertEquals(cwaIn.line + 80, accRecords.size)
+                    assertEquals(cwaIn.line + 80, accRecords.count())
                 }
             }
         }
 
         assertNotNull(records)
-        assertTrue(records.size > 1000)
+        assertThat(records.count(), greaterThan(1000))
     }
 
 }
