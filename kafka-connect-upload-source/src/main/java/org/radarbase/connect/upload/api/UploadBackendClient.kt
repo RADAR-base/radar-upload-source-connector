@@ -79,9 +79,14 @@ open class UploadBackendClient(
         url("$uploadBackendBaseUrl/records/$recordId/metadata")
     }
 
-    open fun updateStatus(recordId: Long, newStatus: RecordMetadataDTO): RecordMetadataDTO = httpClient.executeRequest {
-        url("$uploadBackendBaseUrl/records/$recordId/metadata")
-        post(newStatus.toJsonBody())
+    open fun updateStatus(recordId: Long, newStatus: RecordMetadataDTO): RecordMetadataDTO {
+        val result: RecordMetadataDTO = httpClient.executeRequest {
+            url("$uploadBackendBaseUrl/records/$recordId/metadata")
+            post(newStatus.toJsonBody())
+        }
+        logger.info("Successfully updated record {} status to {} (rev. {})",
+            recordId, result.status, result.revision)
+        return result
     }
 
     open fun addLogs(log: Log): RecordMetadataDTO = httpClient.executeRequest {

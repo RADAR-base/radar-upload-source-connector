@@ -37,10 +37,16 @@ class ConverterManager(
     }
 
     private fun poll() {
-        try {
-            logger.info("Polling new records...")
+        logger.info("Polling new records...")
 
-            val records = uploadClient.pollRecords(PollDTO(1, converters.keys)).records
+        val records = try {
+            uploadClient.pollRecords(PollDTO(1, converters.keys)).records
+        } catch (exe: Throwable) {
+            logger.error("Could not successfully poll records. Waiting for next polling...", exe)
+            return
+        }
+
+        try {
             for (record in records) {
                 val recordLogger = logRepository.createLogger(logger, requireNotNull(record.id))
                 try {
@@ -49,9 +55,8 @@ class ConverterManager(
                     recordLogger.error("Cannot convert record", ex)
                 }
             }
-        } catch (exe: Throwable) {
-            logger.error("Could not successfully poll records. Waiting for next polling...", exe)
-            return
+        } catch (ex: Throwable) {
+            logger.error("Failed to process records", ex)
         }
     }
 

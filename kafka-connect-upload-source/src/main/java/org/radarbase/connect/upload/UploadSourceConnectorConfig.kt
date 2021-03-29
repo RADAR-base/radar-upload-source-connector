@@ -119,7 +119,6 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
         private const val SOURCE_POLL_INTERVAL_DISPLAY = "Polling interval"
         private const val SOURCE_POLL_INTERVAL_DEFAULT = 60000L
 
-
         const val SOURCE_QUEUE_SIZE_CONFIG = "upload.source.queue.size"
         private const val SOURCE_QUEUE_SIZE_DOC = "Capacity of the records queue."
         private const val SOURCE_QUEUE_SIZE_DISPLAY = "Records queue size"
