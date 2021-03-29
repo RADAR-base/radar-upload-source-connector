@@ -37,10 +37,11 @@ import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
 import java.time.temporal.Temporal
-import java.time.temporal.TemporalAmount
+import java.util.*
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicLong
 
 class UploadSourceTask : SourceTask() {
     private var queueSize: Int = 1000
@@ -50,14 +51,19 @@ class UploadSourceTask : SourceTask() {
     private lateinit var logRepository: LogRepository
     private lateinit var queue: BlockingQueue<SourceRecord>
     private lateinit var converterManager: ConverterManager
+    private val commitCounter = AtomicLong(0)
+    private lateinit var commitTimer: Timer
+
+    private lateinit var nextPoll: Instant
 
     override fun start(props: Map<String, String>?) {
-        val connectConfig = UploadSourceConnectorConfig(props!!)
-        val httpClient = connectConfig.httpClient
+        val connectConfig = UploadSourceConnectorConfig(requireNotNull(props))
+        nextPoll = Instant.EPOCH
         uploadClient = UploadBackendClient(
-                connectConfig.getAuthenticator(),
-                httpClient,
-                connectConfig.uploadBackendBaseUrl)
+            connectConfig.authenticator,
+            connectConfig.httpClient,
+            connectConfig.uploadBackendBaseUrl,
+        )
 
         logRepository = ConverterLogRepository()
 
@@ -67,13 +73,24 @@ class UploadSourceTask : SourceTask() {
                         .let { it.sourceType to it }}
                 .toMap()
 
-        pollInterval = Duration.ofMillis(connectConfig.getLong(SOURCE_POLL_INTERVAL_CONFIG))
+        val pollIntervalMs = connectConfig.getLong(SOURCE_POLL_INTERVAL_CONFIG)
+        pollInterval = Duration.ofMillis(pollIntervalMs)
 
         queueSize = connectConfig.getInt(SOURCE_QUEUE_SIZE_CONFIG)
         queue = ArrayBlockingQueue(queueSize)
         converterManager = ConverterManager(queue, converters, uploadClient, logRepository, pollInterval)
 
-        logger.info("Poll with interval $pollInterval milliseconds")
+        commitTimer = Timer(true)
+        commitTimer.schedule(object : TimerTask() {
+            override fun run() {
+                logger.info(
+                    "Committed {} records in the last {} seconds",
+                    commitCounter.getAndSet(0),
+                    pollIntervalMs / 1000,
+                )
+            }
+        }, pollIntervalMs, pollIntervalMs)
+
         logger.info("Initialized ${converters.size} converters...")
     }
 
@@ -81,25 +98,30 @@ class UploadSourceTask : SourceTask() {
         logger.debug("Stopping source task")
         converterManager.close()
         uploadClient.close()
+        commitTimer.cancel()
         converters.values.forEach(Converter::close)
     }
 
     override fun version(): String = VersionUtil.getVersion()
 
-    override fun poll(): List<SourceRecord> {
-
+    override fun poll(): List<SourceRecord>? {
         val records = generateSequence { queue.poll() }  // this will retrieve all non-blocking elements
             .take(queueSize) // don't process more than queueSize records at once
             .toList()
-        if (records.isEmpty()) {
-            val element = queue.poll(pollInterval.toMillis(), TimeUnit.MILLISECONDS)
-            return if (element != null) listOf(element) else emptyList()
+
+        return if (records.isNotEmpty()) {
+            records
+        } else {
+            // if no non-blocking elements are available, it's ok to wait for them for a bit.
+            queue.poll(pollInterval.toMillis(), TimeUnit.MILLISECONDS)
+                ?.let { listOf(it) }
         }
-        return records
     }
 
     override fun commitRecord(record: SourceRecord?) {
         record ?: return
+
+        commitCounter.incrementAndGet()
 
         val offset = record.sourceOffset()
 
@@ -108,10 +130,14 @@ class UploadSourceTask : SourceTask() {
         val endOfRecord = offset[END_OF_RECORD_KEY] as? Boolean ?: return
 
         if (endOfRecord) {
-            logger.info("Committing last record of Record $recordId, with Revision $revision")
             val updatedMetadata = uploadClient.updateStatus(
                 recordId.toLong(),
-                RecordMetadataDTO(revision = revision.toInt(), status = "SUCCEEDED", message = "Record has been processed successfully"))
+                RecordMetadataDTO(
+                    revision = revision.toInt(),
+                    status = "SUCCEEDED",
+                    message = "Record has been processed successfully",
+                ),
+            )
 
             if (updatedMetadata.status == "SUCCEEDED") {
                 logger.info("Uploading logs to backend")
@@ -124,6 +150,5 @@ class UploadSourceTask : SourceTask() {
         private val logger = LoggerFactory.getLogger(UploadSourceTask::class.java)
 
         internal fun Temporal.untilNow(): Duration = Duration.between(Instant.now(), this)
-        private fun TemporalAmount.fromNow(): Instant = Instant.now().plus(this)
     }
 }

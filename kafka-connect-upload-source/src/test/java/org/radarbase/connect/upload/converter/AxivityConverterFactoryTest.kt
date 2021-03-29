@@ -1,5 +1,7 @@
 package org.radarbase.connect.upload.converter
 
+import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers.greaterThan
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.DisplayName
@@ -10,7 +12,6 @@ import org.radarbase.connect.upload.api.*
 import org.radarbase.connect.upload.converter.CwaCsvInputStream.OPTIONS_EVENTS
 import org.radarbase.connect.upload.converter.axivity.AxivityConverterFactory
 import org.radarcns.connector.upload.axivity.AxivityAcceleration
-import java.io.InputStream
 import java.time.Instant
 import java.util.zip.ZipInputStream
 
@@ -35,8 +36,12 @@ class AxivityConverterFactoryTest {
                     revision = 1,
                     status = "PROCESSING"
             ),
-            data = null,
-            sourceType = "axivity"
+            data = RecordDataDTO(
+                projectId = "testProject",
+                userId = "testUser",
+                sourceId = "testSource",
+            ),
+        sourceType = "axivity"
 
     )
 
@@ -59,9 +64,16 @@ class AxivityConverterFactoryTest {
     @Test
     @DisplayName("Should be able to convert a zip file with sample data to TopicRecords")
     fun testValidRawDataProcessing() {
-        var logger = Mockito.mock(RecordLogger::class.java)
-        val records = requireNotNull(javaClass.getResourceAsStream("/CWA-DATA.zip")).use { cwaZipFile ->
-            converter.convertFile(record, contentsDTO, cwaZipFile, logger)
+        val context = ConverterFactory.ContentsContext.create(
+            record = record,
+            contents = contentsDTO,
+            logger = Mockito.mock(RecordLogger::class.java),
+            avroData = RecordConverter.createAvroData(),
+        )
+
+        val records = mutableListOf<TopicData>()
+        requireNotNull(AxivityConverterFactoryTest::class.java.getResourceAsStream("/CWA-DATA.zip")).use { cwaZipFile ->
+            converter.convertFile(context, cwaZipFile, records::add)
         }
 
         val accRecords = records.filter { it.value.javaClass == AxivityAcceleration::class.java }
@@ -78,9 +90,7 @@ class AxivityConverterFactoryTest {
         }
 
         assertNotNull(records)
-        assertTrue(records.count() > 1000)
-        assertEquals(true, records.last().endOfFileOffSet)
-        assertEquals(1, records.count { it.endOfFileOffSet })
+        assertThat(records.count(), greaterThan(1000))
     }
 
 }

@@ -7,8 +7,12 @@ import org.radarcns.connector.upload.axivity.AxivityBatteryLevel
 import kotlin.math.pow
 
 class BatteryLevelCwaBlockProcessor: CwaFileProcessorFactory.CwaBlockProcessor {
-    override fun processBlock(recordLogger: RecordLogger, block: CwaBlock, timeReceived: Double): List<TopicData> {
-        return listOf(TopicData(
+    override fun processBlock(
+        recordLogger: RecordLogger,
+        block: CwaBlock,
+        timeReceived: Double,
+    ): Sequence<TopicData> {
+        return sequenceOf(TopicData(
                 "connect_upload_axivity_battery_level",
                 AxivityBatteryLevel(
                         block.startTime(),

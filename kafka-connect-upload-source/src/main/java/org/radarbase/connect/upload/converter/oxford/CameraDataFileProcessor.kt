@@ -2,6 +2,7 @@ package org.radarbase.connect.upload.converter.oxford
 
 import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
+import org.radarbase.connect.upload.converter.ConverterFactory
 import org.radarbase.connect.upload.converter.FileProcessorFactory
 import org.radarbase.connect.upload.converter.TimeFieldParser
 import org.radarbase.connect.upload.converter.TopicData
@@ -9,7 +10,6 @@ import org.radarcns.connector.upload.oxford.OxfordCameraAxes
 import org.radarcns.connector.upload.oxford.OxfordCameraData
 import org.radarcns.connector.upload.oxford.OxfordCameraRgb
 import java.io.InputStream
-import java.io.InputStreamReader
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeFormatterBuilder
 
@@ -19,56 +19,75 @@ class CameraDataFileProcessor : FileProcessorFactory {
     override fun createProcessor(record: RecordDTO): FileProcessorFactory.FileProcessor = CameraFileProcessor()
 
     private class CameraFileProcessor : FileProcessorFactory.FileProcessor {
-        override fun processData(contents: ContentsDTO, inputStream: InputStream, timeReceived: Double): List<TopicData> {
-            val lines = InputStreamReader(inputStream).use { it.readLines() }
+        override fun processData(
+            context: ConverterFactory.ContentsContext,
+            inputStream: InputStream,
+            produce: (TopicData) -> Unit
+        ) {
+            val lines = inputStream.bufferedReader().use { it.readLines() }
 
             require(lines.size >= 2) { "Image table too short" }
 
-            val header = lines[1].substring(1).split(",").map { it.trim() }
+            val header = lines[1]
+                .drop(1)
+                .split(",")
+                .map { it.trim() }
 
-            return lines.subList(2, lines.size)
-                    .map { line ->
-                        val values = line
-                                .split(",")
-                                .mapIndexed { idx, field -> header[idx] to field.trim() }
-                                .toMap()
-
-                        TopicData(TOPIC,
-                                mapValuesToRecord(values, timeReceived))
-                    }
+            lines
+                .asSequence()
+                .drop(2)
+                .map { line ->
+                    TopicData(
+                        TOPIC,
+                        line.toOxfordCameraRecord(header, context.timeReceived),
+                    )
+                }
+                .forEach(produce)
         }
 
-        fun mapValuesToRecord(values: Map<String, String>, timeReceived: Double) = OxfordCameraData(
-                TIME_PARSER.time(values),
-                timeReceived,
-                values.getValue("id"),
-                values.getValue("p") == "1",
-                OxfordCameraAxes(
-                        values.getValue("accx").toFloat(),
-                        values.getValue("accy").toFloat(),
-                        values.getValue("accz").toFloat()),
-                OxfordCameraAxes(
-                        values.getValue("magx").toFloat(),
-                        values.getValue("magy").toFloat(),
-                        values.getValue("magz").toFloat()),
-                OxfordCameraAxes(
-                        values.getValue("xor").toFloat(),
-                        values.getValue("yor").toFloat(),
-                        values.getValue("zor").toFloat()),
-                values.getValue("tem").toFloat(),
-                OxfordCameraRgb(
-                        values.getValue("red").toInt() / RGB_RANGE,
-                        values.getValue("green").toInt() / RGB_RANGE,
-                        values.getValue("blue").toInt() / RGB_RANGE
-                ),
-                values.getValue("lum").toInt() / LUMINANCE_RANGE,
-                values.getValue("exp").toInt(),
-                values.getValue("gain").toFloat(),
-                OxfordCameraRgb(
-                        values.getValue("rbal").toFloat(),
-                        values.getValue("gbal").toFloat(),
-                        values.getValue("bbal").toFloat()
-                ))
+        fun String.toOxfordCameraRecord(
+            header: List<String>,
+            timeReceived: Double,
+        ) = split(",")
+            .asSequence()
+            .mapIndexed { idx, field -> header[idx] to field.trim() }
+            .toMap()
+            .toOxfordCameraRecord(timeReceived)
+
+        fun Map<String, String>.toOxfordCameraRecord(
+            timeReceived: Double
+        ) = OxfordCameraData(
+            TIME_PARSER.time(this),
+            timeReceived,
+            getValue("id"),
+            getValue("p") == "1",
+            OxfordCameraAxes(
+                    getValue("accx").toFloat(),
+                    getValue("accy").toFloat(),
+                    getValue("accz").toFloat()),
+            OxfordCameraAxes(
+                    getValue("magx").toFloat(),
+                    getValue("magy").toFloat(),
+                    getValue("magz").toFloat()),
+            OxfordCameraAxes(
+                    getValue("xor").toFloat(),
+                    getValue("yor").toFloat(),
+                    getValue("zor").toFloat()),
+            getValue("tem").toFloat(),
+            OxfordCameraRgb(
+                    getValue("red").toInt() / RGB_RANGE,
+                    getValue("green").toInt() / RGB_RANGE,
+                    getValue("blue").toInt() / RGB_RANGE
+            ),
+            getValue("lum").toInt() / LUMINANCE_RANGE,
+            getValue("exp").toInt(),
+            getValue("gain").toFloat(),
+            OxfordCameraRgb(
+                getValue("rbal").toFloat(),
+                getValue("gbal").toFloat(),
+                getValue("bbal").toFloat()
+            ),
+        )
     }
 
     companion object {

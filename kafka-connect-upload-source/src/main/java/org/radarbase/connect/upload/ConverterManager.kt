@@ -6,12 +6,12 @@ import org.radarbase.connect.upload.api.RecordDTO
 import org.radarbase.connect.upload.api.UploadBackendClient
 import org.radarbase.connect.upload.converter.ConverterFactory
 import org.radarbase.connect.upload.converter.LogRepository
+import org.radarbase.connect.upload.converter.RecordLogger
 import org.radarbase.connect.upload.exception.ConflictException
 import org.radarbase.connect.upload.exception.ConversionFailedException
 import org.radarbase.connect.upload.exception.ConversionTemporarilyFailedException
 import org.slf4j.LoggerFactory
 import java.io.Closeable
-import java.lang.RuntimeException
 import java.time.Duration
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.Executors
@@ -22,72 +22,85 @@ class ConverterManager(
     private val converters: Map<String, ConverterFactory.Converter>,
     private val uploadClient: UploadBackendClient,
     private val logRepository: LogRepository,
-    pollDuration: Duration
+    pollDuration: Duration,
 ): Closeable {
     private val executor = Executors.newSingleThreadScheduledExecutor()
 
     init {
+        logger.info("Poll with interval {}", pollDuration)
         executor.scheduleAtFixedRate(
             ::poll,
             pollDuration.toMillis() / 2,
             pollDuration.toMillis(),
-            TimeUnit.MILLISECONDS
+            TimeUnit.MILLISECONDS,
         )
     }
 
     private fun poll() {
         logger.info("Polling new records...")
-        val records: List<RecordDTO> = try {
+        val records = try {
             uploadClient.pollRecords(PollDTO(1, converters.keys)).records
         } catch (exe: Throwable) {
-            logger.error("Could not successfully poll records. Waiting for next polling...")
+            logger.error("Could not successfully poll records. Waiting for next polling...", exe)
             return
         }
 
-        logger.info("Received ${records.size} records")
-
-        records.asSequence()
-            .flatMap(::processRecord)
-            .forEach(queue::put)
-
-        logger.info("Records enqueued")
-    }
-
-    private fun processRecord(record: RecordDTO): Sequence<SourceRecord> {
-        return try {
-            val converter = converters[record.sourceType]
-                ?: throw ConversionTemporarilyFailedException("Could not find converter ${record.sourceType} for record ${record.id}")
-
-            markProcessing(record) ?: return emptySequence()
-
-            converter.convert(record)
-        } catch (exe: ConversionFailedException) {
-            logger.error("Could not convert record {}", record.id)
-            updateRecordFailure(record, exe)
-            emptySequence()
-        } catch (exe: ConversionTemporarilyFailedException) {
-            logger.error("Could not convert record {} due to temporary failure", record.id)
-            updateRecordTemporaryFailure(record, exe)
-            emptySequence()
-        } catch (exe: Throwable) {
-            logger.error("Could not convert record {} due to application failure", record.id, exe)
-            updateRecordTemporaryFailure(record,
-                ConversionTemporarilyFailedException("Could not convert record ${record.id} due to application failure", exe))
-            emptySequence()
+        try {
+            for (record in records) {
+                val recordLogger = logRepository.createLogger(logger, requireNotNull(record.id))
+                try {
+                    processRecord(record, recordLogger, queue::put)
+                } catch (ex: Throwable) {
+                    recordLogger.error("Cannot convert record", ex)
+                }
+            }
+        } catch (ex: Throwable) {
+            logger.error("Failed to process records", ex)
         }
     }
 
-    private fun markProcessing(record: RecordDTO): RecordDTO? {
+    private fun processRecord(
+        record: RecordDTO,
+        recordLogger: RecordLogger,
+        produce: (SourceRecord) -> Unit,
+    ) {
+        try {
+            val converter = converters[record.sourceType]
+                ?: throw ConversionTemporarilyFailedException("Could not find converter ${record.sourceType} for record ${record.id}")
+
+            markProcessing(record, recordLogger) ?: return
+
+            converter.convert(record, produce)
+        } catch (exe: ConversionFailedException) {
+            recordLogger.error("Could not convert record")
+            updateRecordFailure(record, recordLogger, exe)
+            throw exe
+        } catch (exe: ConversionTemporarilyFailedException) {
+            recordLogger.error("Could not convert record due to temporary failure")
+            updateRecordTemporaryFailure(record, recordLogger, exe)
+            throw exe
+        } catch (exe: Throwable) {
+            recordLogger.error("Could not convert record due to application failure", exe)
+            updateRecordTemporaryFailure(record, recordLogger,
+                ConversionTemporarilyFailedException("Could not convert record ${record.id} due to application failure", exe))
+            throw exe
+        }
+    }
+
+    private fun markProcessing(
+        record: RecordDTO,
+        recordLogger: RecordLogger,
+    ): RecordDTO? {
         return try {
             record.apply {
                 metadata = uploadClient.updateStatus(
                     record.id!!,
                     record.metadata!!.copy(status = "PROCESSING")
                 )
-                logger.debug("Updated metadata $id to PROCESSING")
+                recordLogger.debug("Updated metadata to PROCESSING")
             }
         } catch (exe: ConflictException) {
-            logger.warn("Conflicting request was made. Skipping this record")
+            recordLogger.warn("Conflicting request was made. Skipping this record")
             null
         } catch (exe: Exception) {
             throw ConversionTemporarilyFailedException("Cannot update record metadata", exe)
@@ -96,11 +109,11 @@ class ConverterManager(
 
     private fun updateRecordFailure(
         record: RecordDTO,
+        recordLogger: RecordLogger,
         exe: Exception,
-        reason: String = "Could not convert this record. Please refer to the conversion logs for more details"
+        reason: String = "Could not convert this record. Please refer to the conversion logs for more details",
     ) {
         val recordId = record.id ?: return
-        val recordLogger = logRepository.createLogger(logger, recordId)
         recordLogger.error("$reason: ${exe.message}", exe.cause)
         val metadata = uploadClient.retrieveRecordMetadata(recordId)
         val updatedMetadata = uploadClient.updateStatus(recordId, metadata.copy(
@@ -116,10 +129,11 @@ class ConverterManager(
 
     private fun updateRecordTemporaryFailure(
         record: RecordDTO,
+        recordLogger: RecordLogger,
         exe: Exception,
-        reason: String = "Temporarily could not convert this record. Please refer to the conversion logs for more details") {
+        reason: String = "Temporarily could not convert this record. Please refer to the conversion logs for more details",
+    ) {
         logger.info("Update record conversion failure")
-        val recordLogger = logRepository.createLogger(logger, record.id!!)
         recordLogger.error("$reason: ${exe.message}", exe.cause)
         val metadata = uploadClient.retrieveRecordMetadata(record.id!!)
         val updatedMetadata = uploadClient.updateStatus(record.id!!, metadata.copy(
@@ -133,15 +147,6 @@ class ConverterManager(
         }
     }
 
-    private fun uploadAllLogs(reset: Boolean = true) {
-        logger.info("Uploading all remaining logs")
-        logRepository.recordIds.forEach { r ->
-            logRepository.extract(r, reset)
-                ?.let { uploadClient.addLogs(it) }
-        }
-        logger.info("All record logs are uploaded")
-    }
-
     fun uploadLogs(recordId: Long, reset: Boolean = true) {
         logger.info("Sending record $recordId logs...")
         logRepository.extract(recordId, reset)
@@ -151,7 +156,9 @@ class ConverterManager(
     override fun close() {
         // this will trigger a interrupt on the put method
         executor.shutdownNow()
-        uploadAllLogs()
+        logger.info("Uploading all remaining logs")
+        logRepository.recordIds.forEach { r -> uploadLogs(r, reset = true) }
+        logger.info("All record logs are uploaded")
     }
 
     companion object {

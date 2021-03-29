@@ -19,19 +19,23 @@ package org.radarbase.connect.upload.converter.phone
 import org.radarbase.connect.upload.api.SourceTypeDTO
 import org.radarbase.connect.upload.converter.*
 
-class AcceleratometerZipConverterFactory : ConverterFactory {
+class AccelerometerZipConverterFactory : ConverterFactory {
     override val sourceType: String = "acceleration-zip"
 
     override fun fileProcessorFactories(
-            settings: Map<String, String>,
-            connectorConfig: SourceTypeDTO,
-            logRepository: LogRepository
-    ): List<FileProcessorFactory> {
-        val csvLineProcessors  = listOf<CsvLineProcessorFactory>(
-                AccelerometerCsvProcessor())
-
-        val csvProcessors = listOf(CsvFileProcessorFactory(csvLineProcessors, logRepository))
-
-        return listOf(ZipFileProcessorFactory(csvProcessors, logRepository))
-    }
+        settings: Map<String, String>,
+        connectorConfig: SourceTypeDTO,
+        logRepository: LogRepository
+    ): List<FileProcessorFactory> = listOf(
+        ZipFileProcessorFactory(
+            sourceType,
+            zipEntryProcessors = listOf(
+                CsvFileProcessorFactory(
+                    csvProcessorFactories = listOf(
+                        AccelerometerCsvProcessor(),
+                    )
+                ),
+            ),
+        ),
+    )
 }

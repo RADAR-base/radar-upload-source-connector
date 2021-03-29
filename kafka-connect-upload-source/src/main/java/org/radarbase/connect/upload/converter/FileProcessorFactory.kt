@@ -27,7 +27,6 @@ import java.io.InputStream
  * Factory to create processors of single files.
  */
 interface FileProcessorFactory {
-
     /**
      * Whether this processor factory can process given file contents. Matching could occur based on
      * file name, size or content type.
@@ -41,15 +40,22 @@ interface FileProcessorFactory {
 
     /** Processor to process a single file in a record. */
     interface FileProcessor {
+        /**
+         * Process record contents from [context] using [inputStream] and sends the result to [produce].
+         */
         fun processData(
-                contents: ContentsDTO,
-                inputStream: InputStream,
-                timeReceived: Double
-        ): List<TopicData>
+            context: ConverterFactory.ContentsContext,
+            inputStream: InputStream,
+            produce: (TopicData) -> Unit
+        )
 
+        /**
+         * Preprocess the [inputStream] of [context] to ensure that the file can be processed by
+         * other processors.
+         */
         fun preProcessFile(
-                contents: ContentsDTO,
-                inputStream: InputStream,
+            context: ConverterFactory.ContentsContext,
+            inputStream: InputStream,
         ): InputStream = inputStream
     }
 }
