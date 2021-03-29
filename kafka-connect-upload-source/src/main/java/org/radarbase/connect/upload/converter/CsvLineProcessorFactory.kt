@@ -17,7 +17,6 @@
 package org.radarbase.connect.upload.converter
 
 import org.radarbase.connect.upload.api.ContentsDTO
-import org.radarbase.connect.upload.api.RecordDTO
 
 /**
  * Processor for processing single lines of CSV file.
@@ -56,7 +55,7 @@ interface CsvLineProcessorFactory {
     /**
      * Create a line processor for given record.
      */
-    fun createLineProcessor(record: RecordDTO, logRepository: LogRepository): CsvLineProcessor
+    fun createLineProcessor(context: ConverterFactory.ContentsContext): CsvLineProcessor
 
     interface CsvLineProcessor {
         val recordLogger: RecordLogger
@@ -88,7 +87,10 @@ interface CsvLineProcessorFactory {
         /**
          * Convert a line from csv to one or more records
          */
-        fun convertToRecord(lineValues: Map<String, String>, timeReceived: Double): List<TopicData>?
+        fun convertToRecord(
+            lineValues: Map<String, String>,
+            timeReceived: Double,
+        ): Sequence<TopicData>
     }
 }
 

@@ -49,12 +49,6 @@ import javax.ws.rs.core.Response
 
 class TestBase {
     companion object {
-        val fileAndSourceTypeStore = mapOf(
-                "TEST_ACC.csv" to "phone-acceleration",
-                "TEST_ACC.zip" to "acceleration-zip",
-                "TEST_ZIP.zip" to "altoida"
-        )
-
         const val baseUri = "http://0.0.0.0:8085/upload/api"
 
         const val tokenUrl = "http://localhost:8090/managementportal/oauth/token"
@@ -75,6 +69,8 @@ class TestBase {
 
         private val APPLICATION_JSON = "application/json; charset=utf-8".toMediaType()
 
+        val APPLICATION_ZIP = "application/zip".toMediaType()
+
         private val TEXT_CSV = "text/csv; charset=utf-8".toMediaType()
 
         val httpClient = OkHttpClient()
@@ -86,7 +82,10 @@ class TestBase {
                 contentTypes = mutableSetOf("application/text"),
                 timeRequired = false,
                 sourceIdRequired = false,
-                configuration = mutableMapOf("setting1" to "value1", "setting2" to "value2")
+                configuration = mutableMapOf(
+                    "setting1" to "value1",
+                    "setting2" to "value2",
+                ),
         )
 
         private val altoidaZip = SourceTypeDTO(
@@ -95,7 +94,7 @@ class TestBase {
                 contentTypes = mutableSetOf("application/zip"),
                 timeRequired = false,
                 sourceIdRequired = false,
-                configuration = mutableMapOf()
+                configuration = mutableMapOf(),
         )
 
         private val accelerationZip = SourceTypeDTO(
@@ -104,7 +103,7 @@ class TestBase {
                 contentTypes = mutableSetOf("application/zip"),
                 timeRequired = false,
                 sourceIdRequired = false,
-                configuration = mutableMapOf()
+                configuration = mutableMapOf(),
         )
 
         val uploadBackendConfig = Config(
@@ -116,7 +115,11 @@ class TestBase {
                 jdbcUrl = "jdbc:postgresql://localhost:5434/uploadconnector",
                 jdbcUser = "radarcns",
                 jdbcPassword = "radarcns",
-                sourceTypes = listOf(sourceType, altoidaZip, accelerationZip)
+                sourceTypes = listOf(
+                    sourceType,
+                    altoidaZip,
+                    accelerationZip
+                ),
         )
 
         private val mapper: ObjectMapper = ObjectMapper(JsonFactory())
@@ -199,11 +202,11 @@ class TestBase {
                     .build())
         }
 
-        fun createRecordAndUploadContent(accessToken: String, sourceType: String, fileName: String): RecordDTO {
+        fun createRecordAndUploadContent(accessToken: String, sourceType: String, fileName: String, type: okhttp3.MediaType = TEXT_CSV): RecordDTO {
             val recordCreated = createRecord(accessToken, sourceType)
 
             //Test uploading request contentFile for created record
-            uploadContent(recordCreated.id!!, fileName, accessToken)
+            uploadContent(recordCreated.id!!, fileName, accessToken, type)
             markReady(recordCreated.id!!, accessToken)
             return recordCreated
         }
@@ -233,15 +236,14 @@ class TestBase {
             return recordCreated
         }
 
-        fun uploadContent(recordId: Long, fileName: String, clientUserToken: String) {
+        fun uploadContent(recordId: Long, fileName: String, clientUserToken: String, type: okhttp3.MediaType = TEXT_CSV) {
             //Test uploading request contentFile
             val file = File(fileName)
 
             val content = call(httpClient, 201, ContentsDTO::class.java) {
                 url("$baseUri/records/$recordId/contents/$fileName")
-                put(file.asRequestBody(TEXT_CSV))
+                put(file.asRequestBody(type))
                 addHeader("Authorization", BEARER + clientUserToken)
-                addHeader("Content-Type", "text/csv")
                 addHeader("Content-Length", "10000")
             }
             assertThat(content.fileName, equalTo(fileName))

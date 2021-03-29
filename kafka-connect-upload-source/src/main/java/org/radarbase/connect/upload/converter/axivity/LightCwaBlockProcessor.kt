@@ -8,8 +8,12 @@ import java.lang.Math.pow
 import kotlin.math.pow
 
 class LightCwaBlockProcessor: CwaFileProcessorFactory.CwaBlockProcessor {
-    override fun processBlock(recordLogger: RecordLogger, block: CwaBlock, timeReceived: Double): List<TopicData> {
-        return listOf(TopicData(
+    override fun processBlock(
+        recordLogger: RecordLogger,
+        block: CwaBlock,
+        timeReceived: Double,
+    ): Sequence<TopicData> {
+        return sequenceOf(TopicData(
                 "connect_upload_axivity_light",
                 AxivityLight(
                         block.startTime(),

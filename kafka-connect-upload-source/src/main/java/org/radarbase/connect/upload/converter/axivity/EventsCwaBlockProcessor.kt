@@ -9,16 +9,21 @@ import org.radarcns.connector.upload.axivity.AxivityEventType
 import org.radarcns.connector.upload.axivity.AxivityEventType.*
 
 class EventsCwaBlockProcessor: CwaFileProcessorFactory.CwaBlockProcessor {
-    override fun processBlock(recordLogger: RecordLogger, block: CwaBlock, timeReceived: Double): List<TopicData> {
+    override fun processBlock(
+        recordLogger: RecordLogger,
+        block: CwaBlock,
+        timeReceived: Double,
+    ): Sequence<TopicData> {
         return if (block.events == 0.toShort()) {
-            emptyList()
+            emptySequence()
         } else {
             AxivityEventType.values()
-                    .filter { block.events and it.toBitPattern() != 0 }
-                    .map { TopicData("connect_upload_axivity_event", AxivityEvent(
-                            block.startTime(),
-                            timeReceived,
-                            it)) }
+                .asSequence()
+                .filter { block.events and it.toBitPattern() != 0 }
+                .map { TopicData("connect_upload_axivity_event", AxivityEvent(
+                        block.startTime(),
+                        timeReceived,
+                        it)) }
         }
     }
 

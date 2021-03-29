@@ -37,6 +37,7 @@ class UploadSourceConnectorConfigTest {
                 "upload.source.backend.baseUrl" to
                         "http://radar-upload-connect-backend:8085/radar-upload/",
                 "upload.source.poll.interval.ms" to "3600000",
+                "upload.source.queue.size" to "1000",
                 "upload.source.record.converter.classes" to listOf(
                         AccelerometerConverterFactory::class.java.name,
                         AltoidaConverterFactory::class.java.name
@@ -48,7 +49,7 @@ class UploadSourceConnectorConfigTest {
         assertEquals("radar_upload_connect", config.oauthClientId)
         assertEquals("test_secret", config.oauthClientSecret)
         assertEquals("http://managementportal-app:8080/managementportal/oauth/token", config.tokenRequestUrl)
-        assertNotNull(config.getAuthenticator())
+        assertNotNull(config.authenticator)
         assertEquals(2, config.converterClasses.size)
     }
 }

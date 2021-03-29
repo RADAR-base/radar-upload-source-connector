@@ -21,9 +21,7 @@ package org.radarbase.connect.upload.converter.altoida
 
 import org.radarbase.connect.upload.api.SourceTypeDTO
 import org.radarbase.connect.upload.converter.*
-import org.radarbase.connect.upload.converter.altoida.summary.AltoidaDomainResultProcessor
-import org.radarbase.connect.upload.converter.altoida.summary.AltoidaSummaryProcessor
-import org.radarbase.connect.upload.converter.altoida.summary.AltoidaTestMetricsProcessor
+import org.radarbase.connect.upload.converter.altoida.summary.*
 
 class AltoidaConverterFactory : ConverterFactory {
     override val sourceType: String = "altoida"
@@ -32,35 +30,42 @@ class AltoidaConverterFactory : ConverterFactory {
             settings: Map<String, String>,
             connectorConfig: SourceTypeDTO,
             logRepository: LogRepository
-    ): List<FileProcessorFactory> {
-        val csvLineProcessors  = listOf(
-                AltoidaAccelerationCsvProcessor(),
-                AltoidaActionCsvProcessor(),
-                AltoidaAttitudeCsvProcessor(),
-                AltoidaDiagnosticsCsvProcessor(),
-                AltoidaGravityCsvProcessor(),
-                AltoidaMagneticFieldCsvProcessor(),
-                AltoidaObjectCsvProcessor(),
-                AltoidaPathCsvProcessor(),
-                AltoidaRotationCsvProcessor(),
-                AltoidaTapScreenCsvProcessor(),
-                AltoidaTouchScreenCsvProcessor(),
-                AltoidaEyeTrackingCsvProcessor(),
-                AltoidaBlinkCsvProcessor())
-
-        val csvExportProcessors = listOf(
+    ): List<FileProcessorFactory> = listOf(
+        // Preprocess malformed export.csv
+        AltoidaSummaryCsvPreProcessorFactory(),
+        // Process export.csv
+        CsvFileProcessorFactory(
+            csvProcessorFactories = listOf(
                 AltoidaSummaryProcessor(),
                 AltoidaDomainResultProcessor(),
                 AltoidaTestMetricsProcessor(AltoidaTestMetricsProcessor.AltoidaTestCategory.BIT, "connect_upload_altoida_bit_metrics"),
-                AltoidaTestMetricsProcessor(AltoidaTestMetricsProcessor.AltoidaTestCategory.DOT, "connect_upload_altoida_dot_metrics"))
-
-        val fileProcessors = listOf(
-                CsvFileProcessorFactory(csvLineProcessors, logRepository),
-                AltoidaMetadataFileProcessor(logRepository))
-
-        return listOf(
-                ZipFileProcessorFactory(fileProcessors, logRepository),
-                CsvFileProcessorFactory(csvExportProcessors, logRepository))
-    }
+                AltoidaTestMetricsProcessor(AltoidaTestMetricsProcessor.AltoidaTestCategory.DOT, "connect_upload_altoida_dot_metrics"),
+            ),
+        ),
+        // Process zip file with detailed CSV contents
+        ZipFileProcessorFactory(
+            sourceType,
+            zipEntryProcessors = listOf(
+                CsvFileProcessorFactory(
+                    csvProcessorFactories =  listOf(
+                        AltoidaAccelerationCsvProcessor(),
+                        AltoidaActionCsvProcessor(),
+                        AltoidaAttitudeCsvProcessor(),
+                        AltoidaBlinkCsvProcessor(),
+                        AltoidaDiagnosticsCsvProcessor(),
+                        AltoidaEyeTrackingCsvProcessor(),
+                        AltoidaGravityCsvProcessor(),
+                        AltoidaMagneticFieldCsvProcessor(),
+                        AltoidaObjectCsvProcessor(),
+                        AltoidaPathCsvProcessor(),
+                        AltoidaRotationCsvProcessor(),
+                        AltoidaTapScreenCsvProcessor(),
+                        AltoidaTouchScreenCsvProcessor(),
+                    )
+                ),
+                AltoidaMetadataFileProcessor(),
+            )
+        ),
+    )
 }
 

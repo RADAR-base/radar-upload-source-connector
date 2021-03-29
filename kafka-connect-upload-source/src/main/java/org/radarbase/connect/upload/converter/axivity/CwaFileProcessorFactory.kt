@@ -2,10 +2,7 @@ package org.radarbase.connect.upload.converter.axivity
 
 import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
-import org.radarbase.connect.upload.converter.FileProcessorFactory
-import org.radarbase.connect.upload.converter.LogRepository
-import org.radarbase.connect.upload.converter.RecordLogger
-import org.radarbase.connect.upload.converter.TopicData
+import org.radarbase.connect.upload.converter.*
 import org.radarbase.connect.upload.converter.axivity.newcastle.CwaBlock
 import org.radarbase.connect.upload.converter.axivity.newcastle.CwaReader
 import org.slf4j.LoggerFactory
@@ -24,26 +21,45 @@ class CwaFileProcessorFactory(
     inner class CwaProcessor(record: RecordDTO) : FileProcessorFactory.FileProcessor {
         val recordLogger = logRepository.createLogger(logger, record.id!!)
 
-        override fun processData(contents: ContentsDTO, inputStream: InputStream, timeReceived: Double): List<TopicData> {
+        override fun processData(
+            context: ConverterFactory.ContentsContext,
+            inputStream: InputStream,
+            produce: (TopicData) -> Unit
+        ) {
             val cwaReader = CwaReader(inputStream)
 
-            val data = generateSequence { cwaReader.peekBlock() }
-                    .flatMap { block -> processBlock(block, timeReceived) }
-                    .toMutableList()
+            try {
+                var firstTime = context.timeReceived
 
-            val firstTime = data.firstOrNull()?.value?.get(0) as? Double
-                    ?: timeReceived
+                generateSequence { cwaReader.peekBlock() }
+                    .flatMap { block -> processBlock(block, context.timeReceived) }
+                    .forEachIndexed { idx, data ->
+                        if (idx == 0) {
+                            val timeValue = data.value.get(0) as? Double
+                            if (timeValue != null) {
+                                firstTime = timeValue
+                            }
+                        }
+                        produce(data)
+                    }
 
-            data += metadataProcessor.processReader(cwaReader, firstTime, timeReceived)
-
-            return data
+                metadataProcessor.processReader(cwaReader, firstTime, context.timeReceived)
+                    .forEach { produce(it) }
+            } finally {
+                cwaReader.close()
+            }
         }
 
-        private fun processBlock(block: CwaBlock, timeReceived: Double): Sequence<TopicData> {
+        private fun processBlock(
+            block: CwaBlock,
+            timeReceived: Double,
+        ): Sequence<TopicData> {
             val result = if (block.isDataBlock) {
-                dataBlockProcessors.flatMap { processor ->
-                    processor.processBlock(recordLogger, block, timeReceived)
-                }.asSequence()
+                dataBlockProcessors
+                    .asSequence()
+                    .flatMap { processor ->
+                        processor.processBlock(recordLogger, block, timeReceived)
+                    }
             } else emptySequence()
 
             block.invalidate()
@@ -52,7 +68,11 @@ class CwaFileProcessorFactory(
     }
 
     interface CwaBlockProcessor {
-        fun processBlock(recordLogger: RecordLogger, block: CwaBlock, timeReceived: Double): List<TopicData>
+        fun processBlock(
+            recordLogger: RecordLogger,
+            block: CwaBlock,
+            timeReceived: Double,
+        ): Sequence<TopicData>
 
         fun CwaBlock.startTime(): Double = timestampValues[0] / 1000.0
     }

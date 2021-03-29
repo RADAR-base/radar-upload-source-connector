@@ -21,11 +21,10 @@ package org.radarbase.connect.upload.converter
 
 import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
-import org.radarbase.connect.upload.exception.DataProcessorNotFoundException
-import org.slf4j.LoggerFactory
 import java.io.FilterInputStream
 import java.io.IOException
 import java.io.InputStream
+import java.nio.file.Paths
 import java.util.zip.ZipInputStream
 
 /**
@@ -33,66 +32,75 @@ import java.util.zip.ZipInputStream
  * DataProcessors that can process each entry in the Zip file.
  */
 open class ZipFileProcessorFactory(
-        private val entryProcessors: List<FileProcessorFactory>,
-        private val logRepository: LogRepository) : FileProcessorFactory {
+    sourceType: String,
+    zipEntryProcessors: List<FileProcessorFactory>,
+) : FileProcessorFactory {
+    private val delegatingProcessor = DelegatingProcessor(
+        processorFactories = zipEntryProcessors,
+        tempDir = Paths.get(System.getProperty("java.io.tmpdir"), "upload-connector", "$sourceType-zip-cache"),
+        generateTempFilePrefix = { context ->
+            val safeEntryName = context.fileName
+                .replace(nonAlphaNumericRegex, "")
+                .takeLast(50)
+            "record-entry-${context.id}-$safeEntryName-"
+        },
+    )
+
     open fun entryFilter(name: String): Boolean = true
 
-    open fun beforeProcessing(contents: ContentsDTO) = Unit
+    open fun beforeProcessing(contents: ConverterFactory.ContentsContext) = Unit
 
-    open fun afterProcessing(contents: ContentsDTO) = Unit
+    open fun afterProcessing(contents: ConverterFactory.ContentsContext) = Unit
 
     override fun matches(contents: ContentsDTO): Boolean = contents.fileName.endsWith(".zip")
 
     override fun createProcessor(record: RecordDTO): FileProcessorFactory.FileProcessor = ZipFileProcessor(record)
 
     inner class ZipFileProcessor(private val record: RecordDTO): FileProcessorFactory.FileProcessor {
-        private val recordLogger = logRepository.createLogger(logger, record.id!!)
-        override fun processData(contents: ContentsDTO, inputStream: InputStream, timeReceived: Double): List<TopicData> {
-            recordLogger.info("Retrieved file content from record id ${record.id} and filename ${contents.fileName}")
-            beforeProcessing(contents)
-            return try {
-                ZipInputStream(inputStream).use { zippedInput ->
-                    generateSequence { zippedInput.nextEntry }
-                            .ifEmpty { throw IOException("No zipped entry found from ${contents.fileName}") }
-                            .filter { !it.isDirectory && entryFilter(it.name.trim()) }
-                            .flatMap { zippedEntry ->
-                                val entryName = zippedEntry.name.trim()
-                                recordLogger.debug("Processing entry $entryName from record ${record.id}")
-
-                                val entryContents = ContentsDTO(
-                                        fileName = entryName,
-                                        size = zippedEntry.size)
-
-                                val processor = entryProcessors.find { it.matches(entryContents) }
-                                        ?: throw DataProcessorNotFoundException("Could not find registered processor for zipped entry $entryName")
-
-                                recordLogger.debug("Processing $entryName with ${processor.javaClass.simpleName} processor")
-
-                                processor.createProcessor(record)
-                                        .processData(entryContents, object : FilterInputStream(zippedInput) {
-                                            @Throws(IOException::class)
-                                            override fun close() {
-                                                recordLogger.debug("Closing entry $entryName")
-                                                zippedInput.closeEntry()
-                                            }
-                                        }, timeReceived)
-                                        .asSequence()
-                            }
-                            .toList()
+        override fun processData(
+            context: ConverterFactory.ContentsContext,
+            inputStream: InputStream,
+            produce: (TopicData) -> Unit
+        ) {
+            context.logger.info("Retrieved Zip content from filename ${context.fileName}")
+            beforeProcessing(context)
+            try {
+                ZipInputStream(inputStream).use { zipInputStream ->
+                    generateSequence { zipInputStream.nextEntry }
+                        .ifEmpty { throw IOException("No zipped entry found from ${context.fileName}") }
+                        .filter { !it.isDirectory && entryFilter(it.name.trim()) }
+                        .forEach { zipEntry ->
+                            delegatingProcessor.processData(
+                                context = context.copy(
+                                    contents = ContentsDTO(
+                                        fileName = zipEntry.name.trim(),
+                                        size = zipEntry.size
+                                    ),
+                                ),
+                                inputStream = object : FilterInputStream(zipInputStream) {
+                                    @Throws(IOException::class)
+                                    override fun close() {
+                                        context.logger.debug("Closing entry ${context.fileName}")
+                                        zipInputStream.closeEntry()
+                                    }
+                                },
+                                produce,
+                            )
+                        }
                 }
             } catch (exe: IOException) {
-                recordLogger.error("Failed to process zipped input from record ${record.id}", exe)
+                context.logger.error("Failed to process zipped input from record ${record.id}", exe)
                 throw exe
             } catch (exe: Exception) {
-                recordLogger.error("Could not process record ${record.id}", exe)
+                context.logger.error("Could not process record ${record.id}", exe)
                 throw exe
             } finally {
-                afterProcessing(contents)
+                afterProcessing(context)
             }
         }
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(ZipFileProcessor::class.java)
+        private val nonAlphaNumericRegex = "\\W+".toRegex()
     }
 }

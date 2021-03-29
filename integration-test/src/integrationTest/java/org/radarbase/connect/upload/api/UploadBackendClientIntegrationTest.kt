@@ -19,6 +19,7 @@
 
 package org.radarbase.connect.upload.api
 
+import org.apache.kafka.connect.source.SourceRecord
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
 import org.junit.jupiter.api.AfterAll
@@ -114,22 +115,24 @@ class UploadBackendClientIntegrationTest {
 
         val recordToProcess = records.records.first { recordDTO -> recordDTO.sourceType == sourceTypeName }
         createdRecord.metadata = uploadBackendClient.updateStatus(recordToProcess.id!!, recordToProcess.metadata!!.copy(status = "PROCESSING", message = "The record is being processed"))
-        val convertedRecords = converter.convert(records.records.first())
+        val convertedRecords = mutableListOf<SourceRecord>()
+        converter.convert(records.records.first(), convertedRecords::add)
         assertThat(convertedRecords, not(nullValue()))
         assertThat(convertedRecords, not(empty()))
     }
 
     private fun pollRecords(): RecordContainerDTO {
         val pollConfig = PollDTO(
-                limit = 10,
-                supportedConverters = setOf(sourceType))
+            limit = 10,
+            supportedConverters = setOf(sourceType),
+        )
         val records = uploadBackendClient.pollRecords(pollConfig)
         assertNotNull(records)
-        assertThat(records.records.size, greaterThan(0))
+        assertThat(records.records, not(empty()))
         records.records.forEach { recordDTO ->
             assertThat(recordDTO.metadata?.status, equalTo(RecordStatus.QUEUED.toString()))
         }
-        println("Polled ${records.records.size} records")
+        println("Polled ${records.records.count()} records")
         return records
     }
 

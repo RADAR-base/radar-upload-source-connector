@@ -1,7 +1,6 @@
 package org.radarbase.connect.upload.converter.oxford
 
 import okhttp3.internal.closeQuietly
-import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.SourceTypeDTO
 import org.radarbase.connect.upload.converter.ConverterFactory
 import org.radarbase.connect.upload.converter.FileProcessorFactory
@@ -15,20 +14,24 @@ class WearableCameraConverterFactory : ConverterFactory {
 
     private val localUploader = ThreadLocal<FileUploaderFactory.FileUploader>()
 
-    override fun fileProcessorFactories(settings: Map<String, String>, connectorConfig: SourceTypeDTO, logRepository: LogRepository): List<FileProcessorFactory> {
-
+    override fun fileProcessorFactories(
+        settings: Map<String, String>,
+        connectorConfig: SourceTypeDTO,
+        logRepository: LogRepository,
+    ): List<FileProcessorFactory> {
         val uploaderSupplier = FileUploaderFactory(settings).fileUploader()
 
         logger.info("Target endpoint is ${uploaderSupplier.advertisedTargetUri()} and Root folder for upload is ${uploaderSupplier.rootDirectory()}")
         val processors = listOf(
-                CameraDataFileProcessor(),
-                CameraUploadProcessor(logRepository, { localUploader.get() }))
-        return listOf(object : ZipFileProcessorFactory(processors, logRepository) {
-            override fun beforeProcessing(contents: ContentsDTO) {
+            CameraDataFileProcessor(),
+            CameraUploadProcessor() { localUploader.get() },
+        )
+        return listOf(object : ZipFileProcessorFactory(sourceType, processors) {
+            override fun beforeProcessing(contents: ConverterFactory.ContentsContext) {
                 localUploader.set(uploaderSupplier)
             }
 
-            override fun afterProcessing(contents: ContentsDTO) {
+            override fun afterProcessing(contents: ConverterFactory.ContentsContext) {
                 localUploader.get().closeQuietly()
                 localUploader.remove()
             }

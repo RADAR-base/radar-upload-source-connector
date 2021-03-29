@@ -1,5 +1,7 @@
 package org.radarbase.connect.upload.converter
 
+import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers.greaterThan
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.DisplayName
@@ -34,8 +36,12 @@ class AxivityConverterFactoryTest {
                     revision = 1,
                     status = "PROCESSING"
             ),
-            data = null,
-            sourceType = "axivity"
+            data = RecordDataDTO(
+                projectId = "testProject",
+                userId = "testUser",
+                sourceId = "testSource",
+            ),
+        sourceType = "axivity"
 
     )
 
@@ -58,27 +64,33 @@ class AxivityConverterFactoryTest {
     @Test
     @DisplayName("Should be able to convert a zip file with sample data to TopicRecords")
     fun testValidRawDataProcessing() {
-        val records = requireNotNull(AxivityConverterFactoryTest::class.java.getResourceAsStream("/CWA-DATA.zip")).use { cwaZipFile ->
-            converter.convertFile(record, contentsDTO, cwaZipFile, Mockito.mock(RecordLogger::class.java))
+        val context = ConverterFactory.ContentsContext.create(
+            record = record,
+            contents = contentsDTO,
+            logger = Mockito.mock(RecordLogger::class.java),
+            avroData = RecordConverter.createAvroData(),
+        )
+
+        val records = mutableListOf<TopicData>()
+        requireNotNull(AxivityConverterFactoryTest::class.java.getResourceAsStream("/CWA-DATA.zip")).use { cwaZipFile ->
+            converter.convertFile(context, cwaZipFile, records::add)
         }
 
         val accRecords = records.filter { it.value.javaClass == AxivityAcceleration::class.java }
 
-        requireNotNull(AxivityConverterFactoryTest::class.java.getResourceAsStream("/CWA-DATA.zip")).use { cwaZipFile ->
+        requireNotNull(javaClass.getResourceAsStream("/CWA-DATA.zip")).use { cwaZipFile ->
             ZipInputStream(cwaZipFile).use { zipIn ->
                 assertNotNull(zipIn.nextEntry)
                 CwaCsvInputStream(zipIn, 0, 1, -1, OPTIONS_EVENTS).use { cwaIn ->
                     cwaIn.bufferedReader().use { it.readLines() }
                     // without any apparent reason, the CwaCsvInputStream is missing the first block...
-                    assertEquals(cwaIn.line + 80, accRecords.size)
+                    assertEquals(cwaIn.line + 80, accRecords.count())
                 }
             }
         }
 
         assertNotNull(records)
-        assertTrue(records.size > 1000)
-        assertEquals(true, records.last().endOfFileOffSet)
-        assertEquals(1, records.filter { it.endOfFileOffSet }.size)
+        assertThat(records.count(), greaterThan(1000))
     }
 
 }
