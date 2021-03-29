@@ -24,6 +24,9 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody
 import okio.BufferedSink
 import org.apache.kafka.connect.source.SourceRecord
+import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers
+import org.hamcrest.Matchers.*
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
 import org.radarbase.connect.upload.converter.ConverterFactory.Converter.Companion.END_OF_RECORD_KEY
@@ -139,9 +142,7 @@ class UploadSourceTaskTest {
 
         Thread.sleep(4_000L)
         val sourceRecords = sourceTask.poll()
-        assertNotNull(sourceRecords)
-        sourceRecords ?: return
-        assertTrue(sourceRecords.isEmpty())
+        assertThat(sourceRecords, nullValue())
 
         val metadata = retrieveRecordMetadata(accessToken, createdRecord.id!!)
         assertNotNull(metadata)
@@ -157,10 +158,8 @@ class UploadSourceTaskTest {
         assertNotNull(createdRecord.id)
 
         Thread.sleep(4_000L)
-        val sourceRecords = sourceTask.poll()
-        assertNotNull(sourceRecords)
-        sourceRecords ?: return
-        assertTrue(sourceRecords.isEmpty())
+        val sourceRecords: List<SourceRecord>? = sourceTask.poll()
+        assertThat(sourceRecords, nullValue())
 
         val metadata = retrieveRecordMetadata(accessToken, createdRecord.id!!)
         assertNotNull(metadata)

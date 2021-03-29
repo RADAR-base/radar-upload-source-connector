@@ -45,17 +45,10 @@ import org.radarbase.upload.api.SourceTypeDTO
 import java.io.File
 import java.net.URI
 import java.time.LocalDateTime
-import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
 class TestBase {
     companion object {
-        val fileAndSourceTypeStore = mapOf(
-                "TEST_ACC.csv" to "phone-acceleration",
-                "TEST_ACC.zip" to "acceleration-zip",
-                "TEST_ZIP.zip" to "altoida"
-        )
-
         const val baseUri = "http://0.0.0.0:8085/upload/api"
 
         const val tokenUrl = "http://localhost:8090/managementportal/oauth/token"

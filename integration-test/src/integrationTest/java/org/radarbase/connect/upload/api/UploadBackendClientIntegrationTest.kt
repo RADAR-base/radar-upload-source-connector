@@ -118,16 +118,17 @@ class UploadBackendClientIntegrationTest {
         val convertedRecords = mutableListOf<SourceRecord>()
         converter.convert(records.records.first(), convertedRecords::add)
         assertThat(convertedRecords, not(nullValue()))
-        assertThat(convertedRecords.count(), greaterThan(0))
+        assertThat(convertedRecords, not(empty()))
     }
 
     private fun pollRecords(): RecordContainerDTO {
         val pollConfig = PollDTO(
-                limit = 10,
-                supportedConverters = setOf(sourceType))
+            limit = 10,
+            supportedConverters = setOf(sourceType),
+        )
         val records = uploadBackendClient.pollRecords(pollConfig)
         assertNotNull(records)
-        assertThat(records.records.count(), greaterThan(0))
+        assertThat(records.records, not(empty()))
         records.records.forEach { recordDTO ->
             assertThat(recordDTO.metadata?.status, equalTo(RecordStatus.QUEUED.toString()))
         }
