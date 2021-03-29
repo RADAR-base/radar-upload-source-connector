@@ -19,17 +19,20 @@
 
 package org.radarbase.connect.upload.converter
 
+import org.apache.kafka.connect.source.SourceRecord
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
 import org.mockito.Mockito.mock
 import org.radarbase.connect.upload.api.*
-import org.radarbase.connect.upload.converter.phone.AcceleratometerZipConverterFactory
+import org.radarbase.connect.upload.converter.ConverterFactory.Converter.Companion.END_OF_RECORD_KEY
+import org.radarbase.connect.upload.converter.phone.AccelerometerZipConverterFactory
 import org.radarbase.connect.upload.exception.ConversionFailedException
 import java.io.File
 import java.time.Instant
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class AcceleratometerZipConverterFactoryTest {
+class AccelerometerZipConverterFactoryTest {
+    private lateinit var context: ConverterFactory.ContentsContext
     private lateinit var converter: ConverterFactory.Converter
 
     private lateinit var logRepository: LogRepository
@@ -43,22 +46,13 @@ class AcceleratometerZipConverterFactoryTest {
             size = 1L
     )
 
-    private val record = RecordDTO(
-            id = 1L,
-            metadata = RecordMetadataDTO(
-                    revision = 1,
-                    status = "PROCESSING"
-            ),
-            data = null,
-            sourceType = "phone-acceleration"
-
-    )
+    private lateinit var record: RecordDTO
 
     @BeforeAll
     fun setUp() {
         uploadBackendClient = mock(UploadBackendClient::class.java)
         logRepository = ConverterLogRepository()
-        val converterFactory = AcceleratometerZipConverterFactory()
+        val converterFactory = AccelerometerZipConverterFactory()
         val config = SourceTypeDTO(
                 name = "phone-acceleration",
                 configuration = emptyMap(),
@@ -66,6 +60,31 @@ class AcceleratometerZipConverterFactoryTest {
                 timeRequired = false,
                 topics = setOf("test_topic"),
                 contentTypes = setOf()
+        )
+        record = RecordDTO(
+            id = 1L,
+            metadata = RecordMetadataDTO(
+                revision = 1,
+                status = "PROCESSING"
+            ),
+            data = RecordDataDTO(
+                projectId = "testProject",
+                userId = "testUser",
+                sourceId = "testSource",
+                contents = setOf(
+                    ContentsDTO(
+                        fileName = "ACC.csv",
+                    ),
+                ),
+            ),
+            sourceType = "phone-acceleration"
+
+        )
+        context = ConverterFactory.ContentsContext.create(
+            record = record,
+            contents = contentsDTO,
+            logger = mock(RecordLogger::class.java),
+            avroData = RecordConverter.createAvroData(),
         )
         converter = converterFactory.converter(emptyMap(), config, uploadBackendClient, logRepository)
     }
@@ -76,12 +95,21 @@ class AcceleratometerZipConverterFactoryTest {
     fun testValidDataProcessing() {
         val accFile = File("src/test/resources/_ACC.zip")
 
-        val records = converter.convertFile(record, contentsDTO, accFile.inputStream(), mock(RecordLogger::class.java))
+        record.data?.contents?.firstOrNull()?.fileName = "_ACC.zip"
 
-        assertNotNull(record)
+        val records = mutableListOf<SourceRecord>()
+        converter.convertStream(
+            record,
+            openStream = { _, processStream ->
+                processStream(accFile.inputStream())
+            },
+            records::add,
+        )
+
+        assertNotNull(records)
         assertEquals(6, records.size)
-        assertEquals(true, records.last().endOfFileOffSet)
-        assertEquals(1, records.filter { it.endOfFileOffSet }.size)
+        assertEquals(true, records.last().sourceOffset()[END_OF_RECORD_KEY])
+        assertEquals(1, records.filter { it.sourceOffset()[END_OF_RECORD_KEY] == true }.size)
     }
 
     @Test
@@ -90,7 +118,7 @@ class AcceleratometerZipConverterFactoryTest {
         val accFile = File("src/test/resources/ACC.csv")
 
         val exception = assertThrows(ConversionFailedException::class.java) {
-            converter.convertFile(record, contentsDTO, accFile.inputStream(), mock(RecordLogger::class.java))
+            converter.convertFile(context, accFile.inputStream()) {}
         }
         assertNotNull(exception)
     }

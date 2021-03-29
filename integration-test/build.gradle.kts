@@ -1,9 +1,12 @@
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.cli.common.toBooleanLenient
+import java.time.Duration
 
 plugins {
     java
     kotlin("jvm")
+    id("com.avast.gradle.docker-compose") version "0.14.1"
 }
 
 sourceSets {
@@ -31,10 +34,7 @@ dependencies {
     testImplementation("org.hamcrest:hamcrest-all:1.3")
     testImplementation("org.apache.kafka:connect-api:${project.extra["kafkaVersion"]}")
     testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:${project.extra["mockitoKotlinVersion"]}")
-}
-
-tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "11"
+    testImplementation("org.mockito:mockito-core:${project.extra["mockitoCoreVersion"]}")
 }
 
 task<Test>("integrationTest") {
@@ -45,18 +45,16 @@ task<Test>("integrationTest") {
     mustRunAfter(tasks["test"])
 }
 
-tasks.withType<Test> {
-    useJUnitPlatform()
-    testLogging {
-        events("passed", "skipped", "failed", "standard_out", "standard_error")
-        setExceptionFormat("full")
-    }
+tasks.withType<KotlinCompile> {
+    kotlinOptions.jvmTarget = "11"
 }
-val compileKotlin: KotlinCompile by tasks
-compileKotlin.kotlinOptions {
-    jvmTarget = "11"
-}
-val compileTestKotlin: KotlinCompile by tasks
-compileTestKotlin.kotlinOptions {
-    jvmTarget = "11"
+
+dockerCompose {
+    useComposeFiles = listOf("docker-compose.yml")
+    buildAdditionalArgs = emptyList<String>()
+    val dockerComposeStopContainers: String? by project
+    stopContainers = dockerComposeStopContainers?.toBooleanLenient() ?: true
+    waitForTcpPortsTimeout = Duration.ofMinutes(3)
+    environment["SERVICES_HOST"] = "localhost"
+    isRequiredBy(tasks["integrationTest"])
 }

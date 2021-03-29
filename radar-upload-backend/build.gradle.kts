@@ -10,15 +10,19 @@ plugins {
 }
 
 application {
-    mainClassName = "org.radarbase.upload.MainKt"
+    mainClass.set("org.radarbase.upload.MainKt")
 }
 
 dependencies {
     api(kotlin("stdlib-jdk8"))
     implementation(kotlin("reflect"))
 
-    implementation("org.radarbase:radar-jersey:${project.extra["radarJerseyVersion"]}")
-    implementation("org.radarbase:radar-jersey-hibernate:${project.extra["radarJerseyVersion"]}")
+    implementation("org.radarbase:radar-jersey:${project.extra["radarJerseyVersion"]}") {
+        exclude("io.swagger.core.v3", "swagger-jaxrs2")
+    }
+    implementation("org.radarbase:radar-jersey-hibernate:${project.extra["radarJerseyVersion"]}") {
+        exclude("io.swagger.core.v3", "swagger-jaxrs2")
+    }
 
     implementation("org.slf4j:slf4j-api:${project.extra["slf4jVersion"]}")
 
@@ -33,7 +37,6 @@ dependencies {
     testImplementation("org.glassfish.jersey.test-framework.providers:jersey-test-framework-provider-grizzly2:${project.extra["jerseyVersion"]}")
 }
 
-// config JVM target to 1.8 for kotlin compilation tasks
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "11"
 }

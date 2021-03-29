@@ -16,15 +16,10 @@
 
 package org.radarbase.connect.upload.converter
 
-import org.radarbase.connect.upload.api.RecordDTO
-import org.slf4j.LoggerFactory
-
 /**
  * Simple Processor for one line to one record of a single topic conversion.
  */
 abstract class StatelessCsvLineProcessor: CsvLineProcessorFactory {
-    private val logger = LoggerFactory.getLogger(javaClass)
-
     override val fileNameSuffixes: List<String>
         get() = listOf(fileNameSuffix)
 
@@ -39,25 +34,33 @@ abstract class StatelessCsvLineProcessor: CsvLineProcessorFactory {
 
     fun time(line: Map<String, String>): Double = timeFieldParser.time(line)
 
-    open fun lineConversion(line: Map<String, String>, timeReceived: Double): TopicData? = null
+    open fun lineConversion(
+        line: Map<String, String>,
+        timeReceived: Double
+    ): TopicData? = null
 
     open fun lineConversions(
-            line: Map<String, String>,
-            timeReceived: Double): List<TopicData>? = lineConversion(line, timeReceived)?.let { listOf(it) }
+        line: Map<String, String>,
+        timeReceived: Double
+    ): Sequence<TopicData> {
+        val conversion = lineConversion(line, timeReceived)
+        return if (conversion != null) sequenceOf(conversion) else emptySequence()
+    }
 
-    override fun createLineProcessor(record: RecordDTO, logRepository: LogRepository): CsvLineProcessorFactory.CsvLineProcessor {
-        val recordLogger = logRepository.createLogger(logger, record.id!!)
-        return Processor(recordLogger) { l, t -> lineConversions(l, t) }
+    override fun createLineProcessor(
+        context: ConverterFactory.ContentsContext
+    ): CsvLineProcessorFactory.CsvLineProcessor {
+        return Processor(context.logger) { l, t -> lineConversions(l, t) }
     }
 
     internal class Processor(
-            override val recordLogger: RecordLogger,
-            private val conversion: Processor.(lineValues: Map<String, String>, timeReceived: Double) -> List<TopicData>?
+        override val recordLogger: RecordLogger,
+        private val conversion: Processor.(lineValues: Map<String, String>, timeReceived: Double) -> Sequence<TopicData>,
     ) : CsvLineProcessorFactory.CsvLineProcessor {
         override fun convertToRecord(
-                lineValues: Map<String, String>,
-                timeReceived: Double
-        ): List<TopicData>? = conversion(lineValues, timeReceived)
+            lineValues: Map<String, String>,
+            timeReceived: Double
+        ): Sequence<TopicData> = conversion(lineValues, timeReceived)
     }
 }
 

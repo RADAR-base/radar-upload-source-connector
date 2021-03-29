@@ -34,8 +34,12 @@ class AxivityConverterFactoryTest {
                     revision = 1,
                     status = "PROCESSING"
             ),
-            data = null,
-            sourceType = "axivity"
+            data = RecordDataDTO(
+                projectId = "testProject",
+                userId = "testUser",
+                sourceId = "testSource",
+            ),
+        sourceType = "axivity"
 
     )
 
@@ -58,8 +62,16 @@ class AxivityConverterFactoryTest {
     @Test
     @DisplayName("Should be able to convert a zip file with sample data to TopicRecords")
     fun testValidRawDataProcessing() {
-        val records = requireNotNull(AxivityConverterFactoryTest::class.java.getResourceAsStream("/CWA-DATA.zip")).use { cwaZipFile ->
-            converter.convertFile(record, contentsDTO, cwaZipFile, Mockito.mock(RecordLogger::class.java))
+        val context = ConverterFactory.ContentsContext.create(
+            record = record,
+            contents = contentsDTO,
+            logger = Mockito.mock(RecordLogger::class.java),
+            avroData = RecordConverter.createAvroData(),
+        )
+
+        val records = mutableListOf<TopicData>()
+        requireNotNull(AxivityConverterFactoryTest::class.java.getResourceAsStream("/CWA-DATA.zip")).use { cwaZipFile ->
+            converter.convertFile(context, cwaZipFile, records::add)
         }
 
         val accRecords = records.filter { it.value.javaClass == AxivityAcceleration::class.java }
@@ -77,8 +89,6 @@ class AxivityConverterFactoryTest {
 
         assertNotNull(records)
         assertTrue(records.size > 1000)
-        assertEquals(true, records.last().endOfFileOffSet)
-        assertEquals(1, records.filter { it.endOfFileOffSet }.size)
     }
 
 }

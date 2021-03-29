@@ -65,9 +65,10 @@ enum class LogLevel {
 }
 
 data class LogRecord(
-        val logLevel: LogLevel,
-        val message: String,
-        val time: Instant = Instant.now())
+    val logLevel: LogLevel,
+    val message: String,
+    val time: Instant = Instant.now(),
+)
 
 data class Log(val recordId: Long, val records: Collection<LogRecord>) {
     fun asString(writer: BufferedSink) {

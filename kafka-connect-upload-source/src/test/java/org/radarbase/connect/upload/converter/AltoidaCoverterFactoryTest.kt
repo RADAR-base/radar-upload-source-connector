@@ -22,10 +22,14 @@ class AltoidaCoverterFactoryTest {
     private val record = RecordDTO(
             id = 1L,
             metadata = RecordMetadataDTO(
-                    revision = 1,
-                    status = "PROCESSING"
+                revision = 1,
+                status = "PROCESSING"
             ),
-            data = null,
+            data = RecordDataDTO(
+                projectId = "testProject",
+                userId = "testUser",
+                sourceId = "testSource",
+            ),
             sourceType = "altoida"
 
     )
@@ -36,12 +40,12 @@ class AltoidaCoverterFactoryTest {
         logRepository = ConverterLogRepository()
         val converterFactory = AltoidaConverterFactory()
         val config = SourceTypeDTO(
-                name = "altoida",
-                configuration = emptyMap(),
-                sourceIdRequired = false,
-                timeRequired = false,
-                topics = setOf("test_topic"),
-                contentTypes = setOf()
+            name = "altoida",
+            configuration = emptyMap(),
+            sourceIdRequired = false,
+            timeRequired = false,
+            topics = setOf("test_topic"),
+            contentTypes = setOf(),
         )
         converter = converterFactory.converter(emptyMap(), config, uploadBackendClient, logRepository)
     }
@@ -51,17 +55,23 @@ class AltoidaCoverterFactoryTest {
     fun testValidRawIosDataProcessing() {
         val file = File("src/test/resources/TEST_ZIP.zip")
 
-        val records = converter.convertFile(record, ContentsDTO(
+        val context = ConverterFactory.ContentsContext.create(
+            record = record,
+            contents = ContentsDTO(
                 contentType = "application/zip",
                 fileName = "TEST_ZIP.zip",
                 createdDate = Instant.now(),
                 size = 1L
-        ), file.inputStream(), Mockito.mock(RecordLogger::class.java))
+            ),
+            logger = Mockito.mock(RecordLogger::class.java),
+            avroData = RecordConverter.createAvroData(),
+        )
+
+        val records = mutableListOf<TopicData>()
+        converter.convertFile(context, file.inputStream(), records::add)
 
         assertNotNull(records)
         assertTrue(records.size > 1000)
-        assertEquals(true, records.last().endOfFileOffSet)
-        assertEquals(1, records.filter { it.endOfFileOffSet }.size)
     }
 
 
@@ -70,17 +80,23 @@ class AltoidaCoverterFactoryTest {
     fun testValidRawAndroidDataProcessing() {
         val file = File("src/test/resources/ALTOIDA_ANDROID.zip")
 
-        val records = converter.convertFile(record, ContentsDTO(
+        val context = ConverterFactory.ContentsContext.create(
+            record = record,
+            contents = ContentsDTO(
                 contentType = "application/zip",
                 fileName = "ALTOIDA_ANDROID.zip",
                 createdDate = Instant.now(),
                 size = 1L
-        ), file.inputStream(), Mockito.mock(RecordLogger::class.java))
+            ),
+            logger = Mockito.mock(RecordLogger::class.java),
+            avroData = RecordConverter.createAvroData(),
+        )
+
+        val records = mutableListOf<TopicData>()
+        converter.convertFile(context, file.inputStream(), records::add)
 
         assertNotNull(records)
         assertTrue(records.size > 1000)
-        assertEquals(true, records.last().endOfFileOffSet)
-        assertEquals(1, records.filter { it.endOfFileOffSet }.size)
     }
 
     @Test
@@ -88,18 +104,23 @@ class AltoidaCoverterFactoryTest {
     fun testValidExportCsvProcessing() {
         val file = File("src/test/resources/export.csv")
 
-        val contentsDTO = ContentsDTO(
+        val context = ConverterFactory.ContentsContext.create(
+            record = record,
+            contents = ContentsDTO(
                 contentType = "text/csv",
                 fileName = "export.csv",
                 createdDate = Instant.now(),
                 size = 1L
+            ),
+            logger = Mockito.mock(RecordLogger::class.java),
+            avroData = RecordConverter.createAvroData(),
         )
-        val records = converter.convertFile(record, contentsDTO, file.inputStream(), Mockito.mock(RecordLogger::class.java))
+
+        val records = mutableListOf<TopicData>()
+        converter.convertFile(context, file.inputStream(), records::add)
 
         assertNotNull(records)
         assertEquals(records.size, 4)
-        assertEquals(true, records.last().endOfFileOffSet)
-        assertEquals(1, records.filter { it.endOfFileOffSet }.size)
 
         val expectedTopics = listOf(
                 "connect_upload_altoida_bit_metrics",

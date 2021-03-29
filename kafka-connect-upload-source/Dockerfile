@@ -1,4 +1,4 @@
-FROM gradle:6.6.1-jdk11 as builder
+FROM gradle:6.8.3-jdk11 as builder
 
 RUN mkdir /code
 WORKDIR /code
@@ -13,7 +13,7 @@ COPY ./kafka-connect-upload-source/src/main/java /code/kafka-connect-upload-sour
 
 RUN gradle jar
 
-FROM confluentinc/cp-kafka-connect-base:5.5.2-1-ubi8
+FROM confluentinc/cp-kafka-connect-base:5.5.3-1-ubi8
 
 MAINTAINER @nivemaham @blootsvoets
 
