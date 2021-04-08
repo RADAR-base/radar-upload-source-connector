@@ -21,7 +21,10 @@ package org.radarbase.connect.upload.converter.altoida
 
 import org.radarbase.connect.upload.api.SourceTypeDTO
 import org.radarbase.connect.upload.converter.*
-import org.radarbase.connect.upload.converter.altoida.summary.*
+import org.radarbase.connect.upload.converter.altoida.summary.AltoidaDomainResultProcessor
+import org.radarbase.connect.upload.converter.altoida.summary.AltoidaSummaryCsvPreProcessorFactory
+import org.radarbase.connect.upload.converter.altoida.summary.AltoidaSummaryProcessor
+import org.radarbase.connect.upload.converter.altoida.summary.AltoidaTestMetricsProcessor
 
 class AltoidaConverterFactory : ConverterFactory {
     override val sourceType: String = "altoida"
@@ -31,41 +34,42 @@ class AltoidaConverterFactory : ConverterFactory {
             connectorConfig: SourceTypeDTO,
             logRepository: LogRepository
     ): List<FileProcessorFactory> = listOf(
-        // Preprocess malformed export.csv
-        AltoidaSummaryCsvPreProcessorFactory(),
-        // Process export.csv
-        CsvFileProcessorFactory(
-            csvProcessorFactories = listOf(
-                AltoidaSummaryProcessor(),
-                AltoidaDomainResultProcessor(),
-                AltoidaTestMetricsProcessor(AltoidaTestMetricsProcessor.AltoidaTestCategory.BIT, "connect_upload_altoida_bit_metrics"),
-                AltoidaTestMetricsProcessor(AltoidaTestMetricsProcessor.AltoidaTestCategory.DOT, "connect_upload_altoida_dot_metrics"),
+            // Preprocess malformed export.csv
+            AltoidaSummaryCsvPreProcessorFactory(),
+            // Process export.csv
+            CsvFileProcessorFactory(
+                    csvProcessorFactories = listOf(
+                            AltoidaSummaryProcessor(),
+                            AltoidaDomainResultProcessor(),
+                            AltoidaTestMetricsProcessor(AltoidaTestMetricsProcessor.AltoidaTestCategory.BIT, "connect_upload_altoida_bit_metrics"),
+                            AltoidaTestMetricsProcessor(AltoidaTestMetricsProcessor.AltoidaTestCategory.DOT, "connect_upload_altoida_dot_metrics"),
+                    ),
             ),
-        ),
-        // Process zip file with detailed CSV contents
-        ZipFileProcessorFactory(
-            sourceType,
-            zipEntryProcessors = listOf(
-                CsvFileProcessorFactory(
-                    csvProcessorFactories =  listOf(
-                        AltoidaAccelerationCsvProcessor(),
-                        AltoidaActionCsvProcessor(),
-                        AltoidaAttitudeCsvProcessor(),
-                        AltoidaBlinkCsvProcessor(),
-                        AltoidaDiagnosticsCsvProcessor(),
-                        AltoidaEyeTrackingCsvProcessor(),
-                        AltoidaGravityCsvProcessor(),
-                        AltoidaMagneticFieldCsvProcessor(),
-                        AltoidaObjectCsvProcessor(),
-                        AltoidaPathCsvProcessor(),
-                        AltoidaRotationCsvProcessor(),
-                        AltoidaTapScreenCsvProcessor(),
-                        AltoidaTouchScreenCsvProcessor(),
-                    )
-                ),
-                AltoidaMetadataFileProcessor(),
-            )
-        ),
+            // Process zip file with detailed CSV contents
+            ZipFileProcessorFactory(
+                    sourceType,
+                    zipEntryProcessors = listOf(
+                            CsvFileProcessorFactory(
+                                    csvProcessorFactories = listOf(
+                                            AltoidaAccelerationCsvProcessor(),
+                                            AltoidaActionCsvProcessor(),
+                                            AltoidaAttitudeCsvProcessor(),
+                                            AltoidaBlinkCsvProcessor(),
+                                            AltoidaDiagnosticsCsvProcessor(),
+                                            AltoidaEyeTrackingCsvProcessor(),
+                                            AltoidaGravityCsvProcessor(),
+                                            AltoidaMagneticFieldCsvProcessor(),
+                                            AltoidaObjectCsvProcessor(),
+                                            AltoidaPathCsvProcessor(),
+                                            AltoidaRotationCsvProcessor(),
+                                            AltoidaTapScreenCsvProcessor(),
+                                            AltoidaTouchScreenCsvProcessor(),
+                                    )
+                            ),
+                            AltoidaMetadataFileProcessor(),
+                    ),
+                    allowUnmappedFiles = true
+            ),
     )
 }
 
