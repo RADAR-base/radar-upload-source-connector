@@ -74,20 +74,20 @@ open class ZipFileProcessorFactory(
                         .forEach { zipEntry ->
                             try {
                                 delegatingProcessor.processData(
-                                        context = context.copy(
-                                                contents = ContentsDTO(
-                                                        fileName = zipEntry.name.trim(),
-                                                        size = zipEntry.size
-                                                ),
+                                    context = context.copy(
+                                        contents = ContentsDTO(
+                                            fileName = zipEntry.name.trim(),
+                                            size = zipEntry.size
                                         ),
-                                        inputStream = object : FilterInputStream(zipInputStream) {
-                                            @Throws(IOException::class)
-                                            override fun close() {
-                                                context.logger.debug("Closing entry ${context.fileName}")
-                                                zipInputStream.closeEntry()
-                                            }
-                                        },
-                                        produce,
+                                    ),
+                                    inputStream = object : FilterInputStream(zipInputStream) {
+                                        @Throws(IOException::class)
+                                        override fun close() {
+                                            context.logger.debug("Closing entry ${context.fileName}")
+                                            zipInputStream.closeEntry()
+                                        }
+                                    },
+                                    produce,
                                 )
                             }
                             catch (exception: DataProcessorNotFoundException) {
