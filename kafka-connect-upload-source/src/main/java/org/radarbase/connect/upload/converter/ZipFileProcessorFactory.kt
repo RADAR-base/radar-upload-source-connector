@@ -91,8 +91,8 @@ open class ZipFileProcessorFactory(
                                 )
                             }
                             catch (exception: DataProcessorNotFoundException) {
-                              if (!allowUnmappedFiles) throw exception
-                              context.logger.info("Skipping unmapped file ${zipEntry.name}..")
+                                if (!allowUnmappedFiles) throw exception
+                                context.logger.info("Skipping unmapped file ${zipEntry.name}..")
                             }
                         }
                 }
