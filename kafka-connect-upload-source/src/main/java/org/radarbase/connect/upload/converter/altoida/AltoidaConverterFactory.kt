@@ -47,7 +47,7 @@ class AltoidaConverterFactory : ConverterFactory {
             sourceType,
             zipEntryProcessors = listOf(
                 CsvFileProcessorFactory(
-                    csvProcessorFactories =  listOf(
+                    csvProcessorFactories = listOf(
                         AltoidaAccelerationCsvProcessor(),
                         AltoidaActionCsvProcessor(),
                         AltoidaAttitudeCsvProcessor(),
@@ -64,7 +64,8 @@ class AltoidaConverterFactory : ConverterFactory {
                     )
                 ),
                 AltoidaMetadataFileProcessor(),
-            )
+            ),
+            allowUnmappedFiles = true,
         ),
     )
 }
