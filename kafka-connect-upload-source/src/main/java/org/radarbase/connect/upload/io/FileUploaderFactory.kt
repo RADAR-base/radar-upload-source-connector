@@ -15,7 +15,7 @@ class FileUploaderFactory(private val config: Map<String, String>) {
      */
     fun fileUploader(): FileUploader {
         val connectorConfig = UploadSourceConnectorConfig(config)
-        val uploadType = connectorConfig.fileUploaderType ?: throw ConnectException("FileUploader class is required by one or more of registered converters.")
+        val uploadType = connectorConfig.fileUploaderType
         val uploaderConfig = connectorConfig.fileUploadConfig
         return when (uploadType) {
             UploadType.LOCAL -> LocalFileUploader(uploaderConfig)
