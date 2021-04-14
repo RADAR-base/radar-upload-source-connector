@@ -21,6 +21,7 @@ package org.radarbase.connect.upload.converter
 
 import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
+import org.radarbase.connect.upload.exception.DataProcessorNotFoundException
 import java.io.FilterInputStream
 import java.io.IOException
 import java.io.InputStream
@@ -32,8 +33,9 @@ import java.util.zip.ZipInputStream
  * DataProcessors that can process each entry in the Zip file.
  */
 open class ZipFileProcessorFactory(
-    sourceType: String,
-    zipEntryProcessors: List<FileProcessorFactory>,
+        sourceType: String,
+        zipEntryProcessors: List<FileProcessorFactory>,
+        private val allowUnmappedFiles: Boolean = false
 ) : FileProcessorFactory {
     private val delegatingProcessor = DelegatingProcessor(
         processorFactories = zipEntryProcessors,
@@ -70,22 +72,28 @@ open class ZipFileProcessorFactory(
                         .ifEmpty { throw IOException("No zipped entry found from ${context.fileName}") }
                         .filter { !it.isDirectory && entryFilter(it.name.trim()) }
                         .forEach { zipEntry ->
-                            delegatingProcessor.processData(
-                                context = context.copy(
-                                    contents = ContentsDTO(
-                                        fileName = zipEntry.name.trim(),
-                                        size = zipEntry.size
+                            try {
+                                delegatingProcessor.processData(
+                                    context = context.copy(
+                                        contents = ContentsDTO(
+                                            fileName = zipEntry.name.trim(),
+                                            size = zipEntry.size
+                                        ),
                                     ),
-                                ),
-                                inputStream = object : FilterInputStream(zipInputStream) {
-                                    @Throws(IOException::class)
-                                    override fun close() {
-                                        context.logger.debug("Closing entry ${context.fileName}")
-                                        zipInputStream.closeEntry()
-                                    }
-                                },
-                                produce,
-                            )
+                                    inputStream = object : FilterInputStream(zipInputStream) {
+                                        @Throws(IOException::class)
+                                        override fun close() {
+                                            context.logger.debug("Closing entry ${context.fileName}")
+                                            zipInputStream.closeEntry()
+                                        }
+                                    },
+                                    produce,
+                                )
+                            }
+                            catch (exception: DataProcessorNotFoundException) {
+                                if (!allowUnmappedFiles) throw exception
+                                context.logger.info("Skipping unmapped file ${zipEntry.name}..")
+                            }
                         }
                 }
             } catch (exe: IOException) {
