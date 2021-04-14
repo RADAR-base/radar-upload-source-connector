@@ -13,6 +13,7 @@ class DelegatingProcessor(
     val processorFactories: List<FileProcessorFactory>,
     val tempDir: Path,
     val generateTempFilePrefix: (ConverterFactory.ContentsContext) -> String,
+    val allowUnmappedFiles: Boolean = false,
 ) {
     init {
         Files.createDirectories(tempDir)
@@ -26,6 +27,14 @@ class DelegatingProcessor(
         context.logger.debug("Processing entry ${context.fileName} from record ${context.id}")
 
         val processors = createProcessors(context)
+        if (processors.isEmpty()) {
+            if (!allowUnmappedFiles) {
+                throw DataProcessorNotFoundException("Cannot find data processor for record ${context.id} with file ${context.fileName}")
+            } else {
+                context.logger.info("Skipping unmapped file ${context.fileName}..")
+                return
+            }
+        }
 
         val preProcessedStream = inputStream.preProcessed(processors, context)
 
@@ -54,16 +63,12 @@ class DelegatingProcessor(
     private fun createProcessors(
         context: ConverterFactory.ContentsContext,
     ): List<FileProcessorFactory.FileProcessor> {
-        val processors = processorFactories.mapNotNull { factory ->
+        return processorFactories.mapNotNull { factory ->
             if (factory.matches(context.contents)) {
                 factory.createProcessor(context.record)
             } else {
                 null
             }
         }
-        if (processors.isEmpty()) {
-            throw DataProcessorNotFoundException("Cannot find data processor for record ${context.id} with file ${context.fileName}")
-        }
-        return processors
     }
 }

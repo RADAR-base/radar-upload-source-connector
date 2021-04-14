@@ -41,6 +41,7 @@ class RecordConverter(
     private val client: UploadBackendClient,
     private val logRepository: LogRepository,
     private val avroData: AvroData = createAvroData(),
+    allowUnmappedFiles: Boolean = false,
 ) : ConverterFactory.Converter {
     private val delegatingProcessor = DelegatingProcessor(
         processorFactories = processorFactories,
@@ -48,6 +49,7 @@ class RecordConverter(
         generateTempFilePrefix = { context ->
             "record-${context.id}-"
         },
+        allowUnmappedFiles = allowUnmappedFiles,
     )
 
     override fun convert(

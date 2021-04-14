@@ -33,9 +33,9 @@ import java.util.zip.ZipInputStream
  * DataProcessors that can process each entry in the Zip file.
  */
 open class ZipFileProcessorFactory(
-        sourceType: String,
-        zipEntryProcessors: List<FileProcessorFactory>,
-        private val allowUnmappedFiles: Boolean = false
+    sourceType: String,
+    zipEntryProcessors: List<FileProcessorFactory>,
+    allowUnmappedFiles: Boolean = false
 ) : FileProcessorFactory {
     private val delegatingProcessor = DelegatingProcessor(
         processorFactories = zipEntryProcessors,
@@ -46,6 +46,7 @@ open class ZipFileProcessorFactory(
                 .takeLast(50)
             "record-entry-${context.id}-$safeEntryName-"
         },
+        allowUnmappedFiles = allowUnmappedFiles,
     )
 
     open fun entryFilter(name: String): Boolean = true
@@ -72,28 +73,22 @@ open class ZipFileProcessorFactory(
                         .ifEmpty { throw IOException("No zipped entry found from ${context.fileName}") }
                         .filter { !it.isDirectory && entryFilter(it.name.trim()) }
                         .forEach { zipEntry ->
-                            try {
-                                delegatingProcessor.processData(
-                                    context = context.copy(
-                                        contents = ContentsDTO(
-                                            fileName = zipEntry.name.trim(),
-                                            size = zipEntry.size
-                                        ),
+                            delegatingProcessor.processData(
+                                context = context.copy(
+                                    contents = ContentsDTO(
+                                        fileName = zipEntry.name.trim(),
+                                        size = zipEntry.size
                                     ),
-                                    inputStream = object : FilterInputStream(zipInputStream) {
-                                        @Throws(IOException::class)
-                                        override fun close() {
-                                            context.logger.debug("Closing entry ${context.fileName}")
-                                            zipInputStream.closeEntry()
-                                        }
-                                    },
-                                    produce,
-                                )
-                            }
-                            catch (exception: DataProcessorNotFoundException) {
-                                if (!allowUnmappedFiles) throw exception
-                                context.logger.info("Skipping unmapped file ${zipEntry.name}..")
-                            }
+                                ),
+                                inputStream = object : FilterInputStream(zipInputStream) {
+                                    @Throws(IOException::class)
+                                    override fun close() {
+                                        context.logger.debug("Closing entry ${context.fileName}")
+                                        zipInputStream.closeEntry()
+                                    }
+                                },
+                                produce,
+                            )
                         }
                 }
             } catch (exe: IOException) {
