@@ -47,7 +47,7 @@ open class CsvProcessor(
         context: ConverterFactory.ContentsContext,
     ) {
         if (contentProcessorsFactories.all { it.optional }) {
-            context.logger.debug("Skipping optional file")
+            context.logger.debug("Skipping optional file ${context.fileName}")
         } else {
             throw IOException("Cannot read empty CSV file ${context.fileName}")
         }
@@ -68,12 +68,13 @@ open class CsvProcessor(
         val processors = contentProcessorsFactories.createLineProcessors(context, header)
 
         return generateSequence { reader.readNext() }
-            .flatMap { line: Array<String> ->
+            .flatMapIndexed { idx: Int, line: Array<String> ->
                 val lineMap = header.zip(line).toMap()
+                val lineNumber = idx + 2
 
                 processors
                     .asSequence()
-                    .filter { it.isLineValid(header, line) }
+                    .filter { it.isLineValid(header, line, lineNumber) }
                     .flatMap { it.convertToRecord(lineMap, context.timeReceived) }
             }
     }
