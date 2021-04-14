@@ -118,7 +118,7 @@
             color="black"
             v-show="!loadingLog"
           >
-            {{ recordLogs }}
+            <pre><code>{{ recordLogs }}</code></pre>
           </v-card-text>
 
           <v-card-text v-show="loadingLog">
