@@ -207,7 +207,7 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
                     UPLOAD_SOURCE_MP_CLIENT_DISPLAY)
 
                 .define(UPLOAD_SOURCE_MP_SECRET_CONFIG,
-                    ConfigDef.Type.STRING,
+                    ConfigDef.Type.PASSWORD,
                     "",
                     ConfigDef.Importance.HIGH,
                     UPLOAD_SOURCE_MP_SECRET_DOC,
