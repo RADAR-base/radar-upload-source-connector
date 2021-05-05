@@ -29,9 +29,9 @@ import org.radarbase.upload.doa.entity.RecordStatus
 import org.slf4j.LoggerFactory
 import java.net.URLEncoder
 import java.time.Instant
-import javax.ws.rs.BadRequestException
-import javax.ws.rs.core.Context
-import javax.ws.rs.core.UriInfo
+import jakarta.ws.rs.BadRequestException
+import jakarta.ws.rs.core.Context
+import jakarta.ws.rs.core.UriInfo
 
 class RecordMapperImpl(
         @Context val uri: UriInfo,
@@ -65,7 +65,7 @@ class RecordMapperImpl(
             logger.info("Fetching user id by externalId ${this.externalUserId}")
             val user = projectService.userByExternalId(this.projectId!!, this.externalUserId!!)
             user ?: throw BadRequestException("Cannot find a user with externalID ${this.externalUserId}")
-            return user.id
+            return user.id ?: throw BadRequestException("Cannot resolve user id")
         }
     }
 

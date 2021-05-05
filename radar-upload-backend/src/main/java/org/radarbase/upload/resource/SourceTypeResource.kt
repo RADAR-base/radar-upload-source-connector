@@ -24,11 +24,11 @@ import org.radarbase.upload.api.SourceTypeContainerDTO
 import org.radarbase.upload.api.SourceTypeDTO
 import org.radarbase.upload.api.SourceTypeMapper
 import org.radarbase.upload.doa.SourceTypeRepository
-import javax.annotation.Resource
-import javax.inject.Singleton
-import javax.ws.rs.*
-import javax.ws.rs.core.Context
-import javax.ws.rs.core.MediaType
+import jakarta.annotation.Resource
+import jakarta.inject.Singleton
+import jakarta.ws.rs.*
+import jakarta.ws.rs.core.Context
+import jakarta.ws.rs.core.MediaType
 
 @Path("source-types")
 @Produces(MediaType.APPLICATION_JSON)

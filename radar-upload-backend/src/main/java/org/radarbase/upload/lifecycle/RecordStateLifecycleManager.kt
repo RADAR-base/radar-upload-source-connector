@@ -14,8 +14,8 @@ import java.util.concurrent.Future
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 import javax.persistence.EntityManagerFactory
-import javax.ws.rs.core.Context
-import javax.ws.rs.ext.Provider
+import jakarta.ws.rs.core.Context
+import jakarta.ws.rs.ext.Provider
 
 @Provider
 class RecordStateLifecycleManager(
@@ -72,7 +72,7 @@ class RecordStateLifecycleManager(
     private inline fun <T> useRecordRepository(method: (RecordRepository) -> T): T {
         val entityManager = entityManagerFactory.createEntityManager()
         return try {
-            method(RecordRepositoryImpl(javax.inject.Provider { entityManager }))
+            method(RecordRepositoryImpl(jakarta.inject.Provider { entityManager }))
         } finally {
             entityManager.close()
         }
