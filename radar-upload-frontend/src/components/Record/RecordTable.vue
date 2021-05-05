@@ -118,7 +118,7 @@
             color="black"
             v-show="!loadingLog"
           >
-            {{ recordLogs }}
+            <pre><code>{{ recordLogs }}</code></pre>
           </v-card-text>
 
           <v-card-text v-show="loadingLog">
@@ -134,7 +134,7 @@
       <v-icon
         color="error"
         @click="deleteRecord({recordId: item.id, revision: item.revision})"
-        :disabled="item.status=='PROCESSING'"
+        :disabled="item.status==='PROCESSING'"
         class="pa-0"
       >
         mdi-close-circle
@@ -142,7 +142,7 @@
       <v-icon
         color="success"
         @click="retryRecordUpload({recordId: item.id, revision: item. revision})"
-        :disabled="item.status=='PROCESSING'"
+        :disabled="item.status==='PROCESSING'"
         class="pa-0"
       >
         mdi-replay
@@ -285,12 +285,11 @@ export default {
     },
     async viewLogs(url) {
       this.loadingLog = true;
-      const recordLogs = await fileAPI.getRecordLog(url).catch(() => {
+      this.recordLogs = await fileAPI.getRecordLog(url).catch(() => {
         this.$error('Cannot download logs, please try again later');
         this.dialog = false;
         return '';
       });
-      this.recordLogs = recordLogs;
       this.loadingLog = false;
     },
     async getsourceTypeList() {
