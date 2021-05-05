@@ -21,7 +21,7 @@ jobs:
 
             - uses: actions/setup-java@v1
               with:
-                  java-version: 8
+                  java-version: 11
 
             - name: Cache
               uses: actions/cache@v2.0.0
@@ -82,10 +82,10 @@ jobs:
         # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
         - uses: actions/checkout@v2
 
-        - name: Build upload backend Kotlin docker
+        - name: Build upload connector Kotlin docker
           run: docker build -t radarbase/kafka-connect-upload-source:SNAPSHOT -f kafka-connect-upload-source/Dockerfile .
 
-        - name: Build upload connector Kotlin docker
+        - name: Build upload backend Kotlin docker
           run: docker build -t radarbase/radar-upload-backend:SNAPSHOT -f radar-upload-backend/Dockerfile .
 
         - name: Build upload front end Node docker
