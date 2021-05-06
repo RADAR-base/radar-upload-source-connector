@@ -27,15 +27,15 @@ import org.radarbase.upload.api.RecordDataDTO
 import org.radarbase.upload.api.SourceTypeDTO
 import org.radarbase.upload.doa.entity.*
 import org.radarbase.upload.mock.MockResourceEnhancerFactory
-import org.radarcns.auth.token.RadarToken
+import org.radarbase.auth.token.RadarToken
 import java.io.IOException
 import java.net.URI
 import java.nio.file.Path
 import java.util.*
-import javax.ws.rs.client.Entity
-import javax.ws.rs.core.Application
-import javax.ws.rs.core.Response
-import javax.ws.rs.ext.ContextResolver
+import jakarta.ws.rs.client.Entity
+import jakarta.ws.rs.core.Application
+import jakarta.ws.rs.core.Response
+import jakarta.ws.rs.ext.ContextResolver
 import kotlin.reflect.jvm.jvmName
 
 internal class RecordResourceTest: JerseyTest() {

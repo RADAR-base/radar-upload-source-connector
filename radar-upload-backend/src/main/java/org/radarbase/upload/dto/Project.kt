@@ -19,8 +19,8 @@
 
 package org.radarbase.upload.dto
 
-import org.radarbase.jersey.service.managementportal.MPProject
-import org.radarbase.jersey.service.managementportal.MPUser
+import org.radarbase.management.client.MPProject
+import org.radarbase.management.client.MPSubject
 
 data class ProjectList(val projects: List<Project>)
 
@@ -38,8 +38,8 @@ data class UserList(val users: List<User>)
 
 data class User(val id: String, val projectId: String, val externalId: String? = null, val status: String)
 
-fun MPUser.toUser(): User = User(
-        id = id,
+fun MPSubject.toUser(): User = User(
+        id = checkNotNull(id) { "User must have a login" },
         projectId = requireNotNull(projectId),
         externalId = externalId,
         status = status,

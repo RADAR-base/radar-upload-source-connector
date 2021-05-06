@@ -17,8 +17,8 @@ import org.radarbase.jersey.service.managementportal.RadarProjectService
 import org.radarbase.upload.Config
 import org.radarbase.upload.inject.UploadResourceEnhancer
 import java.util.*
-import javax.inject.Singleton
-import javax.ws.rs.container.ContainerRequestContext
+import jakarta.inject.Singleton
+import jakarta.ws.rs.container.ContainerRequestContext
 
 class MockResourceEnhancerFactory(
         private val config: Config,

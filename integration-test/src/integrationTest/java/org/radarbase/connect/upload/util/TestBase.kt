@@ -45,7 +45,7 @@ import org.radarbase.upload.api.SourceTypeDTO
 import java.io.File
 import java.net.URI
 import java.time.LocalDateTime
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 class TestBase {
     companion object {

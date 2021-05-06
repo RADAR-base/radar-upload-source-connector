@@ -34,19 +34,19 @@ import org.radarbase.upload.doa.SourceTypeRepository
 import org.radarbase.upload.doa.entity.Record
 import org.radarbase.upload.doa.entity.RecordStatus
 import org.radarbase.upload.dto.CallbackManager
-import org.radarcns.auth.authorization.Permission
-import org.radarcns.auth.authorization.Permission.*
+import org.radarbase.auth.authorization.Permission
+import org.radarbase.auth.authorization.Permission.*
 import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.io.InputStream
 import java.net.URI
-import javax.annotation.Resource
-import javax.inject.Singleton
-import javax.ws.rs.*
-import javax.ws.rs.core.Context
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.core.StreamingOutput
+import jakarta.annotation.Resource
+import jakarta.inject.Singleton
+import jakarta.ws.rs.*
+import jakarta.ws.rs.core.Context
+import jakarta.ws.rs.core.MediaType
+import jakarta.ws.rs.core.Response
+import jakarta.ws.rs.core.StreamingOutput
 
 @Path("records")
 @Produces(MediaType.APPLICATION_JSON)

@@ -39,7 +39,7 @@ import org.radarbase.upload.api.SourceTypeMapper
 import org.radarbase.upload.api.SourceTypeMapperImpl
 import org.radarbase.upload.doa.entity.*
 import java.nio.file.Path
-import javax.inject.Provider
+import jakarta.inject.Provider
 import javax.persistence.EntityManager
 import javax.persistence.EntityManagerFactory
 import kotlin.reflect.jvm.jvmName

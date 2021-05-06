@@ -16,27 +16,24 @@ subprojects {
         set("jacksonDataVersion", "2.11.4")
         set("openCsvVersion", "5.4")
         set("confluentVersion", "5.5.3")
-        set("radarSchemaVersion", "0.5.15")
+        set("radarSchemaVersion", "0.6.0")
         set("slf4jVersion", "1.7.30")
         set("minioVersion", "7.1.4")
-        set("radarJerseyVersion", "0.4.3")
-        set("radarCommonsVersion", "0.13.0")
+        set("radarJerseyVersion", "0.6.0")
+        set("radarCommonsVersion", "0.13.2")
         set("logbackVersion", "1.2.3")
-        set("jerseyVersion", "2.33")
+        set("jerseyVersion", "3.0.1")
         set("h2Version", "1.4.200")
 
-        set("junitVersion", "5.6.2")
+        set("junitVersion", "5.7.1")
         set("mockitoKotlinVersion", "2.2.0")
         set("mockitoCoreVersion", "3.8.0")
     }
 
     repositories {
-        jcenter()
+        mavenCentral()
         maven(url = "https://packages.confluent.io/maven/")
-        maven(url = "https://dl.bintray.com/radar-cns/org.radarcns")
-        maven(url = "https://dl.bintray.com/radar-base/org.radarbase")
         maven(url = "https://repo.thehyve.nl/content/repositories/snapshots")
-        maven(url = "https://oss.jfrog.org/artifactory/oss-snapshot-local/")
     }
 
     val kotlinApiVersion: String by project

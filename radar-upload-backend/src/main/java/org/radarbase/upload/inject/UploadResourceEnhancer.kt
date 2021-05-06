@@ -14,7 +14,7 @@ import org.radarbase.upload.doa.SourceTypeRepository
 import org.radarbase.upload.doa.SourceTypeRepositoryImpl
 import org.radarbase.upload.dto.CallbackManager
 import org.radarbase.upload.dto.QueuedCallbackManager
-import javax.inject.Singleton
+import jakarta.inject.Singleton
 
 class UploadResourceEnhancer(private val config: Config): JerseyResourceEnhancer {
     override val classes: Array<Class<*>>  get() {

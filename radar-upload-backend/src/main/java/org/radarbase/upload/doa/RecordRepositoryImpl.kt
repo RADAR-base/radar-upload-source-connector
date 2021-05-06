@@ -36,11 +36,11 @@ import java.sql.Blob
 import java.time.Duration
 import java.time.Instant
 import java.util.*
-import javax.inject.Provider
+import jakarta.inject.Provider
 import javax.persistence.EntityManager
 import javax.persistence.LockModeType
 import javax.persistence.PessimisticLockScope
-import javax.ws.rs.core.Context
+import jakarta.ws.rs.core.Context
 import kotlin.collections.HashSet
 import kotlin.streams.toList
 

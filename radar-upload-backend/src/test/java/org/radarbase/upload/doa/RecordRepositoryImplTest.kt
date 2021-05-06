@@ -41,7 +41,7 @@ import java.io.ByteArrayInputStream
 import java.nio.file.Path
 import java.time.Instant
 import java.time.LocalDateTime
-import javax.inject.Provider
+import jakarta.inject.Provider
 import javax.persistence.EntityManager
 import javax.persistence.EntityManagerFactory
 import kotlin.reflect.jvm.jvmName
