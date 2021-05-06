@@ -181,9 +181,9 @@ jobs:
 
       - name: Inspect docker images
         run: |
-        docker image inspect ${{ env.DOCKER_IMAGE_BACKEND }}:${{ steps.docker_meta_backend.outputs.version }}
-        docker image inspect ${{ env.DOCKER_IMAGE_CONNECTOR }}:${{ steps.docker_meta_connector.outputs.version }}
-        docker image inspect ${{ env.DOCKER_IMAGE_FRONTEND }}:${{ steps.docker_meta_frontend.outputs.version }}
+          docker image inspect ${{ env.DOCKER_IMAGE_BACKEND }}:${{ steps.docker_meta_backend.outputs.version }}
+          docker image inspect ${{ env.DOCKER_IMAGE_CONNECTOR }}:${{ steps.docker_meta_connector.outputs.version }}
+          docker image inspect ${{ env.DOCKER_IMAGE_FRONTEND }}:${{ steps.docker_meta_frontend.outputs.version }}
             
       - name: Check backend docker image
         run: >
