@@ -188,7 +188,7 @@ jobs:
             
       - name: Check backend docker image
         run: >
-          docker run --rm ${{ env.DOCKER_IMAGE_BACKEND }}:${{ steps.docker_meta_backend.outputs.version }} curl --help &&
+          docker run --rm ${{ env.DOCKER_IMAGE_BACKEND }}:${{ steps.docker_meta_backend.outputs.version }} curl --help
           docker run --rm ${{ env.DOCKER_IMAGE_BACKEND }}:${{ steps.docker_meta_backend.outputs.version }} radar-upload-backend --help
 
       # Push the backend image on the dev and master branches
