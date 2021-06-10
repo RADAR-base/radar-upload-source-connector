@@ -2,6 +2,7 @@ package org.radarbase.connect.upload.io
 
 import io.minio.*
 import io.minio.errors.MinioException
+import org.radarbase.connect.upload.converter.RecordLogger
 import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.io.InputStream
@@ -9,7 +10,10 @@ import java.net.ConnectException
 import java.net.URI
 import java.nio.file.Path
 
-class S3FileUploader(override val config: FileUploaderFactory.FileUploaderConfig) : FileUploaderFactory.FileUploader {
+class S3FileUploader(
+    override val config: FileUploaderFactory.FileUploaderConfig
+) : FileUploaderFactory.FileUploader {
+    override var recordLogger: RecordLogger? = null
     override val type: String = "s3"
     private val s3Client: MinioClient
     private val bucket: String
@@ -25,7 +29,7 @@ class S3FileUploader(override val config: FileUploaderFactory.FileUploaderConfig
                         .credentials(config.username, config.password)
                         .build()
             } catch (ex: IllegalArgumentException) {
-                logger.warn("Invalid S3 configuration provided for $config.targetEndpoint", ex)
+                logger.warn("Invalid S3 configuration provided for {}", config.targetEndpoint, ex)
                 throw ex
             }
             bucket = config.targetRoot
@@ -37,7 +41,7 @@ class S3FileUploader(override val config: FileUploaderFactory.FileUploaderConfig
                     .bucket(bucket)
                     .build())
             if (isExist) {
-                logger.info("Bucket $bucket already exists.")
+                logger.info("Bucket {} already exists.", bucket)
             } else {
                 s3Client.makeBucket(MakeBucketArgs.Builder()
                         .bucket(bucket)
@@ -50,7 +54,7 @@ class S3FileUploader(override val config: FileUploaderFactory.FileUploaderConfig
     }
 
     override fun upload(relativePath: Path, stream: InputStream, size: Long?) : URI {
-        logger.info("Uploading object $relativePath to $bucket")
+        recordLogger?.info("Uploading object $relativePath to $bucket")
         try {
             s3Client.putObject(PutObjectArgs.Builder()
                     .bucket(bucket)
@@ -61,11 +65,10 @@ class S3FileUploader(override val config: FileUploaderFactory.FileUploaderConfig
             throw IOException(ex)
         }
 
-        return advertisedTargetUri().resolve(rootDirectory().resolve(relativePath).toString())
+        return resolveTargetUri(rootDirectory.resolve(relativePath))
     }
 
-    override fun close() {
-    }
+    override fun close() = Unit
 
     companion object {
         private val logger = LoggerFactory.getLogger(S3FileUploader::class.java)

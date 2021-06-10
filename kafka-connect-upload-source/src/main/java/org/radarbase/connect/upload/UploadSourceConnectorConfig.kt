@@ -64,7 +64,7 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
 
     val converterClasses: List<String> = getList(UPLOAD_SOURCE_CONVERTERS_CONFIG)
 
-    val fileUploaderType: UploadType = UploadType.valueOf(getString(UPLOAD_FILE_UPLOADER_TYPE_CONFIG).toUpperCase())
+    val fileUploaderType: UploadType = UploadType.valueOf(getString(UPLOAD_FILE_UPLOADER_TYPE_CONFIG).uppercase())
 
     val fileUploadConfig: FileUploaderFactory.FileUploaderConfig = FileUploaderFactory.FileUploaderConfig(
         targetEndpoint = getString(UPLOAD_FILE_UPLOADER_TARGET_ENDPOINT_URL_CONFIG),

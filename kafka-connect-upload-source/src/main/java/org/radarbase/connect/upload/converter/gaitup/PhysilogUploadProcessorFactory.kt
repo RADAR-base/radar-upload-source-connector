@@ -27,7 +27,9 @@ open class PhysilogUploadProcessorFactory(
 
     override fun createProcessor(record: RecordDTO): FileProcessorFactory.FileProcessor = PhysilogFileUploadProcessor(record)
 
-    private inner class PhysilogFileUploadProcessor(private val record: RecordDTO) : FileProcessorFactory.FileProcessor {
+    private inner class PhysilogFileUploadProcessor(
+        private val record: RecordDTO
+    ) : FileProcessorFactory.FileProcessor {
         override fun processData(
             context: ConverterFactory.ContentsContext,
             inputStream: InputStream,
@@ -66,7 +68,6 @@ open class PhysilogUploadProcessorFactory(
                 context.logger.info("Finalising the upload")
                 afterProcessing(context)
             }
-
         }
     }
 
@@ -76,7 +77,5 @@ open class PhysilogUploadProcessorFactory(
         private val SUFFIX_REGEX = Regex("\\.zip|\\.tar.gz$", RegexOption.IGNORE_CASE)
         private val directoryDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
                 .withZone(ZoneId.of("UTC"))
-
-        private val logger = LoggerFactory.getLogger(PhysilogUploadProcessorFactory::class.java)
     }
 }

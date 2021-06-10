@@ -18,17 +18,26 @@ class Physilog5ConverterFactory : ConverterFactory {
         connectorConfig: SourceTypeDTO,
         logRepository: LogRepository,
     ): List<FileProcessorFactory> {
-        val uploaderSupplier = FileUploaderFactory(settings).fileUploader()
+        val fileUploader = FileUploaderFactory(settings).fileUploader()
 
-        logger.info("Physilog data will be uploaded using ${uploaderSupplier.type} to ${uploaderSupplier.advertisedTargetUri()} and ${uploaderSupplier.rootDirectory()}")
-        return listOf(object :
-                PhysilogUploadProcessorFactory({ localUploader.get() }){
+        logger.info(
+            "Physilog data will be uploaded using {} to {} and {}",
+            fileUploader.type,
+            fileUploader.advertisedTargetUri,
+            fileUploader.rootDirectory,
+        )
+        return listOf(object : PhysilogUploadProcessorFactory({ localUploader.get() }) {
             override fun beforeProcessing(context: ConverterFactory.ContentsContext) {
-                localUploader.set(uploaderSupplier)
+                localUploader.set(fileUploader.apply {
+                    recordLogger = context.logger
+                })
             }
 
             override fun afterProcessing(context: ConverterFactory.ContentsContext) {
-                localUploader.get().closeQuietly()
+                localUploader.get().apply {
+                    recordLogger = null
+                    closeQuietly()
+                }
                 localUploader.remove()
             }
         })

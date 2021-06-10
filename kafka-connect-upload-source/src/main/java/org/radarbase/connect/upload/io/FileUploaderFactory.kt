@@ -1,13 +1,13 @@
 package org.radarbase.connect.upload.io
 
-import org.apache.kafka.connect.errors.ConnectException
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.radarbase.connect.upload.UploadSourceConnectorConfig
+import org.radarbase.connect.upload.converter.RecordLogger
 import java.io.Closeable
 import java.io.InputStream
 import java.net.URI
 import java.nio.file.Path
 import java.nio.file.Paths
-
 
 class FileUploaderFactory(private val config: Map<String, String>) {
     /**
@@ -25,13 +25,24 @@ class FileUploaderFactory(private val config: Map<String, String>) {
     }
 
     interface FileUploader: Closeable {
+        var recordLogger: RecordLogger?
+
         val type: String
 
         val config: FileUploaderConfig
 
-        fun advertisedTargetUri(): URI = URI(if (config.targetEndpoint.endsWith("/")) config.targetEndpoint else "${config.targetEndpoint}/")
+        val advertisedTargetUri: URI
+            get() = URI(if (config.targetEndpoint.endsWith("/")) config.targetEndpoint else "${config.targetEndpoint}/")
 
-        fun rootDirectory(): Path = Paths.get(config.targetRoot.ifEmpty {"."})
+        fun resolveTargetUri(
+            path: Path
+        ): URI = config.targetEndpoint.toHttpUrl().newBuilder()
+            .addPathSegments(path.toString())
+            .build()
+            .toUri()
+
+        val rootDirectory: Path
+            get() = Paths.get(config.targetRoot.ifEmpty {"."})
 
         fun upload(relativePath: Path, stream: InputStream, size: Long?) : URI
 
