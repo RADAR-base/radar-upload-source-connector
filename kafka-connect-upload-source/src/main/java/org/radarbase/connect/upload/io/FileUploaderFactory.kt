@@ -36,10 +36,17 @@ class FileUploaderFactory(private val config: Map<String, String>) {
 
         fun resolveTargetUri(
             path: Path
-        ): URI = config.targetEndpoint.toHttpUrl().newBuilder()
-            .addPathSegments(path.toString())
-            .build()
-            .toUri()
+        ): URI {
+            val uri = advertisedTargetUri
+            val originalScheme = uri.scheme
+            val noRootPath = if (path.toString().startsWith("/")) Paths.get(path.toString().substring(1)) else path
+            val newUri = config.targetEndpoint.replaceFirst(originalScheme, "http")
+                .toHttpUrl().newBuilder()
+                .addPathSegments(noRootPath.toString())
+                .build()
+                .toString()
+            return URI(newUri.replaceFirst("http", originalScheme))
+        }
 
         val rootDirectory: Path
             get() = Paths.get(config.targetRoot.ifEmpty {"."})

@@ -1,6 +1,8 @@
 package org.radarbase.connect.upload.io
 
 import com.nhaarman.mockitokotlin2.mock
+import io.minio.BucketExistsArgs
+import io.minio.ListObjectsArgs
 import io.minio.MinioClient
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeAll
@@ -12,10 +14,7 @@ import org.radarbase.connect.upload.api.*
 import org.radarbase.connect.upload.converter.*
 import org.radarbase.connect.upload.converter.oxford.WearableCameraConverterFactory
 import org.radarcns.connector.upload.oxford.OxfordCameraImage
-import org.slf4j.LoggerFactory
 import java.time.Instant
-import java.util.*
-
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class S3FileUploaderTest {
@@ -53,22 +52,23 @@ class S3FileUploaderTest {
         logRepository = ConverterLogRepository()
         val converterFactory = WearableCameraConverterFactory()
         val config = SourceTypeDTO(
-                name = "oxford-wearable-camera",
-                configuration = emptyMap(),
-                sourceIdRequired = false,
-                timeRequired = false,
-                topics = setOf(
-                        "connect_upload_oxford_camera_image",
-                        "connect_upload_oxford_camera_data"),
-                contentTypes = setOf("application/zip")
+            name = "oxford-wearable-camera",
+            configuration = emptyMap(),
+            sourceIdRequired = false,
+            timeRequired = false,
+            topics = setOf(
+                "connect_upload_oxford_camera_image",
+                "connect_upload_oxford_camera_data",
+            ),
+            contentTypes = setOf("application/zip")
         )
 
         val settings = mapOf(
-                "upload.source.file.uploader.type" to "s3",
-                "upload.source.file.uploader.target.endpoint" to ADVERTIZED_URL,
-                "upload.source.file.uploader.target.root.directory" to ROOT,
-                "upload.source.file.uploader.username" to USER,
-                "upload.source.file.uploader.password" to PASSWORD
+            "upload.source.file.uploader.type" to "s3",
+            "upload.source.file.uploader.target.endpoint" to ADVERTIZED_URL,
+            "upload.source.file.uploader.target.root.directory" to ROOT,
+            "upload.source.file.uploader.username" to USER,
+            "upload.source.file.uploader.password" to PASSWORD,
         )
 
         converter = converterFactory.converter(settings, config, uploadBackendClient, logRepository)
@@ -99,11 +99,16 @@ class S3FileUploaderTest {
             assertTrue(URL_REGEX.matchEntire(it.getUrl()) != null, "URL ${it.getUrl()} does not match regex $URL_REGEX")
         }
 
-        val s3Client = MinioClient(ADVERTIZED_URL, USER, PASSWORD)
-        val isExist: Boolean = s3Client.bucketExists(ROOT)
+        val s3Client = MinioClient.Builder()
+            .endpoint(ADVERTIZED_URL)
+            .credentials(USER, PASSWORD)
+            .build()
+        val isExist: Boolean = s3Client.bucketExists(BucketExistsArgs.builder()
+            .bucket(ROOT)
+            .build())
         assertTrue(isExist)
 
-        s3Client.listObjects(ROOT).forEach {
+        s3Client.listObjects(ListObjectsArgs.builder().bucket(ROOT).recursive(true).build()).forEach {
             assertTrue(OBJECT_NAME_REGEX.matchEntire(it.get().objectName()) != null, "URL ${it.get().objectName()} does not match regex $OBJECT_NAME_REGEX")
         }
     }
@@ -115,6 +120,5 @@ class S3FileUploaderTest {
         private const val ADVERTIZED_URL = "http://localhost:9000/"
         private val URL_REGEX = Regex("http://localhost:9000/target/p/u/connect_upload_oxford_camera_image/1/2018-01-02/B0000000[0-9]_[^_]*_20180102_12[0-9]*E\\.jpg")
         private val OBJECT_NAME_REGEX = Regex("p/u/connect_upload_oxford_camera_image/1/2018-01-02/B0000000[0-9]_[^_]*_20180102_12[0-9]*E\\.jpg")
-        private val logger = LoggerFactory.getLogger(S3FileUploaderTest::class.java)
     }
 }
