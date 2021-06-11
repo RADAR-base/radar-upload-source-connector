@@ -25,7 +25,6 @@ import okhttp3.RequestBody
 import okio.BufferedSink
 import org.apache.kafka.connect.source.SourceRecord
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers
 import org.hamcrest.Matchers.*
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*

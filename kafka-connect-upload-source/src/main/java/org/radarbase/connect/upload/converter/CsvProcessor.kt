@@ -9,7 +9,6 @@ import org.radarbase.connect.upload.exception.InvalidFormatException
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStream
-import java.util.*
 
 /**
  * Base class to process CSV files with multiple possible per-CSV-line processors.
@@ -63,7 +62,7 @@ open class CsvProcessor(
             checkCsvEmpty(contentProcessorsFactories, context)
             return emptySequence()
         }
-        val header = rawHeader.map { it.trim().toUpperCase(Locale.US) }
+        val header = rawHeader.map { it.trim().uppercase() }
 
         val processors = contentProcessorsFactories.createLineProcessors(context, header)
 

@@ -1,35 +1,18 @@
+import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") apply false
+    id("com.github.ben-manes.versions") version "0.39.0"
 }
 
-
-subprojects {
+allprojects {
     group = "org.radarbase"
     version = "0.5.10-SNAPSHOT"
+}
 
-    project.extra.apply {
-        set("kafkaVersion", "2.5.1")
-        set("okhttpVersion", "4.9.0")
-        set("jacksonVersion", "2.11.4")
-        set("jacksonDataVersion", "2.11.4")
-        set("openCsvVersion", "5.4")
-        set("confluentVersion", "5.5.3")
-        set("radarSchemaVersion", "0.6.0")
-        set("slf4jVersion", "1.7.30")
-        set("minioVersion", "7.1.4")
-        set("radarJerseyVersion", "0.6.0")
-        set("radarCommonsVersion", "0.13.2")
-        set("logbackVersion", "1.2.3")
-        set("jerseyVersion", "3.0.1")
-        set("h2Version", "1.4.200")
-
-        set("junitVersion", "5.7.1")
-        set("mockitoKotlinVersion", "2.2.0")
-        set("mockitoCoreVersion", "3.8.0")
-    }
-
+subprojects {
     repositories {
         mavenCentral()
         maven(url = "https://packages.confluent.io/maven/")
@@ -45,6 +28,7 @@ subprojects {
                 events("passed", "skipped", "failed")
                 setExceptionFormat("full")
                 showStandardStreams = true
+                exceptionFormat = FULL
             }
         }
 
@@ -67,6 +51,20 @@ subprojects {
     }
 }
 
+val stableVersionRegex = "[0-9,.v-]+(-r)?".toRegex()
+
+fun isNonStable(version: String): Boolean {
+    val stableKeyword = listOf("RELEASE", "FINAL", "GA")
+        .any { version.toUpperCase().contains(it) }
+    return !stableKeyword && !stableVersionRegex.matches(version)
+}
+
+tasks.withType<DependencyUpdatesTask> {
+    rejectVersionIf {
+        isNonStable(candidate.version)
+    }
+}
+
 tasks.wrapper {
-    gradleVersion = "6.8.3"
+    gradleVersion = "7.0.2"
 }

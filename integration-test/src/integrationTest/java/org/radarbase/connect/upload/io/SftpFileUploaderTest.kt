@@ -26,25 +26,24 @@ class SftpFileUploaderTest {
     private lateinit var uploadBackendClient: UploadBackendClient
 
     private val contentsDTO = ContentsDTO(
-            contentType = "application/zip",
-            fileName = "oxford-sample-data.zip",
-            createdDate = Instant.now(),
-            size = 1L
+        contentType = "application/zip",
+        fileName = "oxford-sample-data.zip",
+        createdDate = Instant.now(),
+        size = 1L,
     )
 
     private val record = RecordDTO(
-            id = 1L,
-            metadata = RecordMetadataDTO(
-                    revision = 1,
-                    status = "PROCESSING"
-            ),
-            data = RecordDataDTO(
-                    projectId = "p",
-                    userId = "u",
-                    sourceId = "s"
-            ),
-            sourceType = "oxford-wearable-camera"
-
+        id = 1L,
+        metadata = RecordMetadataDTO(
+            revision = 1,
+            status = "PROCESSING",
+        ),
+        data = RecordDataDTO(
+            projectId = "p",
+            userId = "u",
+            sourceId = "s",
+        ),
+        sourceType = "oxford-wearable-camera",
     )
 
     @BeforeAll
@@ -53,25 +52,31 @@ class SftpFileUploaderTest {
         logRepository = ConverterLogRepository()
         val converterFactory = WearableCameraConverterFactory()
         val config = SourceTypeDTO(
-                name = "oxford-wearable-camera",
-                configuration = emptyMap(),
-                sourceIdRequired = false,
-                timeRequired = false,
-                topics = setOf(
-                        "connect_upload_oxford_camera_image",
-                        "connect_upload_oxford_camera_data"),
-                contentTypes = setOf("application/zip")
+            name = "oxford-wearable-camera",
+            configuration = emptyMap(),
+            sourceIdRequired = false,
+            timeRequired = false,
+            topics = setOf(
+                "connect_upload_oxford_camera_image",
+                "connect_upload_oxford_camera_data",
+            ),
+            contentTypes = setOf("application/zip"),
         )
 
         val settings = mapOf(
-                "upload.source.file.uploader.type" to "sftp",
-                "upload.source.file.uploader.target.endpoint" to "sftp://$HOST:$PORT/",
-                "upload.source.file.uploader.target.root.directory" to "/upload",
-                "upload.source.file.uploader.username" to USER,
-                "upload.source.file.uploader.password" to PASSWORD
+            "upload.source.file.uploader.type" to "sftp",
+            "upload.source.file.uploader.target.endpoint" to "sftp://$HOST:$PORT/",
+            "upload.source.file.uploader.target.root.directory" to "/upload",
+            "upload.source.file.uploader.username" to USER,
+            "upload.source.file.uploader.password" to PASSWORD,
         )
 
-        converter = converterFactory.converter(settings, config, uploadBackendClient, logRepository)
+        converter = converterFactory.converter(
+            settings,
+            config,
+            uploadBackendClient,
+            logRepository,
+        )
     }
 
     @Test
@@ -92,8 +97,9 @@ class SftpFileUploaderTest {
         }
         assertNotNull(record)
         assertEquals(10, records.size) // 5 images, 5x upload + 5x metadata
-        val imageRecords = records.filter { it.value is OxfordCameraImage }
-                .map { it.value as OxfordCameraImage }
+        val imageRecords = records
+            .filter { it.value is OxfordCameraImage }
+            .map { it.value as OxfordCameraImage }
         assertEquals(5, imageRecords.size)
         imageRecords.forEach {
             assertTrue(URL_REGEX.matchEntire(it.getUrl()) != null, "URL ${it.getUrl()} does not match regex $URL_REGEX")

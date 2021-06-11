@@ -18,29 +18,43 @@ sourceSets {
 }
 
 dependencies {
-    api("com.squareup.okhttp3:okhttp:${project.extra["okhttpVersion"]}")
-    api("io.confluent:kafka-connect-avro-converter:${project.extra["confluentVersion"]}")
-    api("org.radarbase:radar-schemas-commons:${project.extra["radarSchemaVersion"]}")
+    val okhttpVersion: String by project
+    api("com.squareup.okhttp3:okhttp:$okhttpVersion")
+    val confluentVersion: String by project
+    api("io.confluent:kafka-connect-avro-converter:$confluentVersion")
+    val radarSchemaVersion: String by project
+    api("org.radarbase:radar-schemas-commons:$radarSchemaVersion")
 
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${project.extra["jacksonDataVersion"]}")
-    implementation("com.fasterxml.jackson.core:jackson-databind:${project.extra["jacksonVersion"]}")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:${project.extra["jacksonDataVersion"]}")
-    implementation("com.opencsv:opencsv:${project.extra["openCsvVersion"]}")
+    val jacksonVersion: String by project
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")
+    implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
 
-    implementation("com.jcraft:jsch:0.1.55")
-    implementation("io.minio:minio:${project.extra["minioVersion"]}")
+    val openCsvVersion: String by project
+    implementation("com.opencsv:opencsv:$openCsvVersion")
+
+    val jschVersion: String by project
+    implementation("com.jcraft:jsch:$jschVersion")
+    val minioVersion: String by project
+    implementation("io.minio:minio:$minioVersion")
 
     // Included in connector runtime
-    compileOnly("org.apache.kafka:connect-api:${project.extra["kafkaVersion"]}")
+    val kafkaVersion: String by project
+    compileOnly("org.apache.kafka:connect-api:$kafkaVersion")
     implementation(kotlin("stdlib-jdk8"))
     implementation(kotlin("reflect"))
 
-    testImplementation("org.junit.jupiter:junit-jupiter:5.4.2")
-    testImplementation("org.hamcrest:hamcrest-all:1.3")
-    testImplementation("org.apache.kafka:connect-api:${project.extra["kafkaVersion"]}")
-    testImplementation("org.mockito:mockito-core:2.21.0")
-    testImplementation ("org.mockito:mockito-inline:2.21.0")
-    testRuntimeOnly("org.slf4j:slf4j-simple:${project.extra["slf4jVersion"]}")
+    val junitVersion: String by project
+    testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")
+
+    val hamcrestVersion: String by project
+    testImplementation("org.hamcrest:hamcrest:$hamcrestVersion")
+    testImplementation("org.apache.kafka:connect-api:$kafkaVersion")
+    val mockitoCoreVersion: String by project
+    testImplementation("org.mockito:mockito-core:$mockitoCoreVersion")
+    testImplementation ("org.mockito:mockito-inline:$mockitoCoreVersion")
+    val slf4jVersion: String by project
+    testRuntimeOnly("org.slf4j:slf4j-simple:$slf4jVersion")
 }
 
 java {
