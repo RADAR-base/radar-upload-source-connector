@@ -13,11 +13,9 @@ It will use approximately the following architecture:
 
 [Architectural decisions for this project](https://github.com/RADAR-base/radar-upload-source-connector/blob/master/docs/adr/index.md) are separately documented.
 
-## Data upload backend
+The backend has the following API calls. All content types are `application/json` unless otherwise specified.
 
-The backend should have the following API calls
-
-### Source types
+## Source types
 
 **Get converter types**
 `GET /source-types`
@@ -43,6 +41,7 @@ The backend should have the following API calls
   ]
 }
 ```
+These are the source types that are currently registered with the backend. More can be registered by modifying the backend configuration. The `timeRequired` field indicates whether the user should specify a start time corresponding to a data record, if the data does not contain a time itself.
 
 **Get converter configuration**
 `GET /source-types/{name}`
@@ -69,13 +68,18 @@ The backend should have the following API calls
 }
 ```
 
-### Records
+If the converter is customizable, the backend can provide it with additional configuration properties.
+
+## Records
 
 All uploads are stored in so-called records. A record may contain one or more files that should be processed. To track the status of a record, use the `metadata.status` field. This field follows the state transitions as outlined below.
+
 ![State transitions](state-transitions.png)
 
+### Implementing a data uploader
+
 **Create a new record**
-`POST /records` 
+`POST /records`
 
 ```json
 {
@@ -115,9 +119,16 @@ Returns
 ```
 
 **PUT record data**
-`PUT /records/{id}/contents/{fileName}` <br>
+`PUT /records/{id}/contents/{fileName}`<br>
+`Content-Type: audio/mp3` (for example)<br>
 
-returns `HTTP 200` or `HTTP 201` if existing and the state is incomplete, with body
+```
+...file contents...
+```
+
+This creates a new data file corresponding to the record.
+
+Returns `HTTP 200` or `HTTP 201` if existing and the state is incomplete, with body
 
 ```json
 {
@@ -142,12 +153,15 @@ returns `HTTP 200` or `HTTP 201` if existing and the state is incomplete, with b
 `GET /records/{id}/logs`
 ```
 Content-Type: text/plain
-Content-Length: 23011
+Content-Length: 12345
 
 ...
 ```
 
-**Reset a record to initial state to allow reprocessing** `POST /records/{id}/reset with empty body.`
+**Reset a record to initial state to allow reprocessing**
+
+`POST /records/{id}/reset`
+with empty body.
 
 **Get records for given filters**<br>
 `GET /records`<br>
@@ -191,6 +205,10 @@ Content-Length: 23011
 }
 ```
 
+### Implementing a data converter
+
+A data processor should fetch the latest records from the queue, mark them as processing, process them by e.g. storing them in Kafka or S3, and then mark them as failed or succeeded. All processing actions should be logged in the record logs element.
+
 **For polling queued data**
 `POST /poll`
 
@@ -201,7 +219,9 @@ Content-Length: 23011
 }
 ```
 
-Returns
+requests all data that is currently queued, only for given supported converters. This means that data with different formats can independently be converted by different backends, each polling only for their own source type.
+
+The request returns
 
 ```json
 {
@@ -236,10 +256,6 @@ Returns
 }
 ```
 
-**Get file contents**
-`GET /records/{id}/contents/{fileName}`<br>
-Content-Type: application/mp3
-
 **Start transaction**
 `POST /records/{id}/metadata`
 
@@ -265,6 +281,12 @@ HTTP 200
 
 or HTTP 409 Conflict if the revision does not match (i.e. another process is processing this file.)
 
+**Get file contents**
+`GET /records/{id}/contents/{fileName}`<br>
+`Content-Type: application/mp3`
+```
+...file contents...
+```
 
 **Finalize transaction**
 `POST /records/{id}/metadata`
