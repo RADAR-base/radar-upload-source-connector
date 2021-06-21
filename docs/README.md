@@ -18,7 +18,10 @@ The backend has the following API calls. All content types are `application/json
 ## Source types
 
 **Get converter types**
-`GET /source-types`
+
+```
+GET /source-types
+```
 
 ```json
 {
@@ -44,7 +47,10 @@ The backend has the following API calls. All content types are `application/json
 These are the source types that are currently registered with the backend. More can be registered by modifying the backend configuration. The `timeRequired` field indicates whether the user should specify a start time corresponding to a data record, if the data does not contain a time itself.
 
 **Get converter configuration**
-`GET /source-types/{name}`
+
+```
+GET /source-types/{name}
+```
 
 ```json
 {
@@ -79,7 +85,10 @@ All uploads are stored in so-called records. A record may contain one or more fi
 ### Implementing a data uploader
 
 **Create a new record**
-`POST /records`
+
+```
+POST /records
+```
 
 ```json
 {
@@ -119,10 +128,11 @@ Returns
 ```
 
 **PUT record data**
-`PUT /records/{id}/contents/{fileName}`<br>
-`Content-Type: audio/mp3` (for example)<br>
 
 ```
+PUT /records/{id}/contents/{fileName}
+Content-Type: audio/mp3
+
 ...file contents...
 ```
 
@@ -140,7 +150,11 @@ Returns `HTTP 200` or `HTTP 201` if existing and the state is incomplete, with b
 }
 ```
 
-**Mark record ready for processing** `POST /records/{id}/metadata`
+**Mark record ready for processing**
+
+```
+POST /records/{id}/metadata
+```
 
 ```json
 {
@@ -150,8 +164,8 @@ Returns `HTTP 200` or `HTTP 201` if existing and the state is incomplete, with b
 ```
 
 **Get the logs**
-`GET /records/{id}/logs`
 ```
+GET /records/{id}/logs
 Content-Type: text/plain
 Content-Length: 12345
 
@@ -160,12 +174,17 @@ Content-Length: 12345
 
 **Reset a record to initial state to allow reprocessing**
 
-`POST /records/{id}/reset`
+```
+POST /records/{id}/reset
+Content-Length: 0
+```
 with empty body.
 
 **Get records for given filters**<br>
-`GET /records`<br>
-`GET /records?projectId=radar-test&userId=testUser&sourceType=Mp3Audio&status=READY&size=5&page=1`
+
+```
+GET /records?projectId=radar-test&userId=testUser&sourceType=Mp3Audio&status=READY&size=5&page=1
+```
 
 ```json
 {
@@ -210,7 +229,10 @@ with empty body.
 A data processor should fetch the latest records from the queue, mark them as processing, process them by e.g. storing them in Kafka or S3, and then mark them as failed or succeeded. All processing actions should be logged in the record logs element.
 
 **For polling queued data**
-`POST /poll`
+
+```
+POST /poll
+```
 
 ```json
 {
@@ -257,6 +279,7 @@ The request returns
 ```
 
 **Start transaction**
+
 `POST /records/{id}/metadata`
 
 ```json
@@ -282,15 +305,19 @@ HTTP 200
 or HTTP 409 Conflict if the revision does not match (i.e. another process is processing this file.)
 
 **Get file contents**
-`GET /records/{id}/contents/{fileName}`<br>
-`Content-Type: application/mp3`
+
 ```
+GET /records/{id}/contents/{fileName}
+Content-Type: application/mp3
+
 ...file contents...
 ```
 
 **Finalize transaction**
-`POST /records/{id}/metadata`
 
+```
+POST /records/{id}/metadata
+```
 ```json
 {
   "id": 12,
@@ -317,4 +344,4 @@ Returns
 }
 ```
 
-or HTTP 409 Conflict if the revision does not match (i.e. another process is processing this file.)
+or HTTP status `409 Conflict` if the revision does not match (i.e. another process is processing this file.)
