@@ -27,6 +27,7 @@ import org.radarbase.connect.upload.api.UploadBackendClient
 import org.radarbase.connect.upload.converter.ConverterFactory.Converter.Companion.END_OF_RECORD_KEY
 import org.radarbase.connect.upload.exception.ConversionFailedException
 import org.radarbase.connect.upload.exception.ConversionTemporarilyFailedException
+import org.radarbase.connect.upload.logging.LogRepository
 import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.io.InputStream
@@ -37,6 +38,7 @@ import java.nio.file.Paths
  */
 class RecordConverter(
     override val sourceType: String,
+    preProcessorFactories: List<FilePreProcessorFactory> = emptyList(),
     processorFactories: List<FileProcessorFactory>,
     private val client: UploadBackendClient,
     private val logRepository: LogRepository,
@@ -44,6 +46,7 @@ class RecordConverter(
     allowUnmappedFiles: Boolean = false,
 ) : ConverterFactory.Converter {
     private val delegatingProcessor = DelegatingProcessor(
+        preProcessorFactories = preProcessorFactories,
         processorFactories = processorFactories,
         tempDir = Paths.get(System.getProperty("java.io.tmpdir"), "upload-connector", "$sourceType-cache"),
         generateTempFilePrefix = { context ->

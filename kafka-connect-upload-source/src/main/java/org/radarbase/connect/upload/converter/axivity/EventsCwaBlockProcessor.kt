@@ -1,7 +1,7 @@
 package org.radarbase.connect.upload.converter.axivity
 
 import okhttp3.internal.and
-import org.radarbase.connect.upload.converter.RecordLogger
+import org.radarbase.connect.upload.logging.RecordLogger
 import org.radarbase.connect.upload.converter.TopicData
 import org.radarbase.connect.upload.converter.axivity.newcastle.CwaBlock
 import org.radarcns.connector.upload.axivity.AxivityEvent
@@ -21,7 +21,7 @@ class EventsCwaBlockProcessor: CwaFileProcessorFactory.CwaBlockProcessor {
                 .asSequence()
                 .filter { block.events and it.toBitPattern() != 0 }
                 .map { TopicData("connect_upload_axivity_event", AxivityEvent(
-                        block.startTime(),
+                        block.startTime,
                         timeReceived,
                         it)) }
         }

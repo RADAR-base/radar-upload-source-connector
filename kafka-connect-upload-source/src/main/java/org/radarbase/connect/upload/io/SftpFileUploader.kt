@@ -4,7 +4,7 @@ import com.jcraft.jsch.ChannelSftp
 import com.jcraft.jsch.JSch
 import com.jcraft.jsch.Session
 import com.jcraft.jsch.SftpException
-import org.radarbase.connect.upload.converter.RecordLogger
+import org.radarbase.connect.upload.logging.RecordLogger
 import org.slf4j.LoggerFactory
 import java.io.InputStream
 import java.lang.Exception

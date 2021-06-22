@@ -14,9 +14,11 @@
  *  limitations under the License.
  */
 
-package org.radarbase.connect.upload.converter
+package org.radarbase.connect.upload.converter.csv
 
 import org.radarbase.connect.upload.api.ContentsDTO
+import org.radarbase.connect.upload.converter.ConverterFactory
+import org.radarbase.connect.upload.converter.TopicData
 
 /**
  * Processor for processing single lines of CSV file.

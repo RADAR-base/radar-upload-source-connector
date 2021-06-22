@@ -1,6 +1,6 @@
 package org.radarbase.connect.upload.converter.axivity
 
-import org.radarbase.connect.upload.converter.RecordLogger
+import org.radarbase.connect.upload.logging.RecordLogger
 import org.radarbase.connect.upload.converter.TopicData
 import org.radarbase.connect.upload.converter.axivity.newcastle.CwaBlock
 import org.radarcns.connector.upload.axivity.AxivityTemperature
@@ -14,7 +14,7 @@ class TemperatureCwaBlockProcessor: CwaFileProcessorFactory.CwaBlockProcessor {
         return sequenceOf(TopicData(
                 "connect_upload_axivity_temperature",
                 AxivityTemperature(
-                        block.startTime(),
+                        block.startTime,
                         timeReceived,
                         (block.temperature.toInt() * 75 - 12800) / 256f)))
     }

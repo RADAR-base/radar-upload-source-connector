@@ -2,7 +2,7 @@ package org.radarbase.connect.upload.io
 
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.radarbase.connect.upload.UploadSourceConnectorConfig
-import org.radarbase.connect.upload.converter.RecordLogger
+import org.radarbase.connect.upload.logging.RecordLogger
 import java.io.Closeable
 import java.io.InputStream
 import java.net.URI

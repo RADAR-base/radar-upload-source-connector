@@ -1,7 +1,6 @@
 package org.radarbase.connect.upload.io
 
-import org.radarbase.connect.upload.converter.RecordLogger
-import org.radarbase.connect.upload.exception.ConversionFailedException
+import org.radarbase.connect.upload.logging.RecordLogger
 import org.radarbase.connect.upload.exception.ConversionTemporarilyFailedException
 import java.io.IOException
 import java.io.InputStream

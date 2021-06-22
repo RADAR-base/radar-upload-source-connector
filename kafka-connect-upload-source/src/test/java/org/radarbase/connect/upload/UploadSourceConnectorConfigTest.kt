@@ -30,18 +30,16 @@ class UploadSourceConnectorConfigTest {
     @Test
     fun testConfig() {
         val settings = mapOf(
-                "upload.source.client.id" to "radar_upload_connect",
-                "upload.source.client.secret" to "test_secret",
-                "upload.source.client.tokenUrl" to
-                        "http://managementportal-app:8080/managementportal/oauth/token",
-                "upload.source.backend.baseUrl" to
-                        "http://radar-upload-connect-backend:8085/radar-upload/",
-                "upload.source.poll.interval.ms" to "3600000",
-                "upload.source.queue.size" to "1000",
-                "upload.source.record.converter.classes" to listOf(
-                        AccelerometerConverterFactory::class.java.name,
-                        AltoidaConverterFactory::class.java.name
-                ).joinToString(separator=",")
+            "upload.source.client.id" to "radar_upload_connect",
+            "upload.source.client.secret" to "test_secret",
+            "upload.source.client.tokenUrl" to "http://managementportal-app:8080/managementportal/oauth/token",
+            "upload.source.backend.baseUrl" to "http://radar-upload-connect-backend:8085/radar-upload/",
+            "upload.source.poll.interval.ms" to "3600000",
+            "upload.source.queue.size" to "1000",
+            "upload.source.record.converter.classes" to listOf(
+                AccelerometerConverterFactory::class.qualifiedName,
+                AltoidaConverterFactory::class.qualifiedName
+            ).joinToString(separator=",")
         )
         val config = UploadSourceConnectorConfig(settings)
         assertNotNull(config)

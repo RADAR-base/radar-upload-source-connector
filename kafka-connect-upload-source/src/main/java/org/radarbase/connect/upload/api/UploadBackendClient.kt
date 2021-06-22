@@ -28,7 +28,7 @@ import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import okio.BufferedSink
-import org.radarbase.connect.upload.converter.Log
+import org.radarbase.connect.upload.logging.Log
 import org.radarbase.connect.upload.exception.BadGatewayException
 import org.radarbase.connect.upload.exception.ConflictException
 import org.radarbase.connect.upload.exception.NotAuthorizedException

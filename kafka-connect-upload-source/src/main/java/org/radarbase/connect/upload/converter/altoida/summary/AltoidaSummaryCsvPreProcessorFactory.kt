@@ -25,9 +25,7 @@ import com.opencsv.CSVReaderBuilder
 import com.opencsv.CSVWriter
 import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
-import org.radarbase.connect.upload.converter.ConverterFactory
-import org.radarbase.connect.upload.converter.FileProcessorFactory
-import org.radarbase.connect.upload.converter.TopicData
+import org.radarbase.connect.upload.converter.*
 import org.slf4j.LoggerFactory
 import java.io.BufferedReader
 import java.io.ByteArrayInputStream
@@ -43,18 +41,12 @@ import java.nio.charset.StandardCharsets
  * even when the content/values are correct. This replaces the whole header and replaces it with
  * the correct expected header.
  */
-class AltoidaSummaryCsvPreProcessorFactory : FileProcessorFactory {
+class AltoidaSummaryCsvPreProcessorFactory : FilePreProcessorFactory {
     override fun matches(contents: ContentsDTO): Boolean = contents.fileName.endsWith("export.csv")
 
-    override fun createProcessor(record: RecordDTO): FileProcessorFactory.FileProcessor = AltoidaSummaryCsvPreProcessor()
+    override fun createPreProcessor(record: RecordDTO): FilePreProcessor = AltoidaSummaryCsvPreProcessor()
 
-    private inner class AltoidaSummaryCsvPreProcessor : FileProcessorFactory.FileProcessor {
-        override fun processData(
-            context: ConverterFactory.ContentsContext,
-            inputStream: InputStream,
-            produce: (TopicData) -> Unit
-        ) = Unit
-
+    private inner class AltoidaSummaryCsvPreProcessor : FilePreProcessor {
         override fun preProcessFile(
             context: ConverterFactory.ContentsContext,
             inputStream: InputStream

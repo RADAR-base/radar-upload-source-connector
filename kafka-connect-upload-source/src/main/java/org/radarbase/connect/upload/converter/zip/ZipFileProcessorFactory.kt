@@ -17,12 +17,12 @@
  *
  */
 
-package org.radarbase.connect.upload.converter
+package org.radarbase.connect.upload.converter.zip
 
 import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
+import org.radarbase.connect.upload.converter.*
 import org.radarbase.connect.upload.exception.ConversionFailedException
-import org.radarbase.connect.upload.util.ZipInputStreamIterator
 import java.io.IOException
 import java.io.InputStream
 import java.nio.file.Paths
@@ -33,10 +33,12 @@ import java.nio.file.Paths
  */
 open class ZipFileProcessorFactory(
     sourceType: String,
+    zipEntryPreProcessors: List<FilePreProcessorFactory> = emptyList(),
     zipEntryProcessors: List<FileProcessorFactory>,
     allowUnmappedFiles: Boolean = false
 ) : FileProcessorFactory {
     private val delegatingProcessor = DelegatingProcessor(
+        preProcessorFactories = zipEntryPreProcessors,
         processorFactories = zipEntryProcessors,
         tempDir = Paths.get(System.getProperty("java.io.tmpdir"), "upload-connector", "$sourceType-zip-cache"),
         generateTempFilePrefix = { context ->
@@ -56,9 +58,10 @@ open class ZipFileProcessorFactory(
 
     override fun matches(contents: ContentsDTO): Boolean = contents.fileName.endsWith(".zip")
 
-    override fun createProcessor(record: RecordDTO): FileProcessorFactory.FileProcessor = ZipFileProcessor(record)
+    override fun createProcessor(record: RecordDTO): FileProcessor = ZipFileProcessor(record)
 
-    inner class ZipFileProcessor(private val record: RecordDTO): FileProcessorFactory.FileProcessor {
+    inner class ZipFileProcessor(private val record: RecordDTO):
+        FileProcessor {
         override fun processData(
             context: ConverterFactory.ContentsContext,
             inputStream: InputStream,
@@ -72,13 +75,13 @@ open class ZipFileProcessorFactory(
                         .ifEmpty { throw ConversionFailedException("No zipped entry found from ${context.fileName}") }
                         .forEach { (entry, inputStream) ->
                             delegatingProcessor.processData(
-                                context = context.copy(
+                                context.copy(
                                     contents = ContentsDTO(
                                         fileName = entry.name.trim(),
                                         size = entry.size
                                     ),
                                 ),
-                                inputStream = inputStream,
+                                inputStream,
                                 produce,
                             )
                         }

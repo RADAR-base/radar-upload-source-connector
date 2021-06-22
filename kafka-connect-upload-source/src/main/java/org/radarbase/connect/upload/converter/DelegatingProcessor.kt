@@ -10,6 +10,7 @@ import java.nio.file.Path
  * Delegate file processing to multiple underlying processors.
  */
 class DelegatingProcessor(
+    private val preProcessorFactories: List<FilePreProcessorFactory>,
     val processorFactories: List<FileProcessorFactory>,
     val tempDir: Path,
     val generateTempFilePrefix: (ConverterFactory.ContentsContext) -> String,
@@ -27,6 +28,7 @@ class DelegatingProcessor(
         context.logger.debug("Processing entry ${context.fileName} from record ${context.id}")
 
         val processors = createProcessors(context)
+
         if (processors.isEmpty()) {
             if (!allowUnmappedFiles) {
                 throw DataProcessorNotFoundException("Cannot find data processor for record ${context.id} with file ${context.fileName}")
@@ -36,9 +38,9 @@ class DelegatingProcessor(
             }
         }
 
-        val preProcessedStream = inputStream.preProcessed(processors, context)
+        val preProcessedStream = inputStream.preProcessed(createPreProcessors(context), context)
 
-        val processStream: FileProcessorFactory.FileProcessor.(InputStream) -> Unit = { stream ->
+        val processStream: FileProcessor.(InputStream) -> Unit = { stream ->
             context.logger.debug("Processing ${context.fileName} with ${javaClass.simpleName} processor")
             processData(context, stream, produce)
         }
@@ -56,19 +58,27 @@ class DelegatingProcessor(
     }
 
     private fun InputStream.preProcessed(
-        processors: List<FileProcessorFactory.FileProcessor>,
+        processors: List<FilePreProcessor>,
         context: ConverterFactory.ContentsContext,
     ): InputStream = processors.fold(this) { stream, processor -> processor.preProcessFile(context, stream) }
 
+    private fun createPreProcessors(
+        context: ConverterFactory.ContentsContext,
+    ): List<FilePreProcessor> {
+        return preProcessorFactories.mapNotNull { factory ->
+            if (factory.matches(context.contents)) {
+                factory.createPreProcessor(context.record)
+            } else null
+        }
+    }
+
     private fun createProcessors(
         context: ConverterFactory.ContentsContext,
-    ): List<FileProcessorFactory.FileProcessor> {
+    ): List<FileProcessor> {
         return processorFactories.mapNotNull { factory ->
             if (factory.matches(context.contents)) {
                 factory.createProcessor(context.record)
-            } else {
-                null
-            }
+            } else null
         }
     }
 }

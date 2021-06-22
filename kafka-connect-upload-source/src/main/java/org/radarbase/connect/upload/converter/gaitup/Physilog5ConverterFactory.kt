@@ -4,7 +4,7 @@ import okhttp3.internal.closeQuietly
 import org.radarbase.connect.upload.api.SourceTypeDTO
 import org.radarbase.connect.upload.converter.ConverterFactory
 import org.radarbase.connect.upload.converter.FileProcessorFactory
-import org.radarbase.connect.upload.converter.LogRepository
+import org.radarbase.connect.upload.logging.LogRepository
 import org.radarbase.connect.upload.io.FileUploaderFactory
 import org.slf4j.LoggerFactory
 

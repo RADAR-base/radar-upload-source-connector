@@ -1,4 +1,4 @@
-package org.radarbase.connect.upload.util
+package org.radarbase.connect.upload.converter.zip
 
 import java.io.Closeable
 import java.io.FilterInputStream

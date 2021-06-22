@@ -17,7 +17,7 @@
  *
  */
 
-package org.radarbase.connect.upload.converter
+package org.radarbase.connect.upload.converter.phone
 
 import org.apache.kafka.connect.source.SourceRecord
 import org.junit.jupiter.api.Assertions.*
@@ -27,9 +27,12 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.mockito.Mockito.mock
 import org.radarbase.connect.upload.api.*
+import org.radarbase.connect.upload.converter.ConverterFactory
 import org.radarbase.connect.upload.converter.RecordConverter.Companion.createAvroData
-import org.radarbase.connect.upload.converter.phone.AccelerometerConverterFactory
 import org.radarbase.connect.upload.exception.ConversionFailedException
+import org.radarbase.connect.upload.logging.ConverterLogRepository
+import org.radarbase.connect.upload.logging.LogRepository
+import org.radarbase.connect.upload.logging.RecordLogger
 import java.io.File
 import java.time.Instant
 

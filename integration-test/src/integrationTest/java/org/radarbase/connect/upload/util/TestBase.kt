@@ -46,6 +46,15 @@ import java.io.File
 import java.net.URI
 import java.time.LocalDateTime
 import jakarta.ws.rs.core.Response
+import org.junit.jupiter.api.Assertions
+import org.mockito.Mockito
+import org.radarbase.connect.upload.converter.ConverterFactory
+import org.radarbase.connect.upload.converter.RecordConverter
+import org.radarbase.connect.upload.converter.TopicData
+import org.radarbase.connect.upload.io.SftpFileUploaderTest
+import org.radarbase.connect.upload.logging.RecordLogger
+import org.radarcns.connector.upload.oxford.OxfordCameraImage
+import java.time.Instant
 
 class TestBase {
     companion object {
@@ -120,6 +129,40 @@ class TestBase {
                     altoidaZip,
                     accelerationZip
                 ),
+        )
+
+
+        val oxfordZipContents = ContentsDTO(
+            contentType = "application/zip",
+            fileName = "oxford-sample-data.zip",
+            createdDate = Instant.now(),
+            size = 1L,
+        )
+
+        val oxfordZipRecord = RecordDTO(
+            id = 1L,
+            metadata = RecordMetadataDTO(
+                revision = 1,
+                status = "PROCESSING",
+            ),
+            data = RecordDataDTO(
+                projectId = "p",
+                userId = "u",
+                sourceId = "s",
+            ),
+            sourceType = "oxford-wearable-camera",
+        )
+
+        val oxfordZipSourceType = org.radarbase.connect.upload.api.SourceTypeDTO(
+            name = "oxford-wearable-camera",
+            configuration = emptyMap(),
+            sourceIdRequired = false,
+            timeRequired = false,
+            topics = setOf(
+                "connect_upload_oxford_camera_image",
+                "connect_upload_oxford_camera_data",
+            ),
+            contentTypes = setOf("application/zip")
         )
 
         private val mapper: ObjectMapper = ObjectMapper(JsonFactory())
@@ -256,6 +299,29 @@ class TestBase {
                 addHeader("Authorization", BEARER + clientUserToken)
             }
             assertThat(metadata.status, equalTo("READY"))
+        }
+
+        fun readOxfordZip(converter: ConverterFactory.Converter): List<OxfordCameraImage> {
+            val zipName = "oxford-camera-sample.zip"
+
+            val records = mutableListOf<TopicData>()
+
+            val context = ConverterFactory.ContentsContext.create(
+                record = oxfordZipRecord,
+                contents = oxfordZipContents,
+                logger = Mockito.mock(RecordLogger::class.java),
+                avroData = RecordConverter.createAvroData(),
+            )
+            requireNotNull(javaClass.getResourceAsStream(zipName)).use { zipStream ->
+                converter.convertFile(context, zipStream, records::add)
+            }
+            Assertions.assertNotNull(oxfordZipRecord)
+            Assertions.assertEquals(10, records.size) // 5 images, 5x upload + 5x metadata
+            val imageRecords = records
+                .filter { it.value is OxfordCameraImage }
+                .map { it.value as OxfordCameraImage }
+            Assertions.assertEquals(5, imageRecords.size)
+            return imageRecords
         }
     }
 }

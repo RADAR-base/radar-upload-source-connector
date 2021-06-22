@@ -1,10 +1,13 @@
-package org.radarbase.connect.upload.converter
+package org.radarbase.connect.upload.converter.csv
 
 import com.opencsv.CSVParserBuilder
 import com.opencsv.CSVReader
 import com.opencsv.CSVReaderBuilder
 import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
+import org.radarbase.connect.upload.converter.ConverterFactory
+import org.radarbase.connect.upload.converter.FileProcessor
+import org.radarbase.connect.upload.converter.TopicData
 import org.radarbase.connect.upload.exception.InvalidFormatException
 import java.io.BufferedReader
 import java.io.IOException
@@ -16,7 +19,7 @@ import java.io.InputStream
 open class CsvProcessor(
     private val record: RecordDTO,
     private val processorFactories: List<CsvLineProcessorFactory>,
-): FileProcessorFactory.FileProcessor {
+): FileProcessor {
 
     override fun processData(
         context: ConverterFactory.ContentsContext,

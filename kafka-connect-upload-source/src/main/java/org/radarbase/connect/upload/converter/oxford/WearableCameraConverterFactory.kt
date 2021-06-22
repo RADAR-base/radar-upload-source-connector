@@ -4,8 +4,8 @@ import okhttp3.internal.closeQuietly
 import org.radarbase.connect.upload.api.SourceTypeDTO
 import org.radarbase.connect.upload.converter.ConverterFactory
 import org.radarbase.connect.upload.converter.FileProcessorFactory
-import org.radarbase.connect.upload.converter.LogRepository
-import org.radarbase.connect.upload.converter.ZipFileProcessorFactory
+import org.radarbase.connect.upload.logging.LogRepository
+import org.radarbase.connect.upload.converter.zip.ZipFileProcessorFactory
 import org.radarbase.connect.upload.io.FileUploaderFactory
 import org.slf4j.LoggerFactory
 
@@ -30,7 +30,7 @@ class WearableCameraConverterFactory : ConverterFactory {
             CameraDataFileProcessor(),
             CameraUploadProcessor { localUploader.get() },
         )
-        return listOf(object : ZipFileProcessorFactory(sourceType, processors) {
+        return listOf(object : ZipFileProcessorFactory(sourceType, zipEntryProcessors = processors) {
             override fun beforeProcessing(contents: ConverterFactory.ContentsContext) {
                 localUploader.set(uploaderSupplier.apply {
                     recordLogger = contents.logger

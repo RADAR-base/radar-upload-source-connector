@@ -1,4 +1,4 @@
-package org.radarbase.connect.upload.converter
+package org.radarbase.connect.upload.converter.gaitup
 
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.greaterThan
@@ -9,8 +9,15 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.mockito.Mockito
 import org.radarbase.connect.upload.api.*
-import org.radarbase.connect.upload.converter.CwaCsvInputStream.OPTIONS_EVENTS
+import org.radarbase.connect.upload.converter.ConverterFactory
+import org.radarbase.connect.upload.converter.RecordConverter
+import org.radarbase.connect.upload.converter.TopicData
+import org.radarbase.connect.upload.converter.axivity.CwaCsvInputStream.OPTIONS_EVENTS
 import org.radarbase.connect.upload.converter.axivity.AxivityConverterFactory
+import org.radarbase.connect.upload.converter.axivity.CwaCsvInputStream
+import org.radarbase.connect.upload.logging.ConverterLogRepository
+import org.radarbase.connect.upload.logging.LogRepository
+import org.radarbase.connect.upload.logging.RecordLogger
 import org.radarcns.connector.upload.axivity.AxivityAcceleration
 import java.time.Instant
 import java.util.zip.ZipInputStream
@@ -81,7 +88,12 @@ class PhysilogConverterFactoryTest {
         requireNotNull(javaClass.getResourceAsStream("/CWA-DATA.zip")).use { cwaZipFile ->
             ZipInputStream(cwaZipFile).use { zipIn ->
                 assertNotNull(zipIn.nextEntry)
-                CwaCsvInputStream(zipIn, 0, 1, -1, OPTIONS_EVENTS).use { cwaIn ->
+                CwaCsvInputStream(
+                    zipIn,
+                    0,
+                    1,
+                    -1,
+                    OPTIONS_EVENTS).use { cwaIn ->
                     cwaIn.bufferedReader().use { it.readLines() }
                     // without any apparent reason, the CwaCsvInputStream is missing the first block...
                     assertEquals(cwaIn.line + 80, accRecords.count())

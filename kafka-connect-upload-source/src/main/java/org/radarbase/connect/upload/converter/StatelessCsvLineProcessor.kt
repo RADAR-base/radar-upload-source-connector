@@ -16,6 +16,8 @@
 
 package org.radarbase.connect.upload.converter
 
+import org.radarbase.connect.upload.converter.csv.CsvLineProcessorFactory
+
 /**
  * Simple Processor for one line to one record of a single topic conversion.
  */

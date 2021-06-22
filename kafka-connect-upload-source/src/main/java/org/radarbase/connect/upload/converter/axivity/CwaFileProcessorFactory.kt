@@ -5,12 +5,14 @@ import org.radarbase.connect.upload.api.RecordDTO
 import org.radarbase.connect.upload.converter.*
 import org.radarbase.connect.upload.converter.axivity.newcastle.CwaBlock
 import org.radarbase.connect.upload.converter.axivity.newcastle.CwaReader
+import org.radarbase.connect.upload.logging.LogRepository
+import org.radarbase.connect.upload.logging.RecordLogger
 import org.slf4j.LoggerFactory
 import java.io.InputStream
 
 class CwaFileProcessorFactory(
         val logRepository: LogRepository,
-        private val dataBlockProcessors: Set<CwaBlockProcessor>
+        private val dataBlockProcessors: List<CwaBlockProcessor>
 ) : FileProcessorFactory {
     private val metadataProcessor = MetadataCwaReaderProcessor()
 
@@ -18,7 +20,7 @@ class CwaFileProcessorFactory(
 
     override fun createProcessor(record: RecordDTO) = CwaProcessor(record)
 
-    inner class CwaProcessor(record: RecordDTO) : FileProcessorFactory.FileProcessor {
+    inner class CwaProcessor(record: RecordDTO) : FileProcessor {
         val recordLogger = logRepository.createLogger(logger, record.id!!)
 
         override fun processData(
@@ -74,7 +76,8 @@ class CwaFileProcessorFactory(
             timeReceived: Double,
         ): Sequence<TopicData>
 
-        fun CwaBlock.startTime(): Double = timestampValues[0] / 1000.0
+        val CwaBlock.startTime: Double
+            get() = timestampValues[0] / 1000.0
     }
 
     companion object {

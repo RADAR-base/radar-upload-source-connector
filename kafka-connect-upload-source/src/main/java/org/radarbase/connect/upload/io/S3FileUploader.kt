@@ -2,7 +2,7 @@ package org.radarbase.connect.upload.io
 
 import io.minio.*
 import io.minio.errors.MinioException
-import org.radarbase.connect.upload.converter.RecordLogger
+import org.radarbase.connect.upload.logging.RecordLogger
 import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.io.InputStream

@@ -25,7 +25,7 @@ import org.radarbase.connect.upload.api.RecordDTO
 /**
  * Factory to create processors of single files.
  */
-interface FileProcessorFactory {
+interface FilePreProcessorFactory {
     /**
      * Whether this processor factory can process given file contents. Matching could occur based on
      * file name, size or content type.
@@ -35,6 +35,6 @@ interface FileProcessorFactory {
     /**
      * Create a file processor for a given record.
      */
-    fun createProcessor(record: RecordDTO): FileProcessor
+    fun createPreProcessor(record: RecordDTO): FilePreProcessor
 
 }
