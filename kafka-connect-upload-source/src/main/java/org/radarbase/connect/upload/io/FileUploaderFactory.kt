@@ -39,7 +39,9 @@ class FileUploaderFactory(private val config: Map<String, String>) {
         ): URI {
             val uri = advertisedTargetUri
             val originalScheme = uri.scheme
-            val noRootPath = if (path.toString().startsWith("/")) Paths.get(path.toString().substring(1)) else path
+            val noRootPath = if (path.toString().startsWith("/")) {
+                Paths.get(path.toString().substring(1))
+            } else path
             val newUri = config.targetEndpoint.replaceFirst(originalScheme, "http")
                 .toHttpUrl().newBuilder()
                 .addPathSegments(noRootPath.toString())
@@ -62,9 +64,7 @@ class FileUploaderFactory(private val config: Map<String, String>) {
         val password: String?,
         val sshPrivateKey: String?,
         val sshPassPhrase: String?
-
     )
-
 }
 
 enum class UploadType {

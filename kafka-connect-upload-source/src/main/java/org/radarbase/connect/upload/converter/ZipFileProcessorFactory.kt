@@ -21,11 +21,11 @@ package org.radarbase.connect.upload.converter
 
 import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
-import java.io.FilterInputStream
+import org.radarbase.connect.upload.exception.ConversionFailedException
+import org.radarbase.connect.upload.util.ZipInputStreamIterator
 import java.io.IOException
 import java.io.InputStream
 import java.nio.file.Paths
-import java.util.zip.ZipInputStream
 
 /**
  * Abstract Zip file converter. Implementing classes should provide specific source-type and compatible
@@ -67,25 +67,18 @@ open class ZipFileProcessorFactory(
             context.logger.info("Retrieved Zip content from filename ${context.fileName}")
             beforeProcessing(context)
             try {
-                ZipInputStream(inputStream).use { zipInputStream ->
-                    generateSequence { zipInputStream.nextEntry }
-                        .ifEmpty { throw IOException("No zipped entry found from ${context.fileName}") }
-                        .filter { !it.isDirectory && entryFilter(it.name.trim()) }
-                        .forEach { zipEntry ->
+                ZipInputStreamIterator(inputStream).use { iterator ->
+                    iterator.files { entryFilter(it.name.trim()) }
+                        .ifEmpty { throw ConversionFailedException("No zipped entry found from ${context.fileName}") }
+                        .forEach { (entry, inputStream) ->
                             delegatingProcessor.processData(
                                 context = context.copy(
                                     contents = ContentsDTO(
-                                        fileName = zipEntry.name.trim(),
-                                        size = zipEntry.size
+                                        fileName = entry.name.trim(),
+                                        size = entry.size
                                     ),
                                 ),
-                                inputStream = object : FilterInputStream(zipInputStream) {
-                                    @Throws(IOException::class)
-                                    override fun close() {
-                                        context.logger.debug("Closing entry ${context.fileName}")
-                                        zipInputStream.closeEntry()
-                                    }
-                                },
+                                inputStream = inputStream,
                                 produce,
                             )
                         }

@@ -119,7 +119,11 @@ class RecordConverter(
             delegatingProcessor.processData(context, inputStream, produce)
         } catch (exe: Exception) {
             context.logger.error("Could not convert record ${context.id}", exe)
-            throw ConversionFailedException("Could not convert record ${context.id}",exe)
+            throw when (exe) {
+                is ConversionTemporarilyFailedException, is ConversionFailedException -> exe
+                is InterruptedException, is IOException -> ConversionTemporarilyFailedException("Could not convert record ${context.id}", exe)
+                else -> ConversionFailedException("Could not convert record ${context.id}", exe)
+            }
         }
     }
 
