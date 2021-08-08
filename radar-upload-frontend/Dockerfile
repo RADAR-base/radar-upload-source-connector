@@ -11,7 +11,7 @@ COPY . /app/
 
 RUN npm run build --prod
 
-FROM nginx:1.18.0-alpine
+FROM nginx:mainline-alpine
 
 # add init script
 COPY ./docker/nginx.conf /etc/nginx/nginx.conf
