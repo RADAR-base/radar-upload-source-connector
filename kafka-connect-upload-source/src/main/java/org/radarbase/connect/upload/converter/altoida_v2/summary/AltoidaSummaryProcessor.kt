@@ -1,4 +1,4 @@
-package org.radarbase.connect.upload.converter.altoida.summary
+package org.radarbase.connect.upload.converter.altoida_v2.summary
 
 import org.radarbase.connect.upload.converter.StatelessCsvLineProcessor
 import org.radarbase.connect.upload.converter.TimeFieldParser.DateFormatParser.Companion.formatTimeFieldParser

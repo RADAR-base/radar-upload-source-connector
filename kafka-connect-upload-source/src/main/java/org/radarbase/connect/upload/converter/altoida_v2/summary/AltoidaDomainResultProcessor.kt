@@ -1,4 +1,4 @@
-package org.radarbase.connect.upload.converter.altoida.summary
+package org.radarbase.connect.upload.converter.altoida_v2.summary
 
 import org.radarbase.connect.upload.converter.StatelessCsvLineProcessor
 import org.radarbase.connect.upload.converter.TimeFieldParser
@@ -38,8 +38,9 @@ class AltoidaDomainResultProcessor : StatelessCsvLineProcessor() {
                     line.getValue("DOMAINPERCENTILE_VISUALPERCEPTION").toFloat(),
                     line.getValue("DOMAINPERCENTILE_PLANNING").toFloat(),
                     line.getValue("DOMAINPERCENTILE_PROSPECTIVEMEMORY").toFloat(),
-                    line.getValue("DOMAINPERCENTILE_SPATIALMEMORY").toFloat(),
-                    line.getValue("DOMAINPERCENTILE_EYEMOVEMENT").toFloat(),
-                    line.getValue("DOMAINPERCENTILE_SPEECH").toFloat(),
+                    line.getValue("DOMAINPERCENTILE_SPATIALMEMORY").toFloat()
+//                    ,
+//                    line.getValue("DOMAINPERCENTILE_EYEMOVEMENT").toFloat(),
+//                    line.getValue("DOMAINPERCENTILE_SPEECH").toFloat(),
             ))
 }

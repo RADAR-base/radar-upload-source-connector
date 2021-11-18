@@ -17,7 +17,7 @@
  *
  */
 
-package org.radarbase.connect.upload.converter.altoida.summary
+package org.radarbase.connect.upload.converter.altoida_v2.summary
 
 import com.opencsv.CSVParserBuilder
 import com.opencsv.CSVReader

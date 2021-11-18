@@ -21,21 +21,22 @@ package org.radarbase.connect.upload.converter.altoida_v2
 
 import org.radarbase.connect.upload.converter.StatelessCsvLineProcessor
 import org.radarbase.connect.upload.converter.TopicData
-import org.radarcns.connector.upload.altoida.AltoidaGravity
+import org.radarcns.connector.upload.altoida.AltoidaAcceleration
 
-class AltoidaGravityCsvProcessor : StatelessCsvLineProcessor() {
-    override val fileNameSuffix: String = "gravity_acceleration.csv"
 
-    override val header: List<String> = listOf("TIMESTAMP", "X", "Y", "Z")
+class AltoidaMotorBubbleCsvProcessor : StatelessCsvLineProcessor() {
+    override val fileNameSuffix: String = "motor_bubble.csv"
+
+    override val header: List<String> = listOf("TIMESTAMP", "X", "Y")
 
     override fun lineConversion(
             line: Map<String, String>,
             timeReceived: Double
-    ) = TopicData("connect_upload_altoida_gravity", AltoidaGravity(
+    ) = TopicData("connect_upload_altoida_acceleration", AltoidaAcceleration(
             time(line),
             timeReceived,
             line.getValue("X").toFloat(),
             line.getValue("Y").toFloat(),
-            line.getValue("Z").toFloat()))
+            0.toFloat()))
 
 }

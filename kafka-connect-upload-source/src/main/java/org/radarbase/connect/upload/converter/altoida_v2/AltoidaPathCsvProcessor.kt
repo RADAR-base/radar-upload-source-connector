@@ -17,7 +17,7 @@
  *
  */
 
-package org.radarbase.connect.upload.converter.altoida
+package org.radarbase.connect.upload.converter.altoida_v2
 
 import org.radarbase.connect.upload.converter.StatelessCsvLineProcessor
 import org.radarbase.connect.upload.converter.TopicData
