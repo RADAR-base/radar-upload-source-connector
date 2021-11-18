@@ -17,12 +17,13 @@
  *
  */
 
-package org.radarbase.connect.upload.converter.altoida
+package org.radarbase.connect.upload.converter.altoida_v2
 
 import org.radarbase.connect.upload.api.SourceTypeDTO
 import org.radarbase.connect.upload.converter.*
 import org.radarbase.connect.upload.converter.altoida.summary.*
 import org.radarbase.connect.upload.converter.csv.CsvFileProcessorFactory
+import org.radarbase.connect.upload.converter.csv.XmlFileProcessorFactory
 import org.radarbase.connect.upload.converter.zip.ZipFileProcessorFactory
 import org.radarbase.connect.upload.logging.LogRepository
 
@@ -30,12 +31,12 @@ class AltoidaConverterFactory : ConverterFactory {
     override val sourceType: String = "altoida"
 
     override fun filePreProcessorFactories(
-        settings: Map<String, String>,
-        connectorConfig: SourceTypeDTO,
-        logRepository: LogRepository
+            settings: Map<String, String>,
+            connectorConfig: SourceTypeDTO,
+            logRepository: LogRepository
     ): List<FilePreProcessorFactory> = listOf(
-        // Preprocess malformed export.csv
-        AltoidaSummaryCsvPreProcessorFactory(),
+            // Preprocess malformed export.csv
+            AltoidaSummaryCsvPreProcessorFactory(),
     )
 
     override fun fileProcessorFactories(
@@ -43,40 +44,48 @@ class AltoidaConverterFactory : ConverterFactory {
             connectorConfig: SourceTypeDTO,
             logRepository: LogRepository
     ): List<FileProcessorFactory> = listOf(
-        // Process export.csv
-        CsvFileProcessorFactory(
-            csvProcessorFactories = listOf(
-                AltoidaSummaryProcessor(),
-                AltoidaDomainResultProcessor(),
-                AltoidaTestMetricsProcessor(AltoidaTestMetricsProcessor.AltoidaTestCategory.BIT, "connect_upload_altoida_bit_metrics"),
-                AltoidaTestMetricsProcessor(AltoidaTestMetricsProcessor.AltoidaTestCategory.DOT, "connect_upload_altoida_dot_metrics"),
+            // Process xml file
+            XmlFileProcessorFactory(
+                    xmlProcessorFactories = listOf(
+//                            AltoidaAssessmentsSummaryXmlProcessor(),
+//                            AltoidaContrastVisionTestXmlProcessor(),
+//                            AltoidaTappingTestXmlProcessor(),
+                            AltoidaMetadataXmlProcessor()
+//                            ,
+//                            AltoidaTestMetricsProcessor(AltoidaTestMetricsProcessor.AltoidaTestCategory.BIT, "connect_upload_altoida_bit_metrics"),
+//                            AltoidaTestMetricsProcessor(AltoidaTestMetricsProcessor.AltoidaTestCategory.DOT, "connect_upload_altoida_dot_metrics"),
+                    ),
             ),
-        ),
-        // Process zip file with detailed CSV contents
-        ZipFileProcessorFactory(
-            sourceType,
-            zipEntryProcessors = listOf(
-                CsvFileProcessorFactory(
+
+            // Process export.csv
+            CsvFileProcessorFactory(
                     csvProcessorFactories = listOf(
-                        AltoidaAccelerationCsvProcessor(),
-                        AltoidaActionCsvProcessor(),
-                        AltoidaAttitudeCsvProcessor(),
-                        AltoidaBlinkCsvProcessor(),
-                        AltoidaDiagnosticsCsvProcessor(),
-                        AltoidaEyeTrackingCsvProcessor(),
-                        AltoidaGravityCsvProcessor(),
-                        AltoidaMagneticFieldCsvProcessor(),
-                        AltoidaObjectCsvProcessor(),
-                        AltoidaPathCsvProcessor(),
-                        AltoidaRotationCsvProcessor(),
-                        AltoidaTapScreenCsvProcessor(),
-                        AltoidaTouchScreenCsvProcessor(),
-                    )
-                ),
-                AltoidaMetadataFileProcessor(),
+                            AltoidaSummaryProcessor(),
+                            AltoidaDomainResultProcessor(),
+                            AltoidaTestMetricsProcessor(AltoidaTestMetricsProcessor.AltoidaTestCategory.BIT, "connect_upload_altoida_bit_metrics"),
+                            AltoidaTestMetricsProcessor(AltoidaTestMetricsProcessor.AltoidaTestCategory.DOT, "connect_upload_altoida_dot_metrics"),
+                    ),
             ),
-            allowUnmappedFiles = true,
-        ),
+            // Process zip file with detailed CSV contents
+            ZipFileProcessorFactory(
+                    sourceType,
+                    zipEntryProcessors = listOf(
+                            CsvFileProcessorFactory(
+                                    csvProcessorFactories = listOf(
+                                            AltoidaAccelerationCsvProcessor(),
+                                            AltoidaAttitudeCsvProcessor(),
+                                            AltoidaBlinkCsvProcessor(),
+                                            AltoidaEyeTrackingCsvProcessor(),
+                                            AltoidaGravityCsvProcessor(),
+                                            AltoidaMagneticFieldCsvProcessor(),
+                                            AltoidaPathCsvProcessor(),
+                                            AltoidaMotorBubbleCsvProcessor(),
+                                            AltoidaTouchScreenCsvProcessor(),
+                                    )
+                            )
+                    ),
+                    allowUnmappedFiles = true,
+            ),
     )
 }
 
