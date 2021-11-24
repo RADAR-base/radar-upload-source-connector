@@ -28,7 +28,7 @@ import org.radarbase.connect.upload.converter.zip.ZipFileProcessorFactory
 import org.radarbase.connect.upload.logging.LogRepository
 
 class AltoidaConverterFactory : ConverterFactory {
-    override val sourceType: String = "altoida"
+    override val sourceType: String = "altoida_v2"
 
     override fun filePreProcessorFactories(
             settings: Map<String, String>,
