@@ -66,6 +66,8 @@ open class StatelessXmlLineProcessor {
         return Processor(context) { l, t -> lineConversions(l, t) }
     }
 
+    fun getTagValue(document: Document, tag: String): String = document.getElementsByTagName(tag).item(0).getTextContent()
+
     class Processor(val context: ConverterFactory.ContentsContext,
         private val conversion: Processor.(document: Document, timeReceived: Double) -> Sequence<TopicData>,
     )  {
