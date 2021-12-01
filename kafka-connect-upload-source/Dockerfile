@@ -13,7 +13,7 @@ COPY ./kafka-connect-upload-source/src/main/java /code/kafka-connect-upload-sour
 
 RUN gradle jar
 
-FROM confluentinc/cp-kafka-connect-base:6.2.0-1-ubi8
+FROM confluentinc/cp-kafka-connect-base:7.0.0
 
 MAINTAINER @nivemaham @blootsvoets
 
