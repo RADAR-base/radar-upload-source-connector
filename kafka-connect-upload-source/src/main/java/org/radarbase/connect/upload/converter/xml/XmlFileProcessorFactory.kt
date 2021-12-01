@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package org.radarbase.connect.upload.converter.csv
+package org.radarbase.connect.upload.converter.xml
 
 import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO

@@ -23,7 +23,7 @@ import org.radarbase.connect.upload.api.SourceTypeDTO
 import org.radarbase.connect.upload.converter.*
 import org.radarbase.connect.upload.converter.altoida.summary.*
 import org.radarbase.connect.upload.converter.csv.CsvFileProcessorFactory
-import org.radarbase.connect.upload.converter.csv.XmlFileProcessorFactory
+import org.radarbase.connect.upload.converter.xml.XmlFileProcessorFactory
 import org.radarbase.connect.upload.converter.zip.ZipFileProcessorFactory
 import org.radarbase.connect.upload.logging.LogRepository
 

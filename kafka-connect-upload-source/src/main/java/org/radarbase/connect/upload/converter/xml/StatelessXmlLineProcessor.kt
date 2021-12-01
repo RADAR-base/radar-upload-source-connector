@@ -21,6 +21,7 @@ import org.radarbase.connect.upload.converter.ConverterFactory
 import org.radarbase.connect.upload.converter.TimeFieldParser
 import org.radarbase.connect.upload.converter.TopicData
 import org.w3c.dom.Document
+import org.w3c.dom.Element
 
 /**
  * Simple Processor for one line to one record of a single topic conversion.
@@ -29,10 +30,10 @@ open class StatelessXmlLineProcessor {
     val fileNameSuffixes: List<String>
         get() = listOf(fileNameSuffix)
 
-    open val fileNameSuffix: String = ".csv"
+    open val fileNameSuffix: String = ".xml"
 
     val headerMustMatch: Boolean
-        get() = fileNameSuffixes != listOf(".csv")
+        get() = fileNameSuffixes != listOf(".xml")
 
     val optional: Boolean = false
 
@@ -41,15 +42,15 @@ open class StatelessXmlLineProcessor {
     fun time(line: Map<String, String>): Double = timeFieldParser.time(line)
 
     open fun lineConversion(
-        document: Document,
+            root: Element,
         timeReceived: Double
     ): TopicData? = null
 
     open fun lineConversions(
-        document: Document,
-        timeReceived: Double
+            root: Element,
+            timeReceived: Double
     ): Sequence<TopicData> {
-        val conversion = lineConversion(document, timeReceived)
+        val conversion = lineConversion(root, timeReceived)
         return if (conversion != null) sequenceOf(conversion) else emptySequence()
     }
 
@@ -66,15 +67,29 @@ open class StatelessXmlLineProcessor {
         return Processor(context) { l, t -> lineConversions(l, t) }
     }
 
-    fun getTagValue(document: Document, tag: String): String = document.getElementsByTagName(tag).item(0).getTextContent()
+    fun getTagValue(root: Element, tag: String): String = root.getElementsByTagName(tag).item(0).getTextContent()
+
+    fun getAttributeValue(root: Element, tag: String, attribute: String): String = (root.getElementsByTagName(tag).item(0) as Element).getAttribute(attribute)
+
+    fun getAttributeValueFromElement(element: Element, attribute: String): String = element.getAttribute(attribute)
+
+    fun getElementFromTagList(root: Element, tagList: List<String>): Element {
+        // NOTE: This is assuming tags in each tree are unique
+        // The tagList represents the branch leading to required element
+
+        var currentElement: Element = root
+        tagList.forEach { tag -> currentElement = currentElement.getElementsByTagName(tag).item(0) as Element }
+
+        return currentElement
+    }
 
     class Processor(val context: ConverterFactory.ContentsContext,
-        private val conversion: Processor.(document: Document, timeReceived: Double) -> Sequence<TopicData>,
+        private val conversion: Processor.(root: Element, timeReceived: Double) -> Sequence<TopicData>,
     )  {
         fun convertToRecord(
-            document: Document,
+            root: Element,
             timeReceived: Double,
-        ): Sequence<TopicData> = conversion(document, timeReceived)
+        ): Sequence<TopicData> = conversion(root, timeReceived)
     }
 
 
