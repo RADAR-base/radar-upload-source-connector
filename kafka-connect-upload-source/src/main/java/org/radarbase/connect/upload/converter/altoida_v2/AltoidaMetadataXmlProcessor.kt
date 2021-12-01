@@ -3,9 +3,9 @@ package org.radarbase.connect.upload.converter.altoida_v2
 import org.radarbase.connect.upload.converter.TimeFieldParser.DateFormatParser.Companion.formatTimeFieldParser
 import org.radarbase.connect.upload.converter.TopicData
 import org.radarbase.connect.upload.converter.xml.StatelessXmlLineProcessor
-import org.radarcns.connector.upload.altoida.AltoidaSummary
-import org.radarcns.connector.upload.altoida.Classification
+import org.radarcns.connector.upload.altoida.AltoidaXmlMetadata
 import org.radarcns.connector.upload.altoida.GenderType
+import org.radarcns.connector.upload.altoida.DominantHandType
 import org.w3c.dom.Document
 import org.w3c.dom.Element
 import org.w3c.dom.Node
@@ -21,7 +21,7 @@ class AltoidaMetadataXmlProcessor : StatelessXmlLineProcessor() {
         val age = getTagValue(root, "age")
         val yearsOfEducation = getTagValue(root, "years_of_education")
         val gender = getTagValue(root, "gender").toGender()
-        val dominantHand = getTagValue(root, "dominant_hand")
+        val dominantHand = getTagValue(root, "dominant_hand").toDominantHand()
 
         val applicationVersion = getAttributeValue(root, "application", "version")
         val deviceType = getAttributeValue(root, "device", "type")
@@ -42,15 +42,23 @@ class AltoidaMetadataXmlProcessor : StatelessXmlLineProcessor() {
         val displayHeightCmList = listOf("display", "size", "height", "centimeters")
         val displayHeightCm = getAttributeValueFromElement(getElementFromTagList(root, displayHeightCmList), "value")
 
-        return TopicData("connect_upload_altoida_xml_metadata", AltoidaSummary(
+        return TopicData("connect_upload_altoida_xml_metadata", AltoidaXmlMetadata(
                 timeFieldParser.timeFromString(timestamp),
                 timeReceived,
-                "test",
-                null,
-                null,
-                null,
-                null,
-                2.toDouble())
+                age,
+                yearsOfEducation,
+                gender,
+                dominantHand,
+                applicationVersion,
+                deviceType,
+                deviceDescription,
+                osType,
+                osVersion,
+                displayPpi,
+                displayWidthPixels,
+                displayHeightPixels,
+                displayWidthCm,
+                displayHeightCm)
         )
     }
 
@@ -62,6 +70,16 @@ class AltoidaMetadataXmlProcessor : StatelessXmlLineProcessor() {
             else -> GenderType.UNKNOWN
         }
     }
+
+    private fun String.toDominantHand() : DominantHandType {
+        return when (this) {
+            "left" -> DominantHandType.LEFT
+            "right" -> DominantHandType.RIGHT
+            "other" -> DominantHandType.OTHER
+            else -> DominantHandType.UNKNOWN
+        }
+    }
+
 
     companion object {
         private const val defaultTimeFormat = "yyyy-MM-dd HH:mm:ss"
