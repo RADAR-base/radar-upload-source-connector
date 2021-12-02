@@ -21,7 +21,7 @@ package org.radarbase.connect.upload.converter.altoida_v2
 
 import org.radarbase.connect.upload.converter.StatelessCsvLineProcessor
 import org.radarbase.connect.upload.converter.TopicData
-import org.radarcns.connector.upload.altoida.AltoidaAcceleration
+import org.radarcns.connector.upload.altoida.AltoidaMotorBubble
 
 
 class AltoidaMotorBubbleCsvProcessor : StatelessCsvLineProcessor() {
@@ -32,11 +32,10 @@ class AltoidaMotorBubbleCsvProcessor : StatelessCsvLineProcessor() {
     override fun lineConversion(
             line: Map<String, String>,
             timeReceived: Double
-    ) = TopicData("connect_upload_altoida_acceleration", AltoidaAcceleration(
+    ) = TopicData("connect_upload_altoida_acceleration", AltoidaMotorBubble(
             time(line),
             timeReceived,
             line.getValue("X").toFloat(),
-            line.getValue("Y").toFloat(),
-            0.toFloat()))
+            line.getValue("Y").toFloat()))
 
 }
