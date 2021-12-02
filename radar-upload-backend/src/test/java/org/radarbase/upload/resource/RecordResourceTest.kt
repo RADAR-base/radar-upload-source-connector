@@ -1,8 +1,5 @@
 package org.radarbase.upload.resource
 
-import com.nhaarman.mockitokotlin2.anyOrNull
-import com.nhaarman.mockitokotlin2.doReturn
-import com.nhaarman.mockitokotlin2.mock
 import jakarta.ws.rs.client.Entity
 import jakarta.ws.rs.core.Application
 import jakarta.ws.rs.core.Response
@@ -20,6 +17,9 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.mock
 import org.radarbase.auth.token.RadarToken
 import org.radarbase.jersey.auth.Auth
 import org.radarbase.jersey.config.ConfigLoader

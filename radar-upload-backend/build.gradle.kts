@@ -43,14 +43,14 @@ dependencies {
     val hamcrestVersion: String by project
     testImplementation("org.hamcrest:hamcrest:$hamcrestVersion")
     val mockitoKotlinVersion: String by project
-    testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:$mockitoKotlinVersion")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:$mockitoKotlinVersion")
 
     val jerseyVersion: String by project
     testImplementation("org.glassfish.jersey.test-framework.providers:jersey-test-framework-provider-grizzly2:$jerseyVersion")
 }
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "11"
+    kotlinOptions.jvmTarget = "17"
 }
 
 allOpen {

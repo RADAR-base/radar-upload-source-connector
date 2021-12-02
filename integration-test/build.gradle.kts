@@ -39,9 +39,7 @@ dependencies {
     val kafkaVersion: String by project
     testImplementation("org.apache.kafka:connect-api:$kafkaVersion")
     val mockitoKotlinVersion: String by project
-    testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:$mockitoKotlinVersion")
-    val mockitoCoreVersion: String by project
-    testImplementation("org.mockito:mockito-core:$mockitoCoreVersion")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:$mockitoKotlinVersion")
 }
 
 task<Test>("integrationTest") {
