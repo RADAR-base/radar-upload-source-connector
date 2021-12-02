@@ -47,13 +47,7 @@ class AltoidaConverterFactory : ConverterFactory {
             // Process xml file
             XmlFileProcessorFactory(
                     xmlProcessorFactories = listOf(
-//                            AltoidaAssessmentsSummaryXmlProcessor(),
-//                            AltoidaContrastVisionTestXmlProcessor(),
-//                            AltoidaTappingTestXmlProcessor(),
                             AltoidaMetadataXmlProcessor()
-//                            ,
-//                            AltoidaTestMetricsProcessor(AltoidaTestMetricsProcessor.AltoidaTestCategory.BIT, "connect_upload_altoida_bit_metrics"),
-//                            AltoidaTestMetricsProcessor(AltoidaTestMetricsProcessor.AltoidaTestCategory.DOT, "connect_upload_altoida_dot_metrics"),
                     ),
             ),
 
