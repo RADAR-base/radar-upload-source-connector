@@ -20,9 +20,7 @@ import org.radarbase.connect.upload.converter.StatelessCsvLineProcessor
 import org.radarbase.connect.upload.converter.TopicData
 import org.radarcns.connector.upload.altoida.AltoidaTouch
 
-class AltoidaTouchScreenCsvProcessor : StatelessCsvLineProcessor() {
-    override val fileNameSuffix: String = "_TOUCH.csv"
-
+class AltoidaTouchScreenCsvProcessor(override val fileNameSuffix: String = "_TOUCH.csv") : StatelessCsvLineProcessor() {
     override val header: List<String> = listOf("TIMESTAMP", "X", "Y", "SURFACE", "ACC", "COMBINED", "HIT")
 
     override fun lineConversion(
