@@ -21,7 +21,17 @@ package org.radarbase.connect.upload.converter.altoida_v2
 
 import org.radarbase.connect.upload.api.SourceTypeDTO
 import org.radarbase.connect.upload.converter.*
+import org.radarbase.connect.upload.converter.altoida.AltoidaAccelerationCsvProcessor
+import org.radarbase.connect.upload.converter.altoida.AltoidaAttitudeCsvProcessor
+import org.radarbase.connect.upload.converter.altoida.AltoidaBlinkCsvProcessor
+import org.radarbase.connect.upload.converter.altoida.AltoidaEyeTrackingCsvProcessor
+import org.radarbase.connect.upload.converter.altoida.AltoidaGravityCsvProcessor
+import org.radarbase.connect.upload.converter.altoida.AltoidaMagneticFieldCsvProcessor
+import org.radarbase.connect.upload.converter.altoida.AltoidaPathCsvProcessor
+import org.radarbase.connect.upload.converter.altoida.AltoidaTouchScreenCsvProcessor
 import org.radarbase.connect.upload.converter.altoida.summary.*
+import org.radarbase.connect.upload.converter.altoida_v2.summary.AltoidaDomainResultProcessor
+import org.radarbase.connect.upload.converter.altoida_v2.summary.AltoidaSummaryProcessor
 import org.radarbase.connect.upload.converter.csv.CsvFileProcessorFactory
 import org.radarbase.connect.upload.converter.xml.XmlFileProcessorFactory
 import org.radarbase.connect.upload.converter.zip.ZipFileProcessorFactory
@@ -56,8 +66,6 @@ class AltoidaConverterFactory : ConverterFactory {
                     csvProcessorFactories = listOf(
                             AltoidaSummaryProcessor(),
                             AltoidaDomainResultProcessor(),
-                            AltoidaTestMetricsProcessor(AltoidaTestMetricsProcessor.AltoidaTestCategory.BIT, "connect_upload_altoida_bit_metrics"),
-                            AltoidaTestMetricsProcessor(AltoidaTestMetricsProcessor.AltoidaTestCategory.DOT, "connect_upload_altoida_dot_metrics"),
                     ),
             ),
             // Process zip file with detailed CSV contents
@@ -66,15 +74,15 @@ class AltoidaConverterFactory : ConverterFactory {
                     zipEntryProcessors = listOf(
                             CsvFileProcessorFactory(
                                     csvProcessorFactories = listOf(
-                                            AltoidaAccelerationCsvProcessor(),
-                                            AltoidaAttitudeCsvProcessor(),
-                                            AltoidaBlinkCsvProcessor(),
-                                            AltoidaEyeTrackingCsvProcessor(),
-                                            AltoidaGravityCsvProcessor(),
-                                            AltoidaMagneticFieldCsvProcessor(),
-                                            AltoidaPathCsvProcessor(),
+                                            AltoidaAccelerationCsvProcessor("acceleration.csv"),
+                                            AltoidaAttitudeCsvProcessor("gyroscope.csv"),
+                                            AltoidaBlinkCsvProcessor("blink.csv"),
+                                            AltoidaEyeTrackingCsvProcessor("eye_screen_focuspoint.csv"),
+                                            AltoidaGravityCsvProcessor("gravity_acceleration.csv"),
+                                            AltoidaMagneticFieldCsvProcessor("magnetometer.csv"),
+                                            AltoidaPathCsvProcessor("ar_path.csv"),
                                             AltoidaMotorBubbleCsvProcessor(),
-                                            AltoidaTouchScreenCsvProcessor(),
+                                            AltoidaTouchScreenCsvProcessor("touch.csv"),
                                     )
                             )
                     ),
