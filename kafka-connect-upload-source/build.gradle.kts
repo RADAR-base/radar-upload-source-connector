@@ -50,21 +50,20 @@ dependencies {
     val hamcrestVersion: String by project
     testImplementation("org.hamcrest:hamcrest:$hamcrestVersion")
     testImplementation("org.apache.kafka:connect-api:$kafkaVersion")
-    val mockitoCoreVersion: String by project
-    testImplementation("org.mockito:mockito-core:$mockitoCoreVersion")
-    testImplementation ("org.mockito:mockito-inline:$mockitoCoreVersion")
+    val mockitoKotlinVersion: String by project
+    testImplementation("org.mockito.kotlin:mockito-kotlin:$mockitoKotlinVersion")
     val slf4jVersion: String by project
     testRuntimeOnly("org.slf4j:slf4j-simple:$slf4jVersion")
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
 }
 
 // config JVM target to 1.8 for kotlin compilation tasks
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.jvmTarget = "11"
 }
 
 task<Test>("integrationTest") {

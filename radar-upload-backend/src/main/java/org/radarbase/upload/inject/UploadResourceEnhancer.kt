@@ -33,10 +33,11 @@ class UploadResourceEnhancer(private val config: Config): JerseyResourceEnhancer
     }
 
     override val packages: Array<String> = arrayOf(
-            "org.radarbase.upload.exception",
-            "org.radarbase.upload.filter",
-            "org.radarbase.upload.lifecycle",
-            "org.radarbase.upload.resource")
+        "org.radarbase.upload.exception",
+        "org.radarbase.upload.filter",
+        "org.radarbase.upload.lifecycle",
+        "org.radarbase.upload.resource"
+    )
 
     override fun AbstractBinder.enhance() {
         // Bind instances. These cannot use any injects themselves

@@ -19,8 +19,6 @@
 
 package org.radarbase.upload.doa
 
-import com.nhaarman.mockitokotlin2.doReturn
-import com.nhaarman.mockitokotlin2.mock
 import org.glassfish.jersey.server.monitoring.ApplicationEvent
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
@@ -40,6 +38,8 @@ import org.radarbase.upload.api.SourceTypeMapperImpl
 import org.radarbase.upload.doa.entity.*
 import java.nio.file.Path
 import jakarta.inject.Provider
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.mock
 import javax.persistence.EntityManager
 import javax.persistence.EntityManagerFactory
 import kotlin.reflect.jvm.jvmName

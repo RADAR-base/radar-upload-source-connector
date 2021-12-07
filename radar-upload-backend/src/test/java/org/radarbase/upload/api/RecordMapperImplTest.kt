@@ -1,13 +1,10 @@
 package org.radarbase.upload.api
 
-import com.nhaarman.mockitokotlin2.doReturn
-import com.nhaarman.mockitokotlin2.mock
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.mock
-import org.radarbase.jersey.service.managementportal.RadarProjectService
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.mock
 import org.radarbase.upload.Config
-import org.radarbase.upload.doa.SourceTypeRepository
 import org.radarbase.upload.doa.entity.Record
 import org.radarbase.upload.doa.entity.RecordContent
 import java.net.URI
@@ -31,19 +28,21 @@ internal class RecordMapperImplTest {
         }
 
         val mapper = RecordMapperImpl(
-                mock {
-                    on { baseUri } doReturn URI.create("http://localhost/upload/")
-                },
-                mock(SourceTypeRepository::class.java),
-                mock(RadarProjectService::class.java),
-                Config(advertisedBaseUri = URI.create("https://localhost/upload/")))
+            mock {
+                on { baseUri } doReturn URI.create("http://localhost/upload/")
+            },
+            mock(),
+            mock(),
+            Config(advertisedBaseUri = URI.create("https://localhost/upload/")),
+        )
 
         val expected = ContentsDTO(
-                url = "https://localhost/upload/records/1/contents/test%20123%20%281%29.zip",
-                createdDate = Instant.EPOCH,
-                contentType = "application/zip",
-                size = 11L,
-                fileName = "test 123 (1).zip")
+            url = "https://localhost/upload/records/1/contents/test%20123%20%281%29.zip",
+            createdDate = Instant.EPOCH,
+            contentType = "application/zip",
+            size = 11L,
+            fileName = "test 123 (1).zip",
+        )
 
         val actual = mapper.fromContent(content)
 
