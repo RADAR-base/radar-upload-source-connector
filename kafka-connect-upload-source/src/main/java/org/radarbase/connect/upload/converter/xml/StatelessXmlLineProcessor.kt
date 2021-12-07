@@ -32,11 +32,6 @@ open class StatelessXmlLineProcessor {
 
     open val fileNameSuffix: String = ".xml"
 
-    val headerMustMatch: Boolean
-        get() = fileNameSuffixes != listOf(".xml")
-
-    val optional: Boolean = false
-
     open val timeFieldParser: TimeFieldParser = TimeFieldParser.EpochMillisParser()
 
     fun time(line: Map<String, String>): Double = timeFieldParser.time(line)
