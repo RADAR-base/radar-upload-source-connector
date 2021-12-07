@@ -12,11 +12,10 @@ interface TimeFieldParser {
     /** CSV timestamp parser, assuming that the timestamp is provided as milliseconds since the Unix Epoch. */
     class EpochMillisParser(private val fieldName: String = "TIMESTAMP") : TimeFieldParser {
         override fun time(line: Map<String, String>): Double =
-                line.getValue(fieldName).toDouble() / 1000.0
+            timeFromString(line.getValue(fieldName))
 
-        override fun timeFromString(timestamp: String): Double {
-            TODO("Not yet implemented")
-        }
+        override fun timeFromString(timestamp: String): Double =
+            timestamp.toDouble() / 1000.0
     }
 
     /** CSV timestamp parser using given date-time format. */
