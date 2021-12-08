@@ -36,16 +36,16 @@ open class StatelessXmlLineProcessor {
 
     fun time(line: Map<String, String>): Double = timeFieldParser.time(line)
 
-    open fun lineConversion(
+    open fun convertToSingleRecord(
             root: Element,
         timeReceived: Double
     ): TopicData? = null
 
-    open fun lineConversions(
+    open fun convert(
             root: Element,
             timeReceived: Double
     ): Sequence<TopicData> {
-        val conversion = lineConversion(root, timeReceived)
+        val conversion = convertToSingleRecord(root, timeReceived)
         return if (conversion != null) sequenceOf(conversion) else emptySequence()
     }
 
@@ -59,7 +59,7 @@ open class StatelessXmlLineProcessor {
     fun createLineProcessor(
         context: ConverterFactory.ContentsContext
     ): Processor {
-        return Processor(context) { l, t -> lineConversions(l, t) }
+        return Processor(context) { l, t -> convert(l, t) }
     }
 
     fun getTagValue(root: Element, tag: String): String = root.getElementsByTagName(tag).item(0).getTextContent()
