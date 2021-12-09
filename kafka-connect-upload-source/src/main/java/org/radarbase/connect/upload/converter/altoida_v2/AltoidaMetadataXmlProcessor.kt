@@ -2,7 +2,7 @@ package org.radarbase.connect.upload.converter.altoida_v2
 
 import org.radarbase.connect.upload.converter.TimeFieldParser.DateFormatParser.Companion.formatTimeFieldParser
 import org.radarbase.connect.upload.converter.TopicData
-import org.radarbase.connect.upload.converter.xml.StatelessXmlLineProcessor
+import org.radarbase.connect.upload.converter.xml.XmlProcessor
 import org.radarcns.connector.upload.altoida.AltoidaXmlMetadata
 import org.radarcns.connector.upload.altoida.GenderType
 import org.radarcns.connector.upload.altoida.DominantHandType
@@ -11,12 +11,12 @@ import org.w3c.dom.Element
 import org.w3c.dom.Node
 import java.time.Instant
 
-class AltoidaMetadataXmlProcessor : StatelessXmlLineProcessor() {
+class AltoidaMetadataXmlProcessor : XmlProcessor() {
     override val fileNameSuffix: String = "altoida_data.xml"
 
     override val timeFieldParser = defaultTimeFormatter
 
-    override fun lineConversion(root: Element, timeReceived: Double): TopicData? {
+    override fun convertToSingleRecord(root: Element, timeReceived: Double): TopicData? {
         val timestamp = getAttributeValue(root, "datetime", "utc")
         val age = getTagValue(root, "age")
         val yearsOfEducation = getTagValue(root, "years_of_education")

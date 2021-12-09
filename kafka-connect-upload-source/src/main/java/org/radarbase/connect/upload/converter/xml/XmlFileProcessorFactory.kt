@@ -19,12 +19,12 @@ package org.radarbase.connect.upload.converter.xml
 import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
 import org.radarbase.connect.upload.converter.FileProcessorFactory
-import org.radarbase.connect.upload.converter.xml.StatelessXmlLineProcessor
 
 open class XmlFileProcessorFactory(
-    open val xmlProcessorFactories: List<StatelessXmlLineProcessor>,
+    open val xmlProcessorFactories: List<XmlProcessor>,
 ) : FileProcessorFactory {
     override fun matches(contents: ContentsDTO) = xmlProcessorFactories.any { it.matches(contents) }
 
-    override fun createProcessor(record: RecordDTO) = XmlProcessor(record, xmlProcessorFactories)
+    override fun createProcessor(record: RecordDTO) = XmlProcessor()
+
 }
