@@ -53,7 +53,7 @@ open class XmlProcessor: FileProcessor {
 
         val doc: Element = builder.parse(inputStream).documentElement
 
-        convert(doc, context.timeReceived)
+        convert(doc, context.timeReceived).forEach(produce)
     }
 
     fun time(line: Map<String, String>): Double = timeFieldParser.time(line)
