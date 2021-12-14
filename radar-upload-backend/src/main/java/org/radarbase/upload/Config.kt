@@ -19,7 +19,7 @@
 
 package org.radarbase.upload
 
-import org.radarbase.jersey.config.EnhancerFactory
+import org.radarbase.jersey.enhancer.EnhancerFactory
 import org.radarbase.upload.api.SourceTypeDTO
 import org.radarbase.upload.inject.ManagementPortalEnhancerFactory
 import java.net.URI

@@ -22,8 +22,8 @@ package org.radarbase.upload.inject
 import org.radarbase.jersey.auth.AuthConfig
 import org.radarbase.jersey.auth.MPConfig
 import org.radarbase.jersey.config.ConfigLoader
-import org.radarbase.jersey.config.EnhancerFactory
-import org.radarbase.jersey.config.JerseyResourceEnhancer
+import org.radarbase.jersey.enhancer.EnhancerFactory
+import org.radarbase.jersey.enhancer.JerseyResourceEnhancer
 import org.radarbase.jersey.hibernate.config.DatabaseConfig
 import org.radarbase.jersey.hibernate.config.HibernateResourceEnhancer
 import org.radarbase.upload.Config
@@ -65,12 +65,11 @@ class ManagementPortalEnhancerFactory(private val config: Config) : EnhancerFact
         )
         return listOf(
             UploadResourceEnhancer(config),
-            ConfigLoader.Enhancers.radar(authConfig),
-            ConfigLoader.Enhancers.managementPortal(authConfig),
-            ConfigLoader.Enhancers.health,
+            Enhancers.radar(authConfig),
+            Enhancers.managementPortal(authConfig),
+            Enhancers.health,
             HibernateResourceEnhancer(dbConfig),
-            ConfigLoader.Enhancers.generalException,
-            ConfigLoader.Enhancers.httpException,
+            Enhancers.exception,
         )
     }
 }
