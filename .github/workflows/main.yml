@@ -4,9 +4,9 @@ name: Main test
 # Run in master and dev branches and in all pull requests to those branches
 on:
   push:
-    branches: [ master, dev ]
+    branches: [master, dev]
   pull_request:
-    branches: [ master, dev ]
+    branches: [master, dev]
 
 env:
   DOCKER_IMAGE_BACKEND: radarbase/radar-upload-connect-backend
@@ -26,7 +26,7 @@ jobs:
 
       - uses: actions/setup-java@v1
         with:
-          java-version: 11
+          java-version: 17
 
       - name: Cache
         uses: actions/cache@v2.0.0
@@ -185,7 +185,7 @@ jobs:
           docker image inspect ${{ env.DOCKER_IMAGE_BACKEND }}:${{ steps.docker_meta_backend.outputs.version }}
           docker image inspect ${{ env.DOCKER_IMAGE_CONNECTOR }}:${{ steps.docker_meta_connector.outputs.version }}
           docker image inspect ${{ env.DOCKER_IMAGE_FRONTEND }}:${{ steps.docker_meta_frontend.outputs.version }}
-            
+
       - name: Check backend docker image
         run: >
           docker run --rm ${{ env.DOCKER_IMAGE_BACKEND }}:${{ steps.docker_meta_backend.outputs.version }} curl --help

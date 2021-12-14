@@ -51,6 +51,8 @@ internal class SourceTypeRepositoryImplTest {
     private lateinit var sourceTypeMapper: SourceTypeMapper
     private lateinit var entityManager: EntityManager
 
+    private lateinit var closeable: AutoCloseable
+
     @TempDir
     lateinit var tempDir: Path
 
@@ -59,7 +61,8 @@ internal class SourceTypeRepositoryImplTest {
 
     @BeforeEach
     fun setUp() {
-        MockitoAnnotations.initMocks(this)
+        closeable = MockitoAnnotations.openMocks(this)
+
         val config = DatabaseConfig(
                 managedClasses = listOf(
                         Record::class.jvmName,
@@ -86,6 +89,7 @@ internal class SourceTypeRepositoryImplTest {
     fun tearDown() {
         doaEMFFactory.dispose(doaEMF)
         entityManager.close()
+        closeable.close()
     }
 
     @Test
