@@ -4,8 +4,10 @@ import org.radarbase.connect.upload.converter.TimeFieldParser.DateFormatParser.C
 import org.radarbase.connect.upload.converter.TopicData
 import org.radarbase.connect.upload.converter.xml.XmlProcessor
 import org.radarcns.connector.upload.altoida.AltoidaXmlMetadata
-import org.radarcns.connector.upload.altoida.GenderType
+import org.radarcns.connector.upload.altoida.DeviceType
 import org.radarcns.connector.upload.altoida.DominantHandType
+import org.radarcns.connector.upload.altoida.GenderType
+import org.radarcns.connector.upload.altoida.OSType
 import org.w3c.dom.Document
 import org.w3c.dom.Element
 import org.w3c.dom.Node
