@@ -32,10 +32,10 @@ class AltoidaMotorBubbleCsvProcessor : StatelessCsvLineProcessor() {
     override fun lineConversion(
             line: Map<String, String>,
             timeReceived: Double
-    ) = TopicData("connect_upload_altoida_acceleration", AltoidaMotorBubble(
+    ) = TopicData("connect_upload_altoida_motor_bubble", AltoidaMotorBubble(
             time(line),
             timeReceived,
-            line.getValue("X").toFloat(),
-            line.getValue("Y").toFloat()))
+            line.getValue("X").toDouble(),
+            line.getValue("Y").toDouble()))
 
 }

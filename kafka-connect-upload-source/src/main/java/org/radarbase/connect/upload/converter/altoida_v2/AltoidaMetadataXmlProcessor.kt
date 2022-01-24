@@ -18,8 +18,8 @@ class AltoidaMetadataXmlProcessor : XmlProcessor() {
 
     override fun convertToSingleRecord(root: Element, timeReceived: Double): TopicData? {
         val timestamp = getAttributeValue(root, "datetime", "utc")
-        val age = getTagValue(root, "age")
-        val yearsOfEducation = getTagValue(root, "years_of_education")
+        val age = getTagValue(root, "age").toInt()
+        val yearsOfEducation = getTagValue(root, "years_of_education").toInt()
         val gender = getTagValue(root, "gender").toGender()
         val dominantHand = getTagValue(root, "dominant_hand").toDominantHand()
 
@@ -50,15 +50,15 @@ class AltoidaMetadataXmlProcessor : XmlProcessor() {
                 gender,
                 dominantHand,
                 applicationVersion,
-                deviceType,
+                deviceType.toDeviceType(),
                 deviceDescription,
-                osType,
+                osType.toOsType(),
                 osVersion,
-                displayPpi,
-                displayWidthPixels,
-                displayHeightPixels,
-                displayWidthCm,
-                displayHeightCm)
+                displayPpi.toDouble(),
+                displayWidthPixels.toDouble(),
+                displayHeightPixels.toDouble(),
+                displayWidthCm.toDouble(),
+                displayHeightCm.toDouble())
         )
     }
 
@@ -80,6 +80,23 @@ class AltoidaMetadataXmlProcessor : XmlProcessor() {
         }
     }
 
+    private fun String.toDeviceType() : DeviceType {
+        return when (this) {
+            "phone" -> DeviceType.PHONE
+            "tablet" -> DeviceType.TABLET
+            "other" -> DeviceType.OTHER
+            else -> DeviceType.UNKNOWN
+        }
+    }
+
+    private fun String.toOsType() : OSType {
+        return when (this) {
+            "iOS" -> OSType.IOS
+            "android" -> OSType.ANDROID
+            "other" -> OSType.OTHER
+            else -> OSType.UNKNOWN
+        }
+    }
 
     companion object {
         private const val defaultTimeFormat = "yyyy-MM-dd HH:mm:ss"
