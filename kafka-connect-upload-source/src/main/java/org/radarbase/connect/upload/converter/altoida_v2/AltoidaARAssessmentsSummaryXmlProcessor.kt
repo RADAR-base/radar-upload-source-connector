@@ -17,7 +17,6 @@ class AltoidaARAssessmentsSummaryXmlProcessor : XmlNodeProcessorFactory() {
         val objectName = getAttributeValueFromElement(root, "object_name")
 
         return TopicData("connect_upload_altoida_ar_assessment", AltoidaAssessmentsSummary(
-                timeFieldParser.timeFromString(timestamp),
                 timeReceived,
                 assessmentName,
                 timeFieldParser.timeFromString(timestamp),

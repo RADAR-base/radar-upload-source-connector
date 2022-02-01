@@ -13,20 +13,27 @@ open class AltoidaTestEventXmlProcessor: XmlNodeProcessorFactory() {
     override fun convertToSingleRecord(root: Element, timeReceived: Double, assessmentName: String?): TopicData? {
         val parent = root.parentNode.parentNode as Element
         val assessmentTimestamp = getAttributeValueFromElement(parent, "start_ts")
-        val assessmentName = getAttributeValueFromElement(parent, "xsi:type")
+        val newAssessmentName = getAssessmentName(parent, assessmentName)
         val eventType = root.tagName
-        val timestamp = getAttributeValueFromElement(root, "ts")
+        val time = getAttributeValueFromElement(root, "ts")
         val objectName = getObjectName(root, assessmentName)
         val location = getAttributeValueFromElement(root, "location").toLocation()
 
     return TopicData("connect_upload_altoida_test_event", AltoidaAssessmentEvent(
-            assessmentName,
+            timeFieldParser.timeFromString(time),
+            newAssessmentName,
             timeFieldParser.timeFromString(assessmentTimestamp),
             eventType,
-            timeFieldParser.timeFromString(timestamp),
             objectName,
             location
         ))
+    }
+
+    fun getAssessmentName(root: Element, assessmentName: String?): String? {
+        return when (assessmentName) {
+            "ARTest" -> "ARTest_" + root.tagName
+            else -> assessmentName
+        }
     }
 
     fun getObjectName(root: Element, assessmentName: String?): String? {
