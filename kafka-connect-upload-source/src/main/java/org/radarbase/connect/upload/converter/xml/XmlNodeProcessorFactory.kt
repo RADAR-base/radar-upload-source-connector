@@ -23,7 +23,7 @@ import org.radarbase.connect.upload.converter.TopicData
 import org.w3c.dom.Element
 
 /**
- * Processor for processing single lines of CSV file.
+ * Processor for processing single nodes/elements of an XML file.
  */
 abstract class XmlNodeProcessorFactory {
     val fileNameSuffixes: List<String>
