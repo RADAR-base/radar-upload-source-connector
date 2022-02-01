@@ -17,21 +17,23 @@
 package org.radarbase.connect.upload.converter.xml
 
 import org.radarbase.connect.upload.api.ContentsDTO
+import org.radarbase.connect.upload.api.RecordDTO
 import org.radarbase.connect.upload.converter.ConverterFactory
 import org.radarbase.connect.upload.converter.FileProcessor
 import org.radarbase.connect.upload.converter.TimeFieldParser
 import org.radarbase.connect.upload.converter.TopicData
-import org.radarbase.connect.upload.exception.InvalidFormatException
-import org.w3c.dom.Document
 import org.w3c.dom.Element
 import java.io.IOException
 import java.io.InputStream
 import javax.xml.parsers.DocumentBuilderFactory
 
 /**
- * Simple Processor for one line to one record of a single topic conversion.
+ * Base class to process XML files with multiple possible per-node/tag processors.
  */
-open class XmlProcessor: FileProcessor {
+open class XmlProcessor(
+        private val record: RecordDTO? = null,
+        private val processorFactories: List<XmlNodeProcessorFactory>? = emptyList(),
+): FileProcessor {
     val fileNameSuffixes: List<String>
         get() = listOf(fileNameSuffix)
 
@@ -52,46 +54,50 @@ open class XmlProcessor: FileProcessor {
         }
 
         val doc: Element = builder.parse(inputStream).documentElement
+        val processors = processorFactories!!.filter { it.matches(context.contents) }.createNodeProcessors(context)
+        val topicDataList = mutableListOf<TopicData>()
 
-        convert(doc, context.timeReceived).forEach(produce)
-    }
+        processXml(doc, topicDataList, context, processors, "")
 
-    fun time(line: Map<String, String>): Double = timeFieldParser.time(line)
-
-    open fun convertToSingleRecord(
-            root: Element,
-        timeReceived: Double
-    ): TopicData? = null
-
-    open fun convert(
-            root: Element,
-            timeReceived: Double
-    ): Sequence<TopicData> {
-        val conversion = convertToSingleRecord(root, timeReceived)
-        return if (conversion != null) sequenceOf(conversion) else emptySequence()
+        topicDataList.forEach(produce)
     }
 
     /**
-     * Whether the file contents matches this CSV line processor.
+     * Recursively traverses the xml nodes and converts each node if processor (that matches node name) exists.
+     */
+    open fun processXml(root: Element, list: MutableList<TopicData>, context: ConverterFactory.ContentsContext, contentProcessorsFactories: List<XmlNodeProcessorFactory.XmlNodeProcessor>, metadata: String) {
+        val children = root.childNodes
+        for (i in 0 until children.length) {
+            var n = children.item(i)
+            if (n.hasChildNodes()) {
+                n = n as Element
+                val nodeName = n.nodeName
+                val processor = contentProcessorsFactories.firstOrNull { it.matches(nodeName) }
+                if (processor != null) {
+                    val topicData = processor.convertToRecord(n, context.timeReceived)
+                    list.addAll(topicData)
+                }
+                processXml(n, list, context, contentProcessorsFactories, metadata)
+            }
+        }
+    }
+
+
+    fun time(line: Map<String, String>): Double = timeFieldParser.time(line)
+
+    /**
+     * Whether the file contents matches this xml processor.
      */
     fun matches(contents: ContentsDTO) = fileNameSuffixes.any {
         contents.fileName.endsWith(it, ignoreCase = true)
     }
 
-    fun getTagValue(root: Element, tag: String): String = root.getElementsByTagName(tag).item(0).getTextContent()
+    private fun List<XmlNodeProcessorFactory>.createNodeProcessors(
+            context: ConverterFactory.ContentsContext,
+    ): List<XmlNodeProcessorFactory.XmlNodeProcessor> {
+        val processors = this.map { it.createNodeProcessor(context) }
 
-    fun getAttributeValue(root: Element, tag: String, attribute: String): String = (root.getElementsByTagName(tag).item(0) as Element).getAttribute(attribute)
-
-    fun getAttributeValueFromElement(element: Element, attribute: String): String = element.getAttribute(attribute)
-
-    fun getElementFromTagList(root: Element, tagList: List<String>): Element {
-        // NOTE: This is assuming tags in each tree are unique
-        // The tagList represents the branch leading to required element
-
-        var currentElement: Element = root
-        tagList.forEach { tag -> currentElement = currentElement.getElementsByTagName(tag).item(0) as Element }
-
-        return currentElement
+        return processors
     }
 
 }
