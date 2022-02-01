@@ -36,7 +36,7 @@ class AltoidaDomainResultProcessor : StatelessCsvLineProcessor() {
                     line.getValue("DOMAINPERCENTILE_PLANNING").toFloat(),
                     line.getValue("DOMAINPERCENTILE_PROSPECTIVEMEMORY").toFloat(),
                     line.getValue("DOMAINPERCENTILE_SPATIALMEMORY").toFloat(),
-                    line.getValue("DOMAINPERCENTILE_EYEMOVEMENT").toFloat(),
-                    line.getValue("DOMAINPERCENTILE_SPEECH").toFloat()
+                    null,
+                    null
             ))
 }
