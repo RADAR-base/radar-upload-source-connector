@@ -26,14 +26,14 @@ import org.w3c.dom.Element
  */
 open class AltoidaXmlProcessor(
         private val record: RecordDTO? = null,
-        private val processorFactories: List<XmlNodeProcessorFactory>? = emptyList(),
+        private val processorFactories: List<XmlNodeProcessorFactory>,
 ): XmlProcessor(record, processorFactories) {
 
     /**
      * Recursively traverses the xml nodes and converts each node if processor (that matches node name) exists.
      * In addition to similar base class method, this extracts the assessment name that corresponds to the tag.
      */
-    override fun processXml(root: Element, list: MutableList<TopicData>, context: ConverterFactory.ContentsContext, contentProcessorsFactories: List<XmlNodeProcessorFactory.XmlNodeProcessor>, assessmentName: String) {
+    override fun processXml(root: Element, context: ConverterFactory.ContentsContext, contentProcessorsFactories: List<XmlNodeProcessorFactory.XmlNodeProcessor>, assessmentName: String, produce: (TopicData) -> Unit) {
         val children = root.childNodes
         for (i in 0 until children.length) {
             var n = children.item(i)
@@ -46,11 +46,11 @@ open class AltoidaXmlProcessor(
                     updatedAssessmentName = if (name.isNullOrEmpty()) updatedAssessmentName else name
                 }
                 val processor = contentProcessorsFactories.firstOrNull { it.matches(nodeName) }
-                if (processor != null) {
-                    val topicData = processor.convertToRecord(n, context.timeReceived)
-                    list.addAll(topicData)
+                processor?.let {
+                    processor.convertToRecord(n, context.timeReceived, updatedAssessmentName).forEach(produce)
                 }
-                processXml(n, list, context, contentProcessorsFactories, updatedAssessmentName)
+
+                processXml(n, context, contentProcessorsFactories, updatedAssessmentName, produce)
             }
         }
     }

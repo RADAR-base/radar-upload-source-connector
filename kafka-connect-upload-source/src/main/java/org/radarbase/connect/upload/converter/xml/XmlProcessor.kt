@@ -32,7 +32,7 @@ import javax.xml.parsers.DocumentBuilderFactory
  */
 open class XmlProcessor(
         private val record: RecordDTO? = null,
-        private val processorFactories: List<XmlNodeProcessorFactory>? = emptyList(),
+        private val processorFactories: List<XmlNodeProcessorFactory>,
 ): FileProcessor {
     val fileNameSuffixes: List<String>
         get() = listOf(fileNameSuffix)
@@ -54,18 +54,15 @@ open class XmlProcessor(
         }
 
         val doc: Element = builder.parse(inputStream).documentElement
-        val processors = processorFactories!!.filter { it.matches(context.contents) }.createNodeProcessors(context)
-        val topicDataList = mutableListOf<TopicData>()
+        val processors = processorFactories.filter { it.matches(context.contents) }.createNodeProcessors(context)
 
-        processXml(doc, topicDataList, context, processors, "")
-
-        topicDataList.forEach(produce)
+        processXml(doc, context, processors, "", produce)
     }
 
     /**
      * Recursively traverses the xml nodes and converts each node if processor (that matches node name) exists.
      */
-    open fun processXml(root: Element, list: MutableList<TopicData>, context: ConverterFactory.ContentsContext, contentProcessorsFactories: List<XmlNodeProcessorFactory.XmlNodeProcessor>, metadata: String) {
+    open fun processXml(root: Element, context: ConverterFactory.ContentsContext, contentProcessorsFactories: List<XmlNodeProcessorFactory.XmlNodeProcessor>, metadata: String, produce: (TopicData) -> Unit) {
         val children = root.childNodes
         for (i in 0 until children.length) {
             var n = children.item(i)
@@ -73,11 +70,9 @@ open class XmlProcessor(
                 n = n as Element
                 val nodeName = n.nodeName
                 val processor = contentProcessorsFactories.firstOrNull { it.matches(nodeName) }
-                if (processor != null) {
-                    val topicData = processor.convertToRecord(n, context.timeReceived)
-                    list.addAll(topicData)
-                }
-                processXml(n, list, context, contentProcessorsFactories, metadata)
+                processor?.let { processor.convertToRecord(n, context.timeReceived, metadata).forEach(produce) }
+
+                processXml(n, context, contentProcessorsFactories, metadata, produce)
             }
         }
     }
