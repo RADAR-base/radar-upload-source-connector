@@ -2,23 +2,22 @@ package org.radarbase.connect.upload.converter.altoida_v2
 
 import org.radarbase.connect.upload.converter.TimeFieldParser.DateFormatParser.Companion.formatTimeFieldParser
 import org.radarbase.connect.upload.converter.TopicData
-import org.radarbase.connect.upload.converter.xml.XmlProcessor
+import org.radarbase.connect.upload.converter.xml.XmlNodeProcessorFactory
 import org.radarcns.connector.upload.altoida.AltoidaXmlMetadata
 import org.radarcns.connector.upload.altoida.DeviceType
 import org.radarcns.connector.upload.altoida.DominantHandType
 import org.radarcns.connector.upload.altoida.GenderType
 import org.radarcns.connector.upload.altoida.OSType
-import org.w3c.dom.Document
 import org.w3c.dom.Element
-import org.w3c.dom.Node
-import java.time.Instant
 
-class AltoidaMetadataXmlProcessor : XmlProcessor() {
+class AltoidaMetadataXmlProcessor : XmlNodeProcessorFactory() {
     override val fileNameSuffix: String = "altoida_data.xml"
 
     override val timeFieldParser = defaultTimeFormatter
 
-    override fun convertToSingleRecord(root: Element, timeReceived: Double): TopicData? {
+    override val nodeName: String = "metadata"
+
+    override fun convertToSingleRecord(root: Element, timeReceived: Double, assessmentName: String?): TopicData? {
         val timestamp = getAttributeValue(root, "datetime", "utc")
         val age = getTagValue(root, "age").toInt()
         val yearsOfEducation = getTagValue(root, "years_of_education").toInt()
@@ -33,16 +32,16 @@ class AltoidaMetadataXmlProcessor : XmlProcessor() {
         val displayPpi = getAttributeValue(root, "display", "ppi")
 
         val displayWidthPixelsList = listOf("display", "size", "width", "pixels")
-        val displayWidthPixels =  getAttributeValueFromElement(getElementFromTagList(root, displayWidthPixelsList), "value")
+        val displayWidthPixels =  getAttributeValueFromElement(getSingleElementFromTagList(root, displayWidthPixelsList), "value")
 
         val displayHeightPixelsList = listOf("display", "size", "height", "pixels")
-        val displayHeightPixels = getAttributeValueFromElement(getElementFromTagList(root, displayHeightPixelsList), "value")
+        val displayHeightPixels = getAttributeValueFromElement(getSingleElementFromTagList(root, displayHeightPixelsList), "value")
 
         val displayWidthCmList = listOf("display", "size", "height", "centimeters")
-        val displayWidthCm = getAttributeValueFromElement(getElementFromTagList(root, displayWidthCmList), "value")
+        val displayWidthCm = getAttributeValueFromElement(getSingleElementFromTagList(root, displayWidthCmList), "value")
 
         val displayHeightCmList = listOf("display", "size", "height", "centimeters")
-        val displayHeightCm = getAttributeValueFromElement(getElementFromTagList(root, displayHeightCmList), "value")
+        val displayHeightCm = getAttributeValueFromElement(getSingleElementFromTagList(root, displayHeightCmList), "value")
 
         return TopicData("connect_upload_altoida_xml_metadata", AltoidaXmlMetadata(
                 timeFieldParser.timeFromString(timestamp),
@@ -101,7 +100,7 @@ class AltoidaMetadataXmlProcessor : XmlProcessor() {
     }
 
     companion object {
-        private const val defaultTimeFormat = "yyyy-MM-dd HH:mm:ss"
+        private const val defaultTimeFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'"
         val defaultTimeFormatter = defaultTimeFormat.formatTimeFieldParser()
     }
 }

@@ -33,7 +33,6 @@ import org.radarbase.connect.upload.converter.altoida.summary.*
 import org.radarbase.connect.upload.converter.altoida_v2.summary.AltoidaDomainResultProcessor
 import org.radarbase.connect.upload.converter.altoida_v2.summary.AltoidaSummaryProcessor
 import org.radarbase.connect.upload.converter.csv.CsvFileProcessorFactory
-import org.radarbase.connect.upload.converter.xml.XmlFileProcessorFactory
 import org.radarbase.connect.upload.converter.zip.ZipFileProcessorFactory
 import org.radarbase.connect.upload.logging.LogRepository
 
@@ -54,13 +53,6 @@ class AltoidaConverterFactory : ConverterFactory {
             connectorConfig: SourceTypeDTO,
             logRepository: LogRepository
     ): List<FileProcessorFactory> = listOf(
-            // Process xml file
-            XmlFileProcessorFactory(
-                    xmlProcessorFactories = listOf(
-                            AltoidaMetadataXmlProcessor()
-                    ),
-            ),
-
             // Process export.csv
             CsvFileProcessorFactory(
                     csvProcessorFactories = listOf(
@@ -68,7 +60,7 @@ class AltoidaConverterFactory : ConverterFactory {
                             AltoidaDomainResultProcessor(),
                     ),
             ),
-            // Process zip file with detailed CSV contents
+            // Process zip file with detailed CSV contents and XML file
             ZipFileProcessorFactory(
                     sourceType,
                     zipEntryProcessors = listOf(
@@ -81,8 +73,18 @@ class AltoidaConverterFactory : ConverterFactory {
                                             AltoidaGravityCsvProcessor("gravity_acceleration.csv"),
                                             AltoidaMagneticFieldCsvProcessor("magnetometer.csv"),
                                             AltoidaPathCsvProcessor("ar_path.csv"),
-                                            AltoidaMotorBubbleCsvProcessor(),
                                             AltoidaTouchScreenCsvProcessor("touch.csv"),
+                                            AltoidaMotorBubbleCsvProcessor(),
+                                            )
+                            ),
+                            AltoidaXmlFileProcessorFactory(
+                                    xmlProcessorFactories = listOf(
+                                            AltoidaAssessmentsSummaryXmlProcessor(),
+                                            AltoidaTestEventXmlProcessor(),
+                                            AltoidaARAssessmentsSummaryXmlProcessor(),
+                                            AltoidaARTestQuestionnaireXmlProcessor(),
+                                            AltoidaScreenElementXmlProcessor(),
+                                            AltoidaMetadataXmlProcessor()
                                     )
                             )
                     ),

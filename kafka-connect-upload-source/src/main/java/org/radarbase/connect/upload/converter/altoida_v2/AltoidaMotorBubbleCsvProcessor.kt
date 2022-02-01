@@ -24,7 +24,7 @@ import org.radarbase.connect.upload.converter.TopicData
 import org.radarcns.connector.upload.altoida.AltoidaMotorBubble
 
 
-class AltoidaMotorBubbleCsvProcessor : StatelessCsvLineProcessor() {
+class AltoidaMotorBubbleCsvProcessor() : StatelessCsvLineProcessor() {
     override val fileNameSuffix: String = "motor_bubble.csv"
 
     override val header: List<String> = listOf("TIMESTAMP", "X", "Y")
