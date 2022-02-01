@@ -16,8 +16,8 @@ open class AltoidaScreenElementXmlProcessor: XmlNodeProcessorFactory() {
         val assessmentName = getAttributeValueFromElement(parent, "xsi:type")
         val elementName = root.tagName
         val id = getAttributeValueFromElement(root, "circle_id")
-        val width = null
-        val height = null
+        val width = getAttributeValue(root, "width", "value")
+        val height = getAttributeValue(root, "height", "value")
         val radius = getAttributeValue(root, "radius", "value")
         val alpha = getAttributeValue(root, "color", "alpha")
         val red = getAttributeValue(root, "color", "r")
