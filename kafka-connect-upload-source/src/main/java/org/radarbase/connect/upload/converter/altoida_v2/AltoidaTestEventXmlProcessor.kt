@@ -31,7 +31,6 @@ open class AltoidaTestEventXmlProcessor: XmlNodeProcessorFactory() {
 
     fun getObjectName(root: Element, assessmentName: String?): String? {
         return when (assessmentName) {
-            null -> null
             "ContrastVisionTest" -> "circle_id_" + getAttributeValueFromElement(root, "circle_id")
             else -> getAttributeValueFromElement(root, "object_name")
         }
