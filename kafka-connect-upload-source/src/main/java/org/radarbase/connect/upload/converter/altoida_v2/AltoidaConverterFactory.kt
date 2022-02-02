@@ -29,8 +29,8 @@ import org.radarbase.connect.upload.converter.altoida.AltoidaGravityCsvProcessor
 import org.radarbase.connect.upload.converter.altoida.AltoidaMagneticFieldCsvProcessor
 import org.radarbase.connect.upload.converter.altoida.AltoidaPathCsvProcessor
 import org.radarbase.connect.upload.converter.altoida.AltoidaTouchScreenCsvProcessor
-import org.radarbase.connect.upload.converter.altoida.summary.*
 import org.radarbase.connect.upload.converter.altoida_v2.summary.AltoidaDomainResultProcessor
+import org.radarbase.connect.upload.converter.altoida_v2.summary.AltoidaSummaryCsvPreProcessorFactory
 import org.radarbase.connect.upload.converter.altoida_v2.summary.AltoidaSummaryProcessor
 import org.radarbase.connect.upload.converter.csv.CsvFileProcessorFactory
 import org.radarbase.connect.upload.converter.zip.ZipFileProcessorFactory

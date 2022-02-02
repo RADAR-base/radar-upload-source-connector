@@ -25,7 +25,7 @@ class AltoidaSummaryProcessor : StatelessCsvLineProcessor() {
                     line["LABEL"],
                     null,
                     null,
-                    null,
+                    GenderType.UNKNOWN,
                     line.getValue("CLASS").toInt().classify(),
                     line.getValue("NMI").toDouble())
             )
@@ -49,7 +49,7 @@ class AltoidaSummaryProcessor : StatelessCsvLineProcessor() {
     }
 
     companion object {
-        private const val defaultTimeFormat = "yyyy-MM-dd HH:mm:ss"
+        private const val defaultTimeFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'"
         val defaultTimeFormatter = defaultTimeFormat.formatTimeFieldParser()
     }
 }
