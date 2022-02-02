@@ -23,7 +23,7 @@ import org.mockito.kotlin.mock
 import org.radarbase.auth.token.RadarToken
 import org.radarbase.jersey.auth.Auth
 import org.radarbase.jersey.config.ConfigLoader
-import org.radarbase.jersey.config.UtilityResourceEnhancer
+import org.radarbase.jersey.enhancer.MapperResourceEnhancer
 import org.radarbase.jersey.hibernate.config.DatabaseConfig
 import org.radarbase.upload.Config
 import org.radarbase.upload.api.RecordDTO
@@ -48,7 +48,7 @@ internal class RecordResourceTest: JerseyTest() {
         super.setUp()
         assertThat(client, not(nullValue()))
         client.register(ContextResolver {
-            UtilityResourceEnhancer().mapper
+            MapperResourceEnhancer().mapper
         })
     }
 
