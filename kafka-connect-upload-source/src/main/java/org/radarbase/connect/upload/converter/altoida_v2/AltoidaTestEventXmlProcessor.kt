@@ -30,8 +30,12 @@ open class AltoidaTestEventXmlProcessor: XmlNodeProcessorFactory() {
     }
 
     fun getAssessmentName(root: Element, assessmentName: String?): String? {
+        val objectName = root.getAttribute("object_name")
         return when (assessmentName) {
-            "ARTest" -> "ARTest_" + root.tagName
+            "ARTest" -> {
+                val arName = "ARTest_" + root.tagName
+                if (objectName.length > 0) arName + "_" + objectName else arName
+            }
             else -> assessmentName
         }
     }

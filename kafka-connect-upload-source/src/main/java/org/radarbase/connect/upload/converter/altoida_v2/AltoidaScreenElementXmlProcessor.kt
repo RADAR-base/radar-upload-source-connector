@@ -11,30 +11,21 @@ open class AltoidaScreenElementXmlProcessor: XmlNodeProcessorFactory() {
     override val nodeName: String = "screen_elements"
 
     override fun convertToSingleRecord(root: Element, timeReceived: Double, assessmentName: String?): TopicData? {
-        val parent = root.parentNode.parentNode.parentNode as Element
+        val parent = (if (assessmentName == "ContrastVisionTest") root.parentNode.parentNode.parentNode else root.parentNode.parentNode) as Element
         val assessmentTimestamp = getAttributeValueFromElement(parent, "start_ts")
         val newAssessmentName = getAssessmentName(parent, assessmentName)
         val elementName = root.tagName
-        val xCenterOffset = getAttributeValue(root, "x_center_offset", "value").toDouble()
-        val yCenterOffset = getAttributeValue(root, "y_center_offset", "value").toDouble()
+        val xCenterOffset = getAttributeValue(root, "x_center_offset", "value").toDoubleOrNull()
+        val yCenterOffset = getAttributeValue(root, "y_center_offset", "value").toDoubleOrNull()
+        val id = getAttributeValueFromElement(root, "circle_id").toIntOrNull()
+        val radius = getAttributeValue(root, "radius", "value").toDoubleOrNull()
+        val alpha = getAttributeValue(root, "color", "alpha").toFloatOrNull()
+        val red = getAttributeValue(root, "color", "r").toFloatOrNull()
+        val green = getAttributeValue(root, "color", "g").toFloatOrNull()
+        val blue = getAttributeValue(root, "color", "b").toFloatOrNull()
+        val width = getAttributeValue(root, "width", "value").toDoubleOrNull()
+        val height = getAttributeValue(root, "height", "value").toDoubleOrNull()
 
-        var id: Int? = null; var width: Double? = null; var height: Double? = null; var radius: Double? = null
-        var alpha: Float? = null; var red: Float? = null; var green: Float? = null; var blue: Float? = null
-
-        when (assessmentName) {
-            "ContrastVisionTest" -> {
-                id = getAttributeValueFromElement(root, "circle_id").toInt()
-                radius = getAttributeValue(root, "radius", "value").toDouble()
-                alpha = getAttributeValue(root, "color", "alpha").toFloat()
-                red = getAttributeValue(root, "color", "r").toFloat()
-                green = getAttributeValue(root, "color", "g").toFloat()
-                blue = getAttributeValue(root, "color", "b").toFloat()
-            }
-            else -> {
-                width = getAttributeValue(root, "width", "value").toDouble()
-                height = getAttributeValue(root, "height", "value").toDouble()
-            }
-        }
 
         return TopicData("connect_upload_altoida_screen_elements", AltoidaTestScreenElement(
                 timeFieldParser.timeFromString(assessmentTimestamp),
@@ -54,8 +45,12 @@ open class AltoidaScreenElementXmlProcessor: XmlNodeProcessorFactory() {
     }
 
     fun getAssessmentName(root: Element, assessmentName: String?): String? {
+        val objectName = root.getAttribute("object_name")
         return when (assessmentName) {
-            "ARTest" -> "ARTest_" + root.tagName
+            "ARTest" -> {
+                val arName = "ARTest_" + root.tagName
+                if (objectName.length > 0) arName + "_" + objectName else arName
+            }
             else -> assessmentName
         }
     }
@@ -68,7 +63,7 @@ open class AltoidaScreenElementXmlProcessor: XmlNodeProcessorFactory() {
         val elements = if (assessmentName == "ContrastVisionTest") root.firstChild.childNodes else root.childNodes
         return ((0 until elements.length)
                 .asSequence()
-                .filter { i -> elements.item(i).hasAttributes() }
+                .filter { i -> elements.item(i).hasChildNodes() }
                 .mapNotNull { i -> convertToSingleRecord(elements.item(i) as Element, timeReceived, assessmentName) })
     }
 
