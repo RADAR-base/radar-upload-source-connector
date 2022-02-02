@@ -63,6 +63,16 @@ class AltoidaMetadataXmlProcessor : XmlNodeProcessorFactory() {
         )
     }
 
+    override fun nodeConversions(
+            root: Element,
+            timeReceived: Double,
+            assessmentName: String?
+    ): Sequence<TopicData> {
+        val conversion = convertToSingleRecord(root, timeReceived, assessmentName)
+        return if (conversion != null) sequenceOf(conversion) else emptySequence()
+    }
+
+
     private fun String.toGender() : GenderType {
         return when (this) {
             "male" -> GenderType.MALE
