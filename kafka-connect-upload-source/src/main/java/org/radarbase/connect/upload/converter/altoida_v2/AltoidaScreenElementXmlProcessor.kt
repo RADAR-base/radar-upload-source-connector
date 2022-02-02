@@ -13,45 +13,63 @@ open class AltoidaScreenElementXmlProcessor: XmlNodeProcessorFactory() {
     override fun convertToSingleRecord(root: Element, timeReceived: Double, assessmentName: String?): TopicData? {
         val parent = root.parentNode.parentNode.parentNode as Element
         val assessmentTimestamp = getAttributeValueFromElement(parent, "start_ts")
-        val assessmentName = getAttributeValueFromElement(parent, "xsi:type")
+        val newAssessmentName = getAssessmentName(parent, assessmentName)
         val elementName = root.tagName
-        val id = getAttributeValueFromElement(root, "circle_id")
-        val width = getAttributeValue(root, "width", "value")
-        val height = getAttributeValue(root, "height", "value")
-        val radius = getAttributeValue(root, "radius", "value")
-        val alpha = getAttributeValue(root, "color", "alpha")
-        val red = getAttributeValue(root, "color", "r")
-        val green = getAttributeValue(root, "color", "g")
-        val blue = getAttributeValue(root, "color", "b")
-        val xCenterOffset = getAttributeValue(root, "x_center_offset", "value")
-        val yCenterOffset = getAttributeValue(root, "x_center_offset", "value")
+        val xCenterOffset = getAttributeValue(root, "x_center_offset", "value").toDouble()
+        val yCenterOffset = getAttributeValue(root, "y_center_offset", "value").toDouble()
+
+        var id: Int? = null; var width: Double? = null; var height: Double? = null; var radius: Double? = null
+        var alpha: Float? = null; var red: Float? = null; var green: Float? = null; var blue: Float? = null
+
+        when (assessmentName) {
+            "ContrastVisionTest" -> {
+                id = getAttributeValueFromElement(root, "circle_id").toInt()
+                radius = getAttributeValue(root, "radius", "value").toDouble()
+                alpha = getAttributeValue(root, "color", "alpha").toFloat()
+                red = getAttributeValue(root, "color", "r").toFloat()
+                green = getAttributeValue(root, "color", "g").toFloat()
+                blue = getAttributeValue(root, "color", "b").toFloat()
+            }
+            else -> {
+                width = getAttributeValue(root, "width", "value").toDouble()
+                height = getAttributeValue(root, "height", "value").toDouble()
+            }
+        }
 
         return TopicData("connect_upload_altoida_screen_elements", AltoidaTestScreenElement(
                 timeFieldParser.timeFromString(assessmentTimestamp),
-                assessmentName,
-                id.toInt(),
+                newAssessmentName,
+                id,
                 elementName,
                 width,
                 height,
-                radius.toDouble(),
-                xCenterOffset.toDouble(),
-                yCenterOffset.toDouble(),
-                alpha.toFloat(),
-                red.toFloat(),
-                green.toFloat(),
-                blue.toFloat()
+                radius,
+                xCenterOffset,
+                yCenterOffset,
+                alpha,
+                red,
+                green,
+                blue
         ))
+    }
+
+    fun getAssessmentName(root: Element, assessmentName: String?): String? {
+        return when (assessmentName) {
+            "ARTest" -> "ARTest_" + root.tagName
+            else -> assessmentName
+        }
     }
 
     override fun nodeConversions(
             root: Element,
-            timeReceived: Double
+            timeReceived: Double,
+            assessmentName: String?
     ): Sequence<TopicData> {
-        val elements = if (root.firstChild.nodeName == "contrast_circles") root.firstChild.childNodes else root.childNodes
+        val elements = if (assessmentName == "ContrastVisionTest") root.firstChild.childNodes else root.childNodes
         return ((0 until elements.length)
                 .asSequence()
                 .filter { i -> elements.item(i).hasAttributes() }
-                .mapNotNull { i -> convertToSingleRecord(elements.item(i) as Element, timeReceived) })
+                .mapNotNull { i -> convertToSingleRecord(elements.item(i) as Element, timeReceived, assessmentName) })
     }
 
 }

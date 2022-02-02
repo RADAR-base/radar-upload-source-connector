@@ -21,6 +21,7 @@ import org.radarbase.connect.upload.converter.ConverterFactory
 import org.radarbase.connect.upload.converter.TimeFieldParser
 import org.radarbase.connect.upload.converter.TopicData
 import org.w3c.dom.Element
+import org.w3c.dom.Node
 
 /**
  * Processor for processing single nodes/elements of an XML file.
@@ -48,9 +49,20 @@ abstract class XmlNodeProcessorFactory {
         contents.fileName.endsWith(it, ignoreCase = true)
     }
 
-    fun getTagValue(root: Element, tag: String): String = root.getElementsByTagName(tag).item(0).getTextContent()
+    fun getFirstElementByTagName(root: Element, tag: String): Node? {
+        val elements = root.getElementsByTagName(tag)
+        return elements.item(0)
+    }
 
-    fun getAttributeValue(root: Element, tag: String, attribute: String): String = (root.getElementsByTagName(tag).item(0) as Element).getAttribute(attribute)
+    fun getTagValue(root: Element, tag: String): String {
+        val element = getFirstElementByTagName(root, tag)
+        return if (element != null) element.textContent else ""
+    }
+
+    fun getAttributeValue(root: Element, tag: String, attribute: String): String {
+        val element = (getFirstElementByTagName(root, tag) as Element?)
+        return if  (element != null) element.getAttribute(attribute) else ""
+    }
 
     fun getAttributeValueFromElement(element: Element, attribute: String): String = element.getAttribute(attribute)
 
@@ -68,25 +80,26 @@ abstract class XmlNodeProcessorFactory {
 
     open fun nodeConversions(
             root: Element,
-            timeReceived: Double
+            timeReceived: Double,
+            assessmentName: String?
     ): Sequence<TopicData> {
         val events = root.childNodes
         return ((0 until events.length)
                 .asSequence()
                 .filter { i -> events.item(i).hasAttributes() }
-                .mapNotNull { i -> convertToSingleRecord(events.item(i) as Element, timeReceived) })
+                .mapNotNull { i -> convertToSingleRecord(events.item(i) as Element, timeReceived, assessmentName) })
     }
 
     fun createNodeProcessor(
             context: ConverterFactory.ContentsContext
     ): XmlNodeProcessor {
-        return XmlNodeProcessor(context, nodeName) { l, t -> nodeConversions(l, t) }
+        return XmlNodeProcessor(context, nodeName) { l, t, a -> nodeConversions(l, t, a) }
     }
 
     class XmlNodeProcessor(
             val context: ConverterFactory.ContentsContext,
             val nodeName: String,
-            private val conversion: (node: Element, timeReceived: Double) -> Sequence<TopicData>,
+            private val conversion: (node: Element, timeReceived: Double, assessmentName: String?) -> Sequence<TopicData>,
     ) {
 
         /**
@@ -100,8 +113,9 @@ abstract class XmlNodeProcessorFactory {
         fun convertToRecord(
             node: Element,
             timeReceived: Double,
+            assessmentName: String?
         ): Sequence<TopicData> {
-            return conversion(node, timeReceived)
+            return conversion(node, timeReceived, assessmentName)
         }
     }
 }
