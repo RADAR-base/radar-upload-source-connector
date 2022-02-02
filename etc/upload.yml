@@ -31,6 +31,13 @@ sourceTypes:
       - "application/zip"
     timeRequired: false
     sourceIdRequired: false
+  - name: "altoida_v2"
+    topics:
+      - "connect_upload_altoida_acceleration"
+    contentTypes:
+      - "application/zip"
+    timeRequired: false
+    sourceIdRequired: false
 enableCors: yes
 clientSecret: "secret"
 clientId: "radar_upload_backend"

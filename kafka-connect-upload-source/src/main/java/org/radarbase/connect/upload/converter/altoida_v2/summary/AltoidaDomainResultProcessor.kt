@@ -1,7 +1,8 @@
-package org.radarbase.connect.upload.converter.altoida.summary
+package org.radarbase.connect.upload.converter.altoida_v2.summary
 
 import org.radarbase.connect.upload.converter.StatelessCsvLineProcessor
 import org.radarbase.connect.upload.converter.TimeFieldParser
+import org.radarbase.connect.upload.converter.TimeFieldParser.DateFormatParser.Companion.formatTimeFieldParser
 import org.radarbase.connect.upload.converter.TopicData
 import org.radarbase.connect.upload.converter.altoida.summary.AltoidaSummaryProcessor.Companion.defaultTimeFormatter
 import org.radarcns.connector.upload.altoida.AltoidaDomainResult
@@ -21,7 +22,10 @@ class AltoidaDomainResultProcessor : StatelessCsvLineProcessor() {
             "DOMAINPERCENTILE_VISUALPERCEPTION",
             "DOMAINPERCENTILE_PLANNING",
             "DOMAINPERCENTILE_PROSPECTIVEMEMORY",
-            "DOMAINPERCENTILE_SPATIALMEMORY")
+            "DOMAINPERCENTILE_SPATIALMEMORY",
+            "DOMAINPERCENTILE_EYEMOVEMENT",
+            "DOMAINPERCENTILE_SPEECH"
+            )
 
     override fun lineConversion(line: Map<String, String>, timeReceived: Double) =
             TopicData("connect_upload_altoida_domain_result", AltoidaDomainResult(
@@ -36,7 +40,12 @@ class AltoidaDomainResultProcessor : StatelessCsvLineProcessor() {
                     line.getValue("DOMAINPERCENTILE_PLANNING").toFloat(),
                     line.getValue("DOMAINPERCENTILE_PROSPECTIVEMEMORY").toFloat(),
                     line.getValue("DOMAINPERCENTILE_SPATIALMEMORY").toFloat(),
-                    null,
-                    null
+                    line.getValue("DOMAINPERCENTILE_EYEMOVEMENT").toFloat(),
+                    line.getValue("DOMAINPERCENTILE_SPEECH").toFloat(),
             ))
+
+    companion object {
+        private const val defaultTimeFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'"
+        val defaultTimeFormatter = defaultTimeFormat.formatTimeFieldParser()
+    }
 }
