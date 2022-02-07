@@ -28,7 +28,7 @@ import org.radarbase.upload.logger
 import java.io.IOException
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
-import javax.ws.rs.core.Context
+import jakarta.ws.rs.core.Context
 
 class QueuedCallbackManager(
         @Context val httpClient: OkHttpClient,

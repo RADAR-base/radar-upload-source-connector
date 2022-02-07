@@ -2,7 +2,8 @@ package org.radarbase.upload.inject
 
 import org.glassfish.jersey.internal.inject.AbstractBinder
 import org.radarbase.jersey.config.ConfigLoader
-import org.radarbase.jersey.config.JerseyResourceEnhancer
+import org.radarbase.jersey.enhancer.JerseyResourceEnhancer
+import org.radarbase.jersey.filter.Filters
 import org.radarbase.upload.Config
 import org.radarbase.upload.api.RecordMapper
 import org.radarbase.upload.api.RecordMapperImpl
@@ -14,29 +15,30 @@ import org.radarbase.upload.doa.SourceTypeRepository
 import org.radarbase.upload.doa.SourceTypeRepositoryImpl
 import org.radarbase.upload.dto.CallbackManager
 import org.radarbase.upload.dto.QueuedCallbackManager
-import javax.inject.Singleton
+import jakarta.inject.Singleton
 
 class UploadResourceEnhancer(private val config: Config): JerseyResourceEnhancer {
     override val classes: Array<Class<*>>  get() {
         return if (config.enableCors == true) {
             arrayOf(
-                ConfigLoader.Filters.logResponse,
-                ConfigLoader.Filters.cache,
-                ConfigLoader.Filters.cors,
+                Filters.logResponse,
+                Filters.cache,
+                Filters.cors,
             )
         } else {
             arrayOf(
-                ConfigLoader.Filters.logResponse,
-                ConfigLoader.Filters.cache,
+                Filters.logResponse,
+                Filters.cache,
             )
         }
     }
 
     override val packages: Array<String> = arrayOf(
-            "org.radarbase.upload.exception",
-            "org.radarbase.upload.filter",
-            "org.radarbase.upload.lifecycle",
-            "org.radarbase.upload.resource")
+        "org.radarbase.upload.exception",
+        "org.radarbase.upload.filter",
+        "org.radarbase.upload.lifecycle",
+        "org.radarbase.upload.resource"
+    )
 
     override fun AbstractBinder.enhance() {
         // Bind instances. These cannot use any injects themselves

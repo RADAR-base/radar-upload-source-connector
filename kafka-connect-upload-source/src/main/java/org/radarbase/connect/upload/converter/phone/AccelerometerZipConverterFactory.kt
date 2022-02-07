@@ -18,6 +18,9 @@ package org.radarbase.connect.upload.converter.phone
 
 import org.radarbase.connect.upload.api.SourceTypeDTO
 import org.radarbase.connect.upload.converter.*
+import org.radarbase.connect.upload.converter.csv.CsvFileProcessorFactory
+import org.radarbase.connect.upload.converter.zip.ZipFileProcessorFactory
+import org.radarbase.connect.upload.logging.LogRepository
 
 class AccelerometerZipConverterFactory : ConverterFactory {
     override val sourceType: String = "acceleration-zip"

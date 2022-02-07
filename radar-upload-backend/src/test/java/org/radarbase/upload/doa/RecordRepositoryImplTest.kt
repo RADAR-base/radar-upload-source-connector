@@ -19,8 +19,7 @@
 
 package org.radarbase.upload.doa
 
-import com.nhaarman.mockitokotlin2.doReturn
-import com.nhaarman.mockitokotlin2.mock
+import jakarta.inject.Provider
 import org.glassfish.jersey.server.monitoring.ApplicationEvent
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
@@ -31,6 +30,8 @@ import org.junit.jupiter.api.io.TempDir
 import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.MockitoAnnotations
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.mock
 import org.radarbase.jersey.hibernate.DatabaseInitialization
 import org.radarbase.jersey.hibernate.RadarEntityManagerFactoryFactory
 import org.radarbase.jersey.hibernate.config.DatabaseConfig
@@ -41,7 +42,6 @@ import java.io.ByteArrayInputStream
 import java.nio.file.Path
 import java.time.Instant
 import java.time.LocalDateTime
-import javax.inject.Provider
 import javax.persistence.EntityManager
 import javax.persistence.EntityManagerFactory
 import kotlin.reflect.jvm.jvmName
@@ -54,6 +54,8 @@ internal class RecordRepositoryImplTest {
 
     private lateinit var entityManager: EntityManager
 
+    private lateinit var closeable: AutoCloseable
+
     @TempDir
     lateinit var tempDir: Path
 
@@ -62,7 +64,7 @@ internal class RecordRepositoryImplTest {
 
     @BeforeEach
     fun setUp() {
-        MockitoAnnotations.initMocks(this)
+        closeable = MockitoAnnotations.openMocks(this)
 
         val dbConfig = DatabaseConfig(
                 managedClasses = listOf(
@@ -90,6 +92,7 @@ internal class RecordRepositoryImplTest {
     fun tearDown() {
         doaEMFFactory.dispose(doaEMF)
         entityManager.close()
+        closeable.close()
     }
 
     @Test
@@ -121,12 +124,12 @@ internal class RecordRepositoryImplTest {
     }
 
     private fun doCreate() = repository.create(Record().apply {
-            projectId = "p"
-            userId = "u"
-            sourceId = "s"
-            time = LocalDateTime.parse("2019-01-01T00:00:00")
-            timeZoneOffset = 3600
-        }, contents = setOf(ContentsDTO(
+        projectId = "p"
+        userId = "u"
+        sourceId = "s"
+        time = LocalDateTime.parse("2019-01-01T00:00:00")
+        timeZoneOffset = 3600
+    }, contents = setOf(ContentsDTO(
             fileName = "Gibson.mp3",
             contentType = "audio/mp3",
             text = "test")))
@@ -146,9 +149,9 @@ internal class RecordRepositoryImplTest {
         }
 
         val result = repository.create(record, contents = setOf(ContentsDTO(
-            fileName = "Gibson.mp3",
-            contentType = "audio/mp3",
-            text = "test")))
+                fileName = "Gibson.mp3",
+                contentType = "audio/mp3",
+                text = "test")))
 
         assertThat(result.contents, hasSize(1))
 
@@ -198,9 +201,9 @@ internal class RecordRepositoryImplTest {
         }
 
         val result = repository.create(record, contents = setOf(ContentsDTO(
-                    fileName = "Gibson.mp3",
-                    contentType = "audio/mp3",
-                    text = "test")))
+                fileName = "Gibson.mp3",
+                contentType = "audio/mp3",
+                text = "test")))
 
         assertThat(result.contents, hasSize(1))
 

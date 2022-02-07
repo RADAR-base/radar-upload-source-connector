@@ -17,28 +17,40 @@ dependencies {
     api(kotlin("stdlib-jdk8"))
     implementation(kotlin("reflect"))
 
-    implementation("org.radarbase:radar-jersey:${project.extra["radarJerseyVersion"]}") {
+    val radarJerseyVersion: String by project
+    implementation("org.radarbase:radar-jersey:$radarJerseyVersion") {
         exclude("io.swagger.core.v3", "swagger-jaxrs2")
     }
-    implementation("org.radarbase:radar-jersey-hibernate:${project.extra["radarJerseyVersion"]}") {
+    implementation("org.radarbase:radar-jersey-hibernate:$radarJerseyVersion") {
         exclude("io.swagger.core.v3", "swagger-jaxrs2")
     }
 
-    implementation("org.slf4j:slf4j-api:${project.extra["slf4jVersion"]}")
+    val slf4jVersion: String by project
+    implementation("org.slf4j:slf4j-api:$slf4jVersion")
+    val log4j2Version: String by project
+    runtimeOnly("org.apache.logging.log4j:log4j-slf4j-impl:$log4j2Version")
+    runtimeOnly("org.apache.logging.log4j:log4j-api:$log4j2Version")
+    runtimeOnly("org.apache.logging.log4j:log4j-jul:$log4j2Version")
 
-    implementation("com.squareup.okhttp3:okhttp:${project.extra["okhttpVersion"]}")
+    val okhttpVersion: String by project
+    implementation("com.squareup.okhttp3:okhttp:$okhttpVersion")
 
-    runtimeOnly("com.h2database:h2:${project.extra["h2Version"]}")
+    val h2Version: String by project
+    runtimeOnly("com.h2database:h2:$h2Version")
 
-    testImplementation("org.junit.jupiter:junit-jupiter:5.7.0")
-    testImplementation("org.hamcrest:hamcrest-all:1.3")
-    testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
+    val junitVersion: String by project
+    testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")
+    val hamcrestVersion: String by project
+    testImplementation("org.hamcrest:hamcrest:$hamcrestVersion")
+    val mockitoKotlinVersion: String by project
+    testImplementation("org.mockito.kotlin:mockito-kotlin:$mockitoKotlinVersion")
 
-    testImplementation("org.glassfish.jersey.test-framework.providers:jersey-test-framework-provider-grizzly2:${project.extra["jerseyVersion"]}")
+    val jerseyVersion: String by project
+    testImplementation("org.glassfish.jersey.test-framework.providers:jersey-test-framework-provider-grizzly2:$jerseyVersion")
 }
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "11"
+    kotlinOptions.jvmTarget = "17"
 }
 
 allOpen {

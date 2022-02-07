@@ -36,11 +36,11 @@ import java.sql.Blob
 import java.time.Duration
 import java.time.Instant
 import java.util.*
-import javax.inject.Provider
+import jakarta.inject.Provider
 import javax.persistence.EntityManager
 import javax.persistence.LockModeType
 import javax.persistence.PessimisticLockScope
-import javax.ws.rs.core.Context
+import jakarta.ws.rs.core.Context
 import kotlin.collections.HashSet
 import kotlin.streams.toList
 
@@ -286,7 +286,7 @@ class RecordRepositoryImpl(
 
     override fun update(record: Record): Record = transact {
         record.metadata.update()
-        merge<Record>(record)
+        merge(record)
     }
 
     private fun RecordMetadata.update() {
@@ -313,7 +313,7 @@ class RecordRepositoryImpl(
 
                 status = RecordStatus.valueOf(newStatus)
             }
-            message = metadata.message ?: defaultStatusMessage.get(status)
+            message = metadata.message ?: defaultStatusMessage[status]
         }.update()
 
         merge(existingMetadata)
@@ -357,7 +357,7 @@ class RecordRepositoryImpl(
                     ?: throw HttpBadRequestException("unknown_status", "Record status $from is not a known status. Use one of: ${RecordStatus.values().joinToString()}.")
         }
 
-        private val allowedStateTransitions: Map<RecordStatus, Set<RecordStatus>> = EnumMap<RecordStatus, Set<RecordStatus>>(RecordStatus::class.java).apply {   
+        private val allowedStateTransitions: Map<RecordStatus, Set<RecordStatus>> = EnumMap<RecordStatus, Set<RecordStatus>>(RecordStatus::class.java).apply {
             this[RecordStatus.INCOMPLETE] = setOf(RecordStatus.READY, RecordStatus.FAILED)
             this[RecordStatus.READY] = setOf(RecordStatus.QUEUED, RecordStatus.FAILED)
             this[RecordStatus.QUEUED] = setOf(RecordStatus.PROCESSING, RecordStatus.READY, RecordStatus.FAILED)

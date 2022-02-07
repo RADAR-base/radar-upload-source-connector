@@ -56,7 +56,7 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
 
     val oauthClientId: String = getString(UPLOAD_SOURCE_CLIENT_CONFIG)
 
-    val oauthClientSecret: String = getString(UPLOAD_SOURCE_MP_SECRET_CONFIG)
+    val oauthClientSecret: String = getPassword(UPLOAD_SOURCE_MP_SECRET_CONFIG).value()
 
     val tokenRequestUrl: String = getString(UPLOAD_SOURCE_CLIENT_TOKEN_URL_CONFIG)
 
@@ -64,7 +64,7 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
 
     val converterClasses: List<String> = getList(UPLOAD_SOURCE_CONVERTERS_CONFIG)
 
-    val fileUploaderType: UploadType? = UploadType.valueOf(getString(UPLOAD_FILE_UPLOADER_TYPE_CONFIG).toUpperCase())
+    val fileUploaderType: UploadType = UploadType.valueOf(getString(UPLOAD_FILE_UPLOADER_TYPE_CONFIG).uppercase())
 
     val fileUploadConfig: FileUploaderFactory.FileUploaderConfig = FileUploaderFactory.FileUploaderConfig(
         targetEndpoint = getString(UPLOAD_FILE_UPLOADER_TARGET_ENDPOINT_URL_CONFIG),
@@ -207,7 +207,7 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
                     UPLOAD_SOURCE_MP_CLIENT_DISPLAY)
 
                 .define(UPLOAD_SOURCE_MP_SECRET_CONFIG,
-                    ConfigDef.Type.STRING,
+                    ConfigDef.Type.PASSWORD,
                     "",
                     ConfigDef.Importance.HIGH,
                     UPLOAD_SOURCE_MP_SECRET_DOC,

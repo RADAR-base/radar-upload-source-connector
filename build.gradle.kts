@@ -1,42 +1,22 @@
+import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") apply false
+    id("com.github.ben-manes.versions") version "0.39.0"
 }
 
+allprojects {
+    group = "org.radarbase"
+    version = "0.5.10"
+}
 
 subprojects {
-    group = "org.radarbase"
-    version = "0.5.9"
-
-    project.extra.apply {
-        set("kafkaVersion", "2.5.1")
-        set("okhttpVersion", "4.9.0")
-        set("jacksonVersion", "2.11.4")
-        set("jacksonDataVersion", "2.11.4")
-        set("openCsvVersion", "5.4")
-        set("confluentVersion", "5.5.3")
-        set("radarSchemaVersion", "0.5.15")
-        set("slf4jVersion", "1.7.30")
-        set("minioVersion", "7.1.4")
-        set("radarJerseyVersion", "0.4.3")
-        set("radarCommonsVersion", "0.13.0")
-        set("logbackVersion", "1.2.3")
-        set("jerseyVersion", "2.33")
-        set("h2Version", "1.4.200")
-
-        set("junitVersion", "5.6.2")
-        set("mockitoKotlinVersion", "2.2.0")
-        set("mockitoCoreVersion", "3.8.0")
-    }
-
     repositories {
-        jcenter()
+        mavenCentral()
         maven(url = "https://packages.confluent.io/maven/")
-        maven(url = "https://dl.bintray.com/radar-cns/org.radarcns")
-        maven(url = "https://dl.bintray.com/radar-base/org.radarbase")
         maven(url = "https://repo.thehyve.nl/content/repositories/snapshots")
-        maven(url = "https://oss.jfrog.org/artifactory/oss-snapshot-local/")
     }
 
     val kotlinApiVersion: String by project
@@ -48,6 +28,7 @@ subprojects {
                 events("passed", "skipped", "failed")
                 setExceptionFormat("full")
                 showStandardStreams = true
+                exceptionFormat = FULL
             }
         }
 
@@ -70,6 +51,20 @@ subprojects {
     }
 }
 
+val stableVersionRegex = "[0-9,.v-]+(-r)?".toRegex()
+
+fun isNonStable(version: String): Boolean {
+    val stableKeyword = listOf("RELEASE", "FINAL", "GA")
+        .any { version.toUpperCase().contains(it) }
+    return !stableKeyword && !stableVersionRegex.matches(version)
+}
+
+tasks.withType<DependencyUpdatesTask> {
+    rejectVersionIf {
+        isNonStable(candidate.version)
+    }
+}
+
 tasks.wrapper {
-    gradleVersion = "6.8.3"
+    gradleVersion = "7.3.1"
 }

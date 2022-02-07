@@ -14,11 +14,9 @@
  *  limitations under the License.
  */
 
-package org.radarbase.connect.upload.converter
+package org.radarbase.connect.upload.logging
 
-import okio.BufferedSink
 import org.slf4j.Logger
-import java.time.Instant
 
 interface LogRepository {
     /**
@@ -49,31 +47,3 @@ interface LogRepository {
     fun extract(recordId: Long, reset: Boolean = false): Log?
 }
 
-interface RecordLogger {
-    /** Print an info log message. */
-    fun info(logMessage: String)
-    /** Print an debug log message. */
-    fun debug(logMessage: String)
-    /** Print an warn log message. */
-    fun warn(logMessage: String)
-    /** Print an error log message. The stack trace of the exception is included. */
-    fun error(logMessage: String, exe: Throwable? = null)
-}
-
-enum class LogLevel {
-    INFO, DEBUG, WARN, ERROR
-}
-
-data class LogRecord(
-    val logLevel: LogLevel,
-    val message: String,
-    val time: Instant = Instant.now(),
-)
-
-data class Log(val recordId: Long, val records: Collection<LogRecord>) {
-    fun asString(writer: BufferedSink) {
-        records.forEach { log ->
-            writer.writeUtf8("${log.time} - [${log.logLevel}] ${log.message}\n")
-        }
-    }
-}

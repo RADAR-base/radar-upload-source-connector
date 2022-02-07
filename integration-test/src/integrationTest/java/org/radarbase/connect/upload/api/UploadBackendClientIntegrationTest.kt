@@ -27,8 +27,8 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.radarbase.connect.upload.converter.ConverterLogRepository
-import org.radarbase.connect.upload.converter.LogRepository
+import org.radarbase.connect.upload.logging.ConverterLogRepository
+import org.radarbase.connect.upload.logging.LogRepository
 import org.radarbase.connect.upload.converter.phone.AccelerometerConverterFactory
 import org.radarbase.connect.upload.util.TestBase.Companion.baseUri
 import org.radarbase.connect.upload.util.TestBase.Companion.clientCredentialsAuthorizer

@@ -1,4 +1,4 @@
-package org.radarbase.connect.upload.converter
+package org.radarbase.connect.upload.converter.altoida
 
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.greaterThan
@@ -9,7 +9,12 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.mockito.Mockito
 import org.radarbase.connect.upload.api.*
-import org.radarbase.connect.upload.converter.altoida.AltoidaConverterFactory
+import org.radarbase.connect.upload.converter.ConverterFactory
+import org.radarbase.connect.upload.converter.RecordConverter
+import org.radarbase.connect.upload.converter.TopicData
+import org.radarbase.connect.upload.logging.ConverterLogRepository
+import org.radarbase.connect.upload.logging.LogRepository
+import org.radarbase.connect.upload.logging.RecordLogger
 import java.io.File
 import java.time.Instant
 

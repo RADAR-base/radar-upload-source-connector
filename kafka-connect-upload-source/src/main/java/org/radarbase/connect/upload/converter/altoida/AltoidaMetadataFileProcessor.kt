@@ -22,6 +22,7 @@ package org.radarbase.connect.upload.converter.altoida
 import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
 import org.radarbase.connect.upload.converter.ConverterFactory
+import org.radarbase.connect.upload.converter.FileProcessor
 import org.radarbase.connect.upload.converter.FileProcessorFactory
 import org.radarbase.connect.upload.converter.TopicData
 import org.radarcns.connector.upload.altoida.AltoidaMetadata
@@ -32,9 +33,9 @@ class AltoidaMetadataFileProcessor : FileProcessorFactory {
 
     override fun matches(contents: ContentsDTO): Boolean = contents.fileName.endsWith("VERSION.csv")
 
-    override fun createProcessor(record: RecordDTO): FileProcessorFactory.FileProcessor = AltoidaMetadataProcessor()
+    override fun createProcessor(record: RecordDTO): FileProcessor = AltoidaMetadataProcessor()
 
-    private inner class AltoidaMetadataProcessor : FileProcessorFactory.FileProcessor {
+    private inner class AltoidaMetadataProcessor : FileProcessor {
         override fun processData(
             context: ConverterFactory.ContentsContext,
             inputStream: InputStream,

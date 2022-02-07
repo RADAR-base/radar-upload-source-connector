@@ -41,14 +41,14 @@ import java.util.Map;
 public class CwaReader {
 
     /** Wrapped input stream */
-    private InputStream inputStream;
+    private final InputStream inputStream;
 
     /** Block */
-    private CwaBlock currentBlock;
+    private final CwaBlock currentBlock;
 
     private int sessionId = -1;
     private int deviceId = -1;
-    private Map<String, String> annotations = new HashMap<>();
+    private final Map<String, String> annotations = new HashMap<>();
 
     /** @return Device ID */
     public int getDeviceId() {

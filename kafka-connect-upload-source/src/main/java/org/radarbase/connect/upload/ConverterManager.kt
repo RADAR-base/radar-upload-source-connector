@@ -5,8 +5,8 @@ import org.radarbase.connect.upload.api.PollDTO
 import org.radarbase.connect.upload.api.RecordDTO
 import org.radarbase.connect.upload.api.UploadBackendClient
 import org.radarbase.connect.upload.converter.ConverterFactory
-import org.radarbase.connect.upload.converter.LogRepository
-import org.radarbase.connect.upload.converter.RecordLogger
+import org.radarbase.connect.upload.logging.LogRepository
+import org.radarbase.connect.upload.logging.RecordLogger
 import org.radarbase.connect.upload.exception.ConflictException
 import org.radarbase.connect.upload.exception.ConversionFailedException
 import org.radarbase.connect.upload.exception.ConversionTemporarilyFailedException

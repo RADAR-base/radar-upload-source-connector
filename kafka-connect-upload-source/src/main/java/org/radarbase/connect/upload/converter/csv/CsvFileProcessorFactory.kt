@@ -14,10 +14,11 @@
  *  limitations under the License.
  */
 
-package org.radarbase.connect.upload.converter
+package org.radarbase.connect.upload.converter.csv
 
 import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
+import org.radarbase.connect.upload.converter.FileProcessorFactory
 
 open class CsvFileProcessorFactory(
     open val csvProcessorFactories: List<CsvLineProcessorFactory>,

@@ -1,6 +1,6 @@
 {
   "name": "radar-upload-frontend",
-  "version": "0.5.9",
+  "version": "0.5.10",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
@@ -41,7 +41,7 @@
     "sass": "^1.26.10",
     "sass-loader": "^7.1.0",
     "vue-cli-plugin-vuetify": "~2.1.0",
-    "vue-template-compiler": "^2.6.11",
+    "vue-template-compiler": "2.6.13",
     "vuetify-loader": "^1.6.0",
     "vuex-mock-store": "0.0.7"
   }

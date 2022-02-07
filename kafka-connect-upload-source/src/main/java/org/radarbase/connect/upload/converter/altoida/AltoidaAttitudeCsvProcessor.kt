@@ -24,9 +24,7 @@ import org.radarbase.connect.upload.converter.TopicData
 import org.radarcns.connector.upload.altoida.AltoidaAttitude
 
 
-class AltoidaAttitudeCsvProcessor : StatelessCsvLineProcessor() {
-    override val fileNameSuffix: String = "_ATT.csv"
-
+class AltoidaAttitudeCsvProcessor(override val fileNameSuffix: String = "_ATT.csv") : StatelessCsvLineProcessor() {
     override val header: List<String> = listOf("TIMESTAMP", "PITCH", "ROLL", "YAW")
 
     override fun lineConversion(

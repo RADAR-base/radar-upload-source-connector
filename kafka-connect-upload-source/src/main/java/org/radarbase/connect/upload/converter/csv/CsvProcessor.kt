@@ -1,15 +1,17 @@
-package org.radarbase.connect.upload.converter
+package org.radarbase.connect.upload.converter.csv
 
 import com.opencsv.CSVParserBuilder
 import com.opencsv.CSVReader
 import com.opencsv.CSVReaderBuilder
 import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
+import org.radarbase.connect.upload.converter.ConverterFactory
+import org.radarbase.connect.upload.converter.FileProcessor
+import org.radarbase.connect.upload.converter.TopicData
 import org.radarbase.connect.upload.exception.InvalidFormatException
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStream
-import java.util.*
 
 /**
  * Base class to process CSV files with multiple possible per-CSV-line processors.
@@ -17,7 +19,7 @@ import java.util.*
 open class CsvProcessor(
     private val record: RecordDTO,
     private val processorFactories: List<CsvLineProcessorFactory>,
-): FileProcessorFactory.FileProcessor {
+): FileProcessor {
 
     override fun processData(
         context: ConverterFactory.ContentsContext,
@@ -47,7 +49,7 @@ open class CsvProcessor(
         context: ConverterFactory.ContentsContext,
     ) {
         if (contentProcessorsFactories.all { it.optional }) {
-            context.logger.debug("Skipping optional file")
+            context.logger.debug("Skipping optional file ${context.fileName}")
         } else {
             throw IOException("Cannot read empty CSV file ${context.fileName}")
         }
@@ -63,17 +65,18 @@ open class CsvProcessor(
             checkCsvEmpty(contentProcessorsFactories, context)
             return emptySequence()
         }
-        val header = rawHeader.map { it.trim().toUpperCase(Locale.US) }
+        val header = rawHeader.map { it.trim().uppercase() }
 
         val processors = contentProcessorsFactories.createLineProcessors(context, header)
 
         return generateSequence { reader.readNext() }
-            .flatMap { line: Array<String> ->
+            .flatMapIndexed { idx: Int, line: Array<String> ->
                 val lineMap = header.zip(line).toMap()
+                val lineNumber = idx + 2
 
                 processors
                     .asSequence()
-                    .filter { it.isLineValid(header, line) }
+                    .filter { it.isLineValid(header, line, lineNumber) }
                     .flatMap { it.convertToRecord(lineMap, context.timeReceived) }
             }
     }

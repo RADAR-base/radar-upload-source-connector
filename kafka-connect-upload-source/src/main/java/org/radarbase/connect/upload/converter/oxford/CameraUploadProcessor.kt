@@ -3,6 +3,7 @@ package org.radarbase.connect.upload.converter.oxford
 import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
 import org.radarbase.connect.upload.converter.ConverterFactory
+import org.radarbase.connect.upload.converter.FileProcessor
 import org.radarbase.connect.upload.converter.FileProcessorFactory
 import org.radarbase.connect.upload.converter.TopicData
 import org.radarbase.connect.upload.io.FileUploaderFactory
@@ -18,11 +19,11 @@ class CameraUploadProcessor(
 ) : FileProcessorFactory {
     override fun matches(contents: ContentsDTO) = SUFFIX_REGEX.containsMatchIn(contents.fileName)
 
-    override fun createProcessor(record: RecordDTO): FileProcessorFactory.FileProcessor = FileUploadProcessor(record)
+    override fun createProcessor(record: RecordDTO): FileProcessor = FileUploadProcessor(record)
 
     private inner class FileUploadProcessor(
         private val record: RecordDTO,
-    ) : FileProcessorFactory.FileProcessor {
+    ) : FileProcessor {
         override fun processData(
             context: ConverterFactory.ContentsContext,
             inputStream: InputStream,

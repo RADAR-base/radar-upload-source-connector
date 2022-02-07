@@ -30,8 +30,8 @@ import org.radarbase.connect.upload.converter.ConverterFactory.Converter
 import org.radarbase.connect.upload.converter.ConverterFactory.Converter.Companion.END_OF_RECORD_KEY
 import org.radarbase.connect.upload.converter.ConverterFactory.Converter.Companion.RECORD_ID_KEY
 import org.radarbase.connect.upload.converter.ConverterFactory.Converter.Companion.REVISION_KEY
-import org.radarbase.connect.upload.converter.ConverterLogRepository
-import org.radarbase.connect.upload.converter.LogRepository
+import org.radarbase.connect.upload.logging.ConverterLogRepository
+import org.radarbase.connect.upload.logging.LogRepository
 import org.radarbase.connect.upload.util.VersionUtil
 import org.slf4j.LoggerFactory
 import java.time.Duration

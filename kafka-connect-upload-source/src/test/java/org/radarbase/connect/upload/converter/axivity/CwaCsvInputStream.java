@@ -25,7 +25,7 @@
  * CWA Converter
  */
 
-package org.radarbase.connect.upload.converter;
+package org.radarbase.connect.upload.converter.axivity;
 
 import org.radarbase.connect.upload.converter.axivity.newcastle.CwaBlock;
 import org.radarbase.connect.upload.converter.axivity.newcastle.CwaReader;
@@ -81,12 +81,12 @@ import static org.radarbase.connect.upload.converter.axivity.newcastle.CwaBlock.
 public class CwaCsvInputStream extends FilterInputStream {
 
     // Block reader
-    private CwaReader cwaReader;
+    private final CwaReader cwaReader;
 
     // Output buffer
     private final static int MAX_OUT_BUFFER = (CwaBlock.MAX_SAMPLES_PER_BLOCK * 128);
     private ByteBuffer outBuffer;
-    private StringBuilder outputStringBuilder;
+    private final StringBuilder outputStringBuilder;
     public int line;
     private final int firstLine, lineSkip, lineCount, options;
     private short events = 0;

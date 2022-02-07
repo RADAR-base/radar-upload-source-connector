@@ -19,8 +19,6 @@
 
 package org.radarbase.upload.doa
 
-import com.nhaarman.mockitokotlin2.doReturn
-import com.nhaarman.mockitokotlin2.mock
 import org.glassfish.jersey.server.monitoring.ApplicationEvent
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
@@ -39,7 +37,9 @@ import org.radarbase.upload.api.SourceTypeMapper
 import org.radarbase.upload.api.SourceTypeMapperImpl
 import org.radarbase.upload.doa.entity.*
 import java.nio.file.Path
-import javax.inject.Provider
+import jakarta.inject.Provider
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.mock
 import javax.persistence.EntityManager
 import javax.persistence.EntityManagerFactory
 import kotlin.reflect.jvm.jvmName
@@ -51,6 +51,8 @@ internal class SourceTypeRepositoryImplTest {
     private lateinit var sourceTypeMapper: SourceTypeMapper
     private lateinit var entityManager: EntityManager
 
+    private lateinit var closeable: AutoCloseable
+
     @TempDir
     lateinit var tempDir: Path
 
@@ -59,7 +61,8 @@ internal class SourceTypeRepositoryImplTest {
 
     @BeforeEach
     fun setUp() {
-        MockitoAnnotations.initMocks(this)
+        closeable = MockitoAnnotations.openMocks(this)
+
         val config = DatabaseConfig(
                 managedClasses = listOf(
                         Record::class.jvmName,
@@ -86,6 +89,7 @@ internal class SourceTypeRepositoryImplTest {
     fun tearDown() {
         doaEMFFactory.dispose(doaEMF)
         entityManager.close()
+        closeable.close()
     }
 
     @Test

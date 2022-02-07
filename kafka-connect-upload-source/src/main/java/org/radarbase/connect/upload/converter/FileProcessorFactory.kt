@@ -21,7 +21,6 @@ package org.radarbase.connect.upload.converter
 
 import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
-import java.io.InputStream
 
 /**
  * Factory to create processors of single files.
@@ -38,24 +37,4 @@ interface FileProcessorFactory {
      */
     fun createProcessor(record: RecordDTO): FileProcessor
 
-    /** Processor to process a single file in a record. */
-    interface FileProcessor {
-        /**
-         * Process record contents from [context] using [inputStream] and sends the result to [produce].
-         */
-        fun processData(
-            context: ConverterFactory.ContentsContext,
-            inputStream: InputStream,
-            produce: (TopicData) -> Unit
-        )
-
-        /**
-         * Preprocess the [inputStream] of [context] to ensure that the file can be processed by
-         * other processors.
-         */
-        fun preProcessFile(
-            context: ConverterFactory.ContentsContext,
-            inputStream: InputStream,
-        ): InputStream = inputStream
-    }
 }

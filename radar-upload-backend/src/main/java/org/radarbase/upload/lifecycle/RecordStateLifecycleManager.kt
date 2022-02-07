@@ -14,8 +14,8 @@ import java.util.concurrent.Future
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 import javax.persistence.EntityManagerFactory
-import javax.ws.rs.core.Context
-import javax.ws.rs.ext.Provider
+import jakarta.ws.rs.core.Context
+import jakarta.ws.rs.ext.Provider
 
 @Provider
 class RecordStateLifecycleManager(
@@ -28,13 +28,12 @@ class RecordStateLifecycleManager(
     init {
         val defaultStaleProcessingAge: Duration = Duration.ofMinutes(config.resetProcessingStatusTimeoutMin)
         staleProcessingAge = config.sourceTypes
-                ?.map { source ->
-                    val age = source.resetProcessingStatusTimeoutMin?.let { Duration.ofMinutes(it) }
-                            ?: defaultStaleProcessingAge
-                    source.name to (age to Any())
-                }
-                ?.toMap()
-                ?: mapOf()
+            ?.associate { source ->
+                val age = source.resetProcessingStatusTimeoutMin?.let { Duration.ofMinutes(it) }
+                    ?: defaultStaleProcessingAge
+                source.name to (age to Any())
+            }
+            ?: mapOf()
     }
 
     private var checkTask: List<Future<*>>? = null
@@ -72,7 +71,7 @@ class RecordStateLifecycleManager(
     private inline fun <T> useRecordRepository(method: (RecordRepository) -> T): T {
         val entityManager = entityManagerFactory.createEntityManager()
         return try {
-            method(RecordRepositoryImpl(javax.inject.Provider { entityManager }))
+            method(RecordRepositoryImpl { entityManager })
         } finally {
             entityManager.close()
         }

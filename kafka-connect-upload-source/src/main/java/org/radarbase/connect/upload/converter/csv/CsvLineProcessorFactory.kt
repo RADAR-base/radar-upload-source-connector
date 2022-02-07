@@ -14,9 +14,11 @@
  *  limitations under the License.
  */
 
-package org.radarbase.connect.upload.converter
+package org.radarbase.connect.upload.converter.csv
 
 import org.radarbase.connect.upload.api.ContentsDTO
+import org.radarbase.connect.upload.converter.ConverterFactory
+import org.radarbase.connect.upload.converter.TopicData
 
 /**
  * Processor for processing single lines of CSV file.
@@ -58,26 +60,28 @@ interface CsvLineProcessorFactory {
     fun createLineProcessor(context: ConverterFactory.ContentsContext): CsvLineProcessor
 
     interface CsvLineProcessor {
-        val recordLogger: RecordLogger
+        val context: ConverterFactory.ContentsContext
 
         /**
          * Whether the given line is valid. If not, the line will be discarded. An error can be
          * thrown to mark the entire file invalid.
          */
         fun isLineValid(
-                header: List<String>,
-                line: Array<String>): Boolean {
+            header: List<String>,
+            line: Array<String>,
+            lineNumber: Int,
+        ): Boolean {
             return when {
                 line.isEmpty() -> {
-                    recordLogger.warn("Empty line found ${line.toList()}")
+                    context.logger.warn("[${context.fileName}:$lineNumber] Found empty line")
                     false
                 }
                 header.size != line.size -> {
-                    recordLogger.warn("Line size ${line.size} does not match with header size ${header.size}. Skipping this line")
+                    context.logger.warn("[${context.fileName}:$lineNumber] Line size ${line.size} does not match with header size ${header.size}. Skipping this line")
                     false
                 }
                 line.any { it.isEmpty() } -> {
-                    recordLogger.warn("Line with empty values found. Skipping this line")
+                    context.logger.warn("[${context.fileName}:$lineNumber] Line with empty values found. Skipping this line")
                     false
                 }
                 else -> true

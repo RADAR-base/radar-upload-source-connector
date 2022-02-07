@@ -45,7 +45,7 @@ public class CwaBlock {
     public static final int BLOCK_SIZE = 512;
 
     /** Block buffer for data */
-    private ByteBuffer byteBuffer;
+    private final ByteBuffer byteBuffer;
     private boolean bufferValid = false;
     private boolean dataBlockOk = false;
     private int sessionId = 0;
@@ -434,7 +434,7 @@ public class CwaBlock {
     }
 
 
-    private static Calendar calendar = new GregorianCalendar();
+    private static final Calendar calendar = new GregorianCalendar();
 
     /** Convert a CWA timestamp value into a Java Date.
      * @param cwaTimestamp 32-bit CWA timestamp value

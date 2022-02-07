@@ -16,6 +16,8 @@
 
 package org.radarbase.connect.upload.converter
 
+import org.radarbase.connect.upload.converter.csv.CsvLineProcessorFactory
+
 /**
  * Simple Processor for one line to one record of a single topic conversion.
  */
@@ -50,16 +52,16 @@ abstract class StatelessCsvLineProcessor: CsvLineProcessorFactory {
     override fun createLineProcessor(
         context: ConverterFactory.ContentsContext
     ): CsvLineProcessorFactory.CsvLineProcessor {
-        return Processor(context.logger) { l, t -> lineConversions(l, t) }
+        return Processor(context) { l, t -> lineConversions(l, t) }
     }
 
     internal class Processor(
-        override val recordLogger: RecordLogger,
+        override val context: ConverterFactory.ContentsContext,
         private val conversion: Processor.(lineValues: Map<String, String>, timeReceived: Double) -> Sequence<TopicData>,
     ) : CsvLineProcessorFactory.CsvLineProcessor {
         override fun convertToRecord(
             lineValues: Map<String, String>,
-            timeReceived: Double
+            timeReceived: Double,
         ): Sequence<TopicData> = conversion(lineValues, timeReceived)
     }
 }

@@ -3,8 +3,8 @@ package org.radarbase.connect.upload.converter.axivity
 import org.radarbase.connect.upload.api.SourceTypeDTO
 import org.radarbase.connect.upload.converter.ConverterFactory
 import org.radarbase.connect.upload.converter.FileProcessorFactory
-import org.radarbase.connect.upload.converter.LogRepository
-import org.radarbase.connect.upload.converter.ZipFileProcessorFactory
+import org.radarbase.connect.upload.logging.LogRepository
+import org.radarbase.connect.upload.converter.zip.ZipFileProcessorFactory
 
 class AxivityConverterFactory : ConverterFactory {
     override val sourceType: String = "axivity"
@@ -18,20 +18,25 @@ class AxivityConverterFactory : ConverterFactory {
 
         return listOf(ZipFileProcessorFactory(
             sourceType,
-            listOf(CwaFileProcessorFactory(logRepository, processors.toSet())),
+            zipEntryProcessors = listOf(CwaFileProcessorFactory(logRepository, processors)),
         ))
     }
 
-    private fun createProcessors(config: Map<String, String>): Set<CwaFileProcessorFactory.CwaBlockProcessor> {
-        val processors = mutableListOf<CwaFileProcessorFactory.CwaBlockProcessor>(
-                AccelerationCwaBlockProcessor())
+    private fun createProcessors(
+        config: Map<String, String>
+    ): List<CwaFileProcessorFactory.CwaBlockProcessor> {
+        return processors
+            .filter { (property, _) -> config[property]?.toBoolean() != false }
+            .map { (_, generator) -> generator() }
+    }
 
-        // default to true
-        if (config["readLight"]?.toBoolean() != false) processors += LightCwaBlockProcessor()
-        if (config["readBattery"]?.toBoolean() != false) processors += BatteryLevelCwaBlockProcessor()
-        if (config["readTemperature"]?.toBoolean() != false) processors += TemperatureCwaBlockProcessor()
-        if (config["readEvents"]?.toBoolean() != false) processors += EventsCwaBlockProcessor()
-
-        return processors.toSet()
+    companion object {
+        private val processors = mapOf<String, () -> CwaFileProcessorFactory.CwaBlockProcessor> (
+            "readAcceleration" to ::AccelerationCwaBlockProcessor,
+            "readLight" to ::LightCwaBlockProcessor,
+            "readBattery" to ::BatteryLevelCwaBlockProcessor,
+            "readTemperature" to ::TemperatureCwaBlockProcessor,
+            "readEvents" to ::EventsCwaBlockProcessor,
+        )
     }
 }

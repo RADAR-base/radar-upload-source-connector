@@ -7,8 +7,9 @@ import org.radarbase.jersey.auth.Auth
 import org.radarbase.jersey.auth.AuthConfig
 import org.radarbase.jersey.auth.AuthValidator
 import org.radarbase.jersey.config.ConfigLoader
-import org.radarbase.jersey.config.EnhancerFactory
-import org.radarbase.jersey.config.JerseyResourceEnhancer
+import org.radarbase.jersey.enhancer.Enhancers
+import org.radarbase.jersey.enhancer.EnhancerFactory
+import org.radarbase.jersey.enhancer.JerseyResourceEnhancer
 import org.radarbase.jersey.exception.HttpUnauthorizedException
 import org.radarbase.jersey.hibernate.config.DatabaseConfig
 import org.radarbase.jersey.hibernate.config.HibernateResourceEnhancer
@@ -17,8 +18,8 @@ import org.radarbase.jersey.service.managementportal.RadarProjectService
 import org.radarbase.upload.Config
 import org.radarbase.upload.inject.UploadResourceEnhancer
 import java.util.*
-import javax.inject.Singleton
-import javax.ws.rs.container.ContainerRequestContext
+import jakarta.inject.Singleton
+import jakarta.ws.rs.container.ContainerRequestContext
 
 class MockResourceEnhancerFactory(
         private val config: Config,
@@ -30,7 +31,7 @@ class MockResourceEnhancerFactory(
         val projectService = MockProjectService(projects)
         return listOf(
                 UploadResourceEnhancer(config),
-                ConfigLoader.Enhancers.radar(
+                Enhancers.radar(
                         AuthConfig(jwtResourceName = config.jwtResourceName)),
                 object : JerseyResourceEnhancer {
                     override fun AbstractBinder.enhance() {
@@ -46,9 +47,8 @@ class MockResourceEnhancerFactory(
                     }
                 },
                 HibernateResourceEnhancer(dbConfig),
-                ConfigLoader.Enhancers.health,
-                ConfigLoader.Enhancers.httpException,
-                ConfigLoader.Enhancers.generalException)
+                Enhancers.health,
+                Enhancers.exception)
     }
 
     private inner class MockAuthValidator : AuthValidator {

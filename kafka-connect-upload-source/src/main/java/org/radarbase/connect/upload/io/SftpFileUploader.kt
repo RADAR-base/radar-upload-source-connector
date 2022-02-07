@@ -4,6 +4,7 @@ import com.jcraft.jsch.ChannelSftp
 import com.jcraft.jsch.JSch
 import com.jcraft.jsch.Session
 import com.jcraft.jsch.SftpException
+import org.radarbase.connect.upload.logging.RecordLogger
 import org.slf4j.LoggerFactory
 import java.io.InputStream
 import java.lang.Exception
@@ -13,7 +14,10 @@ import java.nio.file.Path
 import java.util.*
 
 
-class SftpFileUploader(override val config: FileUploaderFactory.FileUploaderConfig) : FileUploaderFactory.FileUploader {
+class SftpFileUploader(
+    override val config: FileUploaderFactory.FileUploaderConfig
+) : FileUploaderFactory.FileUploader {
+    override var recordLogger: RecordLogger? = null
     override val type: String
         get() = "sftp"
     private val jsch = JSch()
@@ -30,33 +34,37 @@ class SftpFileUploader(override val config: FileUploaderFactory.FileUploaderConf
         config.sshPrivateKey?.let {
             jsch.addIdentity(it, config.sshPassPhrase)
         }
-        session = jsch.getSession(config.username, endpoint.host, if (endpoint.port == -1) 22 else endpoint.port)
-        session.setPassword(config.password)
-
-        val sessionConfig = Properties()
-        sessionConfig["StrictHostKeyChecking"] = "no"
-        session.setConfig(sessionConfig)
+        session = jsch.getSession(
+            config.username,
+            endpoint.host,
+            if (endpoint.port == -1) 22 else endpoint.port
+        ).apply {
+            setPassword(config.password)
+            setConfig(Properties().apply {
+                this["StrictHostKeyChecking"] = "no"
+            })
+        }
         session.connect()
         sftpChannel = session.openChannel("sftp") as ChannelSftp
         sftpChannel.connect()
         logger.info("SftpFileUploader Connection established ...")
-        logger.info("Files will be uploaded using SFTP to $endpoint and root directory ${config.targetRoot}")
+        logger.info("Files will be uploaded using SFTP to {} and root directory {}", endpoint, config.targetRoot)
     }
 
     override fun upload(relativePath: Path, stream: InputStream, size: Long?): URI {
         // copy remote log file to localhost.
-        val filePath = rootDirectory().resolve(relativePath)
+        val filePath = rootDirectory.resolve(relativePath)
         sftpChannel.run {
             try {
-                logger.info("Uploading data to ${filePath}")
+                recordLogger?.info("Uploading data to $filePath")
                 put(stream, filePath.toString())
             } catch (ex: SftpException) {
-                logger.error("Could not upload file... Retrying", ex)
-                mkdirs(filePath)
+                recordLogger?.error("Could not upload file... Retrying", ex)
+                createDirectories(filePath)
                 put(stream, filePath.toString())
             }
         }
-        return advertisedTargetUri().resolve(filePath.toString())
+        return resolveTargetUri(filePath)
     }
 
     override fun close() {
@@ -72,27 +80,27 @@ class SftpFileUploader(override val config: FileUploaderFactory.FileUploaderConf
         exception?.let { throw it }
     }
 
+    private fun ChannelSftp.createDirectories(path: Path) {
+        var isMissing = false
+        for (i in 1 until path.nameCount) {
+            val nextDirectory = path.subpath(0, i).toString()
+            if (!isMissing) {
+                try {
+                    lstat(nextDirectory)
+                } catch (ex: SftpException) {
+                    if (ex.id == ChannelSftp.SSH_FX_NO_SUCH_FILE) {
+                        isMissing = true
+                    } else throw ex // unknown exception
+                }
+            }
+            if (isMissing) {
+                recordLogger?.info("Creating $nextDirectory")
+                mkdir(nextDirectory)
+            }
+        }
+    }
 
     companion object {
         private val logger = LoggerFactory.getLogger(SftpFileUploader::class.java)
-        fun ChannelSftp.mkdirs(path: Path) {
-            var isMissing = false
-            for (i in 1 until path.nameCount) {
-                val nextDirectory = path.subpath(0, i).toString()
-                if (!isMissing) {
-                    try {
-                        lstat(nextDirectory)
-                    } catch (ex: SftpException) {
-                        if (ex.id == ChannelSftp.SSH_FX_NO_SUCH_FILE) {
-                            isMissing = true
-                        } else throw ex // unknown exception
-                    }
-                }
-                if (isMissing) {
-                    logger.info("Creating $nextDirectory")
-                    mkdir(nextDirectory)
-                }
-            }
-        }
     }
 }

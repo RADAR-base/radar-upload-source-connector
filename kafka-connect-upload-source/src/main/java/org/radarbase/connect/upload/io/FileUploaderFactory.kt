@@ -1,13 +1,13 @@
 package org.radarbase.connect.upload.io
 
-import org.apache.kafka.connect.errors.ConnectException
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.radarbase.connect.upload.UploadSourceConnectorConfig
+import org.radarbase.connect.upload.logging.RecordLogger
 import java.io.Closeable
 import java.io.InputStream
 import java.net.URI
 import java.nio.file.Path
 import java.nio.file.Paths
-
 
 class FileUploaderFactory(private val config: Map<String, String>) {
     /**
@@ -15,7 +15,7 @@ class FileUploaderFactory(private val config: Map<String, String>) {
      */
     fun fileUploader(): FileUploader {
         val connectorConfig = UploadSourceConnectorConfig(config)
-        val uploadType = connectorConfig.fileUploaderType ?: throw ConnectException("FileUploader class is required by one or more of registered converters.")
+        val uploadType = connectorConfig.fileUploaderType
         val uploaderConfig = connectorConfig.fileUploadConfig
         return when (uploadType) {
             UploadType.LOCAL -> LocalFileUploader(uploaderConfig)
@@ -25,13 +25,33 @@ class FileUploaderFactory(private val config: Map<String, String>) {
     }
 
     interface FileUploader: Closeable {
+        var recordLogger: RecordLogger?
+
         val type: String
 
         val config: FileUploaderConfig
 
-        fun advertisedTargetUri(): URI = URI(if (config.targetEndpoint.endsWith("/")) config.targetEndpoint else "${config.targetEndpoint}/")
+        val advertisedTargetUri: URI
+            get() = URI(if (config.targetEndpoint.endsWith("/")) config.targetEndpoint else "${config.targetEndpoint}/")
 
-        fun rootDirectory(): Path = Paths.get(config.targetRoot.ifEmpty {"."})
+        fun resolveTargetUri(
+            path: Path
+        ): URI {
+            val uri = advertisedTargetUri
+            val originalScheme = uri.scheme
+            val noRootPath = if (path.toString().startsWith("/")) {
+                Paths.get(path.toString().substring(1))
+            } else path
+            val newUri = config.targetEndpoint.replaceFirst(originalScheme, "http")
+                .toHttpUrl().newBuilder()
+                .addPathSegments(noRootPath.toString())
+                .build()
+                .toString()
+            return URI(newUri.replaceFirst("http", originalScheme))
+        }
+
+        val rootDirectory: Path
+            get() = Paths.get(config.targetRoot.ifEmpty {"."})
 
         fun upload(relativePath: Path, stream: InputStream, size: Long?) : URI
 
@@ -44,9 +64,7 @@ class FileUploaderFactory(private val config: Map<String, String>) {
         val password: String?,
         val sshPrivateKey: String?,
         val sshPassPhrase: String?
-
     )
-
 }
 
 enum class UploadType {

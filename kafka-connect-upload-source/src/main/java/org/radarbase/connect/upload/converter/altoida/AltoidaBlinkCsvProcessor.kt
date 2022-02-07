@@ -20,9 +20,7 @@ import org.radarbase.connect.upload.converter.StatelessCsvLineProcessor
 import org.radarbase.connect.upload.converter.TopicData
 import org.radarcns.connector.upload.altoida.AltoidaBlink
 
-class AltoidaBlinkCsvProcessor : StatelessCsvLineProcessor() {
-    override val fileNameSuffix: String = "_BLINK.csv"
-
+class AltoidaBlinkCsvProcessor(override val fileNameSuffix: String = "_BLINK.csv") : StatelessCsvLineProcessor() {
     override val header: List<String> = listOf("TIMESTAMP", "EYE")
 
     override fun lineConversion(

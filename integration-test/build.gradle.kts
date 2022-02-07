@@ -6,7 +6,7 @@ import java.time.Duration
 plugins {
     java
     kotlin("jvm")
-    id("com.avast.gradle.docker-compose") version "0.14.1"
+    id("com.avast.gradle.docker-compose") version "0.14.3"
 }
 
 sourceSets {
@@ -22,19 +22,24 @@ sourceSets {
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
-    testImplementation("com.fasterxml.jackson.core:jackson-databind:${project.extra["jacksonVersion"]}")
-    testImplementation("com.squareup.okhttp3:okhttp:${project.extra["okhttpVersion"]}")
-    testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin:${project.extra["jacksonDataVersion"]}")
-    testImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${project.extra["jacksonDataVersion"]}")
-    testImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:${project.extra["jacksonDataVersion"]}")
+    val jacksonVersion: String by project
+    testImplementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
+    val okhttpVersion: String by project
+    testImplementation("com.squareup.okhttp3:okhttp:$okhttpVersion")
+    testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
+    testImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")
+    testImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$jacksonVersion")
 
     testImplementation(project(":radar-upload-backend"))
     testImplementation(project(":kafka-connect-upload-source"))
-    testImplementation("org.junit.jupiter:junit-jupiter:${project.extra["junitVersion"]}")
-    testImplementation("org.hamcrest:hamcrest-all:1.3")
-    testImplementation("org.apache.kafka:connect-api:${project.extra["kafkaVersion"]}")
-    testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:${project.extra["mockitoKotlinVersion"]}")
-    testImplementation("org.mockito:mockito-core:${project.extra["mockitoCoreVersion"]}")
+    val junitVersion: String by project
+    testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")
+    val hamcrestVersion: String by project
+    testImplementation("org.hamcrest:hamcrest:$hamcrestVersion")
+    val kafkaVersion: String by project
+    testImplementation("org.apache.kafka:connect-api:$kafkaVersion")
+    val mockitoKotlinVersion: String by project
+    testImplementation("org.mockito.kotlin:mockito-kotlin:$mockitoKotlinVersion")
 }
 
 task<Test>("integrationTest") {

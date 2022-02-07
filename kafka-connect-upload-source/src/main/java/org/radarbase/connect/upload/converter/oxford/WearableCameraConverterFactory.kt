@@ -4,8 +4,8 @@ import okhttp3.internal.closeQuietly
 import org.radarbase.connect.upload.api.SourceTypeDTO
 import org.radarbase.connect.upload.converter.ConverterFactory
 import org.radarbase.connect.upload.converter.FileProcessorFactory
-import org.radarbase.connect.upload.converter.LogRepository
-import org.radarbase.connect.upload.converter.ZipFileProcessorFactory
+import org.radarbase.connect.upload.logging.LogRepository
+import org.radarbase.connect.upload.converter.zip.ZipFileProcessorFactory
 import org.radarbase.connect.upload.io.FileUploaderFactory
 import org.slf4j.LoggerFactory
 
@@ -21,18 +21,27 @@ class WearableCameraConverterFactory : ConverterFactory {
     ): List<FileProcessorFactory> {
         val uploaderSupplier = FileUploaderFactory(settings).fileUploader()
 
-        logger.info("Target endpoint is ${uploaderSupplier.advertisedTargetUri()} and Root folder for upload is ${uploaderSupplier.rootDirectory()}")
+        logger.info(
+            "Target endpoint is {} and Root folder for upload is {}",
+            uploaderSupplier.advertisedTargetUri,
+            uploaderSupplier.rootDirectory,
+        )
         val processors = listOf(
             CameraDataFileProcessor(),
-            CameraUploadProcessor() { localUploader.get() },
+            CameraUploadProcessor { localUploader.get() },
         )
-        return listOf(object : ZipFileProcessorFactory(sourceType, processors) {
+        return listOf(object : ZipFileProcessorFactory(sourceType, zipEntryProcessors = processors) {
             override fun beforeProcessing(contents: ConverterFactory.ContentsContext) {
-                localUploader.set(uploaderSupplier)
+                localUploader.set(uploaderSupplier.apply {
+                    recordLogger = contents.logger
+                })
             }
 
             override fun afterProcessing(contents: ConverterFactory.ContentsContext) {
-                localUploader.get().closeQuietly()
+                localUploader.get().run {
+                    recordLogger = null
+                    closeQuietly()
+                }
                 localUploader.remove()
             }
 

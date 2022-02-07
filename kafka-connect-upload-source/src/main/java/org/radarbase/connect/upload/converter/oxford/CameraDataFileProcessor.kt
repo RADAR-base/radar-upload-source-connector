@@ -2,10 +2,7 @@ package org.radarbase.connect.upload.converter.oxford
 
 import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
-import org.radarbase.connect.upload.converter.ConverterFactory
-import org.radarbase.connect.upload.converter.FileProcessorFactory
-import org.radarbase.connect.upload.converter.TimeFieldParser
-import org.radarbase.connect.upload.converter.TopicData
+import org.radarbase.connect.upload.converter.*
 import org.radarcns.connector.upload.oxford.OxfordCameraAxes
 import org.radarcns.connector.upload.oxford.OxfordCameraData
 import org.radarcns.connector.upload.oxford.OxfordCameraRgb
@@ -16,9 +13,9 @@ import java.time.format.DateTimeFormatterBuilder
 class CameraDataFileProcessor : FileProcessorFactory {
     override fun matches(contents: ContentsDTO) = contents.fileName.endsWith("image_table.txt")
 
-    override fun createProcessor(record: RecordDTO): FileProcessorFactory.FileProcessor = CameraFileProcessor()
+    override fun createProcessor(record: RecordDTO): FileProcessor = CameraFileProcessor()
 
-    private class CameraFileProcessor : FileProcessorFactory.FileProcessor {
+    private class CameraFileProcessor : FileProcessor {
         override fun processData(
             context: ConverterFactory.ContentsContext,
             inputStream: InputStream,

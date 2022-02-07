@@ -25,9 +25,9 @@ import org.radarbase.upload.api.SourceTypeDTO
 import org.radarbase.upload.api.SourceTypeMapper
 import org.radarbase.upload.doa.entity.SourceType
 import org.slf4j.LoggerFactory
-import javax.inject.Provider
+import jakarta.inject.Provider
 import javax.persistence.EntityManager
-import javax.ws.rs.core.Context
+import jakarta.ws.rs.core.Context
 
 class SourceTypeRepositoryImpl(
         @Context em: Provider<EntityManager>,
