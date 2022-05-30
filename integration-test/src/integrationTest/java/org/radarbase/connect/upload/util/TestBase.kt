@@ -312,7 +312,7 @@ class TestBase {
                 logger = Mockito.mock(RecordLogger::class.java),
                 avroData = RecordConverter.createAvroData(),
             )
-            requireNotNull(javaClass.getResourceAsStream(zipName)).use { zipStream ->
+            requireNotNull(TestBase::class.java.getResourceAsStream(zipName)).use { zipStream ->
                 converter.convertFile(context, zipStream, records::add)
             }
             Assertions.assertNotNull(oxfordZipRecord)

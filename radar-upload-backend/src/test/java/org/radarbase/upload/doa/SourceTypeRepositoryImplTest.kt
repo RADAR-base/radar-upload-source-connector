@@ -64,15 +64,16 @@ internal class SourceTypeRepositoryImplTest {
         closeable = MockitoAnnotations.openMocks(this)
 
         val config = DatabaseConfig(
-                managedClasses = listOf(
-                        Record::class.jvmName,
-                        RecordMetadata::class.jvmName,
-                        RecordLogs::class.jvmName,
-                        RecordContent::class.jvmName,
-                        SourceType::class.jvmName,
-                ),
-                url = "jdbc:h2:file:${tempDir.resolve("db.h2")};DB_CLOSE_DELAY=-1",
-                dialect = "org.hibernate.dialect.H2Dialect")
+            managedClasses = listOf(
+                Record::class.jvmName,
+                RecordMetadata::class.jvmName,
+                RecordLogs::class.jvmName,
+                RecordContent::class.jvmName,
+                SourceType::class.jvmName,
+            ),
+            url = "jdbc:hsqldb:file:${tempDir.resolve("db.hsql")};DB_CLOSE_DELAY=-1",
+            dialect = "org.hibernate.dialect.H2Dialect",
+        )
         doaEMFFactory = RadarEntityManagerFactoryFactory(config)
         doaEMF = doaEMFFactory.get()
         val eventStart = mock<ApplicationEvent> {

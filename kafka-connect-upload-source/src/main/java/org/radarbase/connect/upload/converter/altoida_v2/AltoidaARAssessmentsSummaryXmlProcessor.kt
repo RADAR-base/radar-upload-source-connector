@@ -13,16 +13,19 @@ class AltoidaARAssessmentsSummaryXmlProcessor : XmlNodeProcessorFactory() {
     override fun convertToSingleRecord(root: Element, timeReceived: Double, assessmentName: String?): TopicData? {
         val timestamp = getAttributeValueFromElement(root, "start_ts")
         val endTime = getAttributeValueFromElement(root, "end_ts")
-        val assessmentName = root.tagName
+        val innerAssessmentName = root.tagName
         val objectName = getAttributeValueFromElement(root, "object_name")
 
-        return TopicData("connect_upload_altoida_ar_assessment", AltoidaAssessmentsSummary(
+        return TopicData(
+            "connect_upload_altoida_ar_assessment",
+            AltoidaAssessmentsSummary(
                 timeReceived,
-                assessmentName,
+                innerAssessmentName,
                 timeFieldParser.timeFromString(timestamp),
                 timeFieldParser.timeFromString(endTime),
-                objectName
-        ))
+                objectName,
+            )
+        )
     }
 
 }

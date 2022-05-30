@@ -1,24 +1,21 @@
 package org.radarbase.connect.upload.io
 
-import com.nhaarman.mockitokotlin2.mock
 import io.minio.BucketExistsArgs
 import io.minio.ListObjectsArgs
 import io.minio.MinioClient
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.mockito.Mockito
-import org.radarbase.connect.upload.api.*
-import org.radarbase.connect.upload.converter.*
+import org.mockito.kotlin.mock
+import org.radarbase.connect.upload.api.UploadBackendClient
+import org.radarbase.connect.upload.converter.ConverterFactory
 import org.radarbase.connect.upload.converter.oxford.WearableCameraConverterFactory
 import org.radarbase.connect.upload.logging.ConverterLogRepository
 import org.radarbase.connect.upload.logging.LogRepository
-import org.radarbase.connect.upload.logging.RecordLogger
 import org.radarbase.connect.upload.util.TestBase
-import org.radarcns.connector.upload.oxford.OxfordCameraImage
-import java.time.Instant
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class S3FileUploaderTest {

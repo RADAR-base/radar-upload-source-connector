@@ -91,7 +91,7 @@ internal class RecordResourceTest: JerseyTest() {
                 RecordContent::class.jvmName,
                 SourceType::class.jvmName,
             ),
-            url = "jdbc:h2:file:${tempDir.resolve("db.h2")};DB_CLOSE_DELAY=-1",
+            url = "jdbc:hsqldb:file:${tempDir.resolve("db.hsql")};DB_CLOSE_DELAY=-1",
             dialect = "org.hibernate.dialect.H2Dialect",
         )
         val enhancerFactory = MockResourceEnhancerFactory(config, authQueue, projects, databaseConfig)

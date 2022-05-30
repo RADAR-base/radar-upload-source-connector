@@ -73,8 +73,3 @@ task<Test>("integrationTest") {
     classpath = sourceSets["integrationTest"].runtimeClasspath
     mustRunAfter(tasks["test"])
 }
-
-tasks.register<Copy>("copyDependencies") {
-    from({ configurations.runtimeClasspath.get().files })
-    into("${buildDir}/third-party")
-}

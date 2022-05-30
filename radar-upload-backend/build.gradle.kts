@@ -11,6 +11,10 @@ plugins {
 
 application {
     mainClass.set("org.radarbase.upload.MainKt")
+    applicationDefaultJvmArgs = listOf(
+        "-Djava.security.egd=file:/dev/./urandom",
+        "-Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager",
+    )
 }
 
 dependencies {
@@ -35,8 +39,8 @@ dependencies {
     val okhttpVersion: String by project
     implementation("com.squareup.okhttp3:okhttp:$okhttpVersion")
 
-    val h2Version: String by project
-    runtimeOnly("com.h2database:h2:$h2Version")
+    val hsqldbVersion: String by project
+    runtimeOnly("org.hsqldb:hsqldb:${hsqldbVersion}")
 
     val junitVersion: String by project
     testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")

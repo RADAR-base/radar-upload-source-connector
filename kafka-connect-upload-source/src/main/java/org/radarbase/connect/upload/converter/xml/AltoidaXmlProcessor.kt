@@ -25,30 +25,42 @@ import org.w3c.dom.Element
  * Altoida class to process XML files with multiple possible per-node/tag processors.
  */
 open class AltoidaXmlProcessor(
-        private val record: RecordDTO? = null,
-        private val processorFactories: List<XmlNodeProcessorFactory>,
+        record: RecordDTO? = null,
+        processorFactories: List<XmlNodeProcessorFactory>,
 ): XmlProcessor(record, processorFactories) {
 
     /**
      * Recursively traverses the xml nodes and converts each node if processor (that matches node name) exists.
      * In addition to similar base class method, this extracts the assessment name that corresponds to the tag.
      */
-    override fun processXml(root: Element, context: ConverterFactory.ContentsContext, contentProcessorsFactories: List<XmlNodeProcessorFactory.XmlNodeProcessor>, assessmentName: String, produce: (TopicData) -> Unit) {
+    override fun processXml(
+        root: Element,
+        context: ConverterFactory.ContentsContext,
+        contentProcessorsFactories: List<XmlNodeProcessorFactory.XmlNodeProcessor>,
+        metadata: String,
+        produce: (TopicData) -> Unit,
+    ) {
         val children = root.childNodes
         for (i in 0 until children.length) {
-            var n = children.item(i)
+            val n = children.item(i)
             if (n.hasChildNodes()) {
-                n = n as Element
+                n as Element
                 val nodeName = n.nodeName
-                var updatedAssessmentName = assessmentName
+                var updatedAssessmentName = metadata
                 if (nodeName == "part") {
                     val name = n.getAttribute("xsi:type")
-                    updatedAssessmentName = if (name.isNullOrEmpty()) updatedAssessmentName else name
+                    if (!name.isNullOrEmpty()) {
+                        updatedAssessmentName = name
+                    }
                 }
-                val processor = contentProcessorsFactories.firstOrNull { it.matches(nodeName) }
-                processor?.let {
-                    processor.convertToRecord(n, context.timeReceived, updatedAssessmentName).forEach(produce)
-                }
+                contentProcessorsFactories
+                    .firstOrNull { it.matches(nodeName) }
+                    ?.convertToRecord(
+                        node = n,
+                        timeReceived = context.timeReceived,
+                        assessmentName = updatedAssessmentName
+                    )
+                    ?.forEach(produce)
 
                 processXml(n, context, contentProcessorsFactories, updatedAssessmentName, produce)
             }

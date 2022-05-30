@@ -6,7 +6,7 @@ import java.time.Duration
 plugins {
     java
     kotlin("jvm")
-    id("com.avast.gradle.docker-compose") version "0.14.3"
+    id("com.avast.gradle.docker-compose") version "0.16.4"
 }
 
 sourceSets {
@@ -55,11 +55,11 @@ tasks.withType<KotlinCompile> {
 }
 
 dockerCompose {
-    useComposeFiles = listOf("docker-compose.yml")
-    buildAdditionalArgs = emptyList<String>()
+    useComposeFiles.set(listOf("docker-compose.yml"))
+    buildAdditionalArgs.set(emptyList<String>())
     val dockerComposeStopContainers: String? by project
-    stopContainers = dockerComposeStopContainers?.toBooleanLenient() ?: true
-    waitForTcpPortsTimeout = Duration.ofMinutes(3)
-    environment["SERVICES_HOST"] = "localhost"
+    stopContainers.set(dockerComposeStopContainers?.toBooleanLenient() ?: true)
+    waitForTcpPortsTimeout.set(Duration.ofMinutes(3))
+    environment.put("SERVICES_HOST", "localhost")
     isRequiredBy(tasks["integrationTest"])
 }
