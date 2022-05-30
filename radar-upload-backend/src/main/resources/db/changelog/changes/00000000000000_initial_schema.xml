@@ -22,7 +22,7 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
-        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.10.xsd">
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
     <property name="autoIncrement" value="true" dbms="mysql,hsqldb,postgresql,oracle,mssql"/>
 
     <changeSet id="0" author="joris" dbms="hsqldb,postgresql">
@@ -80,7 +80,7 @@
         <createTable tableName="record_metadata">
             <column name="record_id" type="bigint">
                 <constraints unique="true" foreignKeyName="fk_record_metadata_record"
-                             referencedColumnNames="id" referencedTableName="record"
+                             references="record(id)"
                              nullable="false"/>
             </column>
             <column name="revision" type="int">
@@ -97,7 +97,7 @@
         <createTable tableName="record_logs">
             <column name="record_id" type="bigint">
                 <constraints foreignKeyName="fk_logs_record_metadata"
-                             referencedColumnNames="record_id" referencedTableName="record_metadata"
+                             references="record_metadata(record_id)"
                              nullable="false"/>
             </column>
             <column name="modified_date" type="timestamp"/>

@@ -74,7 +74,7 @@ internal class RecordRepositoryImplTest {
                 RecordContent::class.jvmName,
                 SourceType::class.jvmName,
             ),
-            url = "jdbc:hsqldb:file:${tempDir.resolve("db.hsql")};DB_CLOSE_DELAY=-1",
+            url = "jdbc:hsqldb:mem:test2;DB_CLOSE_DELAY=-1",
             dialect = "org.hibernate.dialect.HSQLDialect",
         )
         doaEMFFactory = RadarEntityManagerFactoryFactory(dbConfig)

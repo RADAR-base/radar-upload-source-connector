@@ -21,18 +21,13 @@ package org.radarbase.upload.inject
 
 import org.radarbase.jersey.auth.AuthConfig
 import org.radarbase.jersey.auth.MPConfig
-import org.radarbase.jersey.config.ConfigLoader
-import org.radarbase.jersey.enhancer.Enhancers
 import org.radarbase.jersey.enhancer.EnhancerFactory
+import org.radarbase.jersey.enhancer.Enhancers
 import org.radarbase.jersey.enhancer.JerseyResourceEnhancer
 import org.radarbase.jersey.hibernate.config.DatabaseConfig
 import org.radarbase.jersey.hibernate.config.HibernateResourceEnhancer
 import org.radarbase.upload.Config
-import org.radarbase.upload.doa.entity.Record
-import org.radarbase.upload.doa.entity.RecordContent
-import org.radarbase.upload.doa.entity.RecordLogs
-import org.radarbase.upload.doa.entity.RecordMetadata
-import org.radarbase.upload.doa.entity.SourceType
+import org.radarbase.upload.doa.entity.*
 import kotlin.reflect.jvm.jvmName
 
 /** This binder needs to register all non-Jersey classes, otherwise initialization fails. */

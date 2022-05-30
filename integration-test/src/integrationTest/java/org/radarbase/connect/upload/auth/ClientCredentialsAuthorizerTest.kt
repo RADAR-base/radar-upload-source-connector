@@ -23,9 +23,9 @@ import okhttp3.OkHttpClient
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.radarbase.connect.upload.util.TestBase.Companion.tokenUrl
-import org.radarbase.connect.upload.util.TestBase.Companion.uploadConnectClient
-import org.radarbase.connect.upload.util.TestBase.Companion.uploadConnectSecret
+import org.radarbase.connect.upload.util.TestBase.tokenUrl
+import org.radarbase.connect.upload.util.TestBase.uploadConnectClient
+import org.radarbase.connect.upload.util.TestBase.uploadConnectSecret
 
 internal class ClientCredentialsAuthorizerTest {
     private lateinit var clientCredentialsAuthorizer: ClientCredentialsAuthorizer
@@ -48,5 +48,4 @@ internal class ClientCredentialsAuthorizerTest {
         val token = clientCredentialsAuthorizer.accessToken()
         assertNotNull(token)
     }
-
 }

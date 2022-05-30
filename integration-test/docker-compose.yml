@@ -13,7 +13,7 @@ services:
   # Management Portal                                                         #
   #---------------------------------------------------------------------------#
   managementportal-app:
-    image: radarbase/management-portal:0.7.1
+    image: radarbase/management-portal:0.8.1
     networks:
       - default
       - management
@@ -40,7 +40,17 @@ services:
       - ../etc/mp-config/:/mp-includes/config
 
   radarbase-postgresql:
-    image: radarbase/radarbase-postgres:latest
+    image: postgres:14
+    networks:
+      - management
+      - default
+    environment:
+      - POSTGRES_USER=radarcns
+      - POSTGRES_PASSWORD=radarcns
+      - POSTGRES_DB=managementportal
+
+  radarbase-upload:
+    image: postgres:14
     networks:
       - management
       - default
@@ -49,15 +59,16 @@ services:
     environment:
       - POSTGRES_USER=radarcns
       - POSTGRES_PASSWORD=radarcns
-      - POSTGRES_MULTIPLE_DATABASES=managementportal,uploadconnector
+      - POSTGRES_DB=uploadconnector
 
   sftp-server:
-    image: atmoz/sftp:alpine
+    image: emberstack/sftp
     networks:
       - default
     ports:
       - "2222:22"
-    command: ["connect:pass:::upload"]
+    volumes:
+      - ./src/integrationTest/resources/sftp.json:/app/config/sftp.json:ro
 
   minio:
     image: minio/minio

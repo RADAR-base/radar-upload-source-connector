@@ -53,9 +53,6 @@ internal class SourceTypeRepositoryImplTest {
 
     private lateinit var closeable: AutoCloseable
 
-    @TempDir
-    lateinit var tempDir: Path
-
     @Mock
     lateinit var mockEntityManagerProvider: Provider<EntityManager>
 
@@ -71,8 +68,8 @@ internal class SourceTypeRepositoryImplTest {
                 RecordContent::class.jvmName,
                 SourceType::class.jvmName,
             ),
-            url = "jdbc:hsqldb:file:${tempDir.resolve("db.hsql")};DB_CLOSE_DELAY=-1",
-            dialect = "org.hibernate.dialect.H2Dialect",
+            url = "jdbc:hsqldb:mem:test1;DB_CLOSE_DELAY=-1",
+            dialect = "org.hibernate.dialect.HSQLDialect",
         )
         doaEMFFactory = RadarEntityManagerFactoryFactory(config)
         doaEMF = doaEMFFactory.get()
@@ -88,6 +85,7 @@ internal class SourceTypeRepositoryImplTest {
 
     @AfterEach
     fun tearDown() {
+        repository.readAll().forEach { repository.delete(it) }
         doaEMFFactory.dispose(doaEMF)
         entityManager.close()
         closeable.close()
