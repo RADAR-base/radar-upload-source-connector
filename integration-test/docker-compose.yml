@@ -38,6 +38,8 @@ services:
       JAVA_OPTS: -Xmx256m  # maximum heap size for the JVM running ManagementPortal, increase this as necessary
     volumes:
       - ../etc/mp-config/:/mp-includes/config
+    healthcheck:
+      test: "curl -f http://localhost:8080/oauth/token -d grant_type=client_credentials -d client_id=radar_upload_test_client -d client_secret=test"
 
   radarbase-postgresql:
     image: postgres:14

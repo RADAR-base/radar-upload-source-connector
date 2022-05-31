@@ -27,15 +27,15 @@ import org.radarbase.connect.upload.util.TestBase.tokenUrl
 import org.radarbase.connect.upload.util.TestBase.uploadConnectClient
 import org.radarbase.connect.upload.util.TestBase.uploadConnectSecret
 
-internal class ClientCredentialsAuthorizerTest {
-    private lateinit var clientCredentialsAuthorizer: ClientCredentialsAuthorizer
+internal class OAuthClientCredentialsInterceptorTest {
+    private lateinit var clientCredentialsInterceptor: OAuthClientCredentialsInterceptor
 
     private lateinit var httpClient: OkHttpClient
 
     @BeforeEach
     fun setUp() {
         httpClient = OkHttpClient()
-        clientCredentialsAuthorizer = ClientCredentialsAuthorizer(
+        clientCredentialsInterceptor = OAuthClientCredentialsInterceptor(
                 httpClient,
                 uploadConnectClient,
                 uploadConnectSecret,
@@ -45,7 +45,7 @@ internal class ClientCredentialsAuthorizerTest {
 
     @Test
     fun getAccessToken() {
-        val token = clientCredentialsAuthorizer.accessToken()
+        val token = clientCredentialsInterceptor.getAccessToken()
         assertNotNull(token)
     }
 }

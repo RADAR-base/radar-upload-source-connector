@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import jakarta.ws.rs.core.Response
 import okhttp3.Credentials
 import okhttp3.FormBody
 import okhttp3.MediaType.Companion.toMediaType
@@ -35,26 +36,24 @@ import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
+import org.junit.jupiter.api.Assertions
+import org.mockito.Mockito
 import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
 import org.radarbase.connect.upload.api.RecordDataDTO
 import org.radarbase.connect.upload.api.RecordMetadataDTO
-import org.radarbase.connect.upload.auth.ClientCredentialsAuthorizer
-import org.radarbase.upload.Config
-import org.radarbase.upload.api.SourceTypeDTO
-import java.io.File
-import java.net.URI
-import java.time.LocalDateTime
-import jakarta.ws.rs.core.Response
-import org.junit.jupiter.api.Assertions
-import org.mockito.Mockito
+import org.radarbase.connect.upload.auth.OAuthClientCredentialsInterceptor
 import org.radarbase.connect.upload.converter.ConverterFactory
 import org.radarbase.connect.upload.converter.RecordConverter
 import org.radarbase.connect.upload.converter.TopicData
-import org.radarbase.connect.upload.io.SftpFileUploaderTest
 import org.radarbase.connect.upload.logging.RecordLogger
+import org.radarbase.upload.Config
+import org.radarbase.upload.api.SourceTypeDTO
 import org.radarcns.connector.upload.oxford.OxfordCameraImage
+import java.io.File
+import java.net.URI
 import java.time.Instant
+import java.time.LocalDateTime
 
 object TestBase {
     const val baseUri = "http://0.0.0.0:8085/upload/api"
@@ -82,7 +81,6 @@ object TestBase {
     private val TEXT_CSV = "text/csv; charset=utf-8".toMediaType()
 
     val httpClient = OkHttpClient()
-
 
     private val sourceType = SourceTypeDTO(
         name = sourceTypeName,
@@ -170,7 +168,7 @@ object TestBase {
         .registerModule(JavaTimeModule())
         .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
 
-    val clientCredentialsAuthorizer = ClientCredentialsAuthorizer(
+    val clientCredentialsAuthorizer = OAuthClientCredentialsInterceptor(
         httpClient,
         uploadConnectClient,
         uploadConnectSecret,
@@ -242,8 +240,6 @@ object TestBase {
         addHeader("Authorization", Credentials.basic("radar_upload_test_client", "test"))
         post(
             FormBody.Builder().apply {
-                add("client_id", "radar_upload_test_client")
-                add("client_secret", "test")
                 add("grant_type", "client_credentials")
             }.build(),
         )
