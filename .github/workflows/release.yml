@@ -92,8 +92,7 @@ jobs:
       - name: Inspect docker images
         run: |
           docker image inspect ${{ env.DOCKER_IMAGE }}:${{ steps.docker_meta.outputs.version }}
-          docker run --rm ${{ env.DOCKER_IMAGE }}:${{ steps.docker_meta.outputs.version }} curl --help
-          docker run --rm ${{ env.DOCKER_IMAGE }}:${{ steps.docker_meta.outputs.version }} radar-upload-backend --help
+          docker run --rm ${{ env.DOCKER_IMAGE }}:${{ steps.docker_meta.outputs.version }} curl --version
 
   docker-frontend:
     # The type of runner that the job will run on
