@@ -19,9 +19,9 @@ import jakarta.ws.rs.ext.Provider
 
 @Provider
 class RecordStateLifecycleManager(
-        @BackgroundScheduler @Context private val executor: ScheduledExecutorService,
-        @Context private val entityManagerFactory: EntityManagerFactory,
-        @Context config: Config
+    @BackgroundScheduler @Context private val executor: ScheduledExecutorService,
+    @Context private val entityManagerFactory: EntityManagerFactory,
+    @Context config: Config,
 ) : ApplicationEventListener {
     private val staleProcessingAge: Map<String, Pair<Duration, Any>>
 
@@ -64,7 +64,13 @@ class RecordStateLifecycleManager(
                 .map { (source, ageLock) ->
                     val (age, lock) = ageLock
                     val delay = age.dividedBy(4)
-                    executor.scheduleAtFixedRate({ runStaleCheck(source, age, lock) }, 0, delay.toSeconds(), TimeUnit.SECONDS)
+                    val initialDelay = delay.dividedBy(2)
+                    executor.scheduleAtFixedRate(
+                        { runStaleCheck(source, age, lock) },
+                        initialDelay.toSeconds(),
+                        delay.toSeconds(),
+                        TimeUnit.SECONDS
+                    )
                 }
     }
 

@@ -1,7 +1,7 @@
 package org.radarbase.upload.inject
 
+import jakarta.inject.Singleton
 import org.glassfish.jersey.internal.inject.AbstractBinder
-import org.radarbase.jersey.config.ConfigLoader
 import org.radarbase.jersey.enhancer.JerseyResourceEnhancer
 import org.radarbase.jersey.filter.Filters
 import org.radarbase.upload.Config
@@ -15,7 +15,6 @@ import org.radarbase.upload.doa.SourceTypeRepository
 import org.radarbase.upload.doa.SourceTypeRepositoryImpl
 import org.radarbase.upload.dto.CallbackManager
 import org.radarbase.upload.dto.QueuedCallbackManager
-import jakarta.inject.Singleton
 
 class UploadResourceEnhancer(private val config: Config): JerseyResourceEnhancer {
     override val classes: Array<Class<*>>  get() {

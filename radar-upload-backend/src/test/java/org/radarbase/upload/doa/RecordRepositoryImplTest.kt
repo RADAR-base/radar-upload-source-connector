@@ -67,15 +67,15 @@ internal class RecordRepositoryImplTest {
         closeable = MockitoAnnotations.openMocks(this)
 
         val dbConfig = DatabaseConfig(
-                managedClasses = listOf(
-                        Record::class.jvmName,
-                        RecordMetadata::class.jvmName,
-                        RecordLogs::class.jvmName,
-                        RecordContent::class.jvmName,
-                        SourceType::class.jvmName,
-                ),
-                url = "jdbc:h2:file:${tempDir.resolve("db.h2")};DB_CLOSE_DELAY=-1",
-                dialect = "org.hibernate.dialect.H2Dialect",
+            managedClasses = listOf(
+                Record::class.jvmName,
+                RecordMetadata::class.jvmName,
+                RecordLogs::class.jvmName,
+                RecordContent::class.jvmName,
+                SourceType::class.jvmName,
+            ),
+            url = "jdbc:hsqldb:mem:test2;DB_CLOSE_DELAY=-1",
+            dialect = "org.hibernate.dialect.HSQLDialect",
         )
         doaEMFFactory = RadarEntityManagerFactoryFactory(dbConfig)
         doaEMF = doaEMFFactory.get()
@@ -148,10 +148,16 @@ internal class RecordRepositoryImplTest {
             timeZoneOffset = 3600
         }
 
-        val result = repository.create(record, contents = setOf(ContentsDTO(
-                fileName = "Gibson.mp3",
-                contentType = "audio/mp3",
-                text = "test")))
+        val result = repository.create(
+            record,
+            contents = setOf(
+                ContentsDTO(
+                    fileName = "Gibson.mp3",
+                    contentType = "audio/mp3",
+                    text = "test",
+                ),
+            )
+        )
 
         assertThat(result.contents, hasSize(1))
 
@@ -159,18 +165,19 @@ internal class RecordRepositoryImplTest {
         repository.updateContent(result, "Gibson2.mp4", "audio/mp4",
                 ByteArrayInputStream(newContent), newContent.size.toLong())
 
-        assertThat(result.contents, hasSize(2))
-
         assertThat(result.contents, notNullValue())
+        var contents = checkNotNull(result.contents)
 
-        result.contents?.find { it.fileName == "Gibson2.mp4" }?.let {
+        assertThat(contents, hasSize(2))
+
+        contents.find { it.fileName == "Gibson2.mp4" }?.let {
             assertThat(it.content, notNullValue())
             assertThat(repository.readFileContent(record.id!!, record.metadata.revision, it.fileName)?.asString(), equalTo("test2"))
             assertThat(it.fileName, equalTo("Gibson2.mp4"))
             assertThat(it.contentType, equalTo("audio/mp4"))
         }
 
-        result.contents?.find { it.fileName == "Gibson.mp3" }?.let {
+        contents.find { it.fileName == "Gibson.mp3" }?.let {
             assertThat(it.content, notNullValue())
             assertThat(repository.readFileContent(record.id!!, record.metadata.revision, it.fileName)?.asString(), equalTo("test"))
             assertThat(it.fileName, equalTo("Gibson.mp3"))
@@ -180,11 +187,18 @@ internal class RecordRepositoryImplTest {
         repository.updateContent(result, "Gibson.mp3", "audio/mp4",
                 ByteArrayInputStream(newContent), newContent.size.toLong())
 
+        assertThat(result.contents, notNullValue())
+        contents = checkNotNull(result.contents)
         assertThat(result.contents, hasSize(2))
 
-        result.contents?.find { it.fileName == "Gibson.mp3" }?.let {
+        contents.find { it.fileName == "Gibson.mp3" }?.let {
             assertThat(it.content, notNullValue())
-            assertThat(repository.readFileContent(record.id!!, record.metadata.revision, it.fileName)?.asString(), equalTo("test2"))
+            val fileContents = repository.readFileContent(
+                record.id!!,
+                record.metadata.revision,
+                it.fileName
+            )?.asString()
+            assertThat(fileContents, equalTo("test2"))
             assertThat(it.fileName, equalTo("Gibson.mp3"))
             assertThat(it.contentType, equalTo("audio/mp4"))
         } ?: assert(false)
@@ -200,10 +214,16 @@ internal class RecordRepositoryImplTest {
             timeZoneOffset = 3600
         }
 
-        val result = repository.create(record, contents = setOf(ContentsDTO(
-                fileName = "Gibson.mp3",
-                contentType = "audio/mp3",
-                text = "test")))
+        val result = repository.create(
+            record,
+            contents = setOf(
+                ContentsDTO(
+                    fileName = "Gibson.mp3",
+                    contentType = "audio/mp3",
+                    text = "test",
+                ),
+            ),
+        )
 
         assertThat(result.contents, hasSize(1))
 
@@ -211,8 +231,13 @@ internal class RecordRepositoryImplTest {
         assertThat(result.contents, hasSize(0))
 
         val newContent = "test2".toByteArray()
-        repository.updateContent(result, "Gibson2.mp4", "audio/mp4",
-                ByteArrayInputStream(newContent), newContent.size.toLong())
+        repository.updateContent(
+            record = result,
+            fileName = "Gibson2.mp4",
+            contentType = "audio/mp4",
+            stream = ByteArrayInputStream(newContent),
+            length = newContent.size.toLong()
+        )
 
         assertThat(result.contents, hasSize(1))
 
@@ -238,8 +263,13 @@ internal class RecordRepositoryImplTest {
         val result = repository.create(record)
 
         val newContent = "test2".toByteArray()
-        repository.updateContent(result, "Gibson2.mp4", "audio/mp4",
-                ByteArrayInputStream(newContent), newContent.size.toLong())
+        repository.updateContent(
+            record = result,
+            fileName = "Gibson2.mp4",
+            contentType = "audio/mp4",
+            stream = ByteArrayInputStream(newContent),
+            length = newContent.size.toLong(),
+        )
 
         assertThat(result.contents, notNullValue())
         assertThat(result.contents, hasSize(1))

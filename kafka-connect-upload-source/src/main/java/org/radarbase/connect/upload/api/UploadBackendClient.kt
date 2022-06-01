@@ -37,14 +37,14 @@ import java.io.Closeable
 import java.io.IOException
 
 open class UploadBackendClient(
-        auth: Authenticator,
+        authInterceptor: Interceptor,
         private var httpClient: OkHttpClient,
         private var uploadBackendBaseUrl: String) : Closeable {
 
     init {
         httpClient = httpClient
                 .newBuilder()
-                .authenticator(auth)
+                .addInterceptor(authInterceptor)
                 .build()
 
         uploadBackendBaseUrl = uploadBackendBaseUrl.trimEnd('/')

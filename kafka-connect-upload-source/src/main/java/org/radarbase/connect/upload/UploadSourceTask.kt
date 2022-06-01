@@ -19,6 +19,7 @@
 
 package org.radarbase.connect.upload
 
+import org.apache.kafka.clients.producer.RecordMetadata
 import org.apache.kafka.connect.source.SourceRecord
 import org.apache.kafka.connect.source.SourceTask
 import org.radarbase.connect.upload.UploadSourceConnectorConfig.Companion.SOURCE_POLL_INTERVAL_CONFIG
@@ -118,7 +119,7 @@ class UploadSourceTask : SourceTask() {
         }
     }
 
-    override fun commitRecord(record: SourceRecord?) {
+    override fun commitRecord(record: SourceRecord?, recordMetadata: RecordMetadata?) {
         record ?: return
 
         commitCounter.incrementAndGet()

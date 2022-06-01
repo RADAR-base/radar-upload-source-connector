@@ -13,7 +13,7 @@ services:
   # Management Portal                                                         #
   #---------------------------------------------------------------------------#
   managementportal-app:
-    image: radarbase/management-portal:0.7.1
+    image: radarbase/management-portal:0.8.1
     networks:
       - default
       - management
@@ -38,9 +38,21 @@ services:
       JAVA_OPTS: -Xmx256m  # maximum heap size for the JVM running ManagementPortal, increase this as necessary
     volumes:
       - ../etc/mp-config/:/mp-includes/config
+    healthcheck:
+      test: "curl -f http://localhost:8080/oauth/token -d grant_type=client_credentials -d client_id=radar_upload_test_client -d client_secret=test"
 
   radarbase-postgresql:
-    image: radarbase/radarbase-postgres:latest
+    image: postgres:14
+    networks:
+      - management
+      - default
+    environment:
+      - POSTGRES_USER=radarcns
+      - POSTGRES_PASSWORD=radarcns
+      - POSTGRES_DB=managementportal
+
+  radarbase-upload:
+    image: postgres:14
     networks:
       - management
       - default
@@ -49,15 +61,16 @@ services:
     environment:
       - POSTGRES_USER=radarcns
       - POSTGRES_PASSWORD=radarcns
-      - POSTGRES_MULTIPLE_DATABASES=managementportal,uploadconnector
+      - POSTGRES_DB=uploadconnector
 
   sftp-server:
-    image: atmoz/sftp:alpine
+    image: emberstack/sftp
     networks:
       - default
     ports:
       - "2222:22"
-    command: ["connect:pass:::upload"]
+    volumes:
+      - ./src/integrationTest/resources/sftp.json:/app/config/sftp.json:ro
 
   minio:
     image: minio/minio

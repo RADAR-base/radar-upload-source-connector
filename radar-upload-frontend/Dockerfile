@@ -1,5 +1,5 @@
 #alpine version close to the version mentioned in the readme
-FROM node:14-alpine as builder
+FROM --platform=$BUILDPLATFORM node:14 as builder
 
 RUN mkdir /app
 WORKDIR /app
@@ -11,7 +11,7 @@ COPY . /app/
 
 RUN npm run build --prod
 
-FROM nginx:1.19-alpine
+FROM nginx:1.22
 
 # add init script
 COPY ./docker/nginx.conf /etc/nginx/nginx.conf

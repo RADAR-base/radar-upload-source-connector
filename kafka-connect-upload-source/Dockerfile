@@ -1,8 +1,9 @@
-FROM gradle:7.3-jdk11 as builder
+FROM --platform=$BUILDPLATFORM gradle:7.4-jdk11 as builder
 
 RUN mkdir /code
 WORKDIR /code
-ENV GRADLE_USER_HOME=/code/.gradlecache
+ENV GRADLE_USER_HOME=/code/.gradlecache \
+   GRADLE_OPTS=-Djdk.lang.Process.launchMechanism=vfork
 
 COPY ./build.gradle.kts ./settings.gradle.kts ./gradle.properties /code/
 COPY kafka-connect-upload-source/build.gradle.kts  /code/kafka-connect-upload-source/
@@ -13,7 +14,7 @@ COPY ./kafka-connect-upload-source/src/main/java /code/kafka-connect-upload-sour
 
 RUN gradle jar --no-watch-fs
 
-FROM confluentinc/cp-kafka-connect-base:7.0.0-1-ubi8
+FROM confluentinc/cp-kafka-connect-base:7.1.1
 
 MAINTAINER @nivemaham @blootsvoets
 

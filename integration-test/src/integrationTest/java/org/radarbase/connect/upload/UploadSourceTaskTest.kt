@@ -31,24 +31,25 @@ import org.junit.jupiter.api.Assertions.*
 import org.radarbase.connect.upload.converter.ConverterFactory.Converter.Companion.END_OF_RECORD_KEY
 import org.radarbase.connect.upload.converter.altoida.AltoidaConverterFactory
 import org.radarbase.connect.upload.converter.phone.AccelerometerConverterFactory
-import org.radarbase.connect.upload.util.TestBase.Companion.APPLICATION_ZIP
-import org.radarbase.connect.upload.util.TestBase.Companion.baseUri
-import org.radarbase.connect.upload.util.TestBase.Companion.createRecord
-import org.radarbase.connect.upload.util.TestBase.Companion.createRecordAndUploadContent
-import org.radarbase.connect.upload.util.TestBase.Companion.getAccessToken
-import org.radarbase.connect.upload.util.TestBase.Companion.httpClient
-import org.radarbase.connect.upload.util.TestBase.Companion.markReady
-import org.radarbase.connect.upload.util.TestBase.Companion.retrieveRecordMetadata
-import org.radarbase.connect.upload.util.TestBase.Companion.tokenUrl
-import org.radarbase.connect.upload.util.TestBase.Companion.uploadBackendConfig
-import org.radarbase.connect.upload.util.TestBase.Companion.uploadConnectClient
-import org.radarbase.connect.upload.util.TestBase.Companion.uploadConnectSecret
-import org.radarbase.connect.upload.util.TestBase.Companion.uploadContent
+import org.radarbase.connect.upload.util.TestBase.APPLICATION_ZIP
+import org.radarbase.connect.upload.util.TestBase.baseUri
+import org.radarbase.connect.upload.util.TestBase.createRecord
+import org.radarbase.connect.upload.util.TestBase.createRecordAndUploadContent
+import org.radarbase.connect.upload.util.TestBase.getAccessToken
+import org.radarbase.connect.upload.util.TestBase.httpClient
+import org.radarbase.connect.upload.util.TestBase.markReady
+import org.radarbase.connect.upload.util.TestBase.retrieveRecordMetadata
+import org.radarbase.connect.upload.util.TestBase.tokenUrl
+import org.radarbase.connect.upload.util.TestBase.uploadBackendConfig
+import org.radarbase.connect.upload.util.TestBase.uploadConnectClient
+import org.radarbase.connect.upload.util.TestBase.uploadConnectSecret
+import org.radarbase.connect.upload.util.TestBase.uploadContent
 import org.radarbase.jersey.GrizzlyServer
 import org.radarbase.jersey.config.ConfigLoader
 import org.radarbase.upload.inject.ManagementPortalEnhancerFactory
 import java.io.IOException
 import java.util.concurrent.TimeUnit
+import kotlin.reflect.jvm.jvmName
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class UploadSourceTaskTest {
@@ -79,9 +80,9 @@ class UploadSourceTaskTest {
             "upload.source.backend.baseUrl" to baseUri,
             "upload.source.poll.interval.ms" to "2000",
             "upload.source.queue.size" to "1000",
-            "upload.source.record.converter.classes" to listOf(
-                    AccelerometerConverterFactory::class.java.name,
-                    AltoidaConverterFactory::class.java.name
+            "upload.source.record.converter.classes" to arrayOf(
+                AccelerometerConverterFactory::class.jvmName,
+                AltoidaConverterFactory::class.jvmName,
             ).joinToString(separator=",")
         )
 
@@ -118,7 +119,7 @@ class UploadSourceTaskTest {
         assertNotNull(metadata)
         assertEquals("PROCESSING", metadata.status)
 
-        sourceRecords.forEach { sourceTask.commitRecord(it) }
+        sourceRecords.forEach { sourceTask.commitRecord(it, null) }
 
         val metadataAfterCommit = retrieveRecordMetadata(accessToken, createdRecord.id!!)
         assertNotNull(metadataAfterCommit)

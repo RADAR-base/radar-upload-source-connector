@@ -49,33 +49,6 @@ abstract class XmlNodeProcessorFactory {
         contents.fileName.endsWith(it, ignoreCase = true)
     }
 
-    fun getFirstElementByTagName(root: Element, tag: String): Node? {
-        val elements = root.getElementsByTagName(tag)
-        return elements.item(0)
-    }
-
-    fun getTagValue(root: Element, tag: String): String {
-        val element = getFirstElementByTagName(root, tag)
-        return if (element != null) element.textContent else ""
-    }
-
-    fun getAttributeValue(root: Element, tag: String, attribute: String): String {
-        val element = (getFirstElementByTagName(root, tag) as Element?)
-        return if  (element != null) element.getAttribute(attribute) else ""
-    }
-
-    fun getAttributeValueFromElement(element: Element, attribute: String): String = element.getAttribute(attribute)
-
-    fun getSingleElementFromTagList(root: Element, tagList: List<String>): Element {
-        // NOTE: This is assuming tags in each tree are unique
-        // The tagList represents the branch leading to required element
-
-        var currentElement: Element = root
-        tagList.forEach { tag -> currentElement = currentElement.getElementsByTagName(tag).item(0) as Element }
-
-        return currentElement
-    }
-
     abstract fun convertToSingleRecord(root: Element, timeReceived: Double, assessmentName: String? = ""): TopicData?
 
     open fun nodeConversions(
@@ -98,14 +71,18 @@ abstract class XmlNodeProcessorFactory {
 
     class XmlNodeProcessor(
             val context: ConverterFactory.ContentsContext,
-            val nodeName: String,
-            private val conversion: (node: Element, timeReceived: Double, assessmentName: String?) -> Sequence<TopicData>,
+            private val nodeName: String,
+            private val conversion: (
+                node: Element,
+                timeReceived: Double,
+                assessmentName: String?,
+            ) -> Sequence<TopicData>,
     ) {
 
         /**
          * Whether the node name matches this processor.
          */
-        fun matches(nodeName: String): Boolean = nodeName.equals(this.nodeName)
+        fun matches(nodeName: String): Boolean = nodeName == this.nodeName
 
         /**
          * Convert a node from XML to one or more records
@@ -114,8 +91,35 @@ abstract class XmlNodeProcessorFactory {
             node: Element,
             timeReceived: Double,
             assessmentName: String?
-        ): Sequence<TopicData> {
-            return conversion(node, timeReceived, assessmentName)
+        ): Sequence<TopicData> = conversion(node, timeReceived, assessmentName)
+    }
+
+    companion object {
+        fun getFirstElementByTagName(root: Element, tag: String): Node? {
+            val elements = root.getElementsByTagName(tag)
+            return elements.item(0)
+        }
+
+        fun getTagValue(root: Element, tag: String): String {
+            val element = getFirstElementByTagName(root, tag)
+            return if (element != null) element.textContent else ""
+        }
+
+        fun getAttributeValue(root: Element, tag: String, attribute: String): String {
+            val element = (getFirstElementByTagName(root, tag) as Element?)
+            return if  (element != null) element.getAttribute(attribute) else ""
+        }
+
+        fun getAttributeValueFromElement(element: Element, attribute: String): String = element.getAttribute(attribute)
+
+        fun getSingleElementFromTagList(root: Element, tagList: List<String>): Element {
+            // NOTE: This is assuming tags in each tree are unique
+            // The tagList represents the branch leading to required element
+
+            var currentElement: Element = root
+            tagList.forEach { tag -> currentElement = currentElement.getElementsByTagName(tag).item(0) as Element }
+
+            return currentElement
         }
     }
 }

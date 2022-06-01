@@ -25,8 +25,8 @@ The project contains three components:
 # Usage
 If you are a user who would like to upload data to RADAR-base, you require an account on ManagementPortal application of your environment. Please request an account from your System administer if you do not have done.
 
-1. Please login to the uploader application using your account credentials from ManagementPortal.
-2. Authorize the uploading application to to perform mentioned operations by clicking on `"Approve"`.
+1. Please log in to the uploader application using your account credentials from ManagementPortal.
+2. Authorize the uploading application to perform mentioned operations by clicking on `"Approve"`.
 3. Select the project you want to work with.
 4. Click on the `"UPLOAD"` button to upload files.
 5. Select the participant and type of the file data source, then click on `"CREATE RECORD"`.
@@ -116,7 +116,7 @@ sourceTypes: # these are the data source types that are supported to upload data
       keyFile: </path/to/private/ssh/key>
       # keyPassphrase: ...  # SSH key passphrase, if any.
       root: /output/  # root folder to store images to. Defaults to runtime directory.
-      advertizedUrl: sftp://<my-hostname>  # advertized URL to reference path from. May include a base path if needed.
+      advertizedUrl: sftp://<my-hostname>  # advertised URL to reference path from. May include a base path if needed.
   - name: axivity
     topics:
       - connect_upload_axivity_acceleration
@@ -170,19 +170,19 @@ Please copy `etc/source-upload.properties.template` to `etc/source-upload.proper
 <th>Importance</th>
 </tr>
 <tr>
-<td>upload.source.poll.interval.ms</td></td><td>How often to poll the records to process.</td></td><td>long</td></td><td>60000</td></td><td></td></td><td>low</td></td></tr>
+<td>upload.source.poll.interval.ms</td><td>How often to poll the records to process.</td><td>long</td><td>60000</td><td></td><td>low</td></tr>
 <tr>
-<td>upload.source.queue.size</td></td><td>Capacity of the records queue.</td></td><td>int</td></td><td>1000</td></td><td></td></td><td>high</td></tr>
+<td>upload.source.queue.size</td><td>Capacity of the records queue.</td><td>int</td><td>1000</td><td></td><td>high</td></tr>
 <tr>
-<td>upload.source.client.id</td></td><td>OAuth Client-id of the upload kafka connector.</td></td><td>string</td></td><td>radar-upload-connector-client</td></td><td></td></td><td>high</td></td></tr>
+<td>upload.source.client.id</td><td>OAuth Client-id of the upload kafka connector.</td><td>string</td><td>radar-upload-connector-client</td><td></td><td>high</td></tr>
 <tr>
-<td>upload.source.client.secret</td></td><td>OAuth client-secret of the upload kafka connector.</td></td><td>string</td></td><td></td></td><td></td></td><td>high</td></td></tr>
+<td>upload.source.client.secret</td><td>OAuth client-secret of the upload kafka connector.</td><td>string</td><td></td><td></td><td>high</td></tr>
 <tr>
-<td>upload.source.client.tokenUrl</td></td><td>Token URL of ManagementPortal to get access token.</td></td><td>string</td></td><td></td></td><td></td></td><td>high</td></td></tr>
+<td>upload.source.client.tokenUrl</td><td>Token URL of ManagementPortal to get access token.</td><td>string</td><td></td><td></td><td>high</td></tr>
 <tr>
-<td>upload.source.backend.baseUrl</td></td><td>URL of the radar-upload-backend where uploaded files are stored.</td></td><td>string</td></td><td>http://radar-upload-connect-backend:8085/radar-upload/</td></td><td></td></td><td>high</td></td></tr>
+<td>upload.source.backend.baseUrl</td><td>URL of the radar-upload-backend where uploaded files are stored.</td><td>string</td><td>http://radar-upload-connect-backend:8085/radar-upload/</td><td></td><td>high</td></tr>
 <tr>
-<td>upload.source.record.converter.classes</td></td><td>List of classes to be used to convert a record.</td></td><td>list</td></td><td>org.radarbase.connect.upload.converter.phone.AccelerometerConverterFactory</td></td><td>Class extending org.radarbase.connect.upload.converter.ConverterFactory</td></td><td>high</td></td></tr>
+<td>upload.source.record.converter.classes</td><td>List of classes to be used to convert a record.</td><td>list</td><td>org.radarbase.connect.upload.converter.phone.AccelerometerConverterFactory</td><td>Class extending org.radarbase.connect.upload.converter.ConverterFactory</td><td>high</td></tr>
 </tbody></table>
 
 #### Adding support to new device type
@@ -211,7 +211,7 @@ Configuring radar-upload-frontend requires configuring the right environment var
 <td>VUE_APP_AUTH_CALLBACK</td><td>Callback URL to send the `authorization_code`. This should be correctly configured on ManagementPortal.</td><td>http://localhost:8080/upload/login or https://radarbase-test.domain.com/upload/login</td>
 <tr>
 <tr>
-<td>VUE_APP_CLIENT_ID</td><td>OAuth Client Id of the web application configured on ManagementPortal. </td><td>radar_upload_frontend</td>
+<td>VUE_APP_CLIENT_ID</td><td>OAuth Client ID of the web application configured on ManagementPortal. </td><td>radar_upload_frontend</td>
 <tr>
 </tbody></table>
 

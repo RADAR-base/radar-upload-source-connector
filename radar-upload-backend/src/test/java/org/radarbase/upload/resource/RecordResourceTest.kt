@@ -11,6 +11,7 @@ import okhttp3.OkHttpClient
 import okhttp3.RequestBody
 import okio.BufferedSink
 import org.glassfish.jersey.test.JerseyTest
+import org.glassfish.jersey.test.TestProperties
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
 import org.junit.jupiter.api.AfterEach
@@ -45,7 +46,6 @@ internal class RecordResourceTest: JerseyTest() {
 
     @BeforeEach
     fun doSetup() {
-        super.setUp()
         assertThat(client, not(nullValue()))
         client.register(ContextResolver {
             MapperResourceEnhancer().mapper
@@ -91,11 +91,14 @@ internal class RecordResourceTest: JerseyTest() {
                 RecordContent::class.jvmName,
                 SourceType::class.jvmName,
             ),
-            url = "jdbc:h2:file:${tempDir.resolve("db.h2")};DB_CLOSE_DELAY=-1",
-            dialect = "org.hibernate.dialect.H2Dialect",
+            url = "jdbc:hsqldb:mem:test3;DB_CLOSE_DELAY=-1",
+            driver = "org.hsqldb.jdbc.JDBCDriver",
+            dialect = "org.hibernate.dialect.HSQLDialect",
         )
         val enhancerFactory = MockResourceEnhancerFactory(config, authQueue, projects, databaseConfig)
-        return ConfigLoader.createResourceConfig(enhancerFactory.createEnhancers())
+        return ConfigLoader.createResourceConfig(enhancerFactory.createEnhancers()).apply {
+
+        }
     }
 
     @Test
@@ -161,11 +164,5 @@ internal class RecordResourceTest: JerseyTest() {
             .put(Entity.text("something")).use { response ->
                 assertThat(response.statusInfo.family, `is`(Response.Status.Family.SUCCESSFUL))
             }
-    }
-
-    companion object {
-        @JvmStatic
-        @TempDir
-        lateinit var tempDir: Path
     }
 }

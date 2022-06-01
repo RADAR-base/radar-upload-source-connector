@@ -4,19 +4,18 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") apply false
-    id("com.github.ben-manes.versions") version "0.39.0"
+    id("com.github.ben-manes.versions") version "0.42.0"
 }
 
 allprojects {
     group = "org.radarbase"
-    version = "0.5.10"
+    version = "0.5.11"
 }
 
 subprojects {
     repositories {
         mavenCentral()
         maven(url = "https://packages.confluent.io/maven/")
-        maven(url = "https://repo.thehyve.nl/content/repositories/snapshots")
     }
 
     val kotlinApiVersion: String by project
@@ -41,12 +40,19 @@ subprojects {
 
 
         tasks.register("downloadDependencies") {
-            configurations["runtimeClasspath"].files
-            configurations["compileClasspath"].files
+            configurations.find { it.name =="compileClasspath" }?.files
+            configurations.find { it.name =="runtimeClasspath" }?.files
+        }
 
-            doLast {
-                println("Downloaded all dependencies")
+        tasks.register<Copy>("copyDependencies") {
+            try {
+                from(
+                    configurations.named("runtimeClasspath").map { it.files }
+                )
+            } catch (ex: UnknownDomainObjectException) {
+                // do nothing
             }
+            into("$buildDir/third-party/")
         }
     }
 }
@@ -66,5 +72,5 @@ tasks.withType<DependencyUpdatesTask> {
 }
 
 tasks.wrapper {
-    gradleVersion = "7.3.1"
+    gradleVersion = "7.4.2"
 }

@@ -24,11 +24,11 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinModule
-import okhttp3.Authenticator
+import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import org.apache.kafka.common.config.AbstractConfig
 import org.apache.kafka.common.config.ConfigDef
-import org.radarbase.connect.upload.auth.ClientCredentialsAuthorizer
+import org.radarbase.connect.upload.auth.OAuthClientCredentialsInterceptor
 import org.radarbase.connect.upload.converter.altoida.AltoidaConverterFactory
 import org.radarbase.connect.upload.converter.axivity.AxivityConverterFactory
 import org.radarbase.connect.upload.converter.gaitup.Physilog5ConverterFactory
@@ -44,9 +44,9 @@ import java.util.concurrent.TimeUnit
 class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, String>) :
     AbstractConfig(config, parsedConfig) {
 
-    val authenticator: Authenticator by lazy {
+    val authenticator: Interceptor by lazy {
         logger.info("Initializing authenticator")
-        ClientCredentialsAuthorizer(
+        OAuthClientCredentialsInterceptor(
             httpClient,
             oauthClientId,
             oauthClientSecret,
