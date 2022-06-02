@@ -23,10 +23,10 @@ import org.radarbase.connect.upload.converter.xml.AltoidaXmlProcessor
 import org.radarbase.connect.upload.converter.xml.XmlNodeProcessorFactory
 
 open class AltoidaXmlFileProcessorFactory(
-        open val xmlProcessorFactories: List<XmlNodeProcessorFactory>,
-        ) : FileProcessorFactory {
+    open val xmlProcessorFactories: List<XmlNodeProcessorFactory>,
+) : FileProcessorFactory {
     override fun matches(contents: ContentsDTO) = contents.fileName.endsWith("altoida_data.xml")
 
-    override fun createProcessor(record: RecordDTO) = AltoidaXmlProcessor(record, xmlProcessorFactories)
+    override fun createProcessor(record: RecordDTO) = AltoidaXmlProcessor(xmlProcessorFactories)
 
 }

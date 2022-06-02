@@ -10,21 +10,25 @@ class AltoidaARTestQuestionnaireXmlProcessor : XmlNodeProcessorFactory() {
 
     override val nodeName: String = "questionnaire"
 
-    override fun convertToSingleRecord(root: Element, timeReceived: Double, assessmentName: String?): TopicData? {
-        val timestamp = getAttributeValueFromElement(root, "start_ts")
-        val firstObjectPlaced = getAttributeValue(root, "first_object_placed", "selected_object")
-        val firstObjectPlacedCorrect = getAttributeValue(root, "first_object_placed", "correct_object")
-        val firstObjectSearched = getAttributeValue(root, "first_object_searched", "selected_object")
-        val firstObjectSearchedCorrect = getAttributeValue(root, "first_object_searched", "correct_object")
+    override fun convertToSingleRecord(
+        root: Element,
+        timeReceived: Double,
+        assessmentName: String?,
+    ): TopicData {
+        val placedElement = root.childOrNull("first_object_placed")
+        val searchedElement = root.childOrNull("first_object_searched")
 
-        return TopicData("connect_upload_altoida_ar_test_questionnaire", AltoidaARTestQuestionnaire(
-                timeFieldParser.timeFromString(timestamp),
-                timeReceived,
-                firstObjectPlaced,
-                firstObjectPlacedCorrect,
-                firstObjectSearched,
-                firstObjectSearchedCorrect
-        ))
+        return TopicData(
+            topic = "connect_upload_altoida_ar_test_questionnaire",
+            value = AltoidaARTestQuestionnaire.newBuilder().apply {
+                time = root.attributeToTime("start_ts")
+                this.timeReceived = timeReceived
+                firstObjectPlaced = placedElement.attribute("selected_object")
+                firstObjectPlacedCorrect = placedElement.attribute("correct_object")
+                firstObjectSearched = searchedElement.attribute("selected_object")
+                firstObjectSearchedCorrect = searchedElement.attribute("correct_object")
+            }.build(),
+        )
     }
 
 }

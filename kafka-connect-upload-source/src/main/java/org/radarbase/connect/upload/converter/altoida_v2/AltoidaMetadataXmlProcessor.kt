@@ -17,96 +17,86 @@ class AltoidaMetadataXmlProcessor : XmlNodeProcessorFactory() {
 
     override val nodeName: String = "metadata"
 
-    override fun convertToSingleRecord(root: Element, timeReceived: Double, assessmentName: String?): TopicData? {
-        val timestamp = getAttributeValue(root, "datetime", "utc")
-        val age = getTagValue(root, "age").toInt()
-        val yearsOfEducation = getTagValue(root, "years_of_education").toInt()
-        val gender = getTagValue(root, "gender").toGender()
-        val dominantHand = getTagValue(root, "dominant_hand").toDominantHand()
+    override fun convertToSingleRecord(
+        root: Element,
+        timeReceived: Double,
+        assessmentName: String?,
+    ): TopicData {
+        val deviceElement = root.childOrNull("device")
+        val osElement = root.childOrNull("os")
+        val displayElement = root.child("display")
+        val displaySizeElement = displayElement.child("size")
 
-        val applicationVersion = getAttributeValue(root, "application", "version")
-        val deviceType = getAttributeValue(root, "device", "type")
-        val deviceDescription = getAttributeValue(root, "device", "description")
-        val osType = getAttributeValue(root, "os", "type")
-        val osVersion = getAttributeValue(root, "os", "version")
-        val displayPpi = getAttributeValue(root, "display", "ppi")
+        return TopicData(
+            topic = "connect_upload_altoida_xml_metadata",
+            value = AltoidaXmlMetadata.newBuilder().apply {
+                time = root.child("datetime").attributeToTime("utc")
+                this.timeReceived = timeReceived
+                age = root.childValue("age").toInt()
+                yearsOfEducation = root.childValue("years_of_education").toIntOrNull()
+                gender = root.childValue("gender").toGender()
+                dominantHand = root.childValue("dominant_hand").toDominantHand()
+                applicationVersion = root.childOrNull("application").attribute("version")
+                deviceType = deviceElement.attribute("type").toDeviceType()
+                deviceDescription = deviceElement.attribute("description")
+                osType = osElement.attribute("type").toOsType()
+                osVersion = osElement.attribute("version")
+                displayPpi = displayElement.attribute("ppi").toDouble()
+                displayWidthPixels =  displaySizeElement
+                    .child("width", "pixels")
+                    .getAttribute("value")
+                    .toDouble()
+                displayHeightPixels = displaySizeElement
+                    .child("height", "pixels")
+                    .getAttribute("value")
+                    .toDouble()
+                displayWidthCm = displaySizeElement
+                    .child("width", "centimeters")
+                    .getAttribute("value")
+                    .toDouble()
+                displayHeightCm = displaySizeElement
+                    .child("height", "centimeters")
+                    .getAttribute("value")
+                    .toDouble()
 
-        val displayWidthPixelsList = listOf("display", "size", "width", "pixels")
-        val displayWidthPixels =  getAttributeValueFromElement(getSingleElementFromTagList(root, displayWidthPixelsList), "value")
-
-        val displayHeightPixelsList = listOf("display", "size", "height", "pixels")
-        val displayHeightPixels = getAttributeValueFromElement(getSingleElementFromTagList(root, displayHeightPixelsList), "value")
-
-        val displayWidthCmList = listOf("display", "size", "height", "centimeters")
-        val displayWidthCm = getAttributeValueFromElement(getSingleElementFromTagList(root, displayWidthCmList), "value")
-
-        val displayHeightCmList = listOf("display", "size", "height", "centimeters")
-        val displayHeightCm = getAttributeValueFromElement(getSingleElementFromTagList(root, displayHeightCmList), "value")
-
-        return TopicData("connect_upload_altoida_xml_metadata", AltoidaXmlMetadata(
-                timeFieldParser.timeFromString(timestamp),
-                timeReceived,
-                age,
-                yearsOfEducation,
-                gender,
-                dominantHand,
-                applicationVersion,
-                deviceType.toDeviceType(),
-                deviceDescription,
-                osType.toOsType(),
-                osVersion,
-                displayPpi.toDouble(),
-                displayWidthPixels.toDouble(),
-                displayHeightPixels.toDouble(),
-                displayWidthCm.toDouble(),
-                displayHeightCm.toDouble())
+            }.build()
         )
     }
 
     override fun nodeConversions(
-            root: Element,
-            timeReceived: Double,
-            assessmentName: String?
-    ): Sequence<TopicData> {
-        val conversion = convertToSingleRecord(root, timeReceived, assessmentName)
-        return if (conversion != null) sequenceOf(conversion) else emptySequence()
+        root: Element,
+        timeReceived: Double,
+        assessmentName: String?,
+    ) = sequenceOf(
+        convertToSingleRecord(root, timeReceived, assessmentName)
+    )
+
+    private fun String.toGender() : GenderType = when (this) {
+        "male" -> GenderType.MALE
+        "female" -> GenderType.FEMALE
+        "other" -> GenderType.OTHER
+        else -> GenderType.UNKNOWN
     }
 
-
-    private fun String.toGender() : GenderType {
-        return when (this) {
-            "male" -> GenderType.MALE
-            "female" -> GenderType.FEMALE
-            "other" -> GenderType.OTHER
-            else -> GenderType.UNKNOWN
-        }
+    private fun String.toDominantHand() : DominantHandType = when (this) {
+        "left" -> DominantHandType.LEFT
+        "right" -> DominantHandType.RIGHT
+        "other" -> DominantHandType.OTHER
+        else -> DominantHandType.UNKNOWN
     }
 
-    private fun String.toDominantHand() : DominantHandType {
-        return when (this) {
-            "left" -> DominantHandType.LEFT
-            "right" -> DominantHandType.RIGHT
-            "other" -> DominantHandType.OTHER
-            else -> DominantHandType.UNKNOWN
-        }
+    private fun String.toDeviceType() : DeviceType = when (this) {
+        "phone" -> DeviceType.PHONE
+        "tablet" -> DeviceType.TABLET
+        "other" -> DeviceType.OTHER
+        else -> DeviceType.UNKNOWN
     }
 
-    private fun String.toDeviceType() : DeviceType {
-        return when (this) {
-            "phone" -> DeviceType.PHONE
-            "tablet" -> DeviceType.TABLET
-            "other" -> DeviceType.OTHER
-            else -> DeviceType.UNKNOWN
-        }
-    }
-
-    private fun String.toOsType() : OSType {
-        return when (this) {
-            "iOS" -> OSType.IOS
-            "android" -> OSType.ANDROID
-            "other" -> OSType.OTHER
-            else -> OSType.UNKNOWN
-        }
+    private fun String.toOsType() : OSType = when (this) {
+        "iOS" -> OSType.IOS
+        "android" -> OSType.ANDROID
+        "other" -> OSType.OTHER
+        else -> OSType.UNKNOWN
     }
 
     companion object {

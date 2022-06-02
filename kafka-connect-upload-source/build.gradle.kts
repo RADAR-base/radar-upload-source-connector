@@ -47,6 +47,8 @@ dependencies {
     val junitVersion: String by project
     testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")
 
+    testImplementation("io.confluent:kafka-connect-avro-converter:$confluentVersion")
+
     val hamcrestVersion: String by project
     testImplementation("org.hamcrest:hamcrest:$hamcrestVersion")
     testImplementation("org.apache.kafka:connect-api:$kafkaVersion")

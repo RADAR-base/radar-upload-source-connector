@@ -46,7 +46,7 @@ class CwaFileProcessorFactory(
                     }
 
                 metadataProcessor.processReader(cwaReader, firstTime, context.timeReceived)
-                    .forEach { produce(it) }
+                    .forEach(produce)
             } finally {
                 cwaReader.close()
             }

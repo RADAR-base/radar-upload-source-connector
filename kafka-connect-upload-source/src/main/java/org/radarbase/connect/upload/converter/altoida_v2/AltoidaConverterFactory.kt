@@ -40,56 +40,56 @@ class AltoidaConverterFactory : ConverterFactory {
     override val sourceType: String = "altoida_v2"
 
     override fun filePreProcessorFactories(
-            settings: Map<String, String>,
-            connectorConfig: SourceTypeDTO,
-            logRepository: LogRepository
+        settings: Map<String, String>,
+        connectorConfig: SourceTypeDTO,
+        logRepository: LogRepository
     ): List<FilePreProcessorFactory> = listOf(
-            // Preprocess malformed export.csv
-            AltoidaSummaryCsvPreProcessorFactory(),
+        // Preprocess malformed export.csv
+        AltoidaSummaryCsvPreProcessorFactory(),
     )
 
     override fun fileProcessorFactories(
-            settings: Map<String, String>,
-            connectorConfig: SourceTypeDTO,
-            logRepository: LogRepository
+        settings: Map<String, String>,
+        connectorConfig: SourceTypeDTO,
+        logRepository: LogRepository
     ): List<FileProcessorFactory> = listOf(
-            // Process export.csv
-            CsvFileProcessorFactory(
+        // Process export.csv
+        CsvFileProcessorFactory(
+            csvProcessorFactories = listOf(
+                AltoidaSummaryProcessor(),
+                AltoidaDomainResultProcessor(),
+            ),
+        ),
+        // Process zip file with detailed CSV contents and XML file
+        ZipFileProcessorFactory(
+            sourceType,
+            zipEntryProcessors = listOf(
+                CsvFileProcessorFactory(
                     csvProcessorFactories = listOf(
-                            AltoidaSummaryProcessor(),
-                            AltoidaDomainResultProcessor(),
-                    ),
+                        AltoidaAccelerationCsvProcessor("acceleration.csv"),
+                        AltoidaAttitudeCsvProcessor("gyroscope.csv"),
+                        AltoidaBlinkCsvProcessor("blink.csv"),
+                        AltoidaEyeTrackingCsvProcessor("eye_screen_focuspoint.csv"),
+                        AltoidaGravityCsvProcessor("gravity_acceleration.csv"),
+                        AltoidaMagneticFieldCsvProcessor("magnetometer.csv"),
+                        AltoidaPathCsvProcessor("ar_path.csv"),
+                        AltoidaTouchScreenCsvProcessor("touch.csv"),
+                        AltoidaMotorBubbleCsvProcessor(),
+                    )
+                ),
+                AltoidaXmlFileProcessorFactory(
+                    xmlProcessorFactories = listOf(
+                        AltoidaAssessmentsSummaryXmlProcessor(),
+                        AltoidaTestEventXmlProcessor(),
+                        AltoidaARAssessmentsSummaryXmlProcessor(),
+                        AltoidaARTestQuestionnaireXmlProcessor(),
+                        AltoidaScreenElementXmlProcessor(),
+                        AltoidaMetadataXmlProcessor(),
+                    )
+                ),
             ),
-            // Process zip file with detailed CSV contents and XML file
-            ZipFileProcessorFactory(
-                    sourceType,
-                    zipEntryProcessors = listOf(
-                            CsvFileProcessorFactory(
-                                    csvProcessorFactories = listOf(
-                                            AltoidaAccelerationCsvProcessor("acceleration.csv"),
-                                            AltoidaAttitudeCsvProcessor("gyroscope.csv"),
-                                            AltoidaBlinkCsvProcessor("blink.csv"),
-                                            AltoidaEyeTrackingCsvProcessor("eye_screen_focuspoint.csv"),
-                                            AltoidaGravityCsvProcessor("gravity_acceleration.csv"),
-                                            AltoidaMagneticFieldCsvProcessor("magnetometer.csv"),
-                                            AltoidaPathCsvProcessor("ar_path.csv"),
-                                            AltoidaTouchScreenCsvProcessor("touch.csv"),
-                                            AltoidaMotorBubbleCsvProcessor(),
-                                            )
-                            ),
-                            AltoidaXmlFileProcessorFactory(
-                                    xmlProcessorFactories = listOf(
-                                            AltoidaAssessmentsSummaryXmlProcessor(),
-                                            AltoidaTestEventXmlProcessor(),
-                                            AltoidaARAssessmentsSummaryXmlProcessor(),
-                                            AltoidaARTestQuestionnaireXmlProcessor(),
-                                            AltoidaScreenElementXmlProcessor(),
-                                            AltoidaMetadataXmlProcessor()
-                                    )
-                            )
-                    ),
-                    allowUnmappedFiles = true,
-            ),
+            allowUnmappedFiles = true,
+        ),
     )
 }
 

@@ -13,6 +13,7 @@ import org.radarbase.connect.upload.exception.ConversionTemporarilyFailedExcepti
 import org.slf4j.LoggerFactory
 import java.io.Closeable
 import java.time.Duration
+import java.time.Instant
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -22,7 +23,7 @@ class ConverterManager(
     private val converters: Map<String, ConverterFactory.Converter>,
     private val uploadClient: UploadBackendClient,
     private val logRepository: LogRepository,
-    pollDuration: Duration,
+    private val pollDuration: Duration,
 ): Closeable {
     private val executor = Executors.newSingleThreadScheduledExecutor()
 
@@ -38,11 +39,20 @@ class ConverterManager(
 
     private fun poll() {
         logger.info("Polling new records...")
+        val intervalEnd = Instant.now() + pollDuration
+        val pollSize = 1
+
+        do {
+            val processedRecords = makePoll(pollSize)
+        } while (processedRecords == pollSize && Instant.now() < intervalEnd)
+    }
+
+    private fun makePoll(numberOfRecords: Int): Int {
         val records = try {
-            uploadClient.pollRecords(PollDTO(1, converters.keys)).records
+            uploadClient.pollRecords(PollDTO(numberOfRecords, converters.keys)).records
         } catch (exe: Throwable) {
             logger.error("Could not successfully poll records. Waiting for next polling...", exe)
-            return
+            return numberOfRecords
         }
 
         try {
@@ -56,7 +66,9 @@ class ConverterManager(
             }
         } catch (ex: Throwable) {
             logger.error("Failed to process records", ex)
+            return numberOfRecords
         }
+        return records.size
     }
 
     private fun processRecord(
