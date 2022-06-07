@@ -110,9 +110,7 @@ class UploadSourceTask : SourceTask() {
             .take(queueSize) // don't process more than queueSize records at once
             .toList()
 
-        return if (records.isNotEmpty()) {
-            records
-        } else {
+        return records.ifEmpty {
             // if no non-blocking elements are available, it's ok to wait for them for a bit.
             queue.poll(pollInterval.toMillis(), TimeUnit.MILLISECONDS)
                 ?.let { listOf(it) }

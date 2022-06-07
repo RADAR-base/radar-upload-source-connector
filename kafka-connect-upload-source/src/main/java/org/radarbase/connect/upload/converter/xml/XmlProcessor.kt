@@ -75,7 +75,7 @@ open class XmlProcessor(
             val (lastChild, metadata) = children.removeLast()
             val updatedMetadata = findMetadata(lastChild, metadata)
 
-            children += lastChild.childNodes
+            lastChild.childNodes
                 .asSequence()
                 .filter { it.hasChildNodes() }
                 .map { it as Element }
@@ -85,8 +85,7 @@ open class XmlProcessor(
                         ?.convertToRecord(node, context.timeReceived, updatedMetadata)
                         ?.forEach(produce)
                 }
-                .map { it to updatedMetadata }
-                .toList()
+                .mapTo(children) { it to updatedMetadata }
         }
     }
 

@@ -42,7 +42,6 @@ import javax.persistence.LockModeType
 import javax.persistence.PessimisticLockScope
 import jakarta.ws.rs.core.Context
 import kotlin.collections.HashSet
-import kotlin.streams.toList
 
 
 class RecordRepositoryImpl(
@@ -313,7 +312,7 @@ class RecordRepositoryImpl(
 
                 status = RecordStatus.valueOf(newStatus)
             }
-            message = metadata.message ?: defaultStatusMessage[status]
+            message = metadata.message ?: status.defaultStatusMessage
         }.update()
 
         merge(existingMetadata)
@@ -352,28 +351,36 @@ class RecordRepositoryImpl(
                 throw HttpBadRequestException("unknown_status", "Record status $to is not a known status. Use one of: ${RecordStatus.values().joinToString()}.")
             }
 
-            return toStatus == from
-                    || toStatus in allowedStateTransitions[from]
-                    ?: throw HttpBadRequestException("unknown_status", "Record status $from is not a known status. Use one of: ${RecordStatus.values().joinToString()}.")
+            return if (toStatus == from) {
+                true
+            } else {
+                val allowedStateTransition = allowedStateTransitions[from]
+                    ?: throw HttpBadRequestException(
+                        "unknown_status",
+                        "Record status $from is not a known status. Use one of: ${allowedStateTransitions.keys}.",
+                    )
+
+                toStatus in allowedStateTransition
+            }
         }
 
-        private val allowedStateTransitions: Map<RecordStatus, Set<RecordStatus>> = EnumMap<RecordStatus, Set<RecordStatus>>(RecordStatus::class.java).apply {
-            this[RecordStatus.INCOMPLETE] = setOf(RecordStatus.READY, RecordStatus.FAILED)
-            this[RecordStatus.READY] = setOf(RecordStatus.QUEUED, RecordStatus.FAILED)
-            this[RecordStatus.QUEUED] = setOf(RecordStatus.PROCESSING, RecordStatus.READY, RecordStatus.FAILED)
-            this[RecordStatus.PROCESSING] = setOf(RecordStatus.READY, RecordStatus.SUCCEEDED, RecordStatus.FAILED)
-            this[RecordStatus.FAILED] = setOf(RecordStatus.READY)
-            this[RecordStatus.SUCCEEDED] = setOf(RecordStatus.READY)
-        }
+        private val allowedStateTransitions: Map<RecordStatus, Set<RecordStatus>> = listOf(
+            RecordStatus.INCOMPLETE to EnumSet.of(RecordStatus.READY, RecordStatus.FAILED),
+            RecordStatus.READY to EnumSet.of(RecordStatus.QUEUED, RecordStatus.FAILED),
+            RecordStatus.QUEUED to EnumSet.of(RecordStatus.PROCESSING, RecordStatus.READY, RecordStatus.FAILED),
+            RecordStatus.PROCESSING to EnumSet.of(RecordStatus.READY, RecordStatus.SUCCEEDED, RecordStatus.FAILED),
+            RecordStatus.FAILED to EnumSet.of(RecordStatus.READY),
+            RecordStatus.SUCCEEDED to EnumSet.of(RecordStatus.READY),
+        ).toMap(EnumMap(RecordStatus::class.java))
 
-        private val defaultStatusMessage: Map<RecordStatus, String> = EnumMap<RecordStatus, String>(RecordStatus::class.java).apply {
-            this[RecordStatus.INCOMPLETE] = "The record has been created. The data must be uploaded"
-            this[RecordStatus.READY] = "The record is ready for processing"
-            this[RecordStatus.QUEUED] = "The record has been queued for processing"
-            this[RecordStatus.PROCESSING] = "The record is being processed"
-            this[RecordStatus.FAILED] = "The record processing has been failed. Please check the logs for more information"
-            this[RecordStatus.SUCCEEDED] = "The record has been processed successfully"
-        }
-
+        private val RecordStatus.defaultStatusMessage: String
+            get() = when(this) {
+                RecordStatus.INCOMPLETE -> "The record has been created. The data must be uploaded"
+                RecordStatus.READY -> "The record is ready for processing"
+                RecordStatus.QUEUED -> "The record has been queued for processing"
+                RecordStatus.PROCESSING -> "The record is being processed"
+                RecordStatus.FAILED -> "The record processing has been failed. Please check the logs for more information"
+                RecordStatus.SUCCEEDED -> "The record has been processed successfully"
+            }
     }
 }

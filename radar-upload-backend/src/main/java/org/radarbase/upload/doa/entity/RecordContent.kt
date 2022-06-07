@@ -22,6 +22,7 @@ package org.radarbase.upload.doa.entity
 import org.radarbase.upload.doa.AbstractJpaPersistable
 import java.sql.Blob
 import java.time.Instant
+import java.util.*
 import javax.persistence.*
 
 @Entity
@@ -43,6 +44,17 @@ class RecordContent : AbstractJpaPersistable<Long>() {
     @JoinColumn(name = "record_id")
     lateinit var record: Record
 
+    @Lob
     @Basic(fetch = FetchType.LAZY)
     lateinit var content: Blob
+
+    override fun equals(other: Any?): Boolean = equalTo(
+        other,
+        idGetter = { id },
+        { record },
+        { fileName },
+        { createdDate },
+        { size },
+    )
+    override fun hashCode(): Int = Objects.hash(record, fileName)
 }

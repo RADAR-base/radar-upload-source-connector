@@ -41,5 +41,23 @@ abstract class AbstractJpaPersistable<T : java.io.Serializable> {
 
     override fun hashCode(): Int = id.hashCode()
 
-    override fun toString() = "Entity of type ${this.javaClass.name} with id: $id"
+    override fun toString() = "Entity<${javaClass.name}: $id>"
+
+    companion object {
+        inline fun <reified T: Any> T.equalTo(other: Any?, idGetter: T.() -> Any?, vararg getters: T.() -> Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+
+            other as T
+
+            val thisId = idGetter()
+            val otherId = other.idGetter()
+
+            return if (thisId != null && otherId != null) {
+                thisId == otherId
+            } else {
+                getters.all { getter -> getter() == other.getter() }
+            }
+        }
+    }
 }
