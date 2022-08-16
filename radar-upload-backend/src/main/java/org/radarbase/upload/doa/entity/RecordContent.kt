@@ -23,7 +23,7 @@ import org.radarbase.upload.doa.AbstractJpaPersistable
 import java.sql.Blob
 import java.time.Instant
 import java.util.*
-import javax.persistence.*
+import jakarta.persistence.*
 
 @Entity
 @Table(name = "record_content")

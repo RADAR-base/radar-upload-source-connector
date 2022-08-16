@@ -19,9 +19,9 @@
 
 package org.radarbase.upload.doa
 
-import javax.persistence.GeneratedValue
-import javax.persistence.Id
-import javax.persistence.MappedSuperclass
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.Id
+import jakarta.persistence.MappedSuperclass
 
 @MappedSuperclass
 abstract class AbstractJpaPersistable<T : java.io.Serializable> {

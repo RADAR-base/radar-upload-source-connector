@@ -20,7 +20,7 @@
 package org.radarbase.upload.doa.entity
 
 import java.time.Instant
-import javax.persistence.*
+import jakarta.persistence.*
 
 @Entity
 @Table(name = "record_metadata")

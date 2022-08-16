@@ -20,7 +20,7 @@
 package org.radarbase.upload.doa.entity
 
 import org.hibernate.annotations.NaturalId
-import javax.persistence.*
+import jakarta.persistence.*
 
 @Entity
 @Table(name = "source_type")

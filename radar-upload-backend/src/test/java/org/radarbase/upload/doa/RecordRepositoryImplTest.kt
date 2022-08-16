@@ -42,8 +42,8 @@ import java.io.ByteArrayInputStream
 import java.nio.file.Path
 import java.time.Instant
 import java.time.LocalDateTime
-import javax.persistence.EntityManager
-import javax.persistence.EntityManagerFactory
+import jakarta.persistence.EntityManager
+import jakarta.persistence.EntityManagerFactory
 import kotlin.reflect.jvm.jvmName
 import kotlin.text.Charsets.UTF_8
 

@@ -6,7 +6,7 @@ import java.time.Duration
 plugins {
     java
     kotlin("jvm")
-    id("com.avast.gradle.docker-compose") version "0.16.4"
+    id("com.avast.gradle.docker-compose")
 }
 
 sourceSets {

@@ -40,8 +40,8 @@ import java.nio.file.Path
 import jakarta.inject.Provider
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
-import javax.persistence.EntityManager
-import javax.persistence.EntityManagerFactory
+import jakarta.persistence.EntityManager
+import jakarta.persistence.EntityManagerFactory
 import kotlin.reflect.jvm.jvmName
 
 internal class SourceTypeRepositoryImplTest {

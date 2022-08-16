@@ -72,5 +72,5 @@ tasks.withType<DependencyUpdatesTask> {
 }
 
 tasks.wrapper {
-    gradleVersion = "7.4.2"
+    gradleVersion = "7.5.1"
 }

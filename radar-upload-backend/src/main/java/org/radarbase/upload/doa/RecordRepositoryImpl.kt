@@ -37,9 +37,9 @@ import java.time.Duration
 import java.time.Instant
 import java.util.*
 import jakarta.inject.Provider
-import javax.persistence.EntityManager
-import javax.persistence.LockModeType
-import javax.persistence.PessimisticLockScope
+import jakarta.persistence.EntityManager
+import jakarta.persistence.LockModeType
+import jakarta.persistence.PessimisticLockScope
 import jakarta.ws.rs.core.Context
 import kotlin.collections.HashSet
 
@@ -178,7 +178,7 @@ class RecordRepositoryImpl(
     }
 
     override fun poll(limit: Int, supportedConverters: Set<String>): List<Record> = transact {
-        setProperty("javax.persistence.lock.scope", PessimisticLockScope.EXTENDED)
+        setProperty("jakarta.persistence.lock.scope", PessimisticLockScope.EXTENDED)
 
         var queryString = "SELECT r FROM Record r WHERE r.metadata.status = :status "
 
@@ -295,7 +295,7 @@ class RecordRepositoryImpl(
 
     override fun updateMetadata(id: Long, metadata: RecordMetadataDTO): RecordMetadata = transact {
         val existingMetadata = find(RecordMetadata::class.java, id,  LockModeType.PESSIMISTIC_WRITE,
-                mapOf("javax.persistence.lock.scope" to PessimisticLockScope.EXTENDED))
+                mapOf("jakarta.persistence.lock.scope" to PessimisticLockScope.EXTENDED))
                 ?: throw HttpNotFoundException("record_not_found", "RecordMetadata with ID $id does not exist")
 
         if (existingMetadata.revision != metadata.revision)
