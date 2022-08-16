@@ -9,7 +9,7 @@ plugins {
 
 allprojects {
     group = "org.radarbase"
-    version = "0.5.12-SNAPSHOT"
+    version = "0.5.12"
 }
 
 subprojects {
