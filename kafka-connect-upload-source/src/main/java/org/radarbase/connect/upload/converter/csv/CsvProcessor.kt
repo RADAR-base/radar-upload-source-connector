@@ -72,7 +72,11 @@ open class CsvProcessor(
 
         return generateSequence { reader.readNext() }
             .flatMapIndexed { idx: Int, line: Array<String> ->
-                val lineMap = header.zip(line).toMap()
+                val lineMap = mutableMapOf<String, String>().apply {
+                    header.forEachIndexed { headingIdx, heading ->
+                        this[heading] = line[headingIdx]
+                    }
+                }
                 val lineNumber = idx + 2
 
                 processors
