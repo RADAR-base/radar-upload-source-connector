@@ -74,7 +74,9 @@ open class CsvProcessor(
             .flatMapIndexed { idx: Int, line: Array<String> ->
                 val lineMap = mutableMapOf<String, String>().apply {
                     header.forEachIndexed { headingIdx, heading ->
-                        this[heading] = line[headingIdx]
+                        if (headingIdx < line.size) {
+                            this[heading] = line[headingIdx]
+                        }
                     }
                 }
                 val lineNumber = idx + 2
