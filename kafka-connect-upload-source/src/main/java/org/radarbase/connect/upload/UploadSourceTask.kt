@@ -112,17 +112,15 @@ class UploadSourceTask : SourceTask() {
 
     override fun version(): String = VersionUtil.getVersion()
 
-    override fun poll(): List<SourceRecord>? {
-        val records = generateSequence { queue.poll() }  // this will retrieve all non-blocking elements
+    override fun poll(): List<SourceRecord>? =
+        generateSequence { queue.poll() }  // this will retrieve all non-blocking elements
             .take(queueSize) // don't process more than queueSize records at once
             .toList()
-
-        return records.ifEmpty {
-            // if no non-blocking elements are available, it's ok to wait for them for a bit.
-            queue.poll(pollInterval.toMillis(), TimeUnit.MILLISECONDS)
-                ?.let { listOf(it) }
-        }
-    }
+            .ifEmpty {
+                // if no non-blocking elements are available, it's ok to wait for them for a bit.
+                val lateElement = queue.poll(pollInterval.toMillis(), TimeUnit.MILLISECONDS)
+                if (lateElement != null) listOf(lateElement) else null
+            }
 
     override fun commitRecord(record: SourceRecord?, recordMetadata: RecordMetadata?) {
         record ?: return

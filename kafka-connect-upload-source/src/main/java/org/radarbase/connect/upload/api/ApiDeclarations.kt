@@ -88,7 +88,7 @@ data class OAuthToken(
     @JsonProperty("expires_in") var expiresIn: Long,
     @JsonProperty("iat") var issuedAt: Long,
     @JsonProperty("scope") var scope: String,
-    @JsonProperty("sub") var sub: String,
+//    @JsonProperty("sub") var sub: String,
 ) {
     @get:JsonIgnore
     val isExpired: Boolean

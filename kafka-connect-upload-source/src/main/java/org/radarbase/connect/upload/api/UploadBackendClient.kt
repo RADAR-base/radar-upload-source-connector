@@ -23,7 +23,10 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.KotlinFeature
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.fasterxml.jackson.module.kotlin.jsonMapper
+import com.fasterxml.jackson.module.kotlin.kotlinModule
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -137,10 +140,11 @@ open class UploadBackendClient(
         private val logger = LoggerFactory.getLogger(UploadBackendClient::class.java)
         private val APPLICATION_JSON = "application/json; charset=utf-8".toMediaType()
         private val TEXT_PLAIN = "text/plain; charset=utf-8".toMediaType()
-        private var mapper: ObjectMapper = ObjectMapper()
-                .registerModule(KotlinModule())
-                .registerModule(JavaTimeModule())
-                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+        private var mapper: ObjectMapper = jsonMapper {
+            addModule(kotlinModule())
+            addModule(JavaTimeModule())
+            disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+            disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+        }
     }
 }

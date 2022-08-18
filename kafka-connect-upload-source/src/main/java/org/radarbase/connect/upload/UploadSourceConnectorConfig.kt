@@ -23,7 +23,10 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.KotlinFeature
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.fasterxml.jackson.module.kotlin.jsonMapper
+import com.fasterxml.jackson.module.kotlin.kotlinModule
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import org.apache.kafka.common.config.AbstractConfig
@@ -165,11 +168,12 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
             .readTimeout(30, TimeUnit.SECONDS)
             .build()
 
-        var mapper: ObjectMapper = ObjectMapper()
-            .registerModule(KotlinModule())
-            .registerModule(JavaTimeModule())
-            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+        var mapper: ObjectMapper = jsonMapper {
+            addModule(kotlinModule())
+            addModule(JavaTimeModule())
+            disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+            disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+        }
 
         fun conf(): ConfigDef {
             val groupName = "upload"

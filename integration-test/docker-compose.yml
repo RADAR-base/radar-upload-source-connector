@@ -1,5 +1,5 @@
 ---
-version: '3.2'
+version: '3.9'
 
 networks:
   management:
@@ -13,10 +13,11 @@ services:
   # Management Portal                                                         #
   #---------------------------------------------------------------------------#
   managementportal-app:
-    image: radarbase/management-portal:Mp2.0-rc
+    image: radarbase/management-portal:0.8.1
     networks:
       - default
       - management
+    platform: linux/amd64
     depends_on:
       - radarbase-postgresql
     ports:
@@ -40,6 +41,7 @@ services:
       - ../etc/mp-config/:/mp-includes/config
     healthcheck:
       test: "curl -f http://localhost:8080/oauth/token -d grant_type=client_credentials -d client_id=radar_upload_test_client -d client_secret=test"
+      start_period: 600s
 
   radarbase-postgresql:
     image: postgres:14

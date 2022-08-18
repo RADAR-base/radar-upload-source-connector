@@ -25,7 +25,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.fasterxml.jackson.module.kotlin.*
 import jakarta.ws.rs.core.Response
 import okhttp3.Credentials
 import okhttp3.FormBody
@@ -162,11 +162,12 @@ object TestBase {
         contentTypes = setOf("application/zip")
     )
 
-    private val mapper: ObjectMapper = ObjectMapper(JsonFactory())
-        .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-        .registerModule(KotlinModule())
-        .registerModule(JavaTimeModule())
-        .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+    private val mapper: ObjectMapper = jsonMapper {
+        disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+        disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+        addModule(kotlinModule())
+        addModule(JavaTimeModule())
+    }
 
     val clientCredentialsAuthorizer = OAuthClientCredentialsInterceptor(
         httpClient,
