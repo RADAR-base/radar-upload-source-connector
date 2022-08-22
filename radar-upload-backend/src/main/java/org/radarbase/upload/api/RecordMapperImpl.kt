@@ -34,10 +34,11 @@ import jakarta.ws.rs.core.Context
 import jakarta.ws.rs.core.UriInfo
 
 class RecordMapperImpl(
-        @Context val uri: UriInfo,
-        @Context val sourceTypeRepository: SourceTypeRepository,
-        @Context val projectService: RadarProjectService,
-        @Context val config: Config) : RecordMapper {
+    @Context val uri: UriInfo,
+    @Context val sourceTypeRepository: SourceTypeRepository,
+    @Context val projectService: RadarProjectService,
+    @Context val config: Config,
+) : RecordMapper {
 
     override val cleanBaseUri: String
         get() = (config.advertisedBaseUri ?: uri.baseUri).toString().trimEnd('/')
@@ -49,8 +50,8 @@ class RecordMapperImpl(
             userId = data.resolveUserId()
             sourceId = data.sourceId ?: throw BadRequestException("Missing source ID")
             sourceType = sourceTypeRepository.read(record.sourceType
-                    ?: throw BadRequestException("Missing source type"))
-                    ?: throw BadRequestException("Source type not found")
+                ?: throw BadRequestException("Missing source type"))
+                ?: throw BadRequestException("Source type not found")
         }
 
         return Pair(recordDoa, toMetadata(record.metadata))
@@ -86,49 +87,51 @@ class RecordMapperImpl(
     }
 
     override fun fromRecord(record: Record) = RecordDTO(
-            id = record.id!!,
-            metadata = fromMetadata(record.metadata).apply { id = null },
-            sourceType = record.sourceType.name,
-            data = RecordDataDTO(
-                    projectId = record.projectId,
-                    userId = record.userId,
-                    sourceId = record.sourceId,
-                    time = record.time,
-                    timeZoneOffset = record.timeZoneOffset,
-                    contents = record.contents?.mapTo(HashSet(), this::fromContent)
-            ))
+        id = record.id!!,
+        metadata = fromMetadata(record.metadata).apply { id = null },
+        sourceType = record.sourceType.name,
+        data = RecordDataDTO(
+            projectId = record.projectId,
+            userId = record.userId,
+            sourceId = record.sourceId,
+            time = record.time,
+            timeZoneOffset = record.timeZoneOffset,
+            contents = record.contents?.mapTo(HashSet(), this::fromContent),
+        ),
+    )
 
     override fun fromRecords(records: List<Record>, page: Page?) = RecordContainerDTO(
-            records = records.map(::fromRecord),
-            size = page?.pageSize,
-            totalElements = page?.totalElements,
-            page = page?.pageNumber
+        records = records.map(::fromRecord),
+        size = page?.pageSize,
+        totalElements = page?.totalElements,
+        page = page?.pageNumber,
     )
 
     override fun fromContent(content: RecordContent): ContentsDTO {
         val cleanedFileName = URLEncoder.encode(content.fileName, "UTF-8")
-                .replace("+", "%20")
+            .replace("+", "%20")
 
         return ContentsDTO(
-                url = "$cleanBaseUri/records/${content.record.id}/contents/$cleanedFileName",
-                contentType = content.contentType,
-                createdDate = content.createdDate,
-                size = content.size,
-                fileName = content.fileName)
+            url = "$cleanBaseUri/records/${content.record.id}/contents/$cleanedFileName",
+            contentType = content.contentType,
+            createdDate = content.createdDate,
+            size = content.size,
+            fileName = content.fileName,
+        )
     }
 
     override fun fromMetadata(metadata: RecordMetadata) = RecordMetadataDTO(
-            id = metadata.id,
-            revision = metadata.revision,
-            status = metadata.status.name,
-            message = metadata.message,
-            createdDate = metadata.createdDate,
-            modifiedDate = metadata.modifiedDate,
-            committedDate = metadata.committedDate,
-            // use record.id, since metadata and record have one-to-one
-            logs = metadata.logs?.let {
-                LogsDto(url = "${cleanBaseUri}/records/${metadata.id}/logs")
-            }
+        id = metadata.id,
+        revision = metadata.revision,
+        status = metadata.status.name,
+        message = metadata.message,
+        createdDate = metadata.createdDate,
+        modifiedDate = metadata.modifiedDate,
+        committedDate = metadata.committedDate,
+        // use record.id, since metadata and record have one-to-one
+        logs = metadata.logs?.let {
+            LogsDto(url = "${cleanBaseUri}/records/${metadata.id}/logs")
+        },
     )
 
     companion object {

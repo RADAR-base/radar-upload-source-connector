@@ -6,22 +6,21 @@ import org.radarcns.connector.upload.axivity.AxivityMetadata
 import java.util.AbstractMap
 
 class MetadataCwaReaderProcessor {
-    fun processReader(cwaReader: CwaReader, time: Double, timeReceived: Double): Sequence<TopicData> {
-        val records = mutableListOf<Map.Entry<String, String>>()
+    fun processReader(cwaReader: CwaReader, time: Double, timeReceived: Double): Sequence<TopicData> =
+        sequence {
+            if (cwaReader.deviceId != -1) {
+                yield(AbstractMap.SimpleImmutableEntry("deviceId", cwaReader.deviceId.toString()))
+            }
 
-        if (cwaReader.deviceId != -1) {
-            records += AbstractMap.SimpleImmutableEntry("deviceId", cwaReader.deviceId.toString())
+            if (cwaReader.sessionId != -1) {
+                yield(AbstractMap.SimpleImmutableEntry("sessionId", cwaReader.sessionId.toString()))
+            }
+
+            yieldAll(cwaReader.annotations.entries)
+        }.map { (annotationName, annotationData) ->
+            TopicData(
+                "connect_upload_axivity_metadata",
+                AxivityMetadata(time, timeReceived, annotationName, annotationData),
+            )
         }
-
-        if (cwaReader.sessionId != -1) {
-            records += AbstractMap.SimpleImmutableEntry("sessionId", cwaReader.sessionId.toString())
-        }
-
-        records += cwaReader.annotations.entries
-
-        return records.asSequence()
-                .map { TopicData("connect_upload_axivity_metadata",
-                        AxivityMetadata(time, timeReceived, it.key, it.value))
-                }
-    }
 }

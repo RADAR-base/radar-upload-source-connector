@@ -19,14 +19,26 @@
 
 package org.radarbase.upload.doa
 
-import javax.persistence.GeneratedValue
-import javax.persistence.Id
-import javax.persistence.MappedSuperclass
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
+import jakarta.persistence.MappedSuperclass
+import org.hibernate.annotations.GenericGenerator
+import org.hibernate.annotations.Parameter
 
 @MappedSuperclass
 abstract class AbstractJpaPersistable<T : java.io.Serializable> {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sequence-generator")
+    @GenericGenerator(
+        name = "sequence-generator",
+        strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator",
+        parameters = [
+            Parameter(name = "sequence_name", value = "hibernate_sequence"),
+            Parameter(name = "initial_value", value = "1"),
+            Parameter(name = "increment_size", value = "1"),
+        ]
+    )
     var id: T? = null
 
     override fun equals(other: Any?): Boolean {
@@ -41,5 +53,23 @@ abstract class AbstractJpaPersistable<T : java.io.Serializable> {
 
     override fun hashCode(): Int = id.hashCode()
 
-    override fun toString() = "Entity of type ${this.javaClass.name} with id: $id"
+    override fun toString() = "Entity<${javaClass.name}: $id>"
+
+    companion object {
+        inline fun <reified T: Any> T.equalTo(other: Any?, idGetter: T.() -> Any?, vararg getters: T.() -> Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+
+            other as T
+
+            val thisId = idGetter()
+            val otherId = other.idGetter()
+
+            return if (thisId != null && otherId != null) {
+                thisId == otherId
+            } else {
+                getters.all { getter -> getter() == other.getter() }
+            }
+        }
+    }
 }

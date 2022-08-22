@@ -19,25 +19,19 @@ class AltoidaSummaryProcessor : StatelessCsvLineProcessor() {
             "NMI")
 
     override fun lineConversion(line: Map<String, String>, timeReceived: Double) =
-            TopicData("connect_upload_altoida_summary", AltoidaSummary(
-                    timeFieldParser.time(line),
-                    timeReceived,
-                    line["LABEL"],
-                    null,
-                    null,
-                    GenderType.UNKNOWN,
-                    line.getValue("CLASS").toInt().classify(),
-                    line.getValue("NMI").toDouble())
+        TopicData(
+            topic = "connect_upload_altoida_summary",
+            value = AltoidaSummary(
+                timeFieldParser.time(line),
+                timeReceived,
+                line["LABEL"],
+                null,
+                null,
+                GenderType.UNKNOWN,
+                line.getValue("CLASS").toInt().classify(),
+                line.getValue("NMI").toDouble(),
             )
-
-    private fun Int.toGender() : GenderType {
-        return when (this) {
-            0 -> GenderType.MALE
-            1 -> GenderType.FEMALE
-            2 -> GenderType.OTHER
-            else -> GenderType.UNKNOWN
-        }
-    }
+        )
 
     private fun Int.classify() : Classification? {
         return when (this) {

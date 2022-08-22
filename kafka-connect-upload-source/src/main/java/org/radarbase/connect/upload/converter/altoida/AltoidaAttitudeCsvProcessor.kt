@@ -25,16 +25,21 @@ import org.radarcns.connector.upload.altoida.AltoidaAttitude
 
 
 class AltoidaAttitudeCsvProcessor(override val fileNameSuffix: String = "_ATT.csv") : StatelessCsvLineProcessor() {
+    override val optional: Boolean = true
     override val header: List<String> = listOf("TIMESTAMP", "PITCH", "ROLL", "YAW")
 
     override fun lineConversion(
             line: Map<String, String>,
             timeReceived: Double
-    ) = TopicData("connect_upload_altoida_attitude", AltoidaAttitude(
+    ) = TopicData(
+        topic = "connect_upload_altoida_attitude",
+        value = AltoidaAttitude(
             time(line),
             timeReceived,
             line.getValue("PITCH").toFloat(),
             line.getValue("ROLL").toFloat(),
-            line.getValue("YAW").toFloat()))
+            line.getValue("YAW").toFloat(),
+        ),
+    )
 
 }

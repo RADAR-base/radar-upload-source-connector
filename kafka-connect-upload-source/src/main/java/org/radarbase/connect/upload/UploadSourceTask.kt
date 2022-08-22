@@ -70,9 +70,8 @@ class UploadSourceTask : SourceTask() {
 
         // init converters if configured
         converters = connectConfig.converterClasses
-                .map { className -> ConverterFactory.createConverter(className, props, uploadClient, logRepository)
-                        .let { it.sourceType to it }}
-                .toMap()
+            .map { className -> ConverterFactory.createConverter(className, props, uploadClient, logRepository) }
+            .associateBy { it.sourceType }
 
         val pollIntervalMs = connectConfig.getLong(SOURCE_POLL_INTERVAL_CONFIG)
         pollInterval = Duration.ofMillis(pollIntervalMs)
@@ -97,27 +96,31 @@ class UploadSourceTask : SourceTask() {
 
     override fun stop() {
         logger.debug("Stopping source task")
-        converterManager.close()
-        uploadClient.close()
-        commitTimer.cancel()
-        converters.values.forEach(Converter::close)
+        if (this::converterManager.isInitialized) {
+            converterManager.close()
+        }
+        if (this::uploadClient.isInitialized) {
+            uploadClient.close()
+        }
+        if (this::commitTimer.isInitialized) {
+            commitTimer.cancel()
+        }
+        if (this::converters.isInitialized) {
+            converters.values.forEach(Converter::close)
+        }
     }
 
     override fun version(): String = VersionUtil.getVersion()
 
-    override fun poll(): List<SourceRecord>? {
-        val records = generateSequence { queue.poll() }  // this will retrieve all non-blocking elements
+    override fun poll(): List<SourceRecord>? =
+        generateSequence { queue.poll() }  // this will retrieve all non-blocking elements
             .take(queueSize) // don't process more than queueSize records at once
             .toList()
-
-        return if (records.isNotEmpty()) {
-            records
-        } else {
-            // if no non-blocking elements are available, it's ok to wait for them for a bit.
-            queue.poll(pollInterval.toMillis(), TimeUnit.MILLISECONDS)
-                ?.let { listOf(it) }
-        }
-    }
+            .ifEmpty {
+                // if no non-blocking elements are available, it's ok to wait for them for a bit.
+                val lateElement = queue.poll(pollInterval.toMillis(), TimeUnit.MILLISECONDS)
+                if (lateElement != null) listOf(lateElement) else null
+            }
 
     override fun commitRecord(record: SourceRecord?, recordMetadata: RecordMetadata?) {
         record ?: return

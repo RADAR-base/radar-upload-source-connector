@@ -22,12 +22,13 @@ import org.radarbase.connect.upload.converter.TimeFieldParser
 import org.radarbase.connect.upload.converter.TopicData
 import org.w3c.dom.Element
 import org.w3c.dom.Node
+import org.w3c.dom.NodeList
 
 /**
  * Processor for processing single nodes/elements of an XML file.
  */
 abstract class XmlNodeProcessorFactory {
-    val fileNameSuffixes: List<String>
+    open val fileNameSuffixes: List<String>
         get() = listOf(".xml")
 
     open val fileNameSuffix: String = ".xml"
@@ -49,36 +50,38 @@ abstract class XmlNodeProcessorFactory {
         contents.fileName.endsWith(it, ignoreCase = true)
     }
 
-    abstract fun convertToSingleRecord(root: Element, timeReceived: Double, assessmentName: String? = ""): TopicData?
+    open fun convertToSingleRecord(
+        root: Element,
+        timeReceived: Double,
+        assessmentName: String? = "",
+    ): TopicData? = null
 
     open fun nodeConversions(
-            root: Element,
-            timeReceived: Double,
-            assessmentName: String?
-    ): Sequence<TopicData> {
-        val events = root.childNodes
-        return ((0 until events.length)
-                .asSequence()
-                .filter { i -> events.item(i).hasAttributes() }
-                .mapNotNull { i -> convertToSingleRecord(events.item(i) as Element, timeReceived, assessmentName) })
-    }
+        root: Element,
+        timeReceived: Double,
+        assessmentName: String?,
+    ): Sequence<TopicData> = root.childNodes
+        .asSequence()
+        .filter { it.hasAttributes() && it is Element }
+        .mapNotNull { convertToSingleRecord(it as Element, timeReceived, assessmentName) }
 
     fun createNodeProcessor(
-            context: ConverterFactory.ContentsContext
-    ): XmlNodeProcessor {
-        return XmlNodeProcessor(context, nodeName) { l, t, a -> nodeConversions(l, t, a) }
+        context: ConverterFactory.ContentsContext
+    ): XmlNodeProcessor = XmlNodeProcessor(context, nodeName) { l, t, a ->
+        nodeConversions(l, t, a)
     }
 
-    class XmlNodeProcessor(
-            val context: ConverterFactory.ContentsContext,
-            private val nodeName: String,
-            private val conversion: (
-                node: Element,
-                timeReceived: Double,
-                assessmentName: String?,
-            ) -> Sequence<TopicData>,
-    ) {
+    protected fun Element.attributeToTime(name: String) = timeFieldParser.timeFromString(getAttribute(name))
 
+    class XmlNodeProcessor(
+        val context: ConverterFactory.ContentsContext,
+        private val nodeName: String,
+        private val conversion: (
+            node: Element,
+            timeReceived: Double,
+            assessmentName: String,
+        ) -> Sequence<TopicData>,
+    ) {
         /**
          * Whether the node name matches this processor.
          */
@@ -90,36 +93,61 @@ abstract class XmlNodeProcessorFactory {
         fun convertToRecord(
             node: Element,
             timeReceived: Double,
-            assessmentName: String?
-        ): Sequence<TopicData> = conversion(node, timeReceived, assessmentName)
+            assessmentName: String,
+        ) = conversion(node, timeReceived, assessmentName)
     }
 
     companion object {
-        fun getFirstElementByTagName(root: Element, tag: String): Node? {
-            val elements = root.getElementsByTagName(tag)
-            return elements.item(0)
-        }
+        private fun Element.childNodeOrNull(tag: String): Node? = getElementsByTagName(tag).item(0)
 
-        fun getTagValue(root: Element, tag: String): String {
-            val element = getFirstElementByTagName(root, tag)
-            return if (element != null) element.textContent else ""
-        }
+        /**
+         * Get the first child element with the given tag sequence.
+         * @throws IllegalArgumentException if no tag of the given sequence can be found.
+         */
+        // NOTE: This is assuming tags in each tree are unique
+        // The tagList represents the branch leading to required element
+        fun Element.child(
+            vararg tags: String,
+        ): Element =
+            tags.fold(this) { node, tag ->
+                requireNotNull(node.childOrNull(tag)) {
+                    "Missing tag $tag of $tags in XML document"
+                }
+            }
 
-        fun getAttributeValue(root: Element, tag: String, attribute: String): String {
-            val element = (getFirstElementByTagName(root, tag) as Element?)
-            return if  (element != null) element.getAttribute(attribute) else ""
-        }
+        /**
+         * Get the text content from a child tag.
+         * If no child element is present, return [default] value.
+         * Only the first child element with given tag will be used for finding the text.
+         */
+        fun Element.childValue(
+            tag: String,
+            default: String = "",
+        ): String = childNodeOrNull(tag)?.textContent ?: default
 
-        fun getAttributeValueFromElement(element: Element, attribute: String): String = element.getAttribute(attribute)
+        /**
+         * Get the child of the element by tag. Returns `null` if no element by that tag can be
+         * found. Only the first child with given tag will be returned.
+         */
+        fun Element.childOrNull(tag: String): Element? =
+            childNodeOrNull(tag) as? Element
 
-        fun getSingleElementFromTagList(root: Element, tagList: List<String>): Element {
-            // NOTE: This is assuming tags in each tree are unique
-            // The tagList represents the branch leading to required element
+        /**
+         * Get the attribute value with given [name]. If the current element is null or if the
+         * attribute is not present, this will return an empty string.
+         */
+        fun Element?.attribute(
+            name: String,
+            default: String = "",
+        ): String = this?.getAttribute(name) ?: default
 
-            var currentElement: Element = root
-            tagList.forEach { tag -> currentElement = currentElement.getElementsByTagName(tag).item(0) as Element }
-
-            return currentElement
+        /**
+         * Iterates over a node list as a sequence.
+         */
+        fun NodeList.asSequence(): Sequence<Node> {
+            return (0 until length)
+                .asSequence()
+                .map { i -> item(i) }
         }
     }
 }

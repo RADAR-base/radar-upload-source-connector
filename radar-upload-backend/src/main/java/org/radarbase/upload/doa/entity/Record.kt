@@ -21,7 +21,7 @@ package org.radarbase.upload.doa.entity
 
 import org.radarbase.upload.doa.AbstractJpaPersistable
 import java.time.LocalDateTime
-import javax.persistence.*
+import jakarta.persistence.*
 
 @Entity
 @Table(name = "record")

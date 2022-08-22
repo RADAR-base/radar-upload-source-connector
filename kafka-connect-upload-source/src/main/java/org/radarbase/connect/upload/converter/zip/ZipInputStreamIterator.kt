@@ -13,19 +13,14 @@ class ZipInputStreamIterator(
 
     fun files(
         entryFilter: (ZipEntry) -> Boolean = { true },
-    ): Sequence<Pair<ZipEntry, InputStream>> {
-        return generateSequence { zipInputStream.nextEntry }
+    ): Sequence<Pair<ZipEntry, InputStream>> =
+        generateSequence { zipInputStream.nextEntry }
             .filter { zipEntry -> !zipEntry.isDirectory && entryFilter(zipEntry) }
-            .map { zipEntry -> Pair(zipEntry, EntryInputStream()) }
-    }
+            .map { zipEntry -> zipEntry to EntryInputStream() }
 
-    override fun close() {
-        zipInputStream.close()
-    }
+    override fun close() = zipInputStream.close()
 
     inner class EntryInputStream : FilterInputStream(zipInputStream) {
-        override fun close() {
-            zipInputStream.closeEntry()
-        }
+        override fun close() = zipInputStream.closeEntry()
     }
 }

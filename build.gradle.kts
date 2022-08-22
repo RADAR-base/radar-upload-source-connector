@@ -9,7 +9,7 @@ plugins {
 
 allprojects {
     group = "org.radarbase"
-    version = "0.5.11"
+    version = "0.5.12"
 }
 
 subprojects {
@@ -72,5 +72,5 @@ tasks.withType<DependencyUpdatesTask> {
 }
 
 tasks.wrapper {
-    gradleVersion = "7.4.2"
+    gradleVersion = "7.5.1"
 }

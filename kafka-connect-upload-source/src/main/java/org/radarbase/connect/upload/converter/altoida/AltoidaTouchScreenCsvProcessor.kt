@@ -21,12 +21,15 @@ import org.radarbase.connect.upload.converter.TopicData
 import org.radarcns.connector.upload.altoida.AltoidaTouch
 
 class AltoidaTouchScreenCsvProcessor(override val fileNameSuffix: String = "_TOUCH.csv") : StatelessCsvLineProcessor() {
+    override val optional: Boolean = true
     override val header: List<String> = listOf("TIMESTAMP", "X", "Y", "SURFACE", "ACC", "COMBINED", "HIT")
 
     override fun lineConversion(
-            line: Map<String, String>,
-            timeReceived: Double
-    ) = TopicData("connect_upload_altoida_touch", AltoidaTouch(
+        line: Map<String, String>,
+        timeReceived: Double,
+    ) = TopicData(
+        topic = "connect_upload_altoida_touch",
+        value = AltoidaTouch(
             time(line),
             timeReceived,
             line.getValue("X").toDouble(),
@@ -34,5 +37,7 @@ class AltoidaTouchScreenCsvProcessor(override val fileNameSuffix: String = "_TOU
             line.getValue("SURFACE").toDouble(),
             line.getValue("ACC").toDouble(),
             line.getValue("COMBINED").toDouble(),
-            line.getValue("HIT").toBoolean()))
+            line.getValue("HIT").toBoolean(),
+        )
+    )
 }

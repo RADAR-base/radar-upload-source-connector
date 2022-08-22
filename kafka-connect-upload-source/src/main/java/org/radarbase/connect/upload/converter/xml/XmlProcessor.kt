@@ -17,11 +17,11 @@
 package org.radarbase.connect.upload.converter.xml
 
 import org.radarbase.connect.upload.api.ContentsDTO
-import org.radarbase.connect.upload.api.RecordDTO
 import org.radarbase.connect.upload.converter.ConverterFactory
 import org.radarbase.connect.upload.converter.FileProcessor
 import org.radarbase.connect.upload.converter.TimeFieldParser
 import org.radarbase.connect.upload.converter.TopicData
+import org.radarbase.connect.upload.converter.xml.XmlNodeProcessorFactory.Companion.asSequence
 import org.w3c.dom.Element
 import java.io.IOException
 import java.io.InputStream
@@ -31,10 +31,9 @@ import javax.xml.parsers.DocumentBuilderFactory
  * Base class to process XML files with multiple possible per-node/tag processors.
  */
 open class XmlProcessor(
-        private val record: RecordDTO? = null,
-        private val processorFactories: List<XmlNodeProcessorFactory>,
+    private val processorFactories: List<XmlNodeProcessorFactory>,
 ): FileProcessor {
-    val fileNameSuffixes: List<String>
+    open val fileNameSuffixes: List<String>
         get() = listOf(fileNameSuffix)
 
     open val fileNameSuffix: String = ".xml"
@@ -42,9 +41,9 @@ open class XmlProcessor(
     open val timeFieldParser: TimeFieldParser = TimeFieldParser.EpochMillisParser()
 
     override fun processData(
-            context: ConverterFactory.ContentsContext,
-            inputStream: InputStream,
-            produce: (TopicData) -> Unit,
+        context: ConverterFactory.ContentsContext,
+        inputStream: InputStream,
+        produce: (TopicData) -> Unit,
     ) {
         val factory = DocumentBuilderFactory.newInstance()
         val builder = factory.newDocumentBuilder()
@@ -54,29 +53,43 @@ open class XmlProcessor(
         }
 
         val doc: Element = builder.parse(inputStream).documentElement
-        val processors = processorFactories.filter { it.matches(context.contents) }.createNodeProcessors(context)
+        val processors = processorFactories.filter { it.matches(context.contents) }
+            .createNodeProcessors(context)
 
-        processXml(doc, context, processors, "", produce)
+        processXml(doc, context, processors, produce)
     }
 
     /**
-     * Recursively traverses the xml nodes and converts each node if processor (that matches node name) exists.
+     * Traverses the xml nodes and converts each node if processor (that matches node name) exists.
      */
-    open fun processXml(root: Element, context: ConverterFactory.ContentsContext, contentProcessorsFactories: List<XmlNodeProcessorFactory.XmlNodeProcessor>, metadata: String, produce: (TopicData) -> Unit) {
-        val children = root.childNodes
-        for (i in 0 until children.length) {
-            var n = children.item(i)
-            if (n.hasChildNodes()) {
-                n = n as Element
-                val nodeName = n.nodeName
-                val processor = contentProcessorsFactories.firstOrNull { it.matches(nodeName) }
-                processor?.let { processor.convertToRecord(n, context.timeReceived, metadata).forEach(produce) }
+    open fun processXml(
+        root: Element,
+        context: ConverterFactory.ContentsContext,
+        contentProcessorsFactories: List<XmlNodeProcessorFactory.XmlNodeProcessor>,
+        produce: (TopicData) -> Unit,
+    ) {
+        val children = mutableListOf(root to "")
 
-                processXml(n, context, contentProcessorsFactories, metadata, produce)
-            }
+        while (children.isNotEmpty()) {
+            // Do processing of the child node itself first
+            val (lastChild, metadata) = children.removeLast()
+            val updatedMetadata = findMetadata(lastChild, metadata)
+
+            lastChild.childNodes
+                .asSequence()
+                .filter { it.hasChildNodes() }
+                .map { it as Element }
+                .onEach { node ->
+                    contentProcessorsFactories
+                        .firstOrNull { it.matches(node.nodeName) }
+                        ?.convertToRecord(node, context.timeReceived, updatedMetadata)
+                        ?.forEach(produce)
+                }
+                .mapTo(children) { it to updatedMetadata }
         }
     }
 
+    protected open fun findMetadata(element: Element, metadata: String): String = metadata
 
     fun time(line: Map<String, String>): Double = timeFieldParser.time(line)
 
@@ -88,12 +101,8 @@ open class XmlProcessor(
     }
 
     private fun List<XmlNodeProcessorFactory>.createNodeProcessors(
-            context: ConverterFactory.ContentsContext,
-    ): List<XmlNodeProcessorFactory.XmlNodeProcessor> {
-        val processors = this.map { it.createNodeProcessor(context) }
-
-        return processors
-    }
+        context: ConverterFactory.ContentsContext,
+    ): List<XmlNodeProcessorFactory.XmlNodeProcessor> = map { it.createNodeProcessor(context) }
 
 }
 

@@ -10,61 +10,52 @@ open class AltoidaScreenElementXmlProcessor: XmlNodeProcessorFactory() {
 
     override val nodeName: String = "screen_elements"
 
-    override fun convertToSingleRecord(root: Element, timeReceived: Double, assessmentName: String?): TopicData? {
+    override fun convertToSingleRecord(
+        root: Element,
+        timeReceived: Double,
+        assessmentName: String?,
+    ): TopicData {
         val parent = (if (assessmentName == "ContrastVisionTest") root.parentNode.parentNode.parentNode else root.parentNode.parentNode) as Element
-        val assessmentTimestamp = getAttributeValueFromElement(parent, "start_ts")
-        val newAssessmentName = getAssessmentName(parent, assessmentName)
-        val elementName = root.tagName
-        val xCenterOffset = getAttributeValue(root, "x_center_offset", "value").toDoubleOrNull()
-        val yCenterOffset = getAttributeValue(root, "y_center_offset", "value").toDoubleOrNull()
-        val id = getAttributeValueFromElement(root, "circle_id").toIntOrNull()
-        val radius = getAttributeValue(root, "radius", "value").toDoubleOrNull()
-        val alpha = getAttributeValue(root, "color", "alpha").toFloatOrNull()
-        val red = getAttributeValue(root, "color", "r").toFloatOrNull()
-        val green = getAttributeValue(root, "color", "g").toFloatOrNull()
-        val blue = getAttributeValue(root, "color", "b").toFloatOrNull()
-        val width = getAttributeValue(root, "width", "value").toDoubleOrNull()
-        val height = getAttributeValue(root, "height", "value").toDoubleOrNull()
 
+        val colorElement = root.childOrNull("color")
 
-        return TopicData("connect_upload_altoida_screen_elements", AltoidaTestScreenElement(
-                timeFieldParser.timeFromString(assessmentTimestamp),
-                newAssessmentName,
-                id,
-                elementName,
-                width,
-                height,
-                radius,
-                xCenterOffset,
-                yCenterOffset,
-                alpha,
-                red,
-                green,
-                blue
-        ))
+        return TopicData(
+            topic = "connect_upload_altoida_screen_elements",
+            value = AltoidaTestScreenElement.newBuilder().apply {
+                time = parent.attributeToTime("start_ts")
+                this.assessmentName = parent.assessmentName(assessmentName)
+                id = root.getAttribute("circle_id").toIntOrNull()
+                name = root.tagName
+                width = root.childOrNull( "width").attribute("value").toDoubleOrNull()
+                height = root.childOrNull( "height").attribute("value").toDoubleOrNull()
+                radius = root.childOrNull("radius").attribute("value").toDoubleOrNull()
+                xCenterOffset = root.childOrNull( "x_center_offset").attribute("value").toDoubleOrNull()
+                yCenterOffset = root.childOrNull( "y_center_offset").attribute("value").toDoubleOrNull()
+                colorAlpha = colorElement.attribute("alpha").toFloatOrNull()
+                colorRed = colorElement.attribute("r").toFloatOrNull()
+                colorGreen = colorElement.attribute("g").toFloatOrNull()
+                colorBlue = colorElement.attribute("b").toFloatOrNull()
+            }.build()
+        )
     }
 
-    fun getAssessmentName(root: Element, assessmentName: String?): String? {
-        val objectName = root.getAttribute("object_name")
-        return when (assessmentName) {
-            "ARTest" -> {
-                val arName = "ARTest_" + root.tagName
-                if (objectName.length > 0) arName + "_" + objectName else arName
-            }
-            else -> assessmentName
+    private fun Element.assessmentName(assessmentName: String?): String? {
+        val objectName = getAttribute("object_name")
+        return when {
+            assessmentName != "ARTest" -> assessmentName
+            objectName.isEmpty() -> "ARTest_$tagName"
+            else -> "ARTest_${tagName}_$objectName"
         }
     }
 
     override fun nodeConversions(
-            root: Element,
-            timeReceived: Double,
-            assessmentName: String?
+        root: Element,
+        timeReceived: Double,
+        assessmentName: String?,
     ): Sequence<TopicData> {
         val elements = if (assessmentName == "ContrastVisionTest") root.firstChild.childNodes else root.childNodes
-        return ((0 until elements.length)
-                .asSequence()
-                .filter { i -> elements.item(i).hasChildNodes() }
-                .mapNotNull { i -> convertToSingleRecord(elements.item(i) as Element, timeReceived, assessmentName) })
+        return elements.asSequence()
+            .filter { it.hasChildNodes() && it is Element }
+            .map { convertToSingleRecord(it as Element, timeReceived, assessmentName) }
     }
-
 }

@@ -6,7 +6,7 @@ import java.time.Duration
 plugins {
     java
     kotlin("jvm")
-    id("com.avast.gradle.docker-compose") version "0.16.4"
+    id("com.avast.gradle.docker-compose")
 }
 
 sourceSets {
@@ -22,13 +22,16 @@ sourceSets {
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
+
+    val confluentVersion: String by project
+    testImplementation("io.confluent:kafka-connect-avro-converter:$confluentVersion")
     val jacksonVersion: String by project
-    testImplementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
+    testImplementation(platform("com.fasterxml.jackson:jackson-bom:$jacksonVersion"))
     val okhttpVersion: String by project
     testImplementation("com.squareup.okhttp3:okhttp:$okhttpVersion")
-    testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
-    testImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")
-    testImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$jacksonVersion")
+    testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+    testImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+    testImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8")
 
     testImplementation(project(":radar-upload-backend"))
     testImplementation(project(":kafka-connect-upload-source"))
@@ -51,7 +54,7 @@ task<Test>("integrationTest") {
 }
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "11"
+    kotlinOptions.jvmTarget = "17"
 }
 
 dockerCompose {

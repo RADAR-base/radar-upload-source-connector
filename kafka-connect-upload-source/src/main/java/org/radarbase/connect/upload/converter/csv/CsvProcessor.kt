@@ -8,6 +8,7 @@ import org.radarbase.connect.upload.api.RecordDTO
 import org.radarbase.connect.upload.converter.ConverterFactory
 import org.radarbase.connect.upload.converter.FileProcessor
 import org.radarbase.connect.upload.converter.TopicData
+import org.radarbase.connect.upload.exception.ConversionFailedException
 import org.radarbase.connect.upload.exception.InvalidFormatException
 import java.io.BufferedReader
 import java.io.IOException
@@ -51,7 +52,7 @@ open class CsvProcessor(
         if (contentProcessorsFactories.all { it.optional }) {
             context.logger.debug("Skipping optional file ${context.fileName}")
         } else {
-            throw IOException("Cannot read empty CSV file ${context.fileName}")
+            throw ConversionFailedException("Cannot read empty CSV file ${context.fileName}")
         }
     }
 
@@ -71,7 +72,13 @@ open class CsvProcessor(
 
         return generateSequence { reader.readNext() }
             .flatMapIndexed { idx: Int, line: Array<String> ->
-                val lineMap = header.zip(line).toMap()
+                val lineMap = mutableMapOf<String, String>().apply {
+                    header.forEachIndexed { headingIdx, heading ->
+                        if (headingIdx < line.size) {
+                            this[heading] = line[headingIdx]
+                        }
+                    }
+                }
                 val lineNumber = idx + 2
 
                 processors

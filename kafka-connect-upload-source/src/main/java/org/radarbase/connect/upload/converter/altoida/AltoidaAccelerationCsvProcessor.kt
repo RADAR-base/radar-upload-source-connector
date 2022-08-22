@@ -24,15 +24,20 @@ import org.radarbase.connect.upload.converter.TopicData
 import org.radarcns.connector.upload.altoida.AltoidaAcceleration
 
 class AltoidaAccelerationCsvProcessor(override val fileNameSuffix: String = "_ACC.csv") : StatelessCsvLineProcessor() {
+    override val optional: Boolean = true
     override val header: List<String> = listOf("TIMESTAMP", "X", "Y", "Z")
 
     override fun lineConversion(
-            line: Map<String, String>,
-            timeReceived: Double
-    ) = TopicData("connect_upload_altoida_acceleration", AltoidaAcceleration(
+        line: Map<String, String>,
+        timeReceived: Double,
+    ) = TopicData(
+        topic = "connect_upload_altoida_acceleration",
+        value = AltoidaAcceleration(
             time(line),
             timeReceived,
             line.getValue("X").toFloat(),
             line.getValue("Y").toFloat(),
-            line.getValue("Z").toFloat()))
+            line.getValue("Z").toFloat(),
+        ),
+    )
 }

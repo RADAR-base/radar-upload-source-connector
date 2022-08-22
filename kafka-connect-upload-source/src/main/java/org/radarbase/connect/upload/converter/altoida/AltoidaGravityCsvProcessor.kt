@@ -24,16 +24,20 @@ import org.radarbase.connect.upload.converter.TopicData
 import org.radarcns.connector.upload.altoida.AltoidaGravity
 
 class AltoidaGravityCsvProcessor(override val fileNameSuffix: String = "_GRA.csv") : StatelessCsvLineProcessor() {
+    override val optional: Boolean = true
     override val header: List<String> = listOf("TIMESTAMP", "X", "Y", "Z")
 
     override fun lineConversion(
             line: Map<String, String>,
             timeReceived: Double
-    ) = TopicData("connect_upload_altoida_gravity", AltoidaGravity(
+    ) = TopicData(
+        topic = "connect_upload_altoida_gravity",
+        value = AltoidaGravity(
             time(line),
             timeReceived,
             line.getValue("X").toFloat(),
             line.getValue("Y").toFloat(),
-            line.getValue("Z").toFloat()))
-
+            line.getValue("Z").toFloat()
+        ),
+    )
 }

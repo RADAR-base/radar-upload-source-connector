@@ -12,39 +12,33 @@ open class AltoidaTestEventXmlProcessor: XmlNodeProcessorFactory() {
 
     override fun convertToSingleRecord(root: Element, timeReceived: Double, assessmentName: String?): TopicData? {
         val parent = root.parentNode.parentNode as Element
-        val assessmentTimestamp = getAttributeValueFromElement(parent, "start_ts")
-        val newAssessmentName = getAssessmentName(parent, assessmentName)
-        val eventType = root.tagName
-        val time = getAttributeValueFromElement(root, "ts")
-        val objectName = getObjectName(root, assessmentName)
-        val location = getAttributeValueFromElement(root, "location").toLocation()
 
-    return TopicData("connect_upload_altoida_test_event", AltoidaAssessmentEvent(
-            timeFieldParser.timeFromString(time),
-            newAssessmentName,
-            timeFieldParser.timeFromString(assessmentTimestamp),
-            eventType,
-            objectName,
-            location
-        ))
+        return TopicData(
+            topic = "connect_upload_altoida_test_event",
+            value = AltoidaAssessmentEvent.newBuilder().apply {
+                time = root.attributeToTime("ts")
+                this.assessmentName = parent.assessmentName(assessmentName)
+                assessmentTimestamp = parent.attributeToTime("start_ts")
+                eventType = root.tagName
+                objectName = root.objectName(assessmentName)
+                location = root.getAttribute("location").toLocation()
+            }.build()
+        )
     }
 
-    fun getAssessmentName(root: Element, assessmentName: String?): String? {
-        val objectName = root.getAttribute("object_name")
-        return when (assessmentName) {
-            "ARTest" -> {
-                val arName = "ARTest_" + root.tagName
-                if (objectName.length > 0) arName + "_" + objectName else arName
-            }
-            else -> assessmentName
+    private fun Element.assessmentName(assessmentName: String?): String? {
+        val objectName = getAttribute("object_name")
+
+        return when {
+            assessmentName != "ARTest" -> assessmentName
+            objectName.isEmpty() -> "ARTest_$tagName"
+            else -> "ARTest_${tagName}_$objectName"
         }
     }
 
-    fun getObjectName(root: Element, assessmentName: String?): String? {
-        return when (assessmentName) {
-            "ContrastVisionTest" -> "circle_id_" + getAttributeValueFromElement(root, "circle_id")
-            else -> getAttributeValueFromElement(root, "object_name")
-        }
+    private fun Element.objectName(assessmentName: String?): String? = when (assessmentName) {
+        "ContrastVisionTest" -> "circle_id_" + getAttribute("circle_id")
+        else -> getAttribute("object_name")
     }
 
     private fun String.toLocation() : LocationValue {

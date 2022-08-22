@@ -15,23 +15,15 @@ class AltoidaAssessmentsSummaryXmlProcessor : XmlNodeProcessorFactory() {
         timeReceived: Double,
         assessmentName: String?,
     ): TopicData {
-        val timestamp = getAttributeValueFromElement(root, "start_ts")
-        val endTime = getAttributeValueFromElement(root, "end_ts")
-        val innerAssessmentName = requireNotNull(
-            getAttributeValueFromElement(root, "xsi:type")
-                .takeIf { it.isNotEmpty() }
-                ?: assessmentName
-        )
-
         return TopicData(
             topic = "connect_upload_altoida_assessment",
-            value = AltoidaAssessmentsSummary(
-                timeReceived,
-                innerAssessmentName,
-                timeFieldParser.timeFromString(timestamp),
-                timeFieldParser.timeFromString(endTime),
-                null,
-            ),
+            value = AltoidaAssessmentsSummary.newBuilder().apply {
+                this.timeReceived = timeReceived
+                this.assessmentName = root.attribute( "xsi:type", default = assessmentName ?: "")
+                startTime = root.attributeToTime("start_ts")
+                endTime = root.attributeToTime("end_ts")
+                metadata = null
+            }.build()
         )
     }
 

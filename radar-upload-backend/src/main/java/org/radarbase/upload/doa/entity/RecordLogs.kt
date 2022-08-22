@@ -21,7 +21,7 @@ package org.radarbase.upload.doa.entity
 
 import java.sql.Clob
 import java.time.Instant
-import javax.persistence.*
+import jakarta.persistence.*
 
 @Entity
 @Table(name = "record_logs")

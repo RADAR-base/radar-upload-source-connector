@@ -24,6 +24,7 @@ import org.radarbase.connect.upload.converter.TopicData
 import org.radarcns.connector.upload.altoida.AltoidaMagneticField
 
 class AltoidaMagneticFieldCsvProcessor(override val fileNameSuffix: String = "_MAG.csv") : StatelessCsvLineProcessor() {
+    override val optional: Boolean = true
     override val header: List<String> = listOf("TIMESTAMP", "X", "Y", "Z", "ACCURACY")
 
     override fun lineConversion(

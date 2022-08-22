@@ -15,17 +15,17 @@ internal class RecordMapperImplTest {
 
     @Test
     fun fromContent() {
+        val record = Record().apply {
+            id = 1L
+        }
         val content = RecordContent().apply {
+            this.record = record
             fileName = "test 123 (1).zip"
             contentType = "application/zip"
             size = 11L
             createdDate = Instant.EPOCH
         }
-
-        content.record = Record().apply {
-            id = 1L
-            contents = mutableSetOf(content)
-        }
+        record.contents = mutableSetOf(content)
 
         val mapper = RecordMapperImpl(
             mock {

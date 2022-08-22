@@ -13,7 +13,7 @@ import java.time.Duration
 import java.util.concurrent.Future
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
-import javax.persistence.EntityManagerFactory
+import jakarta.persistence.EntityManagerFactory
 import jakarta.ws.rs.core.Context
 import jakarta.ws.rs.ext.Provider
 
