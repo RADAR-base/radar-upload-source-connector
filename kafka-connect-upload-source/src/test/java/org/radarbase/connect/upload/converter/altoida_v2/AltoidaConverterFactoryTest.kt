@@ -58,47 +58,6 @@ class AltoidaConverterFactoryTest {
     }
 
     @Test
-    @DisplayName("Should be able to convert a iOS zip file to TopicRecords")
-    fun testValidRawIosDataProcessing() {
-        val file = File("src/test/resources/v2-ALTOIDA.zip")
-
-        val context = ConverterFactory.ContentsContext.create(
-            record = record,
-            contents = ContentsDTO(
-                contentType = "application/zip",
-                fileName = "TEST_ZIP.zip",
-                createdDate = Instant.now(),
-                size = 1L
-            ),
-            logger = Mockito.mock(RecordLogger::class.java),
-            avroData = RecordConverter.createAvroData(),
-        )
-
-        val records = mutableListOf<TopicData>()
-        converter.convertFile(context, file.inputStream(), records::add)
-
-        assertNotNull(records)
-        assertThat(records.count(), greaterThan(1000))
-
-        val expectedTopics = listOf(
-            "connect_upload_altoida_touch",
-            "connect_upload_altoida_acceleration",
-            "connect_upload_altoida_path",
-            "connect_upload_altoida_attitude",
-            "connect_upload_altoida_gravity",
-            "connect_upload_altoida_magnetic_field",
-            // XML file topics
-            "connect_upload_altoida_ar_assessment",
-            "connect_upload_altoida_assessment",
-            "connect_upload_altoida_xml_metadata",
-            "connect_upload_altoida_screen_elements",
-            "connect_upload_altoida_test_event"
-        )
-        assertTrue(records.map { it.topic }.containsAll(expectedTopics))
-    }
-
-
-    @Test
     @DisplayName("Should be able to convert export.csv to TopicRecords")
     fun testValidExportCsvProcessing() {
         val file = File("src/test/resources/v2-export.csv")
