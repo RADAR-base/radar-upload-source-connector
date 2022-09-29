@@ -19,6 +19,15 @@
 
 package org.radarbase.upload.resource
 
+import jakarta.annotation.Resource
+import jakarta.inject.Singleton
+import jakarta.ws.rs.*
+import jakarta.ws.rs.core.Context
+import jakarta.ws.rs.core.MediaType
+import jakarta.ws.rs.core.Response
+import jakarta.ws.rs.core.StreamingOutput
+import org.radarbase.auth.authorization.Permission
+import org.radarbase.auth.authorization.Permission.*
 import org.radarbase.jersey.auth.Auth
 import org.radarbase.jersey.auth.Authenticated
 import org.radarbase.jersey.auth.NeedsPermission
@@ -33,19 +42,10 @@ import org.radarbase.upload.doa.SourceTypeRepository
 import org.radarbase.upload.doa.entity.Record
 import org.radarbase.upload.doa.entity.RecordStatus
 import org.radarbase.upload.dto.CallbackManager
-import org.radarbase.auth.authorization.Permission
-import org.radarbase.auth.authorization.Permission.*
 import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.io.InputStream
 import java.net.URI
-import jakarta.annotation.Resource
-import jakarta.inject.Singleton
-import jakarta.ws.rs.*
-import jakarta.ws.rs.core.Context
-import jakarta.ws.rs.core.MediaType
-import jakarta.ws.rs.core.Response
-import jakarta.ws.rs.core.StreamingOutput
 
 @Path("records")
 @Produces(MediaType.APPLICATION_JSON)
@@ -172,12 +172,12 @@ class RecordResource(
     @NeedsPermission(Entity.MEASUREMENT, Operation.CREATE)
     @Path("{recordId}/contents/{fileName}")
     fun putContents(
-            input: InputStream,
-            @HeaderParam("Content-Type") contentType: String,
-            @HeaderParam("Content-Length") contentLength: Long,
-            @PathParam("fileName") fileName: String,
-            @PathParam("recordId") recordId: Long): Response {
-
+        input: InputStream,
+        @HeaderParam("Content-Type") contentType: String,
+        @HeaderParam("Content-Length") contentLength: Long,
+        @PathParam("fileName") fileName: String,
+        @PathParam("recordId") recordId: Long,
+    ): Response {
         val record = ensureRecord(recordId)
 
         if (record.metadata.status != RecordStatus.INCOMPLETE) {
@@ -216,9 +216,9 @@ class RecordResource(
     @Cache(maxAge = 86400, isPrivate = true)
     @Path("{recordId}/contents/{fileName}")
     fun getContents(
-            @PathParam("fileName") fileName: String,
-            @PathParam("recordId") recordId: Long): Response {
-
+        @PathParam("fileName") fileName: String,
+        @PathParam("recordId") recordId: Long,
+    ): Response {
         val record = ensureRecord(recordId)
 
         val recordContent = record.contents?.find { it.fileName == fileName }

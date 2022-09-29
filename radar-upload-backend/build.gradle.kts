@@ -29,11 +29,14 @@ dependencies {
         exclude("io.swagger.core.v3", "swagger-jaxrs2")
     }
 
+    val jerseyVersion: String by project
+    implementation("org.glassfish.jersey.containers:jersey-container-grizzly2-http:$jerseyVersion")
+
     val slf4jVersion: String by project
     implementation("org.slf4j:slf4j-api:$slf4jVersion")
     val log4j2Version: String by project
-    runtimeOnly("org.apache.logging.log4j:log4j-slf4j-impl:$log4j2Version")
-    runtimeOnly("org.apache.logging.log4j:log4j-api:$log4j2Version")
+    runtimeOnly("org.apache.logging.log4j:log4j-core:$log4j2Version")
+    runtimeOnly("org.apache.logging.log4j:log4j-slf4j2-impl:$log4j2Version")
     runtimeOnly("org.apache.logging.log4j:log4j-jul:$log4j2Version")
 
     val okhttpVersion: String by project
@@ -49,7 +52,6 @@ dependencies {
     val mockitoKotlinVersion: String by project
     testImplementation("org.mockito.kotlin:mockito-kotlin:$mockitoKotlinVersion")
 
-    val jerseyVersion: String by project
     testImplementation("org.glassfish.jersey.test-framework.providers:jersey-test-framework-provider-grizzly2:$jerseyVersion")
 }
 

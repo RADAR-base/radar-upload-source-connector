@@ -14,7 +14,7 @@ COPY ./kafka-connect-upload-source/src/main/java /code/kafka-connect-upload-sour
 
 RUN gradle jar --no-watch-fs
 
-FROM confluentinc/cp-kafka-connect-base:7.2.1
+FROM confluentinc/cp-kafka-connect-base:7.2.2
 
 MAINTAINER @nivemaham @blootsvoets
 

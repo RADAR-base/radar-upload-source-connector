@@ -10,7 +10,7 @@ class TempFile(
     tempDir: Path,
     prefix: String,
 ): Closeable {
-    private val tempFile = Files.createTempFile(tempDir, prefix, ".tmp")
+    val tempFile: Path = Files.createTempFile(tempDir, prefix, ".tmp")
 
     fun outputStream(): OutputStream = Files.newOutputStream(tempFile)
 

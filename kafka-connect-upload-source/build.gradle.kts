@@ -25,10 +25,14 @@ dependencies {
     val radarSchemaVersion: String by project
     api("org.radarbase:radar-schemas-commons:$radarSchemaVersion")
 
+    val commonsCompressVersion: String by project
+    implementation("org.apache.commons:commons-compress:$commonsCompressVersion")
+
     val jacksonVersion: String by project
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")
-    implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
+    implementation(platform("com.fasterxml.jackson:jackson-bom:$jacksonVersion"))
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+    implementation("com.fasterxml.jackson.core:jackson-databind")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 
     val openCsvVersion: String by project
     implementation("com.opencsv:opencsv:$openCsvVersion")

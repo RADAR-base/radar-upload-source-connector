@@ -154,9 +154,7 @@ class RecordRepositoryImpl(
             this.size = length
             this.content = BlobProxy.generateProxy(stream, length)
         }.also {
-            if (record.contents != null) {
-                record.contents?.add(it)
-            } else {
+            record.contents?.add(it) ?: run {
                 record.contents = mutableSetOf(it)
             }
         }
@@ -218,7 +216,12 @@ class RecordRepositoryImpl(
                 .resultList.firstOrNull()
     }
 
-    override fun readFileContent(id: Long, revision: Int, fileName: String, range: LongRange?): RecordRepository.BlobReader? = createTransaction { transaction ->
+    override fun readFileContent(
+        id: Long,
+        revision: Int,
+        fileName: String,
+        range: LongRange?,
+    ): RecordRepository.BlobReader? = createTransaction { transaction ->
         val queryString = "SELECT rc.content from RecordContent rc WHERE rc.record.id = :id AND rc.fileName = :fileName"
 
         val blob = createQuery(queryString, Blob::class.java)
@@ -233,7 +236,7 @@ class RecordRepositoryImpl(
             } else {
                 val offset = range.first + 1
                 val limit = range.count().toLong()
-                logger.debug("Reading record $id file $fileName from offset $offset with length $limit")
+                logger.debug("Reading record {} file {} from offset {} with length {}", id, fileName, offset, limit)
                 blob.getBinaryStream(offset, limit)
             }
 

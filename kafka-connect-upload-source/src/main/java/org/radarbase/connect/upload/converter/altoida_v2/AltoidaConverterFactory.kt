@@ -20,20 +20,13 @@
 package org.radarbase.connect.upload.converter.altoida_v2
 
 import org.radarbase.connect.upload.api.SourceTypeDTO
-import org.radarbase.connect.upload.converter.*
-import org.radarbase.connect.upload.converter.altoida.AltoidaAccelerationCsvProcessor
-import org.radarbase.connect.upload.converter.altoida.AltoidaAttitudeCsvProcessor
-import org.radarbase.connect.upload.converter.altoida.AltoidaBlinkCsvProcessor
-import org.radarbase.connect.upload.converter.altoida.AltoidaEyeTrackingCsvProcessor
-import org.radarbase.connect.upload.converter.altoida.AltoidaGravityCsvProcessor
-import org.radarbase.connect.upload.converter.altoida.AltoidaMagneticFieldCsvProcessor
-import org.radarbase.connect.upload.converter.altoida.AltoidaPathCsvProcessor
-import org.radarbase.connect.upload.converter.altoida.AltoidaTouchScreenCsvProcessor
+import org.radarbase.connect.upload.converter.ConverterFactory
+import org.radarbase.connect.upload.converter.FilePreProcessorFactory
+import org.radarbase.connect.upload.converter.FileProcessorFactory
 import org.radarbase.connect.upload.converter.altoida_v2.summary.AltoidaDomainResultProcessor
 import org.radarbase.connect.upload.converter.altoida_v2.summary.AltoidaSummaryCsvPreProcessorFactory
 import org.radarbase.connect.upload.converter.altoida_v2.summary.AltoidaSummaryProcessor
 import org.radarbase.connect.upload.converter.csv.CsvFileProcessorFactory
-import org.radarbase.connect.upload.converter.zip.ZipFileProcessorFactory
 import org.radarbase.connect.upload.logging.LogRepository
 
 class AltoidaConverterFactory : ConverterFactory {
@@ -60,36 +53,5 @@ class AltoidaConverterFactory : ConverterFactory {
                 AltoidaDomainResultProcessor(),
             ),
         ),
-        // Process zip file with detailed CSV contents and XML file
-        ZipFileProcessorFactory(
-            sourceType,
-            zipEntryProcessors = listOf(
-                CsvFileProcessorFactory(
-                    csvProcessorFactories = listOf(
-                        AltoidaAccelerationCsvProcessor("acceleration.csv"),
-                        AltoidaAttitudeCsvProcessor("gyroscope.csv"),
-                        AltoidaBlinkCsvProcessor("blink.csv"),
-                        AltoidaEyeTrackingCsvProcessor("eye_screen_focuspoint.csv"),
-                        AltoidaGravityCsvProcessor("gravity_acceleration.csv"),
-                        AltoidaMagneticFieldCsvProcessor("magnetometer.csv"),
-                        AltoidaPathCsvProcessor("ar_path.csv"),
-                        AltoidaTouchScreenCsvProcessor("touch.csv"),
-                        AltoidaMotorBubbleCsvProcessor(),
-                    )
-                ),
-                AltoidaXmlFileProcessorFactory(
-                    xmlProcessorFactories = listOf(
-                        AltoidaAssessmentsSummaryXmlProcessor(),
-                        AltoidaTestEventXmlProcessor(),
-                        AltoidaARAssessmentsSummaryXmlProcessor(),
-                        AltoidaARTestQuestionnaireXmlProcessor(),
-                        AltoidaScreenElementXmlProcessor(),
-                        AltoidaMetadataXmlProcessor(),
-                    )
-                ),
-            ),
-            allowUnmappedFiles = true,
-        ),
     )
 }
-

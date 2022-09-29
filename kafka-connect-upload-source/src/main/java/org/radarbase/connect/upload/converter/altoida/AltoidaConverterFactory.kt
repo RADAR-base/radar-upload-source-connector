@@ -20,10 +20,15 @@
 package org.radarbase.connect.upload.converter.altoida
 
 import org.radarbase.connect.upload.api.SourceTypeDTO
-import org.radarbase.connect.upload.converter.*
-import org.radarbase.connect.upload.converter.altoida.summary.*
+import org.radarbase.connect.upload.converter.ConverterFactory
+import org.radarbase.connect.upload.converter.FilePreProcessorFactory
+import org.radarbase.connect.upload.converter.FileProcessorFactory
+import org.radarbase.connect.upload.converter.altoida.summary.AltoidaDomainResultProcessor
+import org.radarbase.connect.upload.converter.altoida.summary.AltoidaSummaryCsvPreProcessorFactory
+import org.radarbase.connect.upload.converter.altoida.summary.AltoidaSummaryProcessor
+import org.radarbase.connect.upload.converter.altoida.summary.AltoidaTestMetricsProcessor
+import org.radarbase.connect.upload.converter.archive.ArchiveProcessorFactory.Companion.zipFactory
 import org.radarbase.connect.upload.converter.csv.CsvFileProcessorFactory
-import org.radarbase.connect.upload.converter.zip.ZipFileProcessorFactory
 import org.radarbase.connect.upload.logging.LogRepository
 
 class AltoidaConverterFactory : ConverterFactory {
@@ -53,9 +58,9 @@ class AltoidaConverterFactory : ConverterFactory {
             ),
         ),
         // Process zip file with detailed CSV contents
-        ZipFileProcessorFactory(
+        zipFactory(
             sourceType,
-            zipEntryProcessors = listOf(
+            entryProcessors = listOf(
                 CsvFileProcessorFactory(
                     csvProcessorFactories = listOf(
                         AltoidaAccelerationCsvProcessor(),
