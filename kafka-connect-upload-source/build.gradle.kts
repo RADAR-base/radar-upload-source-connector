@@ -27,6 +27,8 @@ dependencies {
 
     val commonsCompressVersion: String by project
     implementation("org.apache.commons:commons-compress:$commonsCompressVersion")
+    val xzVersion: String by project
+    implementation("org.tukaani:xz:$xzVersion")
 
     val jacksonVersion: String by project
     implementation(platform("com.fasterxml.jackson:jackson-bom:$jacksonVersion"))
