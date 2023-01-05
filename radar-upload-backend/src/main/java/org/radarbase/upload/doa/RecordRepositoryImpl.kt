@@ -336,9 +336,9 @@ class RecordRepositoryImpl(
 
     override fun resetStaleProcessing(sourceType: String, age: Duration): Int = transact {
         val now = Instant.now()
-        createQuery("UPDATE RecordMetadata metadata SET metadata.status = :newStatus, metadata.revision = metadata.revision + 1, metadata.modifiedDate = :now WHERE metadata.status = :currentStatus AND metadata.modifiedDate < :staleDate")
+        createQuery("UPDATE RecordMetadata metadata SET metadata.status = :newStatus, metadata.revision = metadata.revision + 1, metadata.modifiedDate = :now WHERE metadata.status IN :currentStatus AND metadata.modifiedDate < :staleDate")
                 .setParameter("newStatus", RecordStatus.READY)
-                .setParameter("currentStatus", RecordStatus.PROCESSING)
+                .setParameter("currentStatus", listOf(RecordStatus.PROCESSING, RecordStatus.QUEUED))
                 .setParameter("now", now)
                 .setParameter("staleDate", now.minus(age))
                 .executeUpdate()
