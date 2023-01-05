@@ -16,6 +16,9 @@ module.exports = {
     'no-debugger': 'off',
     'import/extensions': 0,
     'linebreak-style': 0,
+    'vue/valid-v-slot': ['error', {
+      allowModifiers: true,
+    }],
   },
 
   parserOptions: {
