@@ -69,7 +69,7 @@ java {
     targetCompatibility = JavaVersion.VERSION_11
 }
 
-// config JVM target to 1.8 for kotlin compilation tasks
+// config JVM target to 11 for kotlin compilation tasks
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "11"
 }

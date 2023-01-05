@@ -4,7 +4,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") apply false
-    id("com.github.ben-manes.versions") version "0.42.0"
+    id("com.github.ben-manes.versions") version "0.44.0"
 }
 
 allprojects {
@@ -60,7 +60,7 @@ subprojects {
 val stableVersionRegex = "[0-9,.v-]+(-r)?".toRegex()
 
 fun isNonStable(version: String): Boolean {
-    val stableKeyword = listOf("RELEASE", "FINAL", "GA")
+    val stableKeyword = listOf("RELEASE", "FINAL", "GA", "-CCS")
         .any { version.toUpperCase().contains(it) }
     return !stableKeyword && !stableVersionRegex.matches(version)
 }
@@ -72,5 +72,5 @@ tasks.withType<DependencyUpdatesTask> {
 }
 
 tasks.wrapper {
-    gradleVersion = "7.5.1"
+    gradleVersion = "7.6"
 }
