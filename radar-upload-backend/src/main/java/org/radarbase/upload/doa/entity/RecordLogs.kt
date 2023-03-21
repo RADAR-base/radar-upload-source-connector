@@ -39,6 +39,8 @@ class RecordLogs {
     lateinit var metadata: RecordMetadata
 
     var size: Long = 0
+
+    @Lob
     lateinit var logs: Clob
 
     override fun equals(other: Any?): Boolean {
