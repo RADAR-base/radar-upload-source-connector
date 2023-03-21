@@ -1,5 +1,5 @@
 #alpine version close to the version mentioned in the readme
-FROM --platform=$BUILDPLATFORM node:14 as builder
+FROM --platform=$BUILDPLATFORM node:16 as builder
 
 RUN mkdir /app
 WORKDIR /app

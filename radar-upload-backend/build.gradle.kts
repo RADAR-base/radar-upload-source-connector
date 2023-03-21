@@ -58,6 +58,9 @@ dependencies {
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "17"
 }
+tasks.withType<JavaCompile> {
+    options.release.set(17)
+}
 
 allOpen {
     annotation("jakarta.persistence.Entity")

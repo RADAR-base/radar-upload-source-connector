@@ -64,9 +64,8 @@ dependencies {
     testRuntimeOnly("org.slf4j:slf4j-simple:$slf4jVersion")
 }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+tasks.withType<JavaCompile> {
+    options.release.set(11)
 }
 
 // config JVM target to 11 for kotlin compilation tasks
