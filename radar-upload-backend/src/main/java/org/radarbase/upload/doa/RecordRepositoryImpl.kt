@@ -186,7 +186,7 @@ class RecordRepositoryImpl(
 
         queryString += " ORDER BY r.metadata.modifiedDate"
         val query = createQuery(queryString, Record::class.java)
-                .setParameter("status", RecordStatus.valueOf("READY"))
+                .setParameter("status", RecordStatus.READY)
                 .setMaxResults(limit)
                 .setLockMode(LockModeType.PESSIMISTIC_WRITE)
 
@@ -196,13 +196,13 @@ class RecordRepositoryImpl(
 
         query.resultStream
                 .peek {
-                    it.metadata.apply {
+                    merge(it.metadata.apply {
+                        record = it
                         status = RecordStatus.QUEUED
                         message = "Record is queued for processing"
                         revision += 1
                         modifiedDate = Instant.now()
-                        merge(this)
-                    }
+                    })
                 }
                 .toList()
     }
