@@ -43,7 +43,6 @@ import jakarta.persistence.PessimisticLockScope
 import jakarta.ws.rs.core.Context
 import kotlin.collections.HashSet
 
-
 class RecordRepositoryImpl(
         @Context em: Provider<EntityManager>,
 ) : HibernateRepository(em), RecordRepository {
@@ -76,21 +75,37 @@ class RecordRepositoryImpl(
     }
 
     override fun query(page: Page, projectId: String, userId: String?, status: String?, sourceType: String?): Pair<List<Record>, Page> {
-        var queryString = "SELECT r FROM Record r WHERE r.projectId = :projectId "
-        var countQueryString = "SELECT count(r) FROM Record r WHERE r.projectId = :projectId "
-        userId?.let {
-            queryString += " AND r.userId = :userId"
-            countQueryString += " AND r.userId = :userId"
+        val queryWhere = mutableListOf<String>()
+        val queryParams = mutableMapOf<String, Any>()
+
+        if (userId != null) {
+            queryWhere += " AND r.userId = :userId"
+            queryParams["userId"] = userId
         }
-        status?.let {
-            queryString += " AND r.metadata.status = :status"
-            countQueryString += " AND r.metadata.status = :status"
+        if (status != null) {
+            queryWhere += " AND r.metadata.status = :status"
+            queryParams["status"] = status
         }
-        sourceType?.let {
-            queryString += " AND r.sourceType.name = :sourceType"
-            countQueryString += " AND r.sourceType.name = :sourceType"
+        if (sourceType != null) {
+            queryWhere += " AND r.sourceType.name = :sourceType"
+            queryParams["sourceType"] = sourceType
         }
-        queryString += " ORDER BY r.id DESC"
+
+        val queryWhereString = queryWhere.joinToString(separator = "")
+
+        val queryString = """
+            SELECT r
+            FROM Record r
+            WHERE r.projectId = :projectId
+                $queryWhereString
+            ORDER BY r.id DESC
+            """.trimIndent()
+        val countQueryString = """
+            SELECT count(r)
+            FROM Record r
+            WHERE r.projectId = :projectId
+                $queryWhereString
+            """.trimIndent()
 
         val actualPage = page.createValid(maximum = 100)
 
@@ -103,17 +118,9 @@ class RecordRepositoryImpl(
             val countQuery = createQuery(countQueryString)
                     .setParameter("projectId", projectId)
 
-            userId?.let {
-                query.setParameter("userId", it)
-                countQuery.setParameter("userId", it)
-            }
-            status?.let {
-                query.setParameter("status", RecordStatus.valueOf(it))
-                countQuery.setParameter("status", RecordStatus.valueOf(it))
-            }
-            sourceType?.let {
-                query.setParameter("sourceType", it)
-                countQuery.setParameter("sourceType", it)
+            queryParams.forEach { (k, v) ->
+                query.setParameter(k, v)
+                countQuery.setParameter(k, v)
             }
             val records = query.resultList
             val count = countQuery.singleResult as Long
