@@ -203,13 +203,13 @@ class RecordRepositoryImpl(
 
         query.resultStream
                 .peek {
-                    merge(it.metadata.apply {
-                        record = it
+                    it.metadata.apply {
                         status = RecordStatus.QUEUED
                         message = "Record is queued for processing"
                         revision += 1
                         modifiedDate = Instant.now()
-                    })
+                        merge(this)
+                    }
                 }
                 .toList()
     }
