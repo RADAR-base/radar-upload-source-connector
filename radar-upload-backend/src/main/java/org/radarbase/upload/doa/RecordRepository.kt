@@ -29,7 +29,7 @@ import org.radarbase.upload.doa.entity.RecordMetadata
 import java.io.Closeable
 import java.io.InputStream
 import java.io.Reader
-import java.time.Duration
+import kotlin.time.Duration
 
 interface RecordRepository {
     fun create(record: Record, metadata: RecordMetadata? = null, contents: Set<ContentsDTO>? = null): Record

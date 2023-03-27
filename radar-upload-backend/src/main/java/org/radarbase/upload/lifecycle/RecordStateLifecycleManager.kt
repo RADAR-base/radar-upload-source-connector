@@ -1,5 +1,8 @@
 package org.radarbase.upload.lifecycle
 
+import jakarta.persistence.EntityManagerFactory
+import jakarta.ws.rs.core.Context
+import jakarta.ws.rs.ext.Provider
 import org.glassfish.jersey.server.BackgroundScheduler
 import org.glassfish.jersey.server.monitoring.ApplicationEvent
 import org.glassfish.jersey.server.monitoring.ApplicationEventListener
@@ -9,13 +12,11 @@ import org.radarbase.upload.Config
 import org.radarbase.upload.doa.RecordRepository
 import org.radarbase.upload.doa.RecordRepositoryImpl
 import org.slf4j.LoggerFactory
-import java.time.Duration
 import java.util.concurrent.Future
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
-import jakarta.persistence.EntityManagerFactory
-import jakarta.ws.rs.core.Context
-import jakarta.ws.rs.ext.Provider
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 
 @Provider
 class RecordStateLifecycleManager(
@@ -26,10 +27,10 @@ class RecordStateLifecycleManager(
     private val staleProcessingAge: Map<String, Pair<Duration, Any>>
 
     init {
-        val defaultStaleProcessingAge: Duration = Duration.ofMinutes(config.resetProcessingStatusTimeoutMin)
+        val defaultStaleProcessingAge: Duration = config.resetProcessingStatusTimeoutMin.minutes
         staleProcessingAge = config.sourceTypes
             ?.associate { source ->
-                val age = source.resetProcessingStatusTimeoutMin?.let { Duration.ofMinutes(it) }
+                val age = source.resetProcessingStatusTimeoutMin?.minutes
                     ?: defaultStaleProcessingAge
                 source.name to (age to Any())
             }
@@ -38,8 +39,7 @@ class RecordStateLifecycleManager(
 
     private var checkTask: List<Future<*>>? = null
 
-    override fun onEvent(event: ApplicationEvent?) {
-        event ?: return
+    override fun onEvent(event: ApplicationEvent) {
         when (event.type) {
             ApplicationEvent.Type.INITIALIZATION_APP_FINISHED -> startStaleChecks()
             ApplicationEvent.Type.DESTROY_FINISHED -> cancelStaleChecks()
@@ -63,12 +63,12 @@ class RecordStateLifecycleManager(
         checkTask = staleProcessingAge
                 .map { (source, ageLock) ->
                     val (age, lock) = ageLock
-                    val delay = age.dividedBy(4)
-                    val initialDelay = delay.dividedBy(2)
+                    val delay = age / 4
+                    val initialDelay = delay / 2
                     executor.scheduleAtFixedRate(
                         { runStaleCheck(source, age, lock) },
-                        initialDelay.toSeconds(),
-                        delay.toSeconds(),
+                        initialDelay.inWholeSeconds,
+                        delay.inWholeSeconds,
                         TimeUnit.SECONDS
                     )
                 }

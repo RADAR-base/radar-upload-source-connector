@@ -5,11 +5,11 @@ import org.radarbase.connect.upload.api.PollDTO
 import org.radarbase.connect.upload.api.RecordDTO
 import org.radarbase.connect.upload.api.UploadBackendClient
 import org.radarbase.connect.upload.converter.ConverterFactory
-import org.radarbase.connect.upload.logging.LogRepository
-import org.radarbase.connect.upload.logging.RecordLogger
 import org.radarbase.connect.upload.exception.ConflictException
 import org.radarbase.connect.upload.exception.ConversionFailedException
 import org.radarbase.connect.upload.exception.ConversionTemporarilyFailedException
+import org.radarbase.connect.upload.logging.LogRepository
+import org.radarbase.connect.upload.logging.RecordLogger
 import org.slf4j.LoggerFactory
 import java.io.Closeable
 import java.time.Duration
@@ -17,6 +17,7 @@ import java.time.Instant
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicLong
 
 class ConverterManager(
     private val queue: BlockingQueue<SourceRecord>,
@@ -52,23 +53,41 @@ class ConverterManager(
             uploadClient.pollRecords(PollDTO(numberOfRecords, converters.keys)).records
         } catch (exe: Throwable) {
             logger.error("Could not successfully poll records. Waiting for next polling...", exe)
-            return numberOfRecords
+            return 0
         }
 
-        try {
+        val numberOfKafkaRecords = AtomicLong(0)
+
+        return try {
             for (record in records) {
                 val recordLogger = logRepository.createLogger(logger, requireNotNull(record.id))
                 try {
-                    processRecord(record, recordLogger, queue::put)
+                    numberOfKafkaRecords.set(0L)
+                    processRecord(record, recordLogger) { e ->
+                        queue.put(e)
+                        numberOfKafkaRecords.incrementAndGet()
+                    }
+                    val recordsProcessed = numberOfKafkaRecords.get()
+                    if (recordsProcessed == 0L) {
+                        recordLogger.warn("No records found in data")
+                        updateRecordFailure(
+                            record,
+                            recordLogger,
+                            IllegalArgumentException("No records found in data"),
+                            "No records in data"
+                        )
+                    } else {
+                        recordLogger.info("$recordsProcessed records found in data")
+                    }
                 } catch (ex: Throwable) {
                     recordLogger.error("Cannot convert record", ex)
                 }
             }
+            records.size
         } catch (ex: Throwable) {
             logger.error("Failed to process records", ex)
-            return numberOfRecords
+            numberOfRecords
         }
-        return records.size
     }
 
     private fun processRecord(

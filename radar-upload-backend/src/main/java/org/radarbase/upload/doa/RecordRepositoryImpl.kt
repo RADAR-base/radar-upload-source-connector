@@ -19,6 +19,11 @@
 
 package org.radarbase.upload.doa
 
+import jakarta.inject.Provider
+import jakarta.persistence.EntityManager
+import jakarta.persistence.LockModeType
+import jakarta.persistence.PessimisticLockScope
+import jakarta.ws.rs.core.Context
 import org.hibernate.engine.jdbc.BlobProxy
 import org.hibernate.engine.jdbc.ClobProxy
 import org.radarbase.jersey.exception.HttpBadRequestException
@@ -33,15 +38,9 @@ import org.slf4j.LoggerFactory
 import java.io.InputStream
 import java.io.Reader
 import java.sql.Blob
-import java.time.Duration
 import java.time.Instant
 import java.util.*
-import jakarta.inject.Provider
-import jakarta.persistence.EntityManager
-import jakarta.persistence.LockModeType
-import jakarta.persistence.PessimisticLockScope
-import jakarta.ws.rs.core.Context
-import kotlin.collections.HashSet
+import kotlin.time.Duration
 
 class RecordRepositoryImpl(
         @Context em: Provider<EntityManager>,
@@ -202,16 +201,16 @@ class RecordRepositoryImpl(
         }
 
         query.resultStream
-                .peek {
-                    it.metadata.apply {
-                        status = RecordStatus.QUEUED
-                        message = "Record is queued for processing"
-                        revision += 1
-                        modifiedDate = Instant.now()
-                        merge(this)
-                    }
+            .peek {
+                it.metadata.apply {
+                    status = RecordStatus.QUEUED
+                    message = "Record is queued for processing"
+                    revision += 1
+                    modifiedDate = Instant.now()
+                    merge(this)
                 }
-                .toList()
+            }
+            .toList()
     }
 
     override fun readRecordContent(recordId: Long, fileName: String): RecordContent? = transact {
@@ -347,7 +346,7 @@ class RecordRepositoryImpl(
                 .setParameter("newStatus", RecordStatus.READY)
                 .setParameter("currentStatus", listOf(RecordStatus.PROCESSING, RecordStatus.QUEUED))
                 .setParameter("now", now)
-                .setParameter("staleDate", now.minus(age))
+                .setParameter("staleDate", now.minusSeconds(age.inWholeSeconds))
                 .executeUpdate()
     }
 

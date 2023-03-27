@@ -46,5 +46,5 @@ data class Config(
     val enableCors: Boolean? = false,
     val syncProjectsIntervalMin: Long = 30,
     val syncParticipantsIntervalMin: Long = 30,
-    val resetProcessingStatusTimeoutMin: Long = 30,
+    val resetProcessingStatusTimeoutMin: Long = 300,
 )
