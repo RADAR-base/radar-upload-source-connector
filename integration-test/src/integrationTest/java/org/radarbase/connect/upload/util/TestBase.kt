@@ -62,7 +62,7 @@ import java.time.LocalDateTime
 object TestBase {
     const val baseUri = "http://0.0.0.0:8085/upload/api"
 
-    const val tokenUrl = "http://localhost:8090/oauth/token"
+    const val tokenUrl = "http://localhost:8090/managementportal/oauth/token"
 
     const val sourceTypeName = "phone-acceleration"
 
@@ -117,7 +117,7 @@ object TestBase {
     )
 
     val uploadBackendConfig = Config(
-        managementPortalUrl = "http://localhost:8090",
+        managementPortalUrl = "http://localhost:8090/managementportal",
         clientId = "radar_upload_backend",
         clientSecret = "secret",
         baseUri = URI.create(baseUri),

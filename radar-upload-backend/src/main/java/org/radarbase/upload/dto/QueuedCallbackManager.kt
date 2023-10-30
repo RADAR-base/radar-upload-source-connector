@@ -19,69 +19,76 @@
 
 package org.radarbase.upload.dto
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.contentLength
+import io.ktor.http.contentType
+import io.ktor.http.isSuccess
+import io.ktor.serialization.jackson.jackson
 import jakarta.ws.rs.core.Context
-import okhttp3.Call
-import okhttp3.Callback
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
-import okhttp3.Response
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.radarbase.upload.api.RecordMetadataDTO
 import org.radarbase.upload.logger
-import java.io.IOException
 import java.util.concurrent.ScheduledExecutorService
-import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.minutes
 
 class QueuedCallbackManager(
-    @Context val httpClient: OkHttpClient,
     @Context val scheduler: ScheduledExecutorService,
 ) : CallbackManager {
 
-    override fun callback(metadata: RecordMetadataDTO, retries: Int) {
-        scheduler.execute { doCallback(metadata, retries) }
+    val httpClient: HttpClient = HttpClient(CIO) {
+        install(ContentNegotiation) {
+            jackson {
+                registerModule(JavaTimeModule())
+            }
+        }
     }
 
-    private fun doCallback(metadata: RecordMetadataDTO, retries: Int) {
+    override fun callback(metadata: RecordMetadataDTO, retries: Int) {
+        CoroutineScope(scheduler.asCoroutineDispatcher()).launch {
+            doCallback(metadata, retries)
+        }
+    }
+
+    private tailrec suspend fun doCallback(metadata: RecordMetadataDTO, retries: Int) {
         val url = metadata.callbackUrl ?: return
 
-        val request = Request.Builder()
-            .url(url)
-            .post(jsonWriter.writeValueAsString(metadata).toRequestBody(JSON_TYPE))
-            .build()
-
-        httpClient.newCall(request).enqueue(object : Callback {
-            override fun onResponse(call: Call, response: Response) {
-                response.use {
-                    if (it.isSuccessful) {
-                        logger.debug("Successful callback {}", url)
-                    } else {
-                        val bodyString = if (it.body != null) it.peekBody(255).string() else "<empty>"
-
-                        if (retries > 0) {
-                            logger.debug("Callback to {} failed (code {}): {}, retrying", url, it.code, bodyString)
-                            scheduler.schedule({ doCallback(metadata, retries - 1) }, 10, TimeUnit.MINUTES)
-                        } else {
-                            logger.debug("Callback to {} failed completely (code {}): {}", url, it.code, bodyString)
-                        }
-                    }
+        val errorMessage = try {
+            val response = withContext(Dispatchers.IO) {
+                httpClient.post(url) {
+                    setBody(metadata)
+                    contentType(ContentType.Application.Json)
                 }
             }
 
-            override fun onFailure(call: Call, e: IOException) {
-                if (retries > 0) {
-                    logger.debug("Callback to {} failed: {}, retrying", url, e.toString())
-                    scheduler.schedule({ doCallback(metadata, retries - 1) }, 10, TimeUnit.MINUTES)
-                } else {
-                    logger.debug("Callback to {} failed completely: {}", url, e.toString())
-                }
+            if (response.status.isSuccess()) {
+                logger.debug("Successful callback {}", url)
+                return
+            } else {
+                val bodyString = if ((response.contentLength() ?: 0) > 0) response.bodyAsText().take(255) else "<empty>"
+                "${response.status}: $bodyString"
             }
-        })
-    }
+        } catch (ex: Exception) {
+            ex.toString()
+        }
 
-    companion object {
-        private val JSON_TYPE = "application/json; charset=utf-8".toMediaType()
-        private val jsonWriter = ObjectMapper().writerFor(RecordMetadataDTO::class.java)
+        if (retries > 0) {
+            logger.debug("Callback to {} failed: {}, retrying", url, errorMessage)
+            delay(10.minutes)
+            doCallback(metadata, retries - 1)
+        } else {
+            logger.debug("Callback to {} failed completely: {}", url, errorMessage)
+        }
     }
 }

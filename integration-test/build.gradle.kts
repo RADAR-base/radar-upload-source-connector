@@ -9,7 +9,7 @@ plugins {
 sourceSets {
     create("integrationTest") {
         kotlin.srcDir("src/integrationTest/java")
-        resources.srcDir("src/integrationTest/resources")
+        resources.setSrcDirs(listOf("src/integrationTest/resources"))
         compileClasspath += sourceSets["main"].output + configurations["testRuntimeClasspath"]
         runtimeClasspath += output + compileClasspath + sourceSets["test"].runtimeClasspath
     }

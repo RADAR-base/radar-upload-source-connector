@@ -13,6 +13,7 @@ object Versions {
 
     // From image
     const val jackson = "2.14.2"
+    const val ktor = "2.3.5"
 
     const val log4j2 = "2.21.1"
     const val slf4j = "2.0.9"

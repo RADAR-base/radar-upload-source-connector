@@ -55,10 +55,8 @@ class RecordStateLifecycleManager(
 
     override fun onEvent(event: ApplicationEvent) {
         when (event.type) {
-            ApplicationEvent.Type.INITIALIZATION_APP_FINISHED -> {
-                addSourceTypes()
-                startStaleChecks()
-            }
+            ApplicationEvent.Type.INITIALIZATION_APP_FINISHED -> startStaleChecks()
+            ApplicationEvent.Type.INITIALIZATION_FINISHED -> addSourceTypes()
             ApplicationEvent.Type.DESTROY_FINISHED -> cancelStaleChecks()
             else -> {} // do nothing
         }

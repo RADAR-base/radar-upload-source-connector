@@ -64,7 +64,7 @@ open class UploadBackendClient(
     }
 
     open fun requestConnectorConfig(name: String): SourceTypeDTO = httpClient.executeRequest {
-        url("$uploadBackendBaseUrl/source-types/$name/")
+        url("$uploadBackendBaseUrl/source-types/$name")
     }
 
     open fun requestAllConnectors(): SourceTypeContainerDTO = httpClient.executeRequest {

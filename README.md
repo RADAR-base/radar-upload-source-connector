@@ -68,7 +68,7 @@ jdbcUrl: "jdbc:postgresql://radarbase-postgresql:5432/uploadconnector"
 jdbcUser: "username" # change this to your database username
 jdbcPassword: "password" # change this to your database password
 additionalPersistenceConfig:
-  "hibernate.dialect": "org.hibernate.dialect.PostgreSQL95Dialect"
+  "hibernate.dialect": "org.hibernate.dialect.PostgreSQLDialect"
 enableCors: yes # if you want to enable cors filter to this component specify yes
 clientId: "radar_upload_backend" # configure your oauth client id
 clientSecret: "secret" # configure the client-secret

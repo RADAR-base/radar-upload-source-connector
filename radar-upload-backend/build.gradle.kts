@@ -24,10 +24,16 @@ dependencies {
 
     implementation("org.glassfish.jersey.containers:jersey-container-grizzly2-http:${Versions.jersey}")
 
-    implementation("com.squareup.okhttp3:okhttp:${Versions.okhttp}")
+    implementation(enforcedPlatform("io.ktor:ktor-bom:${Versions.ktor}"))
+    implementation("io.ktor:ktor-client-core")
+    implementation("io.ktor:ktor-client-cio")
+    implementation("io.ktor:ktor-client-content-negotiation")
+    implementation("io.ktor:ktor-serialization-jackson")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${Versions.jackson}")
 
     runtimeOnly("org.hsqldb:hsqldb:${Versions.hsqldb}")
 
+    testImplementation("com.squareup.okhttp3:okhttp:${Versions.okhttp}")
     testImplementation("org.radarbase:radar-auth:${Versions.managementPortal}")
     testImplementation("org.hamcrest:hamcrest:${Versions.hamcrest}")
     testImplementation("org.mockito.kotlin:mockito-kotlin:${Versions.mockitoKotlin}")
