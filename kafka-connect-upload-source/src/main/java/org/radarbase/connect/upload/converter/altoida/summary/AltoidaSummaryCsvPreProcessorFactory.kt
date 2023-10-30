@@ -25,14 +25,15 @@ import com.opencsv.CSVReaderBuilder
 import com.opencsv.CSVWriter
 import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
-import org.radarbase.connect.upload.converter.*
+import org.radarbase.connect.upload.converter.ConverterFactory
+import org.radarbase.connect.upload.converter.FilePreProcessor
+import org.radarbase.connect.upload.converter.FilePreProcessorFactory
 import org.slf4j.LoggerFactory
 import java.io.BufferedReader
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.nio.charset.StandardCharsets
-
 
 /**
  * AltoidaSummaryCsvPreProcesor allows the preprocessing of the export.csv InputStream
@@ -49,7 +50,7 @@ class AltoidaSummaryCsvPreProcessorFactory : FilePreProcessorFactory {
     private inner class AltoidaSummaryCsvPreProcessor : FilePreProcessor {
         override fun preProcessFile(
             context: ConverterFactory.ContentsContext,
-            inputStream: InputStream
+            inputStream: InputStream,
         ): InputStream {
             logger.info("Converting input stream..")
             return inputStream.bufferedReader().toCsvReader().use { reader ->
@@ -60,7 +61,7 @@ class AltoidaSummaryCsvPreProcessorFactory : FilePreProcessorFactory {
 
                 if (header.size < fileHeader.size) header = fileHeader
                 val line = reader.readNext()
-                val outputStream =  ByteArrayOutputStream()
+                val outputStream = ByteArrayOutputStream()
                 val writer = CSVWriter(outputStream.writer(StandardCharsets.UTF_8))
 
                 writer.writeNext(header.toTypedArray())
@@ -77,7 +78,6 @@ class AltoidaSummaryCsvPreProcessorFactory : FilePreProcessorFactory {
         private fun BufferedReader.toCsvReader(): CSVReader = CSVReaderBuilder(this)
             .withCSVParser(CSVParserBuilder().withSeparator(',').build())
             .build()
-
     }
 
     companion object {
@@ -875,6 +875,5 @@ class AltoidaSummaryCsvPreProcessorFactory : FilePreProcessorFactory {
             "DOT_AR_TOOMUCHMOVEMENTCOUNT",
             "YEARSOFEDUCATION",
         )
-
     }
 }

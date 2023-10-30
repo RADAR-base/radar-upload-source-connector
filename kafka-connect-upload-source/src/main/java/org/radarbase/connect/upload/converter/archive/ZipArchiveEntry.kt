@@ -1,10 +1,10 @@
 package org.radarbase.connect.upload.converter.archive
 
 import org.apache.commons.compress.archivers.ArchiveEntry
-import java.util.*
+import java.util.Date
 import java.util.zip.ZipEntry
 
-class ZipArchiveEntry(val entry: ZipEntry): ArchiveEntry {
+class ZipArchiveEntry(val entry: ZipEntry) : ArchiveEntry {
     override fun getName(): String = entry.name
     override fun getSize(): Long = entry.size
     override fun isDirectory(): Boolean = entry.isDirectory

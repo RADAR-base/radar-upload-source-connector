@@ -1,11 +1,11 @@
-package org.radarbase.connect.upload.converter.altoida_v2
+package org.radarbase.connect.upload.converter.altoidav2
 
 import org.radarbase.connect.upload.converter.TopicData
 import org.radarbase.connect.upload.converter.xml.XmlNodeProcessorFactory
-import org.radarcns.connector.upload.altoida.*
+import org.radarcns.connector.upload.altoida.AltoidaTestScreenElement
 import org.w3c.dom.Element
 
-open class AltoidaScreenElementXmlProcessor: XmlNodeProcessorFactory() {
+open class AltoidaScreenElementXmlProcessor : XmlNodeProcessorFactory() {
     override val fileNameSuffix: String = "altoida_data.xml"
 
     override val nodeName: String = "screen_elements"
@@ -26,16 +26,16 @@ open class AltoidaScreenElementXmlProcessor: XmlNodeProcessorFactory() {
                 this.assessmentName = parent.assessmentName(assessmentName)
                 id = root.getAttribute("circle_id").toIntOrNull()
                 name = root.tagName
-                width = root.childOrNull( "width").attribute("value").toDoubleOrNull()
-                height = root.childOrNull( "height").attribute("value").toDoubleOrNull()
+                width = root.childOrNull("width").attribute("value").toDoubleOrNull()
+                height = root.childOrNull("height").attribute("value").toDoubleOrNull()
                 radius = root.childOrNull("radius").attribute("value").toDoubleOrNull()
-                xCenterOffset = root.childOrNull( "x_center_offset").attribute("value").toDoubleOrNull()
-                yCenterOffset = root.childOrNull( "y_center_offset").attribute("value").toDoubleOrNull()
+                xCenterOffset = root.childOrNull("x_center_offset").attribute("value").toDoubleOrNull()
+                yCenterOffset = root.childOrNull("y_center_offset").attribute("value").toDoubleOrNull()
                 colorAlpha = colorElement.attribute("alpha").toFloatOrNull()
                 colorRed = colorElement.attribute("r").toFloatOrNull()
                 colorGreen = colorElement.attribute("g").toFloatOrNull()
                 colorBlue = colorElement.attribute("b").toFloatOrNull()
-            }.build()
+            }.build(),
         )
     }
 

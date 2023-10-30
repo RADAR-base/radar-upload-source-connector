@@ -29,12 +29,16 @@ class AltoidaRotationCsvProcessor : StatelessCsvLineProcessor() {
     override val header: List<String> = listOf("TIMESTAMP", "X", "Y", "Z")
 
     override fun lineConversion(
-            line: Map<String, String>,
-            timeReceived: Double
-    ) = TopicData("connect_upload_altoida_rotation", AltoidaRotation(
+        line: Map<String, String>,
+        timeReceived: Double,
+    ) = TopicData(
+        "connect_upload_altoida_rotation",
+        AltoidaRotation(
             time(line),
             timeReceived,
             line.getValue("X").toFloat(),
             line.getValue("Y").toFloat(),
-            line.getValue("Z").toFloat()))
+            line.getValue("Z").toFloat(),
+        ),
+    )
 }

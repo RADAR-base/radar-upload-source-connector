@@ -1,10 +1,14 @@
-import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
-import org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.radarbase.gradle.plugin.radarKotlin
 
 plugins {
-    kotlin("jvm") apply false
-    id("com.github.ben-manes.versions") version "0.46.0"
+    id("org.radarbase.radar-root-project") version Versions.radarCommons
+    id("org.radarbase.radar-dependency-management") version Versions.radarCommons
+    id("org.radarbase.radar-kotlin") version Versions.radarCommons apply false
+
+    id("org.jetbrains.kotlin.plugin.noarg") version Versions.kotlin apply false
+    id("org.jetbrains.kotlin.plugin.jpa") version Versions.kotlin apply false
+    id("org.jetbrains.kotlin.plugin.allopen") version Versions.kotlin apply false
+    id("com.avast.gradle.docker-compose") version Versions.dockerCompose apply false
 }
 
 allprojects {
@@ -12,65 +16,27 @@ allprojects {
     version = "0.5.13-SNAPSHOT"
 }
 
+
+radarRootProject {
+    projectVersion.set(Versions.project)
+    gradleVersion.set(Versions.wrapper)
+}
+
+
 subprojects {
-    repositories {
-        mavenCentral()
-        maven(url = "https://packages.confluent.io/maven/")
-    }
+    apply(plugin = "org.radarbase.radar-kotlin")
 
-    val kotlinApiVersion: String by project
-
-    afterEvaluate {
-        tasks.withType<Test> {
-            useJUnitPlatform()
-            testLogging {
-                events("passed", "skipped", "failed")
-                setExceptionFormat("full")
-                showStandardStreams = true
-                exceptionFormat = FULL
-            }
-        }
-
-        tasks.withType<KotlinCompile> {
-            kotlinOptions {
-                apiVersion = kotlinApiVersion
-                languageVersion = kotlinApiVersion
-            }
-        }
-
-
-        tasks.register("downloadDependencies") {
-            configurations.find { it.name =="compileClasspath" }?.files
-            configurations.find { it.name =="runtimeClasspath" }?.files
-        }
-
-        tasks.register<Copy>("copyDependencies") {
-            try {
-                from(
-                    configurations.named("runtimeClasspath").map { it.files }
-                )
-            } catch (ex: UnknownDomainObjectException) {
-                // do nothing
-            }
-            into("$buildDir/third-party/")
-        }
+    radarKotlin {
+        javaVersion.set(Versions.java)
+        kotlinVersion.set(Versions.kotlin)
+        slf4jVersion.set(Versions.slf4j)
+        log4j2Version.set(Versions.log4j2)
+        junitVersion.set(Versions.junit)
     }
 }
 
-val stableVersionRegex = "[0-9,.v-]+(-r)?".toRegex()
-
-fun isNonStable(version: String): Boolean {
-    val stableKeyword = listOf("RELEASE", "FINAL", "GA", "-CCS")
-        .any { version.toUpperCase().contains(it) }
-    return !stableKeyword && !stableVersionRegex.matches(version)
-}
-
-tasks.withType<DependencyUpdatesTask> {
-    rejectVersionIf {
-        isNonStable(candidate.version)
+project(":kafka-connect-upload-source") {
+    radarKotlin {
+        javaVersion.set(11)
     }
-}
-
-tasks.wrapper {
-    gradleVersion = "8.0.2"
 }

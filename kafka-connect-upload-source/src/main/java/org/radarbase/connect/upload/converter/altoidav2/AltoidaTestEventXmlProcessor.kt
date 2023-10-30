@@ -1,11 +1,12 @@
-package org.radarbase.connect.upload.converter.altoida_v2
+package org.radarbase.connect.upload.converter.altoidav2
 
 import org.radarbase.connect.upload.converter.TopicData
 import org.radarbase.connect.upload.converter.xml.XmlNodeProcessorFactory
-import org.radarcns.connector.upload.altoida.*
+import org.radarcns.connector.upload.altoida.AltoidaAssessmentEvent
+import org.radarcns.connector.upload.altoida.LocationValue
 import org.w3c.dom.Element
 
-open class AltoidaTestEventXmlProcessor: XmlNodeProcessorFactory() {
+open class AltoidaTestEventXmlProcessor : XmlNodeProcessorFactory() {
     override val fileNameSuffix: String = "altoida_data.xml"
 
     override val nodeName: String = "events"
@@ -22,7 +23,7 @@ open class AltoidaTestEventXmlProcessor: XmlNodeProcessorFactory() {
                 eventType = root.tagName
                 objectName = root.objectName(assessmentName)
                 location = root.getAttribute("location").toLocation()
-            }.build()
+            }.build(),
         )
     }
 
@@ -41,7 +42,7 @@ open class AltoidaTestEventXmlProcessor: XmlNodeProcessorFactory() {
         else -> getAttribute("object_name")
     }
 
-    private fun String.toLocation() : LocationValue {
+    private fun String.toLocation(): LocationValue {
         return when (this) {
             "top" -> LocationValue.TOP
             "right" -> LocationValue.RIGHT
@@ -54,5 +55,4 @@ open class AltoidaTestEventXmlProcessor: XmlNodeProcessorFactory() {
             else -> LocationValue.UNKNOWN
         }
     }
-
 }

@@ -46,4 +46,3 @@ interface LogRepository {
      */
     fun extract(recordId: Long, reset: Boolean = false): Log?
 }
-

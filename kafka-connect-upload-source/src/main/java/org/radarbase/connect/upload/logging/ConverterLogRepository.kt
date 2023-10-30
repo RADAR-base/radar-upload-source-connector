@@ -45,7 +45,7 @@ class ConverterLogRepository : LogRepository {
             logContainer[recordId]
         }
         return recordQueue
-                ?.takeIf { it.isNotEmpty() }
-                ?.let { Log(recordId, it) }
+            ?.takeIf { it.isNotEmpty() }
+            ?.let { Log(recordId, it) }
     }
 }

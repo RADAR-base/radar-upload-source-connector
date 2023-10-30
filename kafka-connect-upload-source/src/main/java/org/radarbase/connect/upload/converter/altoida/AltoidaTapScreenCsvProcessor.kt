@@ -26,11 +26,15 @@ class AltoidaTapScreenCsvProcessor : StatelessCsvLineProcessor() {
     override val header: List<String> = listOf("TIMESTAMP", "X", "Y")
 
     override fun lineConversion(
-            line: Map<String, String>,
-            timeReceived: Double
-    ) = TopicData("connect_upload_altoida_tap", AltoidaTap(
+        line: Map<String, String>,
+        timeReceived: Double,
+    ) = TopicData(
+        "connect_upload_altoida_tap",
+        AltoidaTap(
             time(line),
             timeReceived,
             line.getValue("X").toDouble(),
-            line.getValue("Y").toDouble()))
+            line.getValue("Y").toDouble(),
+        ),
+    )
 }

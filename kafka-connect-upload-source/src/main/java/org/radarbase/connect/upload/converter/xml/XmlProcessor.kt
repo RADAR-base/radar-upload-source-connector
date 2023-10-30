@@ -32,7 +32,7 @@ import javax.xml.parsers.DocumentBuilderFactory
  */
 open class XmlProcessor(
     private val processorFactories: List<XmlNodeProcessorFactory>,
-): FileProcessor {
+) : FileProcessor {
     open val fileNameSuffixes: List<String>
         get() = listOf(fileNameSuffix)
 
@@ -103,7 +103,4 @@ open class XmlProcessor(
     private fun List<XmlNodeProcessorFactory>.createNodeProcessors(
         context: ConverterFactory.ContentsContext,
     ): List<XmlNodeProcessorFactory.XmlNodeProcessor> = map { it.createNodeProcessor(context) }
-
 }
-
-

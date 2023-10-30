@@ -18,8 +18,8 @@ package org.radarbase.connect.upload.converter.phone
 
 import org.radarbase.connect.upload.api.SourceTypeDTO
 import org.radarbase.connect.upload.converter.ConverterFactory
-import org.radarbase.connect.upload.converter.csv.CsvFileProcessorFactory
 import org.radarbase.connect.upload.converter.FileProcessorFactory
+import org.radarbase.connect.upload.converter.csv.CsvFileProcessorFactory
 import org.radarbase.connect.upload.logging.LogRepository
 
 class AccelerometerConverterFactory : ConverterFactory {
@@ -29,7 +29,7 @@ class AccelerometerConverterFactory : ConverterFactory {
         return listOf(
             CsvFileProcessorFactory(
                 csvProcessorFactories = listOf(
-                    AccelerometerCsvProcessor()
+                    AccelerometerCsvProcessor(),
                 ),
             ),
         )

@@ -36,7 +36,7 @@ import java.net.URLDecoder
  */
 class CwaReader(
     /** Wrapped input stream  */
-    private val inputStream: InputStream
+    private val inputStream: InputStream,
 ) {
     /** Block  */
     private val currentBlock: CwaBlock = CwaBlock()

@@ -2,13 +2,20 @@ package org.radarbase.connect.upload.converter.altoida
 
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.greaterThan
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.mockito.Mockito
-import org.radarbase.connect.upload.api.*
+import org.radarbase.connect.upload.api.ContentsDTO
+import org.radarbase.connect.upload.api.RecordDTO
+import org.radarbase.connect.upload.api.RecordDataDTO
+import org.radarbase.connect.upload.api.RecordMetadataDTO
+import org.radarbase.connect.upload.api.SourceTypeDTO
+import org.radarbase.connect.upload.api.UploadBackendClient
 import org.radarbase.connect.upload.converter.ConverterFactory
 import org.radarbase.connect.upload.converter.RecordConverter
 import org.radarbase.connect.upload.converter.TopicData
@@ -27,17 +34,17 @@ class AltoidaCoverterFactoryTest {
     private lateinit var uploadBackendClient: UploadBackendClient
 
     private val record = RecordDTO(
-            id = 1L,
-            metadata = RecordMetadataDTO(
-                revision = 1,
-                status = "PROCESSING"
-            ),
-            data = RecordDataDTO(
-                projectId = "testProject",
-                userId = "testUser",
-                sourceId = "testSource",
-            ),
-            sourceType = "altoida"
+        id = 1L,
+        metadata = RecordMetadataDTO(
+            revision = 1,
+            status = "PROCESSING",
+        ),
+        data = RecordDataDTO(
+            projectId = "testProject",
+            userId = "testUser",
+            sourceId = "testSource",
+        ),
+        sourceType = "altoida",
 
     )
 
@@ -68,7 +75,7 @@ class AltoidaCoverterFactoryTest {
                 contentType = "application/zip",
                 fileName = "TEST_ZIP.zip",
                 createdDate = Instant.now(),
-                size = 1L
+                size = 1L,
             ),
             logger = Mockito.mock(RecordLogger::class.java),
             avroData = RecordConverter.createAvroData(),
@@ -81,7 +88,6 @@ class AltoidaCoverterFactoryTest {
         assertThat(records.count(), greaterThan(1000))
     }
 
-
     @Test
     @DisplayName("Should be able to convert an Android zip file to TopicRecords")
     fun testValidRawAndroidDataProcessing() {
@@ -93,7 +99,7 @@ class AltoidaCoverterFactoryTest {
                 contentType = "application/zip",
                 fileName = "ALTOIDA_ANDROID.zip",
                 createdDate = Instant.now(),
-                size = 1L
+                size = 1L,
             ),
             logger = Mockito.mock(RecordLogger::class.java),
             avroData = RecordConverter.createAvroData(),
@@ -117,7 +123,7 @@ class AltoidaCoverterFactoryTest {
                 contentType = "text/csv",
                 fileName = "export.csv",
                 createdDate = Instant.now(),
-                size = 1L
+                size = 1L,
             ),
             logger = Mockito.mock(RecordLogger::class.java),
             avroData = RecordConverter.createAvroData(),
@@ -130,12 +136,11 @@ class AltoidaCoverterFactoryTest {
         assertEquals(records.count(), 4)
 
         val expectedTopics = listOf(
-                "connect_upload_altoida_bit_metrics",
-                "connect_upload_altoida_dot_metrics",
-                "connect_upload_altoida_summary",
-                "connect_upload_altoida_domain_result"
+            "connect_upload_altoida_bit_metrics",
+            "connect_upload_altoida_dot_metrics",
+            "connect_upload_altoida_summary",
+            "connect_upload_altoida_domain_result",
         )
         assertTrue(records.map { it.topic }.containsAll(expectedTopics))
     }
-
 }

@@ -36,10 +36,10 @@ internal class OAuthClientCredentialsInterceptorTest {
     fun setUp() {
         httpClient = OkHttpClient()
         clientCredentialsInterceptor = OAuthClientCredentialsInterceptor(
-                httpClient,
-                uploadConnectClient,
-                uploadConnectSecret,
-                tokenUrl
+            httpClient,
+            uploadConnectClient,
+            uploadConnectSecret,
+            tokenUrl,
         )
     }
 

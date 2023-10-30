@@ -1,4 +1,4 @@
-package org.radarbase.connect.upload.converter.altoida_v2
+package org.radarbase.connect.upload.converter.altoidav2
 
 import org.radarbase.connect.upload.converter.TimeFieldParser.DateFormatParser.Companion.formatTimeFieldParser
 import org.radarbase.connect.upload.converter.TopicData
@@ -42,7 +42,7 @@ class AltoidaMetadataXmlProcessor : XmlNodeProcessorFactory() {
                 osType = osElement.attribute("type").toOsType()
                 osVersion = osElement.attribute("version")
                 displayPpi = displayElement.attribute("ppi").toDouble()
-                displayWidthPixels =  displaySizeElement
+                displayWidthPixels = displaySizeElement
                     .child("width", "pixels")
                     .getAttribute("value")
                     .toDouble()
@@ -58,8 +58,7 @@ class AltoidaMetadataXmlProcessor : XmlNodeProcessorFactory() {
                     .child("height", "centimeters")
                     .getAttribute("value")
                     .toDouble()
-
-            }.build()
+            }.build(),
         )
     }
 
@@ -68,31 +67,31 @@ class AltoidaMetadataXmlProcessor : XmlNodeProcessorFactory() {
         timeReceived: Double,
         assessmentName: String?,
     ) = sequenceOf(
-        convertToSingleRecord(root, timeReceived, assessmentName)
+        convertToSingleRecord(root, timeReceived, assessmentName),
     )
 
-    private fun String.toGender() : GenderType = when (this) {
+    private fun String.toGender(): GenderType = when (this) {
         "male" -> GenderType.MALE
         "female" -> GenderType.FEMALE
         "other" -> GenderType.OTHER
         else -> GenderType.UNKNOWN
     }
 
-    private fun String.toDominantHand() : DominantHandType = when (this) {
+    private fun String.toDominantHand(): DominantHandType = when (this) {
         "left" -> DominantHandType.LEFT
         "right" -> DominantHandType.RIGHT
         "other" -> DominantHandType.OTHER
         else -> DominantHandType.UNKNOWN
     }
 
-    private fun String.toDeviceType() : DeviceType = when (this) {
+    private fun String.toDeviceType(): DeviceType = when (this) {
         "phone" -> DeviceType.PHONE
         "tablet" -> DeviceType.TABLET
         "other" -> DeviceType.OTHER
         else -> DeviceType.UNKNOWN
     }
 
-    private fun String.toOsType() : OSType = when (this) {
+    private fun String.toOsType(): OSType = when (this) {
         "iOS" -> OSType.IOS
         "android" -> OSType.ANDROID
         "other" -> OSType.OTHER

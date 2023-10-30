@@ -24,7 +24,7 @@ class FileUploaderFactory(private val config: Map<String, String>) {
         }
     }
 
-    interface FileUploader: Closeable {
+    interface FileUploader : Closeable {
         var recordLogger: RecordLogger?
 
         val type: String
@@ -35,13 +35,15 @@ class FileUploaderFactory(private val config: Map<String, String>) {
             get() = URI(if (config.targetEndpoint.endsWith("/")) config.targetEndpoint else "${config.targetEndpoint}/")
 
         fun resolveTargetUri(
-            path: Path
+            path: Path,
         ): URI {
             val uri = advertisedTargetUri
             val originalScheme = uri.scheme
             val noRootPath = if (path.toString().startsWith("/")) {
                 Paths.get(path.toString().substring(1))
-            } else path
+            } else {
+                path
+            }
             val newUri = config.targetEndpoint.replaceFirst(originalScheme, "http")
                 .toHttpUrl().newBuilder()
                 .addPathSegments(noRootPath.toString())
@@ -51,19 +53,18 @@ class FileUploaderFactory(private val config: Map<String, String>) {
         }
 
         val rootDirectory: Path
-            get() = Paths.get(config.targetRoot.ifEmpty {"."})
+            get() = Paths.get(config.targetRoot.ifEmpty { "." })
 
-        fun upload(relativePath: Path, stream: InputStream, size: Long?) : URI
-
+        fun upload(relativePath: Path, stream: InputStream, size: Long?): URI
     }
 
     data class FileUploaderConfig(
-        val targetEndpoint : String,
+        val targetEndpoint: String,
         val targetRoot: String,
         val username: String?,
         val password: String?,
         val sshPrivateKey: String?,
-        val sshPassPhrase: String?
+        val sshPassPhrase: String?,
     )
 }
 

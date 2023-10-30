@@ -21,15 +21,19 @@ package org.radarbase.connect.upload.api
 
 import org.apache.kafka.connect.source.SourceRecord
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.*
+import org.hamcrest.Matchers.empty
+import org.hamcrest.Matchers.equalTo
+import org.hamcrest.Matchers.not
+import org.hamcrest.Matchers.nullValue
 import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.radarbase.connect.upload.converter.phone.AccelerometerConverterFactory
 import org.radarbase.connect.upload.logging.ConverterLogRepository
 import org.radarbase.connect.upload.logging.LogRepository
-import org.radarbase.connect.upload.converter.phone.AccelerometerConverterFactory
 import org.radarbase.connect.upload.util.TestBase.baseUri
 import org.radarbase.connect.upload.util.TestBase.clientCredentialsAuthorizer
 import org.radarbase.connect.upload.util.TestBase.createRecordAndUploadContent
@@ -43,7 +47,6 @@ import org.radarbase.upload.Config
 import org.radarbase.upload.doa.entity.RecordStatus
 import org.radarbase.upload.inject.ManagementPortalEnhancerFactory
 import java.io.File
-
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class UploadBackendClientIntegrationTest {
@@ -61,13 +64,12 @@ class UploadBackendClientIntegrationTest {
 
     private val fileName = "TEST_ACC.csv"
 
-
     @BeforeAll
     fun setUp() {
         uploadBackendClient = UploadBackendClient(
-                clientCredentialsAuthorizer,
-                httpClient,
-                baseUri
+            clientCredentialsAuthorizer,
+            httpClient,
+            baseUri,
         )
 
         logRepository = ConverterLogRepository()
@@ -111,7 +113,7 @@ class UploadBackendClientIntegrationTest {
         val sourceType = uploadBackendClient.requestConnectorConfig(sourceType)
 
         val converter = AccelerometerConverterFactory()
-                .converter(emptyMap(), sourceType, uploadBackendClient, logRepository)
+            .converter(emptyMap(), sourceType, uploadBackendClient, logRepository)
 
         val recordToProcess = records.records.first { recordDTO -> recordDTO.sourceType == sourceTypeName }
         createdRecord.metadata = uploadBackendClient.updateStatus(recordToProcess.id!!, recordToProcess.metadata!!.copy(status = "PROCESSING", message = "The record is being processed"))
@@ -144,5 +146,4 @@ class UploadBackendClientIntegrationTest {
             assertThat(responseData, equalTo(File(fileName).readBytes()))
         }
     }
-
 }

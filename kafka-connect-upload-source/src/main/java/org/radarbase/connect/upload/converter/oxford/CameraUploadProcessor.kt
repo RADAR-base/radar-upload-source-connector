@@ -16,7 +16,7 @@ import java.time.temporal.ChronoField
 import java.time.temporal.TemporalAccessor
 
 class CameraUploadProcessor(
-    private val uploaderSupplier: () -> FileUploaderFactory.FileUploader
+    private val uploaderSupplier: () -> FileUploaderFactory.FileUploader,
 ) : FileProcessorFactory {
     override fun matches(contents: ContentsDTO) = SUFFIX_REGEX.containsMatchIn(contents.fileName)
 
@@ -28,7 +28,7 @@ class CameraUploadProcessor(
         override fun processData(
             context: ConverterFactory.ContentsContext,
             inputStream: InputStream,
-            produce: (TopicData) -> Unit
+            produce: (TopicData) -> Unit,
         ) {
             val fileName = context.fileName.split('/').last()
             val adjustedFilename = SUFFIX_REGEX.replace(fileName, "")
@@ -50,7 +50,7 @@ class CameraUploadProcessor(
                 TopicData(
                     TOPIC,
                     OxfordCameraImage(time, context.timeReceived, adjustedFilename, url),
-                )
+                ),
             )
         }
     }
@@ -65,8 +65,8 @@ class CameraUploadProcessor(
         private val SUFFIX_REGEX = Regex("\\.jpeg|\\.res|\\.jpg$", RegexOption.IGNORE_CASE)
         private val FILENAME_REGEX = Regex("^[^_]+_[^_]+_([0-9]+_[0-9]+)E.*")
         private val fileDateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")
-                .withZone(ZoneId.of("UTC"))
+            .withZone(ZoneId.of("UTC"))
         private val directoryDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-                .withZone(ZoneId.of("UTC"))
+            .withZone(ZoneId.of("UTC"))
     }
 }

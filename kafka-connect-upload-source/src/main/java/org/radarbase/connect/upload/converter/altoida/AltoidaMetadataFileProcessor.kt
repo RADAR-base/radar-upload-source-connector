@@ -39,17 +39,19 @@ class AltoidaMetadataFileProcessor : FileProcessorFactory {
         override fun processData(
             context: ConverterFactory.ContentsContext,
             inputStream: InputStream,
-            produce: (TopicData) -> Unit
+            produce: (TopicData) -> Unit,
         ) {
             val version = inputStream.bufferedReader().use { it.readLine() }
-            produce(TopicData(
-                topic,
-                AltoidaMetadata(
-                    System.currentTimeMillis() / 1000.0,
-                    context.timeReceived,
-                    version,
+            produce(
+                TopicData(
+                    topic,
+                    AltoidaMetadata(
+                        System.currentTimeMillis() / 1000.0,
+                        context.timeReceived,
+                        version,
+                    ),
                 ),
-            ))
+            )
         }
     }
 }

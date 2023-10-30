@@ -4,8 +4,8 @@ import okhttp3.internal.closeQuietly
 import org.radarbase.connect.upload.api.SourceTypeDTO
 import org.radarbase.connect.upload.converter.ConverterFactory
 import org.radarbase.connect.upload.converter.FileProcessorFactory
-import org.radarbase.connect.upload.logging.LogRepository
 import org.radarbase.connect.upload.io.FileUploaderFactory
+import org.radarbase.connect.upload.logging.LogRepository
 import org.slf4j.LoggerFactory
 
 class Physilog5ConverterFactory : ConverterFactory {
@@ -28,9 +28,11 @@ class Physilog5ConverterFactory : ConverterFactory {
         )
         return listOf(object : PhysilogUploadProcessorFactory({ localUploader.get() }) {
             override fun beforeProcessing(context: ConverterFactory.ContentsContext) {
-                localUploader.set(fileUploader.apply {
-                    recordLogger = context.logger
-                })
+                localUploader.set(
+                    fileUploader.apply {
+                        recordLogger = context.logger
+                    },
+                )
             }
 
             override fun afterProcessing(context: ConverterFactory.ContentsContext) {

@@ -23,32 +23,37 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.KotlinFeature
-import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.jsonMapper
 import com.fasterxml.jackson.module.kotlin.kotlinModule
-import okhttp3.*
+import okhttp3.Interceptor
+import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
+import okhttp3.ResponseBody
 import okio.BufferedSink
-import org.radarbase.connect.upload.logging.Log
 import org.radarbase.connect.upload.exception.BadGatewayException
 import org.radarbase.connect.upload.exception.ConflictException
 import org.radarbase.connect.upload.exception.NotAuthorizedException
+import org.radarbase.connect.upload.logging.Log
 import org.slf4j.LoggerFactory
 import java.io.Closeable
 import java.io.IOException
 
 open class UploadBackendClient(
-        authInterceptor: Interceptor,
-        private var httpClient: OkHttpClient,
-        private var uploadBackendBaseUrl: String) : Closeable {
+    authInterceptor: Interceptor,
+    private var httpClient: OkHttpClient,
+    private var uploadBackendBaseUrl: String,
+) : Closeable {
 
     init {
         httpClient = httpClient
-                .newBuilder()
-                .addInterceptor(authInterceptor)
-                .build()
+            .newBuilder()
+            .addInterceptor(authInterceptor)
+            .build()
 
         uploadBackendBaseUrl = uploadBackendBaseUrl.trimEnd('/')
     }
@@ -59,7 +64,7 @@ open class UploadBackendClient(
     }
 
     open fun requestConnectorConfig(name: String): SourceTypeDTO = httpClient.executeRequest {
-        url("$uploadBackendBaseUrl/source-types/${name}/")
+        url("$uploadBackendBaseUrl/source-types/$name/")
     }
 
     open fun requestAllConnectors(): SourceTypeContainerDTO = httpClient.executeRequest {
@@ -87,8 +92,12 @@ open class UploadBackendClient(
             url("$uploadBackendBaseUrl/records/$recordId/metadata")
             post(newStatus.toJsonBody())
         }
-        logger.info("Successfully updated record {} status to {} (rev. {})",
-            recordId, result.status, result.revision)
+        logger.info(
+            "Successfully updated record {} status to {} (rev. {})",
+            recordId,
+            result.status,
+            result.revision,
+        )
         return result
     }
 
@@ -104,11 +113,11 @@ open class UploadBackendClient(
     override fun close() {
     }
 
-    private inline fun <reified T: Any> OkHttpClient.executeRequest(
+    private inline fun <reified T : Any> OkHttpClient.executeRequest(
         noinline requestBuilder: Request.Builder.() -> Request.Builder,
     ): T = executeRequest(requestBuilder) { response ->
         mapper.readValue(response.body?.byteStream(), T::class.java)
-                ?: throw IOException("Received invalid response")
+            ?: throw IOException("Received invalid response")
     }
 
     private fun <T> OkHttpClient.executeRequest(
@@ -133,8 +142,8 @@ open class UploadBackendClient(
     }
 
     private fun Any.toJsonBody(mediaType: MediaType = APPLICATION_JSON): RequestBody = mapper
-            .writeValueAsBytes(this)
-            .toRequestBody(mediaType)
+        .writeValueAsBytes(this)
+        .toRequestBody(mediaType)
 
     companion object {
         private val logger = LoggerFactory.getLogger(UploadBackendClient::class.java)

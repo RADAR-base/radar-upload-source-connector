@@ -3,7 +3,7 @@ package org.radarbase.connect.upload.logging
 import org.slf4j.Logger
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
-import java.util.*
+import java.util.Queue
 
 class QueueRecordLogger(
     private val logger: Logger,

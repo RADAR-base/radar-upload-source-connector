@@ -1,4 +1,4 @@
-package org.radarbase.connect.upload.converter.altoida_v2.summary
+package org.radarbase.connect.upload.converter.altoidav2.summary
 
 import org.radarbase.connect.upload.converter.StatelessCsvLineProcessor
 import org.radarbase.connect.upload.converter.TimeFieldParser.DateFormatParser.Companion.formatTimeFieldParser
@@ -13,10 +13,11 @@ class AltoidaSummaryProcessor : StatelessCsvLineProcessor() {
     override val timeFieldParser = defaultTimeFormatter
 
     override val header: List<String> = listOf(
-            "TIMESTAMP",
-            "LABEL",
-            "CLASS",
-            "NMI")
+        "TIMESTAMP",
+        "LABEL",
+        "CLASS",
+        "NMI",
+    )
 
     override fun lineConversion(line: Map<String, String>, timeReceived: Double) =
         TopicData(
@@ -30,10 +31,10 @@ class AltoidaSummaryProcessor : StatelessCsvLineProcessor() {
                 GenderType.UNKNOWN,
                 line.getValue("CLASS").toInt().classify(),
                 line.getValue("NMI").toDouble(),
-            )
+            ),
         )
 
-    private fun Int.classify() : Classification? {
+    private fun Int.classify(): Classification? {
         return when (this) {
             0 -> Classification.HEALTHY
             1 -> Classification.AT_RISK

@@ -1,8 +1,8 @@
-package org.radarbase.connect.upload.converter.altoida_v2
+package org.radarbase.connect.upload.converter.altoidav2
 
 import org.radarbase.connect.upload.converter.TopicData
 import org.radarbase.connect.upload.converter.xml.XmlNodeProcessorFactory
-import org.radarcns.connector.upload.altoida.*
+import org.radarcns.connector.upload.altoida.AltoidaARTestQuestionnaire
 import org.w3c.dom.Element
 
 class AltoidaARTestQuestionnaireXmlProcessor : XmlNodeProcessorFactory() {
@@ -30,5 +30,4 @@ class AltoidaARTestQuestionnaireXmlProcessor : XmlNodeProcessorFactory() {
             }.build(),
         )
     }
-
 }

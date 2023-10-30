@@ -27,7 +27,11 @@ import org.radarbase.jersey.enhancer.JerseyResourceEnhancer
 import org.radarbase.jersey.hibernate.config.DatabaseConfig
 import org.radarbase.jersey.hibernate.config.HibernateResourceEnhancer
 import org.radarbase.upload.Config
-import org.radarbase.upload.doa.entity.*
+import org.radarbase.upload.doa.entity.Record
+import org.radarbase.upload.doa.entity.RecordContent
+import org.radarbase.upload.doa.entity.RecordLogs
+import org.radarbase.upload.doa.entity.RecordMetadata
+import org.radarbase.upload.doa.entity.SourceType
 import kotlin.reflect.jvm.jvmName
 
 /** This binder needs to register all non-Jersey classes, otherwise initialization fails. */

@@ -19,30 +19,24 @@
 
 package org.radarbase.upload.doa
 
+import jakarta.inject.Provider
+import jakarta.persistence.EntityManager
+import jakarta.ws.rs.core.Context
 import org.radarbase.jersey.hibernate.HibernateRepository
-import org.radarbase.upload.Config
+import org.radarbase.jersey.service.AsyncCoroutineService
 import org.radarbase.upload.api.SourceTypeDTO
 import org.radarbase.upload.api.SourceTypeMapper
 import org.radarbase.upload.doa.entity.SourceType
 import org.slf4j.LoggerFactory
-import jakarta.inject.Provider
-import jakarta.persistence.EntityManager
-import jakarta.ws.rs.core.Context
 
 class SourceTypeRepositoryImpl(
-        @Context em: Provider<EntityManager>,
-        @Context private var config: Config,
-        @Context private val sourceTypeMapper: SourceTypeMapper
-) : HibernateRepository(em), SourceTypeRepository {
+    @Context em: Provider<EntityManager>,
+    @Context asyncService: AsyncCoroutineService,
+    @Context private val sourceTypeMapper: SourceTypeMapper,
+) : HibernateRepository(em, asyncService), SourceTypeRepository {
 
-    init {
-        if (!isInitialized) {
-            config.sourceTypes?.storeSourceTypesFromConfigs()
-        }
-    }
-
-    private fun List<SourceTypeDTO>.storeSourceTypesFromConfigs() {
-        val sourceTypes = map { sourceTypeMapper.toSourceType(it) }
+    suspend fun storeSourceTypesFromConfigs(sourceTypeDtos: List<SourceTypeDTO>) {
+        val sourceTypes = sourceTypeDtos.map { sourceTypeMapper.toSourceType(it) }
 
         transact {
             sourceTypes.forEach { sourceType ->
@@ -62,7 +56,6 @@ class SourceTypeRepositoryImpl(
                 }
             }
         }
-        isInitialized = true
     }
 
     fun SourceType.copy(sourceType: SourceType): SourceType {
@@ -74,10 +67,9 @@ class SourceTypeRepositoryImpl(
         return this
     }
 
+    override suspend fun create(record: SourceType) = transact { persist(record) }
 
-    override fun create(record: SourceType) = transact { persist(record) }
-
-    override fun readAll(limit: Int?, lastId: Long?, detailed: Boolean): List<SourceType> {
+    override suspend fun readAll(limit: Int?, lastId: Long?, detailed: Boolean): List<SourceType> {
         var queryString = "SELECT s FROM SourceType s"
         lastId?.let {
             queryString += " WHERE s.id > :lastId "
@@ -101,7 +93,7 @@ class SourceTypeRepositoryImpl(
         }
     }
 
-    override fun read(name: String): SourceType? = transact {
+    override suspend fun read(name: String): SourceType? = transact {
         val queryString = "SELECT s FROM SourceType s LEFT JOIN FETCH s.configuration WHERE s.name = :name"
 
         createQuery(queryString, SourceType::class.java).run {
@@ -111,12 +103,11 @@ class SourceTypeRepositoryImpl(
         }
     }
 
-    override fun update(record: SourceType): SourceType = transact { merge(record) }
+    override suspend fun update(record: SourceType): SourceType = transact { merge(record) }
 
-    override fun delete(record: SourceType) = transact { remove(record) }
+    override suspend fun delete(record: SourceType) = transact { remove(record) }
 
     companion object {
         private val logger = LoggerFactory.getLogger(SourceTypeRepositoryImpl::class.java)
-        private var isInitialized = false
     }
 }

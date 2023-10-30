@@ -13,27 +13,31 @@ class AltoidaSummaryProcessor : StatelessCsvLineProcessor() {
     override val timeFieldParser = defaultTimeFormatter
 
     override val header: List<String> = listOf(
-            "TIMESTAMP",
-            "LABEL",
-            "AGE",
-            "YEARSOFEDUCATION",
-            "GENDER",
-            "CLASS",
-            "NMI")
+        "TIMESTAMP",
+        "LABEL",
+        "AGE",
+        "YEARSOFEDUCATION",
+        "GENDER",
+        "CLASS",
+        "NMI",
+    )
 
     override fun lineConversion(line: Map<String, String>, timeReceived: Double) =
-            TopicData("connect_upload_altoida_summary", AltoidaSummary(
-                    timeFieldParser.time(line),
-                    timeReceived,
-                    line["LABEL"],
-                    line.getValue("AGE").toInt(),
-                    line.getValue("YEARSOFEDUCATION").toInt(),
-                    line.getValue("GENDER").toInt().toGender(),
-                    line.getValue("CLASS").toInt().classify(),
-                    line.getValue("NMI").toDouble())
-            )
+        TopicData(
+            "connect_upload_altoida_summary",
+            AltoidaSummary(
+                timeFieldParser.time(line),
+                timeReceived,
+                line["LABEL"],
+                line.getValue("AGE").toInt(),
+                line.getValue("YEARSOFEDUCATION").toInt(),
+                line.getValue("GENDER").toInt().toGender(),
+                line.getValue("CLASS").toInt().classify(),
+                line.getValue("NMI").toDouble(),
+            ),
+        )
 
-    private fun Int.toGender() : GenderType {
+    private fun Int.toGender(): GenderType {
         return when (this) {
             0 -> GenderType.MALE
             1 -> GenderType.FEMALE
@@ -42,7 +46,7 @@ class AltoidaSummaryProcessor : StatelessCsvLineProcessor() {
         }
     }
 
-    private fun Int.classify() : Classification? {
+    private fun Int.classify(): Classification? {
         return when (this) {
             0 -> Classification.HEALTHY
             1 -> Classification.AT_RISK

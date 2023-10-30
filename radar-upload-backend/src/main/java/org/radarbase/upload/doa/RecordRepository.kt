@@ -32,22 +32,22 @@ import java.io.Reader
 import kotlin.time.Duration
 
 interface RecordRepository {
-    fun create(record: Record, metadata: RecordMetadata? = null, contents: Set<ContentsDTO>? = null): Record
-    fun read(id: Long): Record?
-    fun readLogs(id: Long): RecordLogs?
-    fun readLogContents(id: Long): ClobReader?
-    fun updateLogs(id: Long, logsData: String): RecordMetadata
-    fun delete(record: Record, revision: Int)
-    fun readFileContent(id: Long, revision: Int, fileName: String, range: LongRange? = null): BlobReader?
-    fun update(record: Record): Record
-    fun updateMetadata(id: Long, metadata: RecordMetadataDTO): RecordMetadata
-    fun updateContent(record: Record, fileName: String, contentType: String, stream: InputStream, length: Long): RecordContent
-    fun readMetadata(id: Long): RecordMetadata?
-    fun query(page: Page, projectId: String, userId: String?, status: String?, sourceType: String?): Pair<List<Record>, Page>
-    fun poll(limit: Int, supportedConverters: Set<String>): List<Record>
-    fun readRecordContent(recordId: Long, fileName: String): RecordContent?
-    fun deleteContents(record: Record, fileName: String)
-    fun resetStaleProcessing(sourceType: String, age: Duration): Int
+    suspend fun create(record: Record, metadata: RecordMetadata? = null, contents: Set<ContentsDTO>? = null): Record
+    suspend fun read(id: Long): Record?
+    suspend fun readLogs(id: Long): RecordLogs?
+    suspend fun readLogContents(id: Long): ClobReader?
+    suspend fun updateLogs(id: Long, logsData: String): RecordMetadata
+    suspend fun delete(record: Record, revision: Int)
+    suspend fun readFileContent(id: Long, revision: Int, fileName: String, range: LongRange? = null): BlobReader?
+    suspend fun update(record: Record): Record
+    suspend fun updateMetadata(id: Long, metadata: RecordMetadataDTO): RecordMetadata
+    suspend fun updateContent(record: Record, fileName: String, contentType: String, stream: InputStream, length: Long): RecordContent
+    suspend fun readMetadata(id: Long): RecordMetadata?
+    suspend fun query(page: Page, projectId: String, userId: String?, status: String?, sourceType: String?): Pair<List<Record>, Page>
+    suspend fun poll(limit: Int, supportedConverters: Set<String>): List<Record>
+    suspend fun readRecordContent(recordId: Long, fileName: String): RecordContent?
+    suspend fun deleteContents(record: Record, fileName: String)
+    suspend fun resetStaleProcessing(sourceType: String, age: Duration): Int
 
     interface BlobReader : Closeable {
         val stream: InputStream

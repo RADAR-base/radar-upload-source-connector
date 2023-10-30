@@ -23,14 +23,13 @@ import org.radarbase.connect.upload.converter.StatelessCsvLineProcessor
 import org.radarbase.connect.upload.converter.TopicData
 import org.radarcns.connector.upload.altoida.AltoidaAttitude
 
-
 class AltoidaAttitudeCsvProcessor(override val fileNameSuffix: String = "_ATT.csv") : StatelessCsvLineProcessor() {
     override val optional: Boolean = true
     override val header: List<String> = listOf("TIMESTAMP", "PITCH", "ROLL", "YAW")
 
     override fun lineConversion(
-            line: Map<String, String>,
-            timeReceived: Double
+        line: Map<String, String>,
+        timeReceived: Double,
     ) = TopicData(
         topic = "connect_upload_altoida_attitude",
         value = AltoidaAttitude(
@@ -41,5 +40,4 @@ class AltoidaAttitudeCsvProcessor(override val fileNameSuffix: String = "_ATT.cs
             line.getValue("YAW").toFloat(),
         ),
     )
-
 }

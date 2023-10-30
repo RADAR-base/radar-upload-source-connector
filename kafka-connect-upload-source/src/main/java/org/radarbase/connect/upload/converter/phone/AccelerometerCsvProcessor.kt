@@ -29,12 +29,16 @@ class AccelerometerCsvProcessor : StatelessCsvLineProcessor() {
     override val header: List<String> = listOf("TIMESTAMP", "X", "Y", "Z")
 
     override fun lineConversion(
-            line: Map<String, String>,
-            timeReceived: Double
-    ) = TopicData(topic, PhoneAcceleration(
+        line: Map<String, String>,
+        timeReceived: Double,
+    ) = TopicData(
+        topic,
+        PhoneAcceleration(
             time(line),
             timeReceived,
             line.getValue("X").toFloat(),
             line.getValue("Y").toFloat(),
-            line.getValue("Z").toFloat()))
+            line.getValue("Z").toFloat(),
+        ),
+    )
 }

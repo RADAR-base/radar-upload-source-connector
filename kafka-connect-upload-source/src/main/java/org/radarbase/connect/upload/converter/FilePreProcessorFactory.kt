@@ -36,5 +36,4 @@ interface FilePreProcessorFactory {
      * Create a file processor for a given record.
      */
     fun createPreProcessor(record: RecordDTO): FilePreProcessor
-
 }
