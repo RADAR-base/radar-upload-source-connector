@@ -19,18 +19,27 @@
 
 package org.radarbase.upload.resource
 
-import org.radarbase.jersey.auth.Auth
+import jakarta.annotation.Resource
+import jakarta.inject.Singleton
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.container.AsyncResponse
+import jakarta.ws.rs.container.Suspended
+import jakarta.ws.rs.core.Context
+import jakarta.ws.rs.core.MediaType
+import org.radarbase.auth.authorization.Permission
 import org.radarbase.jersey.auth.Authenticated
 import org.radarbase.jersey.auth.NeedsPermission
 import org.radarbase.jersey.cache.Cache
+import org.radarbase.jersey.service.AsyncCoroutineService
 import org.radarbase.jersey.service.managementportal.RadarProjectService
-import org.radarbase.upload.dto.*
-import org.radarbase.auth.authorization.Permission
-import jakarta.annotation.Resource
-import jakarta.inject.Singleton
-import jakarta.ws.rs.*
-import jakarta.ws.rs.core.Context
-import jakarta.ws.rs.core.MediaType
+import org.radarbase.upload.dto.ProjectList
+import org.radarbase.upload.dto.UserList
+import org.radarbase.upload.dto.toProject
+import org.radarbase.upload.dto.toUser
 
 @Path("projects")
 @Authenticated
@@ -39,30 +48,44 @@ import jakarta.ws.rs.core.MediaType
 @Resource
 @Singleton
 class ProjectResource(
-        @Context private val projectService: RadarProjectService,
-        @Context private val auth: Auth
+    @Context private val projectService: RadarProjectService,
+    @Context private val asyncService: AsyncCoroutineService,
 ) {
 
     @GET
-    @NeedsPermission(Permission.Entity.PROJECT, Permission.Operation.READ)
+    @NeedsPermission(Permission.PROJECT_READ)
     @Cache(maxAge = 300, isPrivate = true)
-    fun projects() = ProjectList(projectService.userProjects(auth)
-            .map { it.toProject() })
+    fun projects(
+        @Suspended asyncResponse: AsyncResponse,
+    ) = asyncService.runAsCoroutine(asyncResponse) {
+        ProjectList(
+            projectService.userProjects()
+                .map { it.toProject() },
+        )
+    }
 
     @GET
     @Path("{projectId}/users")
     @Cache(maxAge = 300, isPrivate = true)
-    @NeedsPermission(Permission.Entity.PROJECT, Permission.Operation.READ, "projectId")
-    fun users(@PathParam("projectId") projectId: String): UserList {
-        return UserList(projectService.projectUsers(projectId)
-                .map { it.toUser() })
+    @NeedsPermission(Permission.PROJECT_READ, "projectId")
+    fun users(
+        @PathParam("projectId") projectId: String,
+        @Suspended asyncResponse: AsyncResponse,
+    ) = asyncService.runAsCoroutine(asyncResponse) {
+        UserList(
+            projectService.projectSubjects(projectId)
+                .map { it.toUser() },
+        )
     }
 
     @GET
     @Path("{projectId}")
     @Cache(maxAge = 3600, isPrivate = true)
-    @NeedsPermission(Permission.Entity.PROJECT, Permission.Operation.READ, "projectId")
-    fun project(@PathParam("projectId") projectId: String): Project {
-        return projectService.project(projectId).toProject()
+    @NeedsPermission(Permission.PROJECT_READ, "projectId")
+    fun project(
+        @PathParam("projectId") projectId: String,
+        @Suspended asyncResponse: AsyncResponse,
+    ) = asyncService.runAsCoroutine(asyncResponse) {
+        projectService.project(projectId).toProject()
     }
 }

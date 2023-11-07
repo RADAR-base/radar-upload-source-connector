@@ -19,6 +19,10 @@
 
 package org.radarbase.upload.api
 
+import jakarta.ws.rs.BadRequestException
+import jakarta.ws.rs.core.Context
+import jakarta.ws.rs.core.UriInfo
+import org.radarbase.jersey.service.AsyncCoroutineService
 import org.radarbase.jersey.service.managementportal.RadarProjectService
 import org.radarbase.upload.Config
 import org.radarbase.upload.doa.SourceTypeRepository
@@ -29,42 +33,47 @@ import org.radarbase.upload.doa.entity.RecordStatus
 import org.slf4j.LoggerFactory
 import java.net.URLEncoder
 import java.time.Instant
-import jakarta.ws.rs.BadRequestException
-import jakarta.ws.rs.core.Context
-import jakarta.ws.rs.core.UriInfo
 
 class RecordMapperImpl(
-    @Context val uri: UriInfo,
-    @Context val sourceTypeRepository: SourceTypeRepository,
-    @Context val projectService: RadarProjectService,
-    @Context val config: Config,
+    @Context private val uri: UriInfo,
+    @Context private val sourceTypeRepository: SourceTypeRepository,
+    @Context private val projectService: RadarProjectService,
+    @Context private val config: Config,
+    @Context private val asyncService: AsyncCoroutineService,
 ) : RecordMapper {
+    override suspend fun cleanBaseUri(): String {
+        val baseUrl = config.advertisedBaseUri ?: asyncService.runInRequestScope { uri.baseUri }
+        return baseUrl.toString().trimEnd('/')
+    }
 
-    override val cleanBaseUri: String
-        get() = (config.advertisedBaseUri ?: uri.baseUri).toString().trimEnd('/')
-
-    override fun toRecord(record: RecordDTO): Pair<Record, RecordMetadata> {
+    override suspend fun toRecord(record: RecordDTO): Pair<Record, RecordMetadata> {
         val recordDoa = Record().apply {
             val data = record.data ?: throw BadRequestException("No data field included")
             projectId = data.projectId ?: throw BadRequestException("Missing project ID")
             userId = data.resolveUserId()
             sourceId = data.sourceId ?: throw BadRequestException("Missing source ID")
-            sourceType = sourceTypeRepository.read(record.sourceType
-                ?: throw BadRequestException("Missing source type"))
+            sourceType = sourceTypeRepository.read(
+                record.sourceType
+                    ?: throw BadRequestException("Missing source type"),
+            )
                 ?: throw BadRequestException("Source type not found")
         }
 
         return Pair(recordDoa, toMetadata(record.metadata))
     }
 
-    private fun RecordDataDTO.resolveUserId(): String {
-        return if (!userId.isNullOrEmpty()) userId!! else {
-            if (this.externalUserId.isNullOrEmpty()) {
-                throw BadRequestException("Missing both user ID and external-user ID or they are empty")
-            }
+    private suspend fun RecordDataDTO.resolveUserId(): String {
+        val userId = userId
+        return if (!userId.isNullOrEmpty()) {
+            userId
+        } else {
+            val externalUserId = externalUserId?.takeIf { it.isNotEmpty() }
+                ?: throw BadRequestException("Missing both user ID and external-user ID or they are empty")
+            val projectId = projectId
+                ?: throw BadRequestException("Missing project ID")
 
-            logger.info("Fetching user id by externalId ${this.externalUserId}")
-            val user = projectService.userByExternalId(this.projectId!!, this.externalUserId!!)
+            logger.info("Fetching user id by externalId {}", externalUserId)
+            val user = projectService.subjectByExternalId(projectId, externalUserId)
             user ?: throw BadRequestException("Cannot find a user with externalID ${this.externalUserId}")
             return user.id ?: throw BadRequestException("Cannot resolve user id")
         }
@@ -86,7 +95,7 @@ class RecordMapperImpl(
         callbackUrl = metadata?.callbackUrl
     }
 
-    override fun fromRecord(record: Record) = RecordDTO(
+    override suspend fun fromRecord(record: Record) = RecordDTO(
         id = record.id!!,
         metadata = fromMetadata(record.metadata).apply { id = null },
         sourceType = record.sourceType.name,
@@ -96,23 +105,24 @@ class RecordMapperImpl(
             sourceId = record.sourceId,
             time = record.time,
             timeZoneOffset = record.timeZoneOffset,
-            contents = record.contents?.mapTo(HashSet(), this::fromContent),
+            contents = record.contents?.mapTo(HashSet()) { fromContent(it) },
         ),
     )
 
-    override fun fromRecords(records: List<Record>, page: Page?) = RecordContainerDTO(
-        records = records.map(::fromRecord),
+    override suspend fun fromRecords(records: List<Record>, page: Page?) = RecordContainerDTO(
+        records = records.map { fromRecord(it) },
         size = page?.pageSize,
         totalElements = page?.totalElements,
         page = page?.pageNumber,
     )
 
-    override fun fromContent(content: RecordContent): ContentsDTO {
+    override suspend fun fromContent(content: RecordContent): ContentsDTO {
+        @Suppress("BlockingMethodInNonBlockingContext")
         val cleanedFileName = URLEncoder.encode(content.fileName, "UTF-8")
             .replace("+", "%20")
 
         return ContentsDTO(
-            url = "$cleanBaseUri/records/${content.record.id}/contents/$cleanedFileName",
+            url = "${cleanBaseUri()}/records/${content.record.id}/contents/$cleanedFileName",
             contentType = content.contentType,
             createdDate = content.createdDate,
             size = content.size,
@@ -120,7 +130,7 @@ class RecordMapperImpl(
         )
     }
 
-    override fun fromMetadata(metadata: RecordMetadata) = RecordMetadataDTO(
+    override suspend fun fromMetadata(metadata: RecordMetadata) = RecordMetadataDTO(
         id = metadata.id,
         revision = metadata.revision,
         status = metadata.status.name,
@@ -130,7 +140,7 @@ class RecordMapperImpl(
         committedDate = metadata.committedDate,
         // use record.id, since metadata and record have one-to-one
         logs = metadata.logs?.let {
-            LogsDto(url = "${cleanBaseUri}/records/${metadata.id}/logs")
+            LogsDto(url = "${cleanBaseUri()}/records/${metadata.id}/logs")
         },
     )
 

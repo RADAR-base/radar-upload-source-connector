@@ -7,15 +7,13 @@ import com.jcraft.jsch.SftpException
 import org.radarbase.connect.upload.logging.RecordLogger
 import org.slf4j.LoggerFactory
 import java.io.InputStream
-import java.lang.Exception
 import java.net.ConnectException
 import java.net.URI
 import java.nio.file.Path
-import java.util.*
-
+import java.util.Properties
 
 class SftpFileUploader(
-    override val config: FileUploaderFactory.FileUploaderConfig
+    override val config: FileUploaderFactory.FileUploaderConfig,
 ) : FileUploaderFactory.FileUploader {
     override var recordLogger: RecordLogger? = null
     override val type: String
@@ -37,12 +35,14 @@ class SftpFileUploader(
         session = jsch.getSession(
             config.username,
             endpoint.host,
-            if (endpoint.port == -1) 22 else endpoint.port
+            if (endpoint.port == -1) 22 else endpoint.port,
         ).apply {
             setPassword(config.password)
-            setConfig(Properties().apply {
-                this["StrictHostKeyChecking"] = "no"
-            })
+            setConfig(
+                Properties().apply {
+                    this["StrictHostKeyChecking"] = "no"
+                },
+            )
         }
         session.connect()
         sftpChannel = session.openChannel("sftp") as ChannelSftp
@@ -90,7 +90,9 @@ class SftpFileUploader(
                 } catch (ex: SftpException) {
                     if (ex.id == ChannelSftp.SSH_FX_NO_SUCH_FILE) {
                         isMissing = true
-                    } else throw ex // unknown exception
+                    } else {
+                        throw ex // unknown exception
+                    }
                 }
             }
             if (isMissing) {

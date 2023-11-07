@@ -1,6 +1,9 @@
 package org.radarbase.connect.upload.io
 
-import io.minio.*
+import io.minio.BucketExistsArgs
+import io.minio.MakeBucketArgs
+import io.minio.MinioClient
+import io.minio.PutObjectArgs
 import io.minio.errors.MinioException
 import org.radarbase.connect.upload.logging.RecordLogger
 import org.slf4j.LoggerFactory
@@ -11,7 +14,7 @@ import java.net.URI
 import java.nio.file.Path
 
 class S3FileUploader(
-    override val config: FileUploaderFactory.FileUploaderConfig
+    override val config: FileUploaderFactory.FileUploaderConfig,
 ) : FileUploaderFactory.FileUploader {
     override var recordLogger: RecordLogger? = null
     override val type: String = "s3"
@@ -36,27 +39,33 @@ class S3FileUploader(
 
     private fun ensureBucketExists() {
         // Check if the bucket already exists.
-        val isExist: Boolean = s3Client.bucketExists(BucketExistsArgs.Builder()
-            .bucket(bucket)
-            .build())
+        val isExist: Boolean = s3Client.bucketExists(
+            BucketExistsArgs.Builder()
+                .bucket(bucket)
+                .build(),
+        )
         if (isExist) {
             logger.info("Bucket {} already exists.", bucket)
         } else {
-            s3Client.makeBucket(MakeBucketArgs.Builder()
-                .bucket(bucket)
-                .build())
+            s3Client.makeBucket(
+                MakeBucketArgs.Builder()
+                    .bucket(bucket)
+                    .build(),
+            )
             logger.info("Bucket $bucket was created.")
         }
     }
 
-    override fun upload(relativePath: Path, stream: InputStream, size: Long?) : URI {
+    override fun upload(relativePath: Path, stream: InputStream, size: Long?): URI {
         recordLogger?.info("Uploading object $relativePath to $bucket")
         try {
-            s3Client.putObject(PutObjectArgs.Builder()
+            s3Client.putObject(
+                PutObjectArgs.Builder()
                     .bucket(bucket)
                     .`object`(relativePath.toString())
                     .stream(stream, size ?: -1, 5 * 1024 * 2014)
-                    .build())
+                    .build(),
+            )
         } catch (ex: MinioException) {
             throw IOException(ex)
         }

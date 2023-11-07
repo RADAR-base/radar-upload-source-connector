@@ -25,7 +25,7 @@ class AxivityConverterFactory : ConverterFactory {
     }
 
     private fun createProcessors(
-        config: Map<String, String>
+        config: Map<String, String>,
     ): List<CwaFileProcessorFactory.CwaBlockProcessor> = processors
         .filter { (property, _) -> config[property]?.toBoolean() != false }
         .map { (_, generator) -> generator() }

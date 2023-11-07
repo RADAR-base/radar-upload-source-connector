@@ -23,8 +23,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.KotlinFeature
-import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.jsonMapper
 import com.fasterxml.jackson.module.kotlin.kotlinModule
 import okhttp3.Interceptor
@@ -180,7 +178,8 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
             var orderInGroup = 0
 
             return ConfigDef()
-                .define(SOURCE_POLL_INTERVAL_CONFIG,
+                .define(
+                    SOURCE_POLL_INTERVAL_CONFIG,
                     ConfigDef.Type.LONG,
                     SOURCE_POLL_INTERVAL_DEFAULT,
                     ConfigDef.Importance.HIGH,
@@ -188,9 +187,10 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
                     groupName,
                     ++orderInGroup,
                     ConfigDef.Width.SHORT,
-                    SOURCE_POLL_INTERVAL_DISPLAY)
-
-                .define(SOURCE_QUEUE_SIZE_CONFIG,
+                    SOURCE_POLL_INTERVAL_DISPLAY,
+                )
+                .define(
+                    SOURCE_QUEUE_SIZE_CONFIG,
                     ConfigDef.Type.INT,
                     SOURCE_QUEUE_SIZE_DEFAULT,
                     ConfigDef.Importance.HIGH,
@@ -198,9 +198,10 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
                     groupName,
                     ++orderInGroup,
                     ConfigDef.Width.SHORT,
-                    SOURCE_QUEUE_SIZE_DISPLAY)
-
-                .define(UPLOAD_SOURCE_CLIENT_CONFIG,
+                    SOURCE_QUEUE_SIZE_DISPLAY,
+                )
+                .define(
+                    UPLOAD_SOURCE_CLIENT_CONFIG,
                     ConfigDef.Type.STRING,
                     UPLOAD_SOURCE_MP_CLIENT_DEFAULT,
                     ConfigDef.Importance.HIGH,
@@ -208,9 +209,10 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
                     groupName,
                     ++orderInGroup,
                     ConfigDef.Width.SHORT,
-                    UPLOAD_SOURCE_MP_CLIENT_DISPLAY)
-
-                .define(UPLOAD_SOURCE_MP_SECRET_CONFIG,
+                    UPLOAD_SOURCE_MP_CLIENT_DISPLAY,
+                )
+                .define(
+                    UPLOAD_SOURCE_MP_SECRET_CONFIG,
                     ConfigDef.Type.PASSWORD,
                     "",
                     ConfigDef.Importance.HIGH,
@@ -218,9 +220,10 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
                     groupName,
                     ++orderInGroup,
                     ConfigDef.Width.SHORT,
-                    UPLOAD_SOURCE_MP_SECRET_DISPLAY)
-
-                .define(UPLOAD_SOURCE_SERVER_BASE_URL_CONFIG,
+                    UPLOAD_SOURCE_MP_SECRET_DISPLAY,
+                )
+                .define(
+                    UPLOAD_SOURCE_SERVER_BASE_URL_CONFIG,
                     ConfigDef.Type.STRING,
                     UPLOAD_SOURCE_SERVER_BASE_URL_DEFAULT,
                     ConfigDef.Importance.LOW,
@@ -228,9 +231,10 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
                     groupName,
                     ++orderInGroup,
                     ConfigDef.Width.SHORT,
-                    UPLOAD_SOURCE_SERVER_BASE_URL_DISPLAY)
-
-                .define(UPLOAD_SOURCE_CLIENT_TOKEN_URL_CONFIG,
+                    UPLOAD_SOURCE_SERVER_BASE_URL_DISPLAY,
+                )
+                .define(
+                    UPLOAD_SOURCE_CLIENT_TOKEN_URL_CONFIG,
                     ConfigDef.Type.STRING,
                     UPLOAD_SOURCE_CLIENT_TOKEN_URL_DEFAULT,
                     ConfigDef.Importance.LOW,
@@ -238,9 +242,10 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
                     groupName,
                     ++orderInGroup,
                     ConfigDef.Width.SHORT,
-                    UPLOAD_SOURCE_CLIENT_TOKEN_URL_DISPLAY)
-
-                .define(UPLOAD_SOURCE_CONVERTERS_CONFIG,
+                    UPLOAD_SOURCE_CLIENT_TOKEN_URL_DISPLAY,
+                )
+                .define(
+                    UPLOAD_SOURCE_CONVERTERS_CONFIG,
                     ConfigDef.Type.LIST,
                     UPLOAD_SOURCE_CONVERTERS_DEFAULT,
                     ConfigDef.Importance.HIGH,
@@ -248,9 +253,10 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
                     groupName,
                     ++orderInGroup,
                     ConfigDef.Width.LONG,
-                    UPLOAD_SOURCE_CONVERTERS_DISPLAY)
-
-                .define(UPLOAD_FILE_UPLOADER_TYPE_CONFIG,
+                    UPLOAD_SOURCE_CONVERTERS_DISPLAY,
+                )
+                .define(
+                    UPLOAD_FILE_UPLOADER_TYPE_CONFIG,
                     ConfigDef.Type.STRING,
                     UPLOAD_FILE_UPLOADER_TYPE_DEFAULT,
                     ConfigDef.Importance.LOW,
@@ -258,9 +264,10 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
                     groupName,
                     ++orderInGroup,
                     ConfigDef.Width.LONG,
-                    UPLOAD_FILE_UPLOADER_TYPE_DISPLAY)
-
-                .define(UPLOAD_FILE_UPLOADER_TARGET_ENDPOINT_URL_CONFIG,
+                    UPLOAD_FILE_UPLOADER_TYPE_DISPLAY,
+                )
+                .define(
+                    UPLOAD_FILE_UPLOADER_TARGET_ENDPOINT_URL_CONFIG,
                     ConfigDef.Type.STRING,
                     UPLOAD_FILE_UPLOADER_TARGET_ENDPOINT_URL_DEFAULT,
                     ConfigDef.Importance.LOW,
@@ -268,9 +275,10 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
                     groupName,
                     ++orderInGroup,
                     ConfigDef.Width.MEDIUM,
-                    UPLOAD_FILE_UPLOADER_TARGET_ENDPOINT_URL_DISPLAY)
-
-                .define(UPLOAD_FILE_UPLOADER_TARGET_ROOT_DIRECTORY_CONFIG,
+                    UPLOAD_FILE_UPLOADER_TARGET_ENDPOINT_URL_DISPLAY,
+                )
+                .define(
+                    UPLOAD_FILE_UPLOADER_TARGET_ROOT_DIRECTORY_CONFIG,
                     ConfigDef.Type.STRING,
                     UPLOAD_FILE_UPLOADER_TARGET_ROOT_DIRECTORY_DEFAULT,
                     ConfigDef.Importance.LOW,
@@ -278,9 +286,10 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
                     groupName,
                     ++orderInGroup,
                     ConfigDef.Width.SHORT,
-                    UPLOAD_FILE_UPLOADER_TARGET_ROOT_DIRECTORY_DISPLAY)
-
-                .define(UPLOAD_FILE_UPLOADER_USERNAME_CONFIG,
+                    UPLOAD_FILE_UPLOADER_TARGET_ROOT_DIRECTORY_DISPLAY,
+                )
+                .define(
+                    UPLOAD_FILE_UPLOADER_USERNAME_CONFIG,
                     ConfigDef.Type.STRING,
                     UPLOAD_FILE_UPLOADER_USERNAME_DEFAULT,
                     ConfigDef.Importance.LOW,
@@ -288,9 +297,10 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
                     groupName,
                     ++orderInGroup,
                     ConfigDef.Width.MEDIUM,
-                    UPLOAD_FILE_UPLOADER_USERNAME_DISPLAY)
-
-                .define(UPLOAD_FILE_UPLOADER_PASSWORD_CONFIG,
+                    UPLOAD_FILE_UPLOADER_USERNAME_DISPLAY,
+                )
+                .define(
+                    UPLOAD_FILE_UPLOADER_PASSWORD_CONFIG,
                     ConfigDef.Type.PASSWORD,
                     UPLOAD_FILE_UPLOADER_PASSWORD_DEFAULT,
                     ConfigDef.Importance.LOW,
@@ -298,9 +308,10 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
                     groupName,
                     ++orderInGroup,
                     ConfigDef.Width.MEDIUM,
-                    UPLOAD_FILE_UPLOADER_PASSWORD_DISPLAY)
-
-                .define(UPLOAD_FILE_UPLOADER_SSH_PRIVATE_KEY_FILE_CONFIG,
+                    UPLOAD_FILE_UPLOADER_PASSWORD_DISPLAY,
+                )
+                .define(
+                    UPLOAD_FILE_UPLOADER_SSH_PRIVATE_KEY_FILE_CONFIG,
                     ConfigDef.Type.STRING,
                     UPLOAD_FILE_UPLOADER_SSH_PRIVATE_KEY_FILE_DEFAULT,
                     ConfigDef.Importance.LOW,
@@ -308,9 +319,10 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
                     groupName,
                     ++orderInGroup,
                     ConfigDef.Width.MEDIUM,
-                    UPLOAD_FILE_UPLOADER_SSH_PRIVATE_KEY_FILE_DISPLAY)
-
-                .define(UPLOAD_FILE_UPLOADER_SSH_PASSPHRASE_CONFIG,
+                    UPLOAD_FILE_UPLOADER_SSH_PRIVATE_KEY_FILE_DISPLAY,
+                )
+                .define(
+                    UPLOAD_FILE_UPLOADER_SSH_PASSPHRASE_CONFIG,
                     ConfigDef.Type.PASSWORD,
                     UPLOAD_FILE_UPLOADER_SSH_PASSPHRASE_DEFAULT,
                     ConfigDef.Importance.LOW,
@@ -318,8 +330,8 @@ class UploadSourceConnectorConfig(config: ConfigDef, parsedConfig: Map<String, S
                     groupName,
                     ++orderInGroup,
                     ConfigDef.Width.MEDIUM,
-                    UPLOAD_FILE_UPLOADER_SSH_PASSPHRASE_DISPLAY)
-
+                    UPLOAD_FILE_UPLOADER_SSH_PASSPHRASE_DISPLAY,
+                )
         }
     }
 }

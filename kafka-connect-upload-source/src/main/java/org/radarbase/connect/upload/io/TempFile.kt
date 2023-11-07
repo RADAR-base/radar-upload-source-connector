@@ -9,7 +9,7 @@ import java.nio.file.Path
 class TempFile(
     tempDir: Path,
     prefix: String,
-): Closeable {
+) : Closeable {
     val tempFile: Path = Files.createTempFile(tempDir, prefix, ".tmp")
 
     fun outputStream(): OutputStream = Files.newOutputStream(tempFile)

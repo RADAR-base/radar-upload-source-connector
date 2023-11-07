@@ -28,13 +28,17 @@ class AltoidaMagneticFieldCsvProcessor(override val fileNameSuffix: String = "_M
     override val header: List<String> = listOf("TIMESTAMP", "X", "Y", "Z", "ACCURACY")
 
     override fun lineConversion(
-            line: Map<String, String>,
-            timeReceived: Double
-    ) = TopicData("connect_upload_altoida_magnetic_field", AltoidaMagneticField(
+        line: Map<String, String>,
+        timeReceived: Double,
+    ) = TopicData(
+        "connect_upload_altoida_magnetic_field",
+        AltoidaMagneticField(
             time(line),
             timeReceived,
             line.getValue("X").toFloat(),
             line.getValue("Y").toFloat(),
             line.getValue("Z").toFloat(),
-            line["ACCURACY"]))
+            line["ACCURACY"],
+        ),
+    )
 }

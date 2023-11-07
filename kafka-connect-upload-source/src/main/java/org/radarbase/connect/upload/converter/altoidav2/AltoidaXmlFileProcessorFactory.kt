@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package org.radarbase.connect.upload.converter.altoida_v2
+package org.radarbase.connect.upload.converter.altoidav2
 
 import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
@@ -28,5 +28,4 @@ open class AltoidaXmlFileProcessorFactory(
     override fun matches(contents: ContentsDTO) = contents.fileName.endsWith("altoida_data.xml")
 
     override fun createProcessor(record: RecordDTO) = AltoidaXmlProcessor(xmlProcessorFactories)
-
 }

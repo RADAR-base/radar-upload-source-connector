@@ -38,6 +38,6 @@ class AltoidaTouchScreenCsvProcessor(override val fileNameSuffix: String = "_TOU
             line.getValue("ACC").toDouble(),
             line.getValue("COMBINED").toDouble(),
             line.getValue("HIT").toBoolean(),
-        )
+        ),
     )
 }

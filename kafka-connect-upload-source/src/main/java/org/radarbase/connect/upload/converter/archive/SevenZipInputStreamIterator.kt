@@ -8,13 +8,11 @@ import org.radarbase.connect.upload.io.TempFile.Companion.copyToTempFile
 import java.io.IOException
 import java.io.InputStream
 import java.nio.file.Path
-import java.util.zip.ZipException
-import java.util.zip.ZipFile
 
 class SevenZipInputStreamIterator(
     input: InputStream,
     tempDir: Path,
-): ArchiveIterator {
+) : ArchiveIterator {
     private val file: TempFile
     private val sevenZFile: SevenZFile
 

@@ -2,7 +2,12 @@ package org.radarbase.connect.upload.converter.archive
 
 import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
-import org.radarbase.connect.upload.converter.*
+import org.radarbase.connect.upload.converter.ConverterFactory
+import org.radarbase.connect.upload.converter.DelegatingProcessor
+import org.radarbase.connect.upload.converter.FilePreProcessorFactory
+import org.radarbase.connect.upload.converter.FileProcessor
+import org.radarbase.connect.upload.converter.FileProcessorFactory
+import org.radarbase.connect.upload.converter.TopicData
 import org.radarbase.connect.upload.converter.archive.SevenZipInputStreamIterator.Companion.sevenZipIteratorFactory
 import org.radarbase.connect.upload.converter.archive.ZipInputStreamIterator.Companion.zipIteratorFactory
 import org.radarbase.connect.upload.exception.ConversionFailedException
@@ -19,12 +24,12 @@ open class ArchiveProcessorFactory(
     entryProcessors: List<FileProcessorFactory>,
     allowUnmappedFiles: Boolean = false,
     private val extension: String,
-    private val archiveIteratorFactory: ArchiveIteratorFactory
-): FileProcessorFactory {
+    private val archiveIteratorFactory: ArchiveIteratorFactory,
+) : FileProcessorFactory {
     private val cacheDir: Path = Paths.get(
         System.getProperty("java.io.tmpdir"),
         "upload-connector",
-        "$sourceType-$extension-cache"
+        "$sourceType-$extension-cache",
     )
 
     private val delegatingProcessor = DelegatingProcessor(
@@ -50,12 +55,12 @@ open class ArchiveProcessorFactory(
 
     override fun createProcessor(record: RecordDTO): FileProcessor = ArchiveFileProcessor(record)
 
-    inner class ArchiveFileProcessor(private val record: RecordDTO):
+    inner class ArchiveFileProcessor(private val record: RecordDTO) :
         FileProcessor {
         override fun processData(
             context: ConverterFactory.ContentsContext,
             inputStream: InputStream,
-            produce: (TopicData) -> Unit
+            produce: (TopicData) -> Unit,
         ) {
             context.logger.info("Retrieved archive content from filename ${context.fileName}")
             beforeProcessing(context)
@@ -68,7 +73,7 @@ open class ArchiveProcessorFactory(
                                 context.copy(
                                     contents = ContentsDTO(
                                         fileName = entry.name.trim(),
-                                        size = entry.size
+                                        size = entry.size,
                                     ),
                                 ),
                                 inputStream,

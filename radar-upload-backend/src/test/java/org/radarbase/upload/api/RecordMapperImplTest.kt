@@ -1,5 +1,6 @@
 package org.radarbase.upload.api
 
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.doReturn
@@ -10,11 +11,10 @@ import org.radarbase.upload.doa.entity.RecordContent
 import java.net.URI
 import java.time.Instant
 
-
 internal class RecordMapperImplTest {
 
     @Test
-    fun fromContent() {
+    fun fromContent() = runBlocking {
         val record = Record().apply {
             id = 1L
         }
@@ -34,6 +34,7 @@ internal class RecordMapperImplTest {
             mock(),
             mock(),
             Config(advertisedBaseUri = URI.create("https://localhost/upload/")),
+            mock(),
         )
 
         val expected = ContentsDTO(

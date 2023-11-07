@@ -17,15 +17,15 @@
  *
  */
 
-package org.radarbase.connect.upload.converter.altoida_v2
+package org.radarbase.connect.upload.converter.altoidav2
 
 import org.radarbase.connect.upload.api.SourceTypeDTO
 import org.radarbase.connect.upload.converter.ConverterFactory
 import org.radarbase.connect.upload.converter.FilePreProcessorFactory
 import org.radarbase.connect.upload.converter.FileProcessorFactory
-import org.radarbase.connect.upload.converter.altoida_v2.summary.AltoidaDomainResultProcessor
-import org.radarbase.connect.upload.converter.altoida_v2.summary.AltoidaSummaryCsvPreProcessorFactory
-import org.radarbase.connect.upload.converter.altoida_v2.summary.AltoidaSummaryProcessor
+import org.radarbase.connect.upload.converter.altoidav2.summary.AltoidaDomainResultProcessor
+import org.radarbase.connect.upload.converter.altoidav2.summary.AltoidaSummaryCsvPreProcessorFactory
+import org.radarbase.connect.upload.converter.altoidav2.summary.AltoidaSummaryProcessor
 import org.radarbase.connect.upload.converter.csv.CsvFileProcessorFactory
 import org.radarbase.connect.upload.logging.LogRepository
 
@@ -35,7 +35,7 @@ class AltoidaConverterFactory : ConverterFactory {
     override fun filePreProcessorFactories(
         settings: Map<String, String>,
         connectorConfig: SourceTypeDTO,
-        logRepository: LogRepository
+        logRepository: LogRepository,
     ): List<FilePreProcessorFactory> = listOf(
         // Preprocess malformed export.csv
         AltoidaSummaryCsvPreProcessorFactory(),
@@ -44,7 +44,7 @@ class AltoidaConverterFactory : ConverterFactory {
     override fun fileProcessorFactories(
         settings: Map<String, String>,
         connectorConfig: SourceTypeDTO,
-        logRepository: LogRepository
+        logRepository: LogRepository,
     ): List<FileProcessorFactory> = listOf(
         // Process export.csv
         CsvFileProcessorFactory(

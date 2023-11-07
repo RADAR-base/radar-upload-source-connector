@@ -17,12 +17,11 @@
  *
  */
 
-package org.radarbase.connect.upload.converter.altoida_v2
+package org.radarbase.connect.upload.converter.altoidav2
 
 import org.radarbase.connect.upload.converter.StatelessCsvLineProcessor
 import org.radarbase.connect.upload.converter.TopicData
 import org.radarcns.connector.upload.altoida.AltoidaMotorBubble
-
 
 class AltoidaMotorBubbleCsvProcessor() : StatelessCsvLineProcessor() {
     override val fileNameSuffix: String = "motor_bubble.csv"
@@ -30,12 +29,15 @@ class AltoidaMotorBubbleCsvProcessor() : StatelessCsvLineProcessor() {
     override val header: List<String> = listOf("TIMESTAMP", "X", "Y")
 
     override fun lineConversion(
-            line: Map<String, String>,
-            timeReceived: Double
-    ) = TopicData("connect_upload_altoida_motor_bubble", AltoidaMotorBubble(
+        line: Map<String, String>,
+        timeReceived: Double,
+    ) = TopicData(
+        "connect_upload_altoida_motor_bubble",
+        AltoidaMotorBubble(
             time(line),
             timeReceived,
             line.getValue("X").toDouble(),
-            line.getValue("Y").toDouble()))
-
+            line.getValue("Y").toDouble(),
+        ),
+    )
 }

@@ -17,7 +17,7 @@ data class TopicData(
             val offset = mutableMapOf(
                 ConverterFactory.Converter.END_OF_RECORD_KEY to false,
                 ConverterFactory.Converter.RECORD_ID_KEY to context.id,
-                ConverterFactory.Converter.REVISION_KEY to context.metadata.revision
+                ConverterFactory.Converter.REVISION_KEY to context.metadata.revision,
             )
             return SourceRecord(
                 partition,
@@ -26,7 +26,7 @@ data class TopicData(
                 context.key.schema(),
                 context.key.value(),
                 valRecord.schema(),
-                valRecord.value()
+                valRecord.value(),
             )
         } catch (exe: Exception) {
             context.logger.info("This value $value and schema ${value.schema.toString(true)} could not be converted")

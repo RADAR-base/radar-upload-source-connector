@@ -31,13 +31,17 @@ class AltoidaObjectCsvProcessor : StatelessCsvLineProcessor() {
     override val header: List<String> = listOf("TIMESTAMP", "OBJ", "X", "Y", "Z")
 
     override fun lineConversion(
-            line: Map<String, String>,
-            timeReceived: Double
-    ) = TopicData("connect_upload_altoida_object", AltoidaObject(
+        line: Map<String, String>,
+        timeReceived: Double,
+    ) = TopicData(
+        "connect_upload_altoida_object",
+        AltoidaObject(
             time(line),
             timeReceived,
             line["OBJ"],
             line.getValue("X").toFloat(),
             line.getValue("Y").toFloat(),
-            line.getValue("Z").toFloat()))
+            line.getValue("Z").toFloat(),
+        ),
+    )
 }

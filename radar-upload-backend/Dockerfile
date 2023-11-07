@@ -10,7 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM --platform=$BUILDPLATFORM gradle:8.0-jdk17 as builder
+FROM --platform=$BUILDPLATFORM gradle:8.4-jdk17 as builder
 
 RUN mkdir /code
 WORKDIR /code
@@ -19,6 +19,7 @@ ENV GRADLE_USER_HOME=/code/.gradlecache \
 
 COPY ./build.gradle.kts ./settings.gradle.kts ./gradle.properties /code/
 COPY radar-upload-backend/build.gradle.kts  /code/radar-upload-backend/
+COPY buildSrc /code/buildSrc
 RUN gradle downloadDependencies copyDependencies startScripts
 
 COPY radar-upload-backend/src /code/radar-upload-backend/src

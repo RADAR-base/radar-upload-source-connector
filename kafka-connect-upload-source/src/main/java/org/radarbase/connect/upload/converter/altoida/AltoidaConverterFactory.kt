@@ -37,16 +37,16 @@ class AltoidaConverterFactory : ConverterFactory {
     override fun filePreProcessorFactories(
         settings: Map<String, String>,
         connectorConfig: SourceTypeDTO,
-        logRepository: LogRepository
+        logRepository: LogRepository,
     ): List<FilePreProcessorFactory> = listOf(
         // Preprocess malformed export.csv
         AltoidaSummaryCsvPreProcessorFactory(),
     )
 
     override fun fileProcessorFactories(
-            settings: Map<String, String>,
-            connectorConfig: SourceTypeDTO,
-            logRepository: LogRepository
+        settings: Map<String, String>,
+        connectorConfig: SourceTypeDTO,
+        logRepository: LogRepository,
     ): List<FileProcessorFactory> = listOf(
         // Process export.csv
         CsvFileProcessorFactory(
@@ -76,7 +76,7 @@ class AltoidaConverterFactory : ConverterFactory {
                         AltoidaRotationCsvProcessor(),
                         AltoidaTapScreenCsvProcessor(),
                         AltoidaTouchScreenCsvProcessor(),
-                    )
+                    ),
                 ),
                 AltoidaMetadataFileProcessor(),
             ),
@@ -84,4 +84,3 @@ class AltoidaConverterFactory : ConverterFactory {
         ),
     )
 }
-

@@ -24,14 +24,13 @@ import org.apache.kafka.connect.connector.Task
 import org.apache.kafka.connect.source.SourceConnector
 import org.radarbase.connect.upload.util.VersionUtil
 import org.slf4j.LoggerFactory
-import java.util.*
-import kotlin.collections.HashMap
+import java.util.Collections
 
 class UploadSourceConnector : SourceConnector() {
     private lateinit var connectorConfig: UploadSourceConnectorConfig
 
     override fun taskConfigs(maxTasks: Int): List<Map<String, String>> =
-            Collections.nCopies(maxTasks, HashMap(connectorConfig.originalsStrings()))
+        Collections.nCopies(maxTasks, HashMap(connectorConfig.originalsStrings()))
 
     override fun start(props: Map<String, String>?) {
         connectorConfig = UploadSourceConnectorConfig(props!!)
@@ -50,5 +49,4 @@ class UploadSourceConnector : SourceConnector() {
     companion object {
         private val logger = LoggerFactory.getLogger(UploadSourceConnector::class.java)
     }
-
 }

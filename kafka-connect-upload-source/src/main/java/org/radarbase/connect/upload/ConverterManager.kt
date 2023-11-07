@@ -25,7 +25,7 @@ class ConverterManager(
     private val uploadClient: UploadBackendClient,
     private val logRepository: LogRepository,
     private val pollDuration: Duration,
-): Closeable {
+) : Closeable {
     private val executor = Executors.newSingleThreadScheduledExecutor()
 
     init {
@@ -74,7 +74,7 @@ class ConverterManager(
                             record,
                             recordLogger,
                             IllegalArgumentException("No records found in data"),
-                            "No records in data"
+                            "No records in data",
                         )
                     } else {
                         recordLogger.info("$recordsProcessed records found in data")
@@ -112,8 +112,11 @@ class ConverterManager(
             throw exe
         } catch (exe: Throwable) {
             recordLogger.error("Could not convert record due to application failure", exe)
-            updateRecordTemporaryFailure(record, recordLogger,
-                ConversionTemporarilyFailedException("Could not convert record ${record.id} due to application failure", exe))
+            updateRecordTemporaryFailure(
+                record,
+                recordLogger,
+                ConversionTemporarilyFailedException("Could not convert record ${record.id} due to application failure", exe),
+            )
             throw exe
         }
     }
@@ -126,7 +129,7 @@ class ConverterManager(
             record.apply {
                 metadata = uploadClient.updateStatus(
                     record.id!!,
-                    record.metadata!!.copy(status = "PROCESSING")
+                    record.metadata!!.copy(status = "PROCESSING"),
                 )
                 recordLogger.debug("Updated metadata to PROCESSING")
             }
@@ -147,10 +150,13 @@ class ConverterManager(
         val recordId = record.id ?: return
         recordLogger.error("$reason: ${exe.message}", exe.cause)
         val metadata = uploadClient.retrieveRecordMetadata(recordId)
-        val updatedMetadata = uploadClient.updateStatus(recordId, metadata.copy(
-            status = "FAILED",
-            message = reason
-        ))
+        val updatedMetadata = uploadClient.updateStatus(
+            recordId,
+            metadata.copy(
+                status = "FAILED",
+                message = reason,
+            ),
+        )
 
         if (updatedMetadata.status == "FAILED") {
             logger.info("Uploading logs to backend")
@@ -167,10 +173,13 @@ class ConverterManager(
         logger.info("Update record conversion failure")
         recordLogger.error("$reason: ${exe.message}", exe.cause)
         val metadata = uploadClient.retrieveRecordMetadata(record.id!!)
-        val updatedMetadata = uploadClient.updateStatus(record.id!!, metadata.copy(
-            status = "READY",
-            message = reason
-        ))
+        val updatedMetadata = uploadClient.updateStatus(
+            record.id!!,
+            metadata.copy(
+                status = "READY",
+                message = reason,
+            ),
+        )
 
         if (updatedMetadata.status == "READY") {
             logger.info("Uploading logs to backend")

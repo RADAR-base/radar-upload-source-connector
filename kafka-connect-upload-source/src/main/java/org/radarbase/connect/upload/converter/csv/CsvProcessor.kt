@@ -20,7 +20,7 @@ import java.io.InputStream
 open class CsvProcessor(
     private val record: RecordDTO,
     private val processorFactories: List<CsvLineProcessorFactory>,
-): FileProcessor {
+) : FileProcessor {
 
     override fun processData(
         context: ConverterFactory.ContentsContext,
@@ -98,14 +98,14 @@ open class CsvProcessor(
             CSV header of file ${contents.fileName} in record ${record.id} did not match processor $javaClass
                 Found:    $header
                 Expected: ${this.header}
-            """.trimIndent()
+            """.trimIndent(),
         )
         else -> false
     }
 
     protected open fun BufferedReader.toCsvReader(): CSVReader = CSVReaderBuilder(this)
-            .withCSVParser(CSVParserBuilder().withSeparator(',').build())
-            .build()
+        .withCSVParser(CSVParserBuilder().withSeparator(',').build())
+        .build()
 
     private fun List<CsvLineProcessorFactory>.createLineProcessors(
         context: ConverterFactory.ContentsContext,

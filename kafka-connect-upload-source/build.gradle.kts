@@ -1,6 +1,3 @@
-import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
     java
     kotlin("jvm")
@@ -8,69 +5,41 @@ plugins {
 
 sourceSets {
     create("integrationTest") {
-        withConvention(KotlinSourceSet::class) {
-            kotlin.srcDir("src/integrationTest/java")
-            resources.srcDir("src/integrationTest/resources")
-            compileClasspath += sourceSets["main"].output + configurations["testRuntimeClasspath"]
-            runtimeClasspath += output + compileClasspath + sourceSets["test"].runtimeClasspath
-        }
+        kotlin.srcDir("src/integrationTest/java")
+        resources.srcDir("src/integrationTest/resources")
+        compileClasspath += sourceSets["main"].output + configurations["testRuntimeClasspath"]
+        runtimeClasspath += output + compileClasspath + sourceSets["test"].runtimeClasspath
     }
 }
 
 dependencies {
-    val okhttpVersion: String by project
-    api("com.squareup.okhttp3:okhttp:$okhttpVersion")
-    val confluentVersion: String by project
-    api("io.confluent:kafka-connect-avro-converter:$confluentVersion")
-    val radarSchemaVersion: String by project
-    api("org.radarbase:radar-schemas-commons:$radarSchemaVersion")
+    api("com.squareup.okhttp3:okhttp:${Versions.okhttp}")
+    api("io.confluent:kafka-connect-avro-converter:${Versions.confluent}")
+    api("org.radarbase:radar-schemas-commons:${Versions.radarSchemas}")
 
-    val commonsCompressVersion: String by project
-    implementation("org.apache.commons:commons-compress:$commonsCompressVersion")
-    val xzVersion: String by project
-    implementation("org.tukaani:xz:$xzVersion")
+    implementation("org.apache.commons:commons-compress:${Versions.commonsCompress}")
+    implementation("org.tukaani:xz:${Versions.xz}")
 
-    val jacksonVersion: String by project
-    implementation(platform("com.fasterxml.jackson:jackson-bom:$jacksonVersion"))
+    implementation(platform("com.fasterxml.jackson:jackson-bom:${Versions.jackson}"))
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
     implementation("com.fasterxml.jackson.core:jackson-databind")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 
-    val openCsvVersion: String by project
-    implementation("com.opencsv:opencsv:$openCsvVersion")
+    implementation("com.opencsv:opencsv:${Versions.openCsv}")
 
-    val jschVersion: String by project
-    implementation("com.jcraft:jsch:$jschVersion")
-    val minioVersion: String by project
-    implementation("io.minio:minio:$minioVersion")
+    implementation("com.jcraft:jsch:${Versions.jsch}")
+    implementation("io.minio:minio:${Versions.minio}")
 
     // Included in connector runtime
-    val kafkaVersion: String by project
-    compileOnly("org.apache.kafka:connect-api:$kafkaVersion")
+    compileOnly("org.apache.kafka:connect-api:${Versions.kafka}")
     implementation(kotlin("stdlib-jdk8"))
     implementation(kotlin("reflect"))
 
-    val junitVersion: String by project
-    testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")
+    testImplementation("io.confluent:kafka-connect-avro-converter:${Versions.confluent}")
 
-    testImplementation("io.confluent:kafka-connect-avro-converter:$confluentVersion")
-
-    val hamcrestVersion: String by project
-    testImplementation("org.hamcrest:hamcrest:$hamcrestVersion")
-    testImplementation("org.apache.kafka:connect-api:$kafkaVersion")
-    val mockitoKotlinVersion: String by project
-    testImplementation("org.mockito.kotlin:mockito-kotlin:$mockitoKotlinVersion")
-    val slf4jVersion: String by project
-    testRuntimeOnly("org.slf4j:slf4j-simple:$slf4jVersion")
-}
-
-tasks.withType<JavaCompile> {
-    options.release.set(11)
-}
-
-// config JVM target to 11 for kotlin compilation tasks
-tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "11"
+    testImplementation("org.hamcrest:hamcrest:${Versions.hamcrest}")
+    testImplementation("org.apache.kafka:connect-api:${Versions.kafka}")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:${Versions.mockitoKotlin}")
 }
 
 task<Test>("integrationTest") {

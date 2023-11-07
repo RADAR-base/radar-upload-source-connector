@@ -35,7 +35,7 @@ data class Config(
     val jdbcUrl: String? = null,
     val jdbcUser: String? = null,
     val jdbcPassword: String? = null,
-    val hibernateDialect: String = "org.hibernate.dialect.PostgreSQL95Dialect",
+    val hibernateDialect: String = "org.hibernate.dialect.PostgreSQLDialect",
     val jwtECPublicKeys: List<String>? = null,
     val jwtRSAPublicKeys: List<String>? = null,
     val jwtIssuer: String? = null,

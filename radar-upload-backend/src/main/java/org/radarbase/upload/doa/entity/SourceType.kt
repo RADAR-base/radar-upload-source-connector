@@ -19,10 +19,19 @@
 
 package org.radarbase.upload.doa.entity
 
-import jakarta.persistence.*
-import jakarta.persistence.GenerationType.*
-import org.hibernate.annotations.NaturalId
+import jakarta.persistence.CollectionTable
+import jakarta.persistence.Column
+import jakarta.persistence.ElementCollection
+import jakarta.persistence.Entity
+import jakarta.persistence.FetchType
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType.SEQUENCE
+import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.MapKeyColumn
+import jakarta.persistence.Table
 import org.hibernate.annotations.GenericGenerator
+import org.hibernate.annotations.NaturalId
 import org.hibernate.annotations.Parameter
 
 @Entity
@@ -37,7 +46,7 @@ class SourceType {
             Parameter(name = "sequence_name", value = "hibernate_sequence"),
             Parameter(name = "initial_value", value = "1"),
             Parameter(name = "increment_size", value = "1"),
-        ]
+        ],
     )
     var id: Long? = null
 
@@ -57,6 +66,7 @@ class SourceType {
 
     @Column(name = "time_required")
     var timeRequired = false
+
     @Column(name = "source_id_required")
     var sourceIdRequired = false
 

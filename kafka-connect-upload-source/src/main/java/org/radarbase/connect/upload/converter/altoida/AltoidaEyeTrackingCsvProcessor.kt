@@ -24,11 +24,15 @@ class AltoidaEyeTrackingCsvProcessor(override val fileNameSuffix: String = "_EYE
     override val header: List<String> = listOf("TIMESTAMP", "X", "Y")
 
     override fun lineConversion(
-            line: Map<String, String>,
-            timeReceived: Double
-    ) = TopicData("connect_upload_altoida_eye_tracking", AltoidaEyeTracking(
+        line: Map<String, String>,
+        timeReceived: Double,
+    ) = TopicData(
+        "connect_upload_altoida_eye_tracking",
+        AltoidaEyeTracking(
             time(line),
             timeReceived,
             line.getValue("X").toFloatOrNull(),
-            line.getValue("Y").toFloatOrNull()))
+            line.getValue("Y").toFloatOrNull(),
+        ),
+    )
 }

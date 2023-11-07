@@ -24,10 +24,10 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import java.time.Instant
 import java.time.LocalDateTime
 
-
 data class LogsDto(
     var url: String? = null,
-    var contents: String? = null)
+    var contents: String? = null,
+)
 
 data class ContentsDTO(
     var url: String? = null,
@@ -35,7 +35,8 @@ data class ContentsDTO(
     var contentType: String? = null,
     var createdDate: Instant? = null,
     var size: Long? = null,
-    var fileName: String)
+    var fileName: String,
+)
 
 data class RecordDataDTO(
     var projectId: String?,
@@ -43,7 +44,8 @@ data class RecordDataDTO(
     var sourceId: String?,
     var time: LocalDateTime? = null,
     var timeZoneOffset: Int? = null,
-    var contents: Set<ContentsDTO>? = null)
+    var contents: Set<ContentsDTO>? = null,
+)
 
 data class RecordMetadataDTO(
     var revision: Int,
@@ -52,18 +54,20 @@ data class RecordMetadataDTO(
     var createdDate: Instant? = null,
     var modifiedDate: Instant? = null,
     var committedDate: Instant? = null,
-    var logs: LogsDto? = null)
-
+    var logs: LogsDto? = null,
+)
 
 data class RecordDTO(
     var id: Long?,
     var data: RecordDataDTO?,
     var sourceType: String?,
-    var metadata: RecordMetadataDTO?)
+    var metadata: RecordMetadataDTO?,
+)
 
 data class RecordContainerDTO(
     var limit: Int? = null,
-    var records: List<RecordDTO>)
+    var records: List<RecordDTO>,
+)
 
 data class SourceTypeDTO(
     var name: String?,
@@ -72,16 +76,17 @@ data class SourceTypeDTO(
     var timeRequired: Boolean?,
     var sourceIdRequired: Boolean?,
     var configuration: Map<String, String>?,
-    var resetProcessingStatusTimeoutMin: Long? = null
+    var resetProcessingStatusTimeoutMin: Long? = null,
 )
 
 data class SourceTypeContainerDTO(
-    var sourceTypes: List<SourceTypeDTO>)
+    var sourceTypes: List<SourceTypeDTO>,
+)
 
 data class PollDTO(
     var limit: Int = 10,
-    var supportedConverters: Set<String>)
-
+    var supportedConverters: Set<String>,
+)
 
 data class OAuthToken(
     @JsonProperty("access_token") var accessToken: String,

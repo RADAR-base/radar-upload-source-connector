@@ -38,8 +38,8 @@ class UploadSourceConnectorConfigTest {
             "upload.source.queue.size" to "1000",
             "upload.source.record.converter.classes" to listOf(
                 AccelerometerConverterFactory::class.qualifiedName,
-                AltoidaConverterFactory::class.qualifiedName
-            ).joinToString(separator=",")
+                AltoidaConverterFactory::class.qualifiedName,
+            ).joinToString(separator = ","),
         )
         val config = UploadSourceConnectorConfig(settings)
         assertNotNull(config)

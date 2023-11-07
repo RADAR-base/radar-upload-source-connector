@@ -31,12 +31,15 @@ class AltoidaDiagnosticsCsvProcessor : StatelessCsvLineProcessor() {
     override val header: List<String> = listOf("TIMESTAMP", "TAG", "PAYLOAD", "CONTRAST", "MOVEMENT", "ANGLE", "FEATURES")
 
     override fun lineConversion(
-            line: Map<String, String>,
-            timeReceived: Double
-    ) = TopicData("connect_upload_altoida_attitude", AltoidaDiagnostics(
+        line: Map<String, String>,
+        timeReceived: Double,
+    ) = TopicData(
+        "connect_upload_altoida_attitude",
+        AltoidaDiagnostics(
             time(line),
             timeReceived,
             line["TAG"],
-            line["PAYLOAD"]))
-
+            line["PAYLOAD"],
+        ),
+    )
 }

@@ -2,7 +2,10 @@ package org.radarbase.connect.upload.converter.axivity
 
 import org.radarbase.connect.upload.api.ContentsDTO
 import org.radarbase.connect.upload.api.RecordDTO
-import org.radarbase.connect.upload.converter.*
+import org.radarbase.connect.upload.converter.ConverterFactory
+import org.radarbase.connect.upload.converter.FileProcessor
+import org.radarbase.connect.upload.converter.FileProcessorFactory
+import org.radarbase.connect.upload.converter.TopicData
 import org.radarbase.connect.upload.converter.axivity.newcastle.CwaBlock
 import org.radarbase.connect.upload.converter.axivity.newcastle.CwaReader
 import org.radarbase.connect.upload.logging.LogRepository
@@ -11,8 +14,8 @@ import org.slf4j.LoggerFactory
 import java.io.InputStream
 
 class CwaFileProcessorFactory(
-        val logRepository: LogRepository,
-        private val dataBlockProcessors: List<CwaBlockProcessor>
+    val logRepository: LogRepository,
+    private val dataBlockProcessors: List<CwaBlockProcessor>,
 ) : FileProcessorFactory {
     private val metadataProcessor = MetadataCwaReaderProcessor()
 
@@ -26,7 +29,7 @@ class CwaFileProcessorFactory(
         override fun processData(
             context: ConverterFactory.ContentsContext,
             inputStream: InputStream,
-            produce: (TopicData) -> Unit
+            produce: (TopicData) -> Unit,
         ) {
             val cwaReader = CwaReader(inputStream)
 
@@ -62,7 +65,9 @@ class CwaFileProcessorFactory(
                     .flatMap { processor ->
                         processor.processBlock(recordLogger, block, timeReceived)
                     }
-            } else emptySequence()
+            } else {
+                emptySequence()
+            }
 
             block.invalidate()
             return result

@@ -25,5 +25,5 @@ enum class RecordStatus {
     QUEUED,
     PROCESSING,
     FAILED,
-    SUCCEEDED
+    SUCCEEDED,
 }

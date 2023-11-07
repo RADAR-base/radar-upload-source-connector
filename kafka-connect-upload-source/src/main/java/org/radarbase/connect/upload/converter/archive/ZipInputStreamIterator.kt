@@ -12,7 +12,7 @@ import java.util.zip.ZipFile
 class ZipInputStreamIterator(
     input: InputStream,
     tempDir: Path,
-): ArchiveIterator {
+) : ArchiveIterator {
     private val tempFile: TempFile
     private val zipFile: ZipFile
 

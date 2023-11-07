@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
     java
     application
@@ -11,55 +9,36 @@ plugins {
 
 application {
     mainClass.set("org.radarbase.upload.MainKt")
-    applicationDefaultJvmArgs = listOf(
-        "-Djava.security.egd=file:/dev/./urandom",
-        "-Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager",
-    )
 }
 
 dependencies {
     api(kotlin("stdlib-jdk8"))
     implementation(kotlin("reflect"))
 
-    val radarJerseyVersion: String by project
-    implementation("org.radarbase:radar-jersey:$radarJerseyVersion") {
+    implementation("org.radarbase:radar-jersey:${Versions.radarJersey}") {
         exclude("io.swagger.core.v3", "swagger-jaxrs2")
     }
-    implementation("org.radarbase:radar-jersey-hibernate:$radarJerseyVersion") {
+    implementation("org.radarbase:radar-jersey-hibernate:${Versions.radarJersey}") {
         exclude("io.swagger.core.v3", "swagger-jaxrs2")
     }
 
-    val jerseyVersion: String by project
-    implementation("org.glassfish.jersey.containers:jersey-container-grizzly2-http:$jerseyVersion")
+    implementation("org.glassfish.jersey.containers:jersey-container-grizzly2-http:${Versions.jersey}")
 
-    val slf4jVersion: String by project
-    implementation("org.slf4j:slf4j-api:$slf4jVersion")
-    val log4j2Version: String by project
-    runtimeOnly("org.apache.logging.log4j:log4j-core:$log4j2Version")
-    runtimeOnly("org.apache.logging.log4j:log4j-slf4j2-impl:$log4j2Version")
-    runtimeOnly("org.apache.logging.log4j:log4j-jul:$log4j2Version")
+    implementation(enforcedPlatform("io.ktor:ktor-bom:${Versions.ktor}"))
+    implementation("io.ktor:ktor-client-core")
+    implementation("io.ktor:ktor-client-cio")
+    implementation("io.ktor:ktor-client-content-negotiation")
+    implementation("io.ktor:ktor-serialization-jackson")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${Versions.jackson}")
 
-    val okhttpVersion: String by project
-    implementation("com.squareup.okhttp3:okhttp:$okhttpVersion")
+    runtimeOnly("org.hsqldb:hsqldb:${Versions.hsqldb}")
 
-    val hsqldbVersion: String by project
-    runtimeOnly("org.hsqldb:hsqldb:${hsqldbVersion}")
+    testImplementation("com.squareup.okhttp3:okhttp:${Versions.okhttp}")
+    testImplementation("org.radarbase:radar-auth:${Versions.managementPortal}")
+    testImplementation("org.hamcrest:hamcrest:${Versions.hamcrest}")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:${Versions.mockitoKotlin}")
 
-    val junitVersion: String by project
-    testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")
-    val hamcrestVersion: String by project
-    testImplementation("org.hamcrest:hamcrest:$hamcrestVersion")
-    val mockitoKotlinVersion: String by project
-    testImplementation("org.mockito.kotlin:mockito-kotlin:$mockitoKotlinVersion")
-
-    testImplementation("org.glassfish.jersey.test-framework.providers:jersey-test-framework-provider-grizzly2:$jerseyVersion")
-}
-
-tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "17"
-}
-tasks.withType<JavaCompile> {
-    options.release.set(17)
+    testImplementation("org.glassfish.jersey.test-framework.providers:jersey-test-framework-provider-grizzly2:${Versions.jersey}")
 }
 
 allOpen {

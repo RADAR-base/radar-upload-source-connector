@@ -5,10 +5,9 @@ import org.radarbase.connect.upload.api.SourceTypeDTO
 import org.radarbase.connect.upload.converter.ConverterFactory
 import org.radarbase.connect.upload.converter.FileProcessorFactory
 import org.radarbase.connect.upload.converter.archive.ArchiveProcessorFactory
-import org.radarbase.connect.upload.converter.archive.ZipInputStreamIterator
 import org.radarbase.connect.upload.converter.archive.ZipInputStreamIterator.Companion.zipIteratorFactory
-import org.radarbase.connect.upload.logging.LogRepository
 import org.radarbase.connect.upload.io.FileUploaderFactory
+import org.radarbase.connect.upload.logging.LogRepository
 import org.slf4j.LoggerFactory
 
 class WearableCameraConverterFactory : ConverterFactory {
@@ -64,11 +63,13 @@ class WearableCameraConverterFactory : ConverterFactory {
     companion object {
         private val logger = LoggerFactory.getLogger(WearableCameraConverterFactory::class.java)
         private val ignoredFiles = arrayOf(
-                // downsized image directories
-                "/256_192/", "/640_480/",
-                // image binary data table
-                "/.image_table",
-                // ACTIVITY.CSV no knowledge about the content.
-                "ACTIVITY.CSV")
+            // downsized image directories
+            "/256_192/",
+            "/640_480/",
+            // image binary data table
+            "/.image_table",
+            // ACTIVITY.CSV no knowledge about the content.
+            "ACTIVITY.CSV",
+        )
     }
 }

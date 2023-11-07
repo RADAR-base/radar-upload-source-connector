@@ -37,7 +37,7 @@ abstract class AbstractJpaPersistable<T : java.io.Serializable> {
             Parameter(name = "sequence_name", value = "hibernate_sequence"),
             Parameter(name = "initial_value", value = "1"),
             Parameter(name = "increment_size", value = "1"),
-        ]
+        ],
     )
     var id: T? = null
 
@@ -56,7 +56,7 @@ abstract class AbstractJpaPersistable<T : java.io.Serializable> {
     override fun toString() = "Entity<${javaClass.name}: $id>"
 
     companion object {
-        inline fun <reified T: Any> T.equalTo(other: Any?, idGetter: T.() -> Any?, vararg getters: T.() -> Any?): Boolean {
+        inline fun <reified T : Any> T.equalTo(other: Any?, idGetter: T.() -> Any?, vararg getters: T.() -> Any?): Boolean {
             if (this === other) return true
             if (javaClass != other?.javaClass) return false
 
