@@ -26,7 +26,7 @@ object Versions {
     const val mockito = "5.3.1"
 
     const val openCsv = "5.8"
-    const val minio = "8.5.6"
+    const val minio = "8.5.10"
     const val jsch = "0.1.55"
     const val radarJersey = "0.11.0"
     const val jersey = "3.1.3"
