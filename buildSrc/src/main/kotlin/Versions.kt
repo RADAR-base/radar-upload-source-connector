@@ -33,7 +33,7 @@ object Versions {
     const val hsqldb = "2.7.2"
     const val mockitoKotlin = "5.1.0"
     const val hamcrest = "2.2"
-    const val commonsCompress = "1.24.0"
+    const val commonsCompress = "1.26.0"
     const val xz = "1.9"
     const val managementPortal = "2.1.0"
 }
