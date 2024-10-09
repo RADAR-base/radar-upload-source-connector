@@ -28,7 +28,7 @@ object Versions {
     const val openCsv = "5.8"
     const val minio = "8.5.10"
     const val jsch = "0.1.55"
-    const val radarJersey = "0.11.0"
+    const val radarJersey = "0.11.1"
     const val jersey = "3.1.3"
     const val hsqldb = "2.7.2"
     const val mockitoKotlin = "5.1.0"
