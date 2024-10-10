@@ -9,6 +9,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import org.glassfish.jersey.process.internal.RequestContext
 import org.glassfish.jersey.process.internal.RequestScope
 import org.glassfish.jersey.server.BackgroundScheduler
 import org.glassfish.jersey.server.monitoring.ApplicationEvent
@@ -36,6 +37,7 @@ class RecordStateLifecycleManager(
     @Context private val asyncCoroutineService: AsyncCoroutineService,
     @Context private val config: Config,
     @Context private val requestScope: jakarta.inject.Provider<RequestScope>,
+    @Context private val requestContext: jakarta.inject.Provider<RequestContext>,
     @Context private val sourceTypeMapper: SourceTypeMapper,
 ) : ApplicationEventListener {
     private val staleProcessingAge: Map<String, Pair<Duration, Mutex>>
@@ -64,7 +66,9 @@ class RecordStateLifecycleManager(
 
     private fun addSourceTypes() {
         CoroutineScope(executor.asCoroutineDispatcher()).launch {
-            val wrapper = CoroutineRequestWrapper(null, requestScope.get(), "addSourceTypes")
+            val wrapper = CoroutineRequestWrapper(requestScope.get()) {
+                this.location = "addSourceTypes"
+            }
             try {
                 withContext(wrapper.coroutineContext) {
                     entityManagerFactory.createEntityManager().use { entityManager ->
