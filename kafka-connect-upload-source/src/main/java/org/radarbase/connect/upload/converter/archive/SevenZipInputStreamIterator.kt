@@ -7,6 +7,7 @@ import org.radarbase.connect.upload.io.TempFile
 import org.radarbase.connect.upload.io.TempFile.Companion.copyToTempFile
 import java.io.IOException
 import java.io.InputStream
+import java.nio.file.Files
 import java.nio.file.Path
 
 class SevenZipInputStreamIterator(
@@ -20,7 +21,7 @@ class SevenZipInputStreamIterator(
         file = input.copyToTempFile(tempDir, "7zip")
         input.close()
         sevenZFile = try {
-            SevenZFile(file.tempFile.toFile())
+            SevenZFile.builder().setSeekableByteChannel(Files.newByteChannel(file.tempFile)).get()
         } catch (ex: IOException) {
             throw ConversionFailedException("Cannot open 7zip file", ex)
         }
