@@ -92,7 +92,7 @@ internal class RecordRepositoryImplTest {
         val eventStart = mock<ApplicationEvent> {
             on(ApplicationEvent::getType) doReturn ApplicationEvent.Type.INITIALIZATION_APP_FINISHED
         }
-        DatabaseInitialization({ doaEMF }, dbConfig).onEvent(eventStart)
+        DatabaseInitialization({ doaEMF }, dbConfig, MockAsyncCoroutineService()).onEvent(eventStart)
         entityManager = doaEMF.createEntityManager()
         repository = RecordRepositoryImpl(this.mockEntityManagerProvider, asyncService = MockAsyncCoroutineService())
         Mockito.`when`(mockEntityManagerProvider.get()).thenReturn(entityManager)
