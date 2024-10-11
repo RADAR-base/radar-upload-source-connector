@@ -20,10 +20,20 @@
 package org.radarbase.connect.upload.converter.phone
 
 import org.apache.kafka.connect.source.SourceRecord
-import org.junit.jupiter.api.*
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import org.mockito.Mockito.mock
-import org.radarbase.connect.upload.api.*
+import org.radarbase.connect.upload.api.ContentsDTO
+import org.radarbase.connect.upload.api.RecordDTO
+import org.radarbase.connect.upload.api.RecordDataDTO
+import org.radarbase.connect.upload.api.RecordMetadataDTO
+import org.radarbase.connect.upload.api.SourceTypeDTO
+import org.radarbase.connect.upload.api.UploadBackendClient
 import org.radarbase.connect.upload.converter.ConverterFactory
 import org.radarbase.connect.upload.converter.ConverterFactory.Converter.Companion.END_OF_RECORD_KEY
 import org.radarbase.connect.upload.converter.RecordConverter
@@ -44,10 +54,10 @@ class AccelerometerZipConverterFactoryTest {
     private lateinit var uploadBackendClient: UploadBackendClient
 
     private val contentsDTO = ContentsDTO(
-            contentType = "application/zip",
-            fileName = "_ACC.zip",
-            createdDate = Instant.now(),
-            size = 1L
+        contentType = "application/zip",
+        fileName = "_ACC.zip",
+        createdDate = Instant.now(),
+        size = 1L,
     )
 
     private lateinit var record: RecordDTO
@@ -58,18 +68,18 @@ class AccelerometerZipConverterFactoryTest {
         logRepository = ConverterLogRepository()
         val converterFactory = AccelerometerZipConverterFactory()
         val config = SourceTypeDTO(
-                name = "phone-acceleration",
-                configuration = emptyMap(),
-                sourceIdRequired = false,
-                timeRequired = false,
-                topics = setOf("test_topic"),
-                contentTypes = setOf()
+            name = "phone-acceleration",
+            configuration = emptyMap(),
+            sourceIdRequired = false,
+            timeRequired = false,
+            topics = setOf("test_topic"),
+            contentTypes = setOf(),
         )
         record = RecordDTO(
             id = 1L,
             metadata = RecordMetadataDTO(
                 revision = 1,
-                status = "PROCESSING"
+                status = "PROCESSING",
             ),
             data = RecordDataDTO(
                 projectId = "testProject",
@@ -81,7 +91,7 @@ class AccelerometerZipConverterFactoryTest {
                     ),
                 ),
             ),
-            sourceType = "phone-acceleration"
+            sourceType = "phone-acceleration",
 
         )
         context = ConverterFactory.ContentsContext.create(
@@ -92,7 +102,6 @@ class AccelerometerZipConverterFactoryTest {
         )
         converter = converterFactory.converter(emptyMap(), config, uploadBackendClient, logRepository)
     }
-
 
     @Test
     @DisplayName("Should be able to convert a zip file to TopicRecords")

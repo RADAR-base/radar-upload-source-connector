@@ -18,7 +18,7 @@
     show-expand
     @click:row="expandRow"
   >
-    <template v-slot:top>
+    <template #top>
       <!-- filter slot -->
       <v-row
         wrap

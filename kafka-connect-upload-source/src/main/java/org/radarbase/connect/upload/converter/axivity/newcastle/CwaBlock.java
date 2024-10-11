@@ -44,21 +44,6 @@ public class CwaBlock {
     /** Block size for data */
     public static final int BLOCK_SIZE = 512;
 
-    /** Block buffer for data */
-    private final ByteBuffer byteBuffer;
-    private boolean bufferValid = false;
-    private boolean dataBlockOk = false;
-    private int sessionId = 0;
-    private short deviceId = 0;
-    private short light = 0;
-    private short temp = 0;
-    private short batt = 0;
-    private short events = 0;
-    private int sampleCount = 0;
-    private long[] sampleTimes;
-    private short[] sampleValues;
-
-
     /** Maximum number of samples per (new format) data block */
     public static final int MAX_SAMPLES_PER_BLOCK = 120;
 
@@ -68,28 +53,11 @@ public class CwaBlock {
     /** Block type - no block */
     public static final short BLOCK_NONE = 0;            //
 
-    /** Block type - empty block */
-    public static final short BLOCK_EMPTY = -1;            // 0xffff
-
     /** Block type - header block */
     public static final short BLOCK_HEADER = 0x444D;        // "MD" (length 0xFFFC)
-    /** Block length - header block */
-    public static final int LENGTH_HEADER = 0xFFFC;
-
-    /** Block type - usage block */
-    public static final short BLOCK_USAGE = 0x4255;            // "UB" (length 0xFFFC)
-    /** Block length - usage block */
-    public static final int LENGTH_USAGE = 0xFFFC;
-
-    /** Block type - session info block */
-    public static final short BLOCK_SESSIONINFO = 0x4953;    // "SI" (length 0x01FC)
-    /** Block length - session info block */
-    public static final int LENGTH_SESSIONINFO = 0x01FC;
 
     /** Block type - data block */
     public static final short BLOCK_DATA = 0x5841;            // "AX" (length 0x01FC)
-    /** Block length - data block */
-    public static final int LENGTH_DATA = 0x01FC;
 
     //private static final int DATA_EVENT_NONE = 0x00;
     public static final int DATA_EVENT_RESUME = 0x01;
@@ -100,6 +68,21 @@ public class CwaBlock {
     public static final int DATA_EVENT_BUFFER_OVERFLOW = 0x20;
     public static final int DATA_EVENT_UNHANDLED_INTERRUPT = 0x40;
     public static final int DATA_EVENT_CHECKSUM_FAIL = 0x80;  // (not used)
+
+    /** Block buffer for data */
+    private final ByteBuffer byteBuffer;
+    private boolean bufferValid;
+    private boolean dataBlockOk;
+    private int sessionId;
+    private short deviceId;
+    private short light;
+    private short temp;
+    private short batt;
+    private short events;
+    private int sampleCount;
+    private long[] sampleTimes;
+    private short[] sampleValues;
+    protected long tLast;
 
 	/*
 	// 512-byte data packet
@@ -154,6 +137,8 @@ public class CwaBlock {
 
     /** Copy constructor */
     public CwaBlock(CwaBlock source) {
+        temp = 0;
+        tLast = 0;
         if (source != null) {
             byteBuffer = ByteBuffer.wrap(source.byteBuffer.array().clone());
             bufferValid = source.bufferValid;
@@ -182,12 +167,6 @@ public class CwaBlock {
             sampleValues = new short[0];
         }
         byteBuffer.order(ByteOrder.LITTLE_ENDIAN);    // All little endian values
-
-        // In-place samples
-        //byteBuffer.position(30);
-        //private ShortBuffer rawSamplesShort = null;
-        //rawSamplesShort = byteBuffer.asShortBuffer();
-        //byteBuffer.rewind();
     }
 
     // Marks the block as invalidate
@@ -201,8 +180,6 @@ public class CwaBlock {
     public ByteBuffer buffer() {
         return byteBuffer.asReadOnlyBuffer();
     }
-
-    protected long tLast = 0;
 
     /**
      * Reads the next block into the buffer.
@@ -283,7 +260,7 @@ public class CwaBlock {
                     }
 
                     long time0 = getTimestamp(blockTimestamp) + (long) (1000 * offsetStart / freq);
-                    long time1 = time0 + (long) (1000 * sampleCount / freq); // Packet end time
+                    long time1 = time0 + (long) (1000L * sampleCount / freq); // Packet end time
                     //System.err.println("[" + time0 + " - " + time1 + "]");
                     if (tLast != 0 && time0 - tLast < 1000) {
                         time0 = tLast;

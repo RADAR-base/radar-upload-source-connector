@@ -25,9 +25,16 @@ import okhttp3.RequestBody
 import okio.BufferedSink
 import org.apache.kafka.connect.source.SourceRecord
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.*
-import org.junit.jupiter.api.*
-import org.junit.jupiter.api.Assertions.*
+import org.hamcrest.Matchers.nullValue
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.Timeout
 import org.radarbase.connect.upload.converter.ConverterFactory.Converter.Companion.END_OF_RECORD_KEY
 import org.radarbase.connect.upload.converter.altoida.AltoidaConverterFactory
 import org.radarbase.connect.upload.converter.phone.AccelerometerConverterFactory
@@ -83,7 +90,7 @@ class UploadSourceTaskTest {
             "upload.source.record.converter.classes" to arrayOf(
                 AccelerometerConverterFactory::class.jvmName,
                 AltoidaConverterFactory::class.jvmName,
-            ).joinToString(separator=",")
+            ).joinToString(separator = ","),
         )
 
         sourceTask.start(settings)
@@ -191,10 +198,10 @@ class UploadSourceTaskTest {
         val body = CancelableRequestBody()
 
         val request = okhttp3.Request.Builder()
-                .url("$baseUri/records/${record.id}/contents/$fileName")
-                .header("Authorization", "Bearer $accessToken")
-                .put(body)
-                .build()
+            .url("$baseUri/records/${record.id}/contents/$fileName")
+            .header("Authorization", "Bearer $accessToken")
+            .put(body)
+            .build()
 
         val call = httpClient.newCall(request)
         body.call = call

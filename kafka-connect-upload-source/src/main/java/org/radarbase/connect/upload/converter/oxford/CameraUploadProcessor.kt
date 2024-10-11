@@ -13,9 +13,10 @@ import java.nio.file.Paths
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoField
+import java.time.temporal.TemporalAccessor
 
 class CameraUploadProcessor(
-    private val uploaderCreate: () -> FileUploaderFactory.FileUploader
+    private val uploaderSupplier: () -> FileUploaderFactory.FileUploader,
 ) : FileProcessorFactory {
     override fun matches(contents: ContentsDTO) = SUFFIX_REGEX.containsMatchIn(contents.fileName)
 
@@ -27,13 +28,11 @@ class CameraUploadProcessor(
         override fun processData(
             context: ConverterFactory.ContentsContext,
             inputStream: InputStream,
-            produce: (TopicData) -> Unit
+            produce: (TopicData) -> Unit,
         ) {
             val fileName = context.fileName.split('/').last()
             val adjustedFilename = SUFFIX_REGEX.replace(fileName, "")
-            val formattedTime = checkNotNull(FILENAME_REGEX.matchEntire(fileName)) { "Image file name $fileName does not match pattern" }
-                    .groupValues[1]
-            val dateTime = fileDateFormatter.parse(formattedTime)
+            val dateTime = fileName.extractDateFromFilename()
             val time = dateTime.getLong(ChronoField.INSTANT_SECONDS).toDouble()
             val dateDirectory = directoryDateFormatter.format(dateTime)
 
@@ -41,18 +40,24 @@ class CameraUploadProcessor(
             val userId = checkNotNull(record.data?.userId) { "Project ID required to upload image files." }
             val relativePath = Paths.get("$projectId/$userId/$TOPIC/${record.id}/$dateDirectory/$adjustedFilename.jpg")
 
-            val url = uploaderCreate()
+            val url = uploaderSupplier()
                 .upload(relativePath, inputStream, context.contents.size)
                 .toString()
 
             context.logger.info("Uploaded file to $url")
 
-            produce(TopicData(
-                TOPIC,
-                OxfordCameraImage(time, context.timeReceived, adjustedFilename, url),
-            ))
+            produce(
+                TopicData(
+                    TOPIC,
+                    OxfordCameraImage(time, context.timeReceived, adjustedFilename, url),
+                ),
+            )
         }
     }
+
+    fun String.extractDateFromFilename(): TemporalAccessor =
+        checkNotNull(FILENAME_REGEX.matchEntire(this)) { "Image file name $this does not match pattern" }
+            .let { fileDateFormatter.parse(it.groupValues[1]) }
 
     companion object {
         private const val TOPIC = "connect_upload_oxford_camera_image"
@@ -60,8 +65,8 @@ class CameraUploadProcessor(
         private val SUFFIX_REGEX = Regex("\\.jpeg|\\.res|\\.jpg$", RegexOption.IGNORE_CASE)
         private val FILENAME_REGEX = Regex("^[^_]+_[^_]+_([0-9]+_[0-9]+)E.*")
         private val fileDateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")
-                .withZone(ZoneId.of("UTC"))
+            .withZone(ZoneId.of("UTC"))
         private val directoryDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-                .withZone(ZoneId.of("UTC"))
+            .withZone(ZoneId.of("UTC"))
     }
 }

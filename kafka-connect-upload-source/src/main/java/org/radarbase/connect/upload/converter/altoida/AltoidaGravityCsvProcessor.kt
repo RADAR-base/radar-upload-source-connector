@@ -28,8 +28,8 @@ class AltoidaGravityCsvProcessor(override val fileNameSuffix: String = "_GRA.csv
     override val header: List<String> = listOf("TIMESTAMP", "X", "Y", "Z")
 
     override fun lineConversion(
-            line: Map<String, String>,
-            timeReceived: Double
+        line: Map<String, String>,
+        timeReceived: Double,
     ) = TopicData(
         topic = "connect_upload_altoida_gravity",
         value = AltoidaGravity(
@@ -37,7 +37,7 @@ class AltoidaGravityCsvProcessor(override val fileNameSuffix: String = "_GRA.csv
             timeReceived,
             line.getValue("X").toFloat(),
             line.getValue("Y").toFloat(),
-            line.getValue("Z").toFloat()
+            line.getValue("Z").toFloat(),
         ),
     )
 }

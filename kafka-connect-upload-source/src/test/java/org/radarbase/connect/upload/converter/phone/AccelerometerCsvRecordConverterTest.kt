@@ -20,13 +20,20 @@
 package org.radarbase.connect.upload.converter.phone
 
 import org.apache.kafka.connect.source.SourceRecord
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.mockito.Mockito.mock
-import org.radarbase.connect.upload.api.*
+import org.radarbase.connect.upload.api.ContentsDTO
+import org.radarbase.connect.upload.api.RecordDTO
+import org.radarbase.connect.upload.api.RecordDataDTO
+import org.radarbase.connect.upload.api.RecordMetadataDTO
+import org.radarbase.connect.upload.api.SourceTypeDTO
+import org.radarbase.connect.upload.api.UploadBackendClient
 import org.radarbase.connect.upload.converter.ConverterFactory
 import org.radarbase.connect.upload.converter.RecordConverter.Companion.createAvroData
 import org.radarbase.connect.upload.exception.ConversionFailedException
@@ -44,29 +51,29 @@ class AccelerometerCsvRecordConverterTest {
     private lateinit var logRepository: LogRepository
 
     private val contentsDTO = ContentsDTO(
-            contentType = "application/csv",
-            fileName = "ACC_INVALID.CSV",
-            createdDate = Instant.now(),
-            size = 1L
+        contentType = "application/csv",
+        fileName = "ACC_INVALID.CSV",
+        createdDate = Instant.now(),
+        size = 1L,
     )
 
     private val record = RecordDTO(
-            id = 1L,
-            metadata = RecordMetadataDTO(
-                    revision = 1,
-                    status = "PROCESSING"
-            ),
-            data = RecordDataDTO(
-                projectId = "testProject",
-                userId = "testUser",
-                sourceId = "testSource",
-                contents = setOf(
-                    ContentsDTO(
-                        fileName = "ACC.csv",
-                    ),
+        id = 1L,
+        metadata = RecordMetadataDTO(
+            revision = 1,
+            status = "PROCESSING",
+        ),
+        data = RecordDataDTO(
+            projectId = "testProject",
+            userId = "testUser",
+            sourceId = "testSource",
+            contents = setOf(
+                ContentsDTO(
+                    fileName = "ACC.csv",
                 ),
             ),
-        sourceType = "phone-acceleration"
+        ),
+        sourceType = "phone-acceleration",
 
     )
 
@@ -75,17 +82,17 @@ class AccelerometerCsvRecordConverterTest {
         logRepository = ConverterLogRepository()
         val converterFactory = AccelerometerConverterFactory()
         converter = converterFactory.converter(
-                client = mock(UploadBackendClient::class.java),
-                connectorConfig = SourceTypeDTO(
-                        name = "phone-acceleration",
-                        configuration = emptyMap(),
-                        sourceIdRequired = false,
-                        timeRequired = false,
-                        topics = setOf("test_topic"),
-                        contentTypes = setOf()
-                ),
-                logRepository = logRepository,
-                settings = emptyMap()
+            client = mock(UploadBackendClient::class.java),
+            connectorConfig = SourceTypeDTO(
+                name = "phone-acceleration",
+                configuration = emptyMap(),
+                sourceIdRequired = false,
+                timeRequired = false,
+                topics = setOf("test_topic"),
+                contentTypes = setOf(),
+            ),
+            logRepository = logRepository,
+            settings = emptyMap(),
         )
         context = ConverterFactory.ContentsContext.create(
             record = record,
@@ -94,7 +101,6 @@ class AccelerometerCsvRecordConverterTest {
             avroData = createAvroData(),
         )
     }
-
 
     @Test
     @DisplayName("Should be able to convert ACC.csv to TopicRecords")
@@ -120,10 +126,10 @@ class AccelerometerCsvRecordConverterTest {
     @DisplayName("Should throw an exception if the headers do not match")
     fun testInvalidSchema() {
         val input =
-                "TIMESTAMP    ,NOTTHIS               ,Y               ,Z\n" +
+            "TIMESTAMP    ,NOTTHIS               ,Y               ,Z\n" +
                 "1553108459103,0.0082303769886 ,-0.0277035832405,0.0245985984802"
         val stream = input.toByteArray(Charsets.UTF_8)
-                        .inputStream()
+            .inputStream()
 
         val exception = assertThrows(ConversionFailedException::class.java) {
             converter.convertFile(context, stream) {}
@@ -131,15 +137,14 @@ class AccelerometerCsvRecordConverterTest {
         assertNotNull(exception)
     }
 
-
     @Test
     @DisplayName("Should throw Exception when invalid data type is sent in the file")
     fun testInvalidDataProcess() {
         val input =
-                "TIMESTAMP    ,X               ,Y               ,Z\n" +
-                        "1553108459103,corrupted ,-0.0277035832405,0.0245985984802"
+            "TIMESTAMP    ,X               ,Y               ,Z\n" +
+                "1553108459103,corrupted ,-0.0277035832405,0.0245985984802"
         val stream = input.toByteArray(Charsets.UTF_8)
-                .inputStream()
+            .inputStream()
 
         val exception = assertThrows(ConversionFailedException::class.java) {
             converter.convertFile(context, stream) {}

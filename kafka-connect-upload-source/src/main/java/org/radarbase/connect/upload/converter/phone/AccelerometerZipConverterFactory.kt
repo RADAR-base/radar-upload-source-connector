@@ -17,9 +17,10 @@
 package org.radarbase.connect.upload.converter.phone
 
 import org.radarbase.connect.upload.api.SourceTypeDTO
-import org.radarbase.connect.upload.converter.*
+import org.radarbase.connect.upload.converter.ConverterFactory
+import org.radarbase.connect.upload.converter.FileProcessorFactory
+import org.radarbase.connect.upload.converter.archive.ArchiveProcessorFactory.Companion.zipFactory
 import org.radarbase.connect.upload.converter.csv.CsvFileProcessorFactory
-import org.radarbase.connect.upload.converter.zip.ZipFileProcessorFactory
 import org.radarbase.connect.upload.logging.LogRepository
 
 class AccelerometerZipConverterFactory : ConverterFactory {
@@ -28,15 +29,15 @@ class AccelerometerZipConverterFactory : ConverterFactory {
     override fun fileProcessorFactories(
         settings: Map<String, String>,
         connectorConfig: SourceTypeDTO,
-        logRepository: LogRepository
+        logRepository: LogRepository,
     ): List<FileProcessorFactory> = listOf(
-        ZipFileProcessorFactory(
+        zipFactory(
             sourceType,
-            zipEntryProcessors = listOf(
+            entryProcessors = listOf(
                 CsvFileProcessorFactory(
                     csvProcessorFactories = listOf(
                         AccelerometerCsvProcessor(),
-                    )
+                    ),
                 ),
             ),
         ),

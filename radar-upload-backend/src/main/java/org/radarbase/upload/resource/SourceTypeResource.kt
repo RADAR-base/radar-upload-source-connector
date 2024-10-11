@@ -19,16 +19,24 @@
 
 package org.radarbase.upload.resource
 
-import org.radarbase.jersey.cache.Cache
-import org.radarbase.upload.api.SourceTypeContainerDTO
-import org.radarbase.upload.api.SourceTypeDTO
-import org.radarbase.upload.api.SourceTypeMapper
-import org.radarbase.upload.doa.SourceTypeRepository
 import jakarta.annotation.Resource
 import jakarta.inject.Singleton
-import jakarta.ws.rs.*
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.DefaultValue
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.NotFoundException
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.container.AsyncResponse
+import jakarta.ws.rs.container.Suspended
 import jakarta.ws.rs.core.Context
 import jakarta.ws.rs.core.MediaType
+import org.radarbase.jersey.cache.Cache
+import org.radarbase.jersey.service.AsyncCoroutineService
+import org.radarbase.upload.api.SourceTypeMapper
+import org.radarbase.upload.doa.SourceTypeRepository
 
 @Path("source-types")
 @Produces(MediaType.APPLICATION_JSON)
@@ -36,34 +44,36 @@ import jakarta.ws.rs.core.MediaType
 @Resource
 @Singleton
 class SourceTypeResource(
-    @Context private var sourceTypeRepository: SourceTypeRepository,
-    @Context private var sourceTypeMapper: SourceTypeMapper,
+    @Context private val sourceTypeRepository: SourceTypeRepository,
+    @Context private val sourceTypeMapper: SourceTypeMapper,
+    @Context private val asyncService: AsyncCoroutineService,
 ) {
     @GET
     @Cache(maxAge = 300)
     fun query(
         @DefaultValue("20") @QueryParam("limit") limit: Int,
         @QueryParam("lastId") lastId: Long?,
-    ): SourceTypeContainerDTO {
+        @Suspended asyncResponse: AsyncResponse,
+    ) = asyncService.runAsCoroutine(asyncResponse) {
         val imposedLimit = limit
             .coerceAtLeast(1)
             .coerceAtMost(100)
 
         val records = sourceTypeRepository.readAll(imposedLimit, lastId)
 
-        return sourceTypeMapper.fromSourceTypes(records)
+        sourceTypeMapper.fromSourceTypes(records)
     }
 
     @GET
     @Cache(maxAge = 3600)
     @Path("{name}")
     fun getSourceType(
-            @PathParam("name") name: String,
-    ): SourceTypeDTO {
-
+        @PathParam("name") name: String,
+        @Suspended asyncResponse: AsyncResponse,
+    ) = asyncService.runAsCoroutine(asyncResponse) {
         val record = sourceTypeRepository.read(name)
             ?: throw NotFoundException("Source type with name $name not found")
 
-        return sourceTypeMapper.fromSourceType(record)
+        sourceTypeMapper.fromSourceType(record)
     }
 }

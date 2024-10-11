@@ -24,10 +24,14 @@ class AltoidaBlinkCsvProcessor(override val fileNameSuffix: String = "_BLINK.csv
     override val header: List<String> = listOf("TIMESTAMP", "EYE")
 
     override fun lineConversion(
-            line: Map<String, String>,
-            timeReceived: Double
-    ) = TopicData("connect_upload_altoida_blink", AltoidaBlink(
+        line: Map<String, String>,
+        timeReceived: Double,
+    ) = TopicData(
+        "connect_upload_altoida_blink",
+        AltoidaBlink(
             time(line),
             timeReceived,
-            line["EYE"]))
+            line["EYE"],
+        ),
+    )
 }

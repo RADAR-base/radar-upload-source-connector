@@ -19,9 +19,17 @@
 
 package org.radarbase.upload.doa.entity
 
+import jakarta.persistence.CascadeType
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.FetchType
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToOne
+import jakarta.persistence.OneToMany
+import jakarta.persistence.OneToOne
+import jakarta.persistence.Table
 import org.radarbase.upload.doa.AbstractJpaPersistable
 import java.time.LocalDateTime
-import jakarta.persistence.*
 
 @Entity
 @Table(name = "record")
@@ -31,11 +39,14 @@ class Record : AbstractJpaPersistable<Long>() {
 
     @Column(name = "project_id")
     lateinit var projectId: String
+
     @Column(name = "user_id")
     lateinit var userId: String
+
     @Column(name = "source_id")
     var sourceId: String? = null
     var time: LocalDateTime? = null
+
     @Column(name = "time_zone_offset")
     var timeZoneOffset: Int? = null
 

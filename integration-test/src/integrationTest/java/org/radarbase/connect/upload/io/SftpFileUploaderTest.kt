@@ -15,8 +15,7 @@ import org.radarbase.connect.upload.converter.oxford.WearableCameraConverterFact
 import org.radarbase.connect.upload.logging.ConverterLogRepository
 import org.radarbase.connect.upload.logging.LogRepository
 import org.radarbase.connect.upload.util.TestBase
-import java.util.*
-
+import java.util.Properties
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SftpFileUploaderTest {
@@ -56,7 +55,7 @@ class SftpFileUploaderTest {
         imageRecords.forEach {
             assertNotNull(
                 URL_REGEX.matchEntire(it.getUrl()),
-                "URL ${it.getUrl()} does not match regex $URL_REGEX"
+                "URL ${it.getUrl()} does not match regex $URL_REGEX",
             )
         }
 

@@ -50,7 +50,7 @@ class S3FileUploaderTest {
         imageRecords.forEach {
             assertNotNull(
                 URL_REGEX.matchEntire(it.getUrl()),
-                "URL ${it.getUrl()} does not match regex $URL_REGEX"
+                "URL ${it.getUrl()} does not match regex $URL_REGEX",
             )
         }
 
@@ -58,9 +58,11 @@ class S3FileUploaderTest {
             .endpoint(ADVERTIZED_URL)
             .credentials(USER, PASSWORD)
             .build()
-        val isExist: Boolean = s3Client.bucketExists(BucketExistsArgs.builder()
-            .bucket(ROOT)
-            .build())
+        val isExist: Boolean = s3Client.bucketExists(
+            BucketExistsArgs.builder()
+                .bucket(ROOT)
+                .build(),
+        )
         assertTrue(isExist)
 
         s3Client.listObjects(ListObjectsArgs.builder().bucket(ROOT).recursive(true).build()).forEach {

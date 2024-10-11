@@ -1,37 +1,52 @@
 package org.radarbase.upload.mock
 
-import org.radarbase.jersey.auth.Auth
+import org.radarbase.auth.authorization.Permission
 import org.radarbase.jersey.exception.HttpNotFoundException
+import org.radarbase.jersey.service.managementportal.RadarProjectService
+import org.radarbase.management.client.MPOrganization
 import org.radarbase.management.client.MPProject
 import org.radarbase.management.client.MPSubject
-import org.radarbase.jersey.service.managementportal.RadarProjectService
-import org.radarbase.auth.authorization.Permission
 
 class MockProjectService(private val projects: Map<String, List<String>>) : RadarProjectService {
-    override fun userByExternalId(projectId: String, externalUserId: String): MPSubject? {
+    private val org = MPOrganization("main")
+
+    override suspend fun subjectByExternalId(projectId: String, externalUserId: String): MPSubject? {
         return MPSubject(projectId = projectId, id = "something", externalId = externalUserId, status = "ACTIVATED")
     }
 
-    override fun project(projectId: String): MPProject {
+    override suspend fun project(projectId: String): MPProject {
         ensureProject(projectId)
-        return MPProject(id = projectId)
+        return MPProject(id = projectId, organization = org)
     }
 
-    override fun userProjects(auth: Auth, permission: Permission): List<MPProject> = projects.keys.map { MPProject(id = it) }
+    override suspend fun projectOrganization(projectId: String): String {
+        ensureProject(projectId)
+        return org.id
+    }
 
-    override fun projectUsers(projectId: String): List<MPSubject> {
+    override suspend fun userProjects(permission: Permission): List<MPProject> {
+        return projects.keys.map { MPProject(id = it, organization = org) }
+    }
+
+    override suspend fun projectSubjects(projectId: String): List<MPSubject> {
         ensureProject(projectId)
         return projects.getValue(projectId)
-                .map { MPSubject(projectId = projectId, id = it, status = "ACTIVATED") }
+            .map { MPSubject(projectId = projectId, id = it, status = "ACTIVATED") }
     }
 
-    override fun ensureProject(projectId: String) {
+    override suspend fun ensureOrganization(organizationId: String) {
+        if (organizationId != org.id) {
+            throw HttpNotFoundException("user_not_found", "Organization $organizationId does not exist")
+        }
+    }
+
+    override suspend fun ensureProject(projectId: String) {
         if (projectId !in projects) {
             throw HttpNotFoundException("project_not_found", "Project $projectId does not exist")
         }
     }
 
-    override fun ensureUser(projectId: String, userId: String) {
+    override suspend fun ensureSubject(projectId: String, userId: String) {
         ensureProject(projectId)
 
         if (userId !in projects.getValue(projectId)) {
@@ -39,8 +54,13 @@ class MockProjectService(private val projects: Map<String, List<String>>) : Rada
         }
     }
 
-    override fun getUser(projectId: String, userId: String): MPSubject? {
-        ensureUser(projectId, userId)
+    override suspend fun listProjects(organizationId: String): List<String> {
+        ensureOrganization(organizationId)
+        return projects.keys.toList()
+    }
+
+    override suspend fun subject(projectId: String, userId: String): MPSubject {
+        ensureSubject(projectId, userId)
         return MPSubject(projectId = projectId, id = userId, status = "ACTIVATED")
     }
 }

@@ -21,7 +21,7 @@ import org.radarbase.connect.upload.converter.csv.CsvLineProcessorFactory
 /**
  * Simple Processor for one line to one record of a single topic conversion.
  */
-abstract class StatelessCsvLineProcessor: CsvLineProcessorFactory {
+abstract class StatelessCsvLineProcessor : CsvLineProcessorFactory {
     override val fileNameSuffixes: List<String>
         get() = listOf(fileNameSuffix)
 
@@ -38,19 +38,19 @@ abstract class StatelessCsvLineProcessor: CsvLineProcessorFactory {
 
     open fun lineConversion(
         line: Map<String, String>,
-        timeReceived: Double
+        timeReceived: Double,
     ): TopicData? = null
 
     open fun lineConversions(
         line: Map<String, String>,
-        timeReceived: Double
+        timeReceived: Double,
     ): Sequence<TopicData> {
         val conversion = lineConversion(line, timeReceived)
         return if (conversion != null) sequenceOf(conversion) else emptySequence()
     }
 
     override fun createLineProcessor(
-        context: ConverterFactory.ContentsContext
+        context: ConverterFactory.ContentsContext,
     ): CsvLineProcessorFactory.CsvLineProcessor {
         return Processor(context) { l, t -> lineConversions(l, t) }
     }
@@ -65,5 +65,3 @@ abstract class StatelessCsvLineProcessor: CsvLineProcessorFactory {
         ): Sequence<TopicData> = conversion(lineValues, timeReceived)
     }
 }
-
-

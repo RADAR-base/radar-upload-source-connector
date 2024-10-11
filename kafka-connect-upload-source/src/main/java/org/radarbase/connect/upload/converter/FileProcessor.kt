@@ -10,6 +10,6 @@ interface FileProcessor {
     fun processData(
         context: ConverterFactory.ContentsContext,
         inputStream: InputStream,
-        produce: (TopicData) -> Unit
+        produce: (TopicData) -> Unit,
     )
 }

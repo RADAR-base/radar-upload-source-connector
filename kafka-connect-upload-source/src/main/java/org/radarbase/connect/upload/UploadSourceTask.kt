@@ -38,7 +38,8 @@ import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
 import java.time.temporal.Temporal
-import java.util.*
+import java.util.Timer
+import java.util.TimerTask
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.TimeUnit
@@ -81,15 +82,19 @@ class UploadSourceTask : SourceTask() {
         converterManager = ConverterManager(queue, converters, uploadClient, logRepository, pollInterval)
 
         commitTimer = Timer(true)
-        commitTimer.schedule(object : TimerTask() {
-            override fun run() {
-                logger.info(
-                    "Committed {} records in the last {} seconds",
-                    commitCounter.getAndSet(0),
-                    pollIntervalMs / 1000,
-                )
-            }
-        }, pollIntervalMs, pollIntervalMs)
+        commitTimer.schedule(
+            object : TimerTask() {
+                override fun run() {
+                    logger.info(
+                        "Committed {} records in the last {} seconds",
+                        commitCounter.getAndSet(0),
+                        pollIntervalMs / 1000,
+                    )
+                }
+            },
+            pollIntervalMs,
+            pollIntervalMs,
+        )
 
         logger.info("Initialized ${converters.size} converters...")
     }
@@ -113,7 +118,7 @@ class UploadSourceTask : SourceTask() {
     override fun version(): String = VersionUtil.getVersion()
 
     override fun poll(): List<SourceRecord>? =
-        generateSequence { queue.poll() }  // this will retrieve all non-blocking elements
+        generateSequence { queue.poll() } // this will retrieve all non-blocking elements
             .take(queueSize) // don't process more than queueSize records at once
             .toList()
             .ifEmpty {

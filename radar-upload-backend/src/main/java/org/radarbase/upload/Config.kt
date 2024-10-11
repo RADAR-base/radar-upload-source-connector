@@ -35,7 +35,7 @@ data class Config(
     val jdbcUrl: String? = null,
     val jdbcUser: String? = null,
     val jdbcPassword: String? = null,
-    val hibernateDialect: String = "org.hibernate.dialect.PostgreSQL95Dialect",
+    val hibernateDialect: String = "org.hibernate.dialect.PostgreSQLDialect",
     val jwtECPublicKeys: List<String>? = null,
     val jwtRSAPublicKeys: List<String>? = null,
     val jwtIssuer: String? = null,
@@ -46,5 +46,5 @@ data class Config(
     val enableCors: Boolean? = false,
     val syncProjectsIntervalMin: Long = 30,
     val syncParticipantsIntervalMin: Long = 30,
-    val resetProcessingStatusTimeoutMin: Long = 30,
+    val resetProcessingStatusTimeoutMin: Long = 300,
 )

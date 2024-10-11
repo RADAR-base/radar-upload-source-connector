@@ -29,12 +29,15 @@ class AltoidaActionCsvProcessor : StatelessCsvLineProcessor() {
     override val header: List<String> = listOf("TIMESTAMP", "TAG", "PAYLOAD")
 
     override fun lineConversion(
-            line: Map<String, String>,
-            timeReceived: Double
-    ) = TopicData("connect_upload_altoida_action", AltoidaAction(
+        line: Map<String, String>,
+        timeReceived: Double,
+    ) = TopicData(
+        "connect_upload_altoida_action",
+        AltoidaAction(
             time(line),
             timeReceived,
             line["TAG"],
-            line["PAYLOAD"]))
-
+            line["PAYLOAD"],
+        ),
+    )
 }

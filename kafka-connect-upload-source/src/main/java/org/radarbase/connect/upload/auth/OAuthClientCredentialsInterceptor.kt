@@ -1,12 +1,16 @@
 package org.radarbase.connect.upload.auth
 
-import okhttp3.*
+import okhttp3.Credentials
+import okhttp3.FormBody
+import okhttp3.Interceptor
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
 import org.radarbase.connect.upload.UploadSourceConnectorConfig
 import org.radarbase.connect.upload.api.OAuthToken
 import org.radarbase.connect.upload.exception.NotAuthorizedException
 import org.slf4j.LoggerFactory
 import java.io.IOException
-import kotlin.Throws
 
 class OAuthClientCredentialsInterceptor(
     private val httpClient: OkHttpClient,
@@ -18,11 +22,11 @@ class OAuthClientCredentialsInterceptor(
 
     @Throws(IOException::class)
     override fun intercept(chain: Interceptor.Chain): Response {
-        //Build new request
+        // Build new request
         val accessToken = getAccessToken()
         val response: Response = chain.proceed(chain.request().withBearerAuth(accessToken))
-        if (response.code == 401) { //if unauthorized
-            //perform all 401 in sync blocks, to avoid multiply token updates
+        if (response.code == 401) { // if unauthorized
+            // perform all 401 in sync blocks, to avoid multiply token updates
             logger.debug("Request failed with token existing token. Requesting new token")
             val refreshedAccessToken = getAccessToken(previousToken = accessToken)
             return chain.proceed(chain.request().withBearerAuth(refreshedAccessToken))
@@ -42,14 +46,15 @@ class OAuthClientCredentialsInterceptor(
         return token.accessToken
     }
 
-
     private fun requestAccessToken(): OAuthToken {
         val request = Request.Builder().apply {
             header("Authorization", Credentials.basic(clientId.trim(), clientSecret.trim()))
             url(tokenUrl)
-            post(FormBody.Builder().apply {
-                add("grant_type", "client_credentials")
-            }.build())
+            post(
+                FormBody.Builder().apply {
+                    add("grant_type", "client_credentials")
+                }.build(),
+            )
         }.build()
 
         return httpClient.newCall(request).execute().use { response ->

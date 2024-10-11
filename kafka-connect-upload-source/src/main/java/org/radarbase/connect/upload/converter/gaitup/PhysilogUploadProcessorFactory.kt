@@ -16,7 +16,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 open class PhysilogUploadProcessorFactory(
-    private val uploaderCreate: () -> FileUploaderFactory.FileUploader
+    private val uploaderCreate: () -> FileUploaderFactory.FileUploader,
 ) : FileProcessorFactory {
 
     open fun beforeProcessing(context: ConverterFactory.ContentsContext) = Unit
@@ -28,12 +28,12 @@ open class PhysilogUploadProcessorFactory(
     override fun createProcessor(record: RecordDTO): FileProcessor = PhysilogFileUploadProcessor(record)
 
     private inner class PhysilogFileUploadProcessor(
-        private val record: RecordDTO
+        private val record: RecordDTO,
     ) : FileProcessor {
         override fun processData(
             context: ConverterFactory.ContentsContext,
             inputStream: InputStream,
-            produce: (TopicData) -> Unit
+            produce: (TopicData) -> Unit,
         ) {
             beforeProcessing(context)
             val fileName = context.fileName
@@ -52,15 +52,17 @@ open class PhysilogUploadProcessorFactory(
 
                 context.logger.info("Uploaded file to $url")
 
-                produce(TopicData(
-                    TOPIC,
-                    PhysilogBinaryDataReference(
-                        context.timeReceived,
-                        context.timeReceived,
-                        fileName,
-                        url,
+                produce(
+                    TopicData(
+                        TOPIC,
+                        PhysilogBinaryDataReference(
+                            context.timeReceived,
+                            context.timeReceived,
+                            fileName,
+                            url,
+                        ),
                     ),
-                ))
+                )
             } catch (exe: IOException) {
                 context.logger.error("Could not upload file", exe)
                 throw exe
@@ -76,6 +78,6 @@ open class PhysilogUploadProcessorFactory(
 
         private val SUFFIX_REGEX = Regex("\\.zip|\\.tar.gz$", RegexOption.IGNORE_CASE)
         private val directoryDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-                .withZone(ZoneId.of("UTC"))
+            .withZone(ZoneId.of("UTC"))
     }
 }

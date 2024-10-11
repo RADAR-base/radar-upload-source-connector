@@ -20,13 +20,22 @@
 package org.radarbase.upload.doa
 
 import jakarta.inject.Provider
+import jakarta.persistence.EntityManager
+import jakarta.persistence.EntityManagerFactory
+import kotlinx.coroutines.runBlocking
 import org.glassfish.jersey.server.monitoring.ApplicationEvent
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.*
+import org.hamcrest.Matchers.equalTo
+import org.hamcrest.Matchers.greaterThan
+import org.hamcrest.Matchers.greaterThanOrEqualTo
+import org.hamcrest.Matchers.hasSize
+import org.hamcrest.Matchers.lessThanOrEqualTo
+import org.hamcrest.Matchers.notNullValue
+import org.hamcrest.Matchers.nullValue
+import org.hamcrest.Matchers.sameInstance
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.io.TempDir
 import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.MockitoAnnotations
@@ -37,13 +46,16 @@ import org.radarbase.jersey.hibernate.RadarEntityManagerFactoryFactory
 import org.radarbase.jersey.hibernate.config.DatabaseConfig
 import org.radarbase.upload.api.ContentsDTO
 import org.radarbase.upload.api.RecordMetadataDTO
-import org.radarbase.upload.doa.entity.*
+import org.radarbase.upload.doa.entity.Record
+import org.radarbase.upload.doa.entity.RecordContent
+import org.radarbase.upload.doa.entity.RecordLogs
+import org.radarbase.upload.doa.entity.RecordMetadata
+import org.radarbase.upload.doa.entity.RecordStatus
+import org.radarbase.upload.doa.entity.SourceType
+import org.radarbase.upload.mock.MockAsyncCoroutineService
 import java.io.ByteArrayInputStream
-import java.nio.file.Path
 import java.time.Instant
 import java.time.LocalDateTime
-import jakarta.persistence.EntityManager
-import jakarta.persistence.EntityManagerFactory
 import kotlin.reflect.jvm.jvmName
 import kotlin.text.Charsets.UTF_8
 
@@ -55,9 +67,6 @@ internal class RecordRepositoryImplTest {
     private lateinit var entityManager: EntityManager
 
     private lateinit var closeable: AutoCloseable
-
-    @TempDir
-    lateinit var tempDir: Path
 
     @Mock
     lateinit var mockEntityManagerProvider: Provider<EntityManager>
@@ -76,15 +85,16 @@ internal class RecordRepositoryImplTest {
             ),
             url = "jdbc:hsqldb:mem:test2;DB_CLOSE_DELAY=-1",
             dialect = "org.hibernate.dialect.HSQLDialect",
+            driver = "org.hsqldb.jdbc.JDBCDriver",
         )
         doaEMFFactory = RadarEntityManagerFactoryFactory(dbConfig)
         doaEMF = doaEMFFactory.get()
         val eventStart = mock<ApplicationEvent> {
             on(ApplicationEvent::getType) doReturn ApplicationEvent.Type.INITIALIZATION_APP_FINISHED
         }
-        DatabaseInitialization({ doaEMF }, dbConfig).onEvent(eventStart)
+        DatabaseInitialization({ doaEMF }, dbConfig, MockAsyncCoroutineService()).onEvent(eventStart)
         entityManager = doaEMF.createEntityManager()
-        repository = RecordRepositoryImpl(mockEntityManagerProvider)
+        repository = RecordRepositoryImpl(this.mockEntityManagerProvider, asyncService = MockAsyncCoroutineService())
         Mockito.`when`(mockEntityManagerProvider.get()).thenReturn(entityManager)
     }
 
@@ -96,7 +106,7 @@ internal class RecordRepositoryImplTest {
     }
 
     @Test
-    fun create() {
+    fun create() = runBlocking {
         val beforeTime = Instant.now()
         val result = doCreate()
         val afterTime = Instant.now()
@@ -123,23 +133,31 @@ internal class RecordRepositoryImplTest {
         assertThat(metadata.revision, equalTo(2))
     }
 
-    private fun doCreate() = repository.create(Record().apply {
-        projectId = "p"
-        userId = "u"
-        sourceId = "s"
-        time = LocalDateTime.parse("2019-01-01T00:00:00")
-        timeZoneOffset = 3600
-    }, contents = setOf(ContentsDTO(
-            fileName = "Gibson.mp3",
-            contentType = "audio/mp3",
-            text = "test")))
+    private fun doCreate() = runBlocking {
+        repository.create(
+            Record().apply {
+                projectId = "p"
+                userId = "u"
+                sourceId = "s"
+                time = LocalDateTime.parse("2019-01-01T00:00:00")
+                timeZoneOffset = 3600
+            },
+            contents = setOf(
+                ContentsDTO(
+                    fileName = "Gibson.mp3",
+                    contentType = "audio/mp3",
+                    text = "test",
+                ),
+            ),
+        )
+    }
 
     @Test
     fun readContent() {
     }
 
     @Test
-    fun updateContent() {
+    fun updateContent() = runBlocking {
         val record = Record().apply {
             projectId = "p"
             userId = "u"
@@ -156,14 +174,19 @@ internal class RecordRepositoryImplTest {
                     contentType = "audio/mp3",
                     text = "test",
                 ),
-            )
+            ),
         )
 
         assertThat(result.contents, hasSize(1))
 
         val newContent = "test2".toByteArray()
-        repository.updateContent(result, "Gibson2.mp4", "audio/mp4",
-                ByteArrayInputStream(newContent), newContent.size.toLong())
+        repository.updateContent(
+            result,
+            "Gibson2.mp4",
+            "audio/mp4",
+            ByteArrayInputStream(newContent),
+            newContent.size.toLong(),
+        )
 
         assertThat(result.contents, notNullValue())
         var contents = checkNotNull(result.contents)
@@ -184,8 +207,13 @@ internal class RecordRepositoryImplTest {
             assertThat(it.contentType, equalTo("audio/mp3"))
         } ?: assert(false)
 
-        repository.updateContent(result, "Gibson.mp3", "audio/mp4",
-                ByteArrayInputStream(newContent), newContent.size.toLong())
+        repository.updateContent(
+            result,
+            "Gibson.mp3",
+            "audio/mp4",
+            ByteArrayInputStream(newContent),
+            newContent.size.toLong(),
+        )
 
         assertThat(result.contents, notNullValue())
         contents = checkNotNull(result.contents)
@@ -196,7 +224,7 @@ internal class RecordRepositoryImplTest {
             val fileContents = repository.readFileContent(
                 record.id!!,
                 record.metadata.revision,
-                it.fileName
+                it.fileName,
             )?.asString()
             assertThat(fileContents, equalTo("test2"))
             assertThat(it.fileName, equalTo("Gibson.mp3"))
@@ -205,7 +233,7 @@ internal class RecordRepositoryImplTest {
     }
 
     @Test
-    fun deleteContent() {
+    fun deleteContent(): Unit = runBlocking {
         val record = Record().apply {
             projectId = "p"
             userId = "u"
@@ -236,7 +264,7 @@ internal class RecordRepositoryImplTest {
             fileName = "Gibson2.mp4",
             contentType = "audio/mp4",
             stream = ByteArrayInputStream(newContent),
-            length = newContent.size.toLong()
+            length = newContent.size.toLong(),
         )
 
         assertThat(result.contents, hasSize(1))
@@ -251,7 +279,7 @@ internal class RecordRepositoryImplTest {
     }
 
     @Test
-    fun createContent() {
+    fun createContent(): Unit = runBlocking {
         val record = Record().apply {
             projectId = "p"
             userId = "u"
@@ -277,7 +305,7 @@ internal class RecordRepositoryImplTest {
     }
 
     @Test
-    fun readLogs() {
+    fun readLogs(): Unit = runBlocking {
         val record = Record().apply {
             projectId = "p"
             userId = "u"
@@ -305,11 +333,7 @@ internal class RecordRepositoryImplTest {
     }
 
     @Test
-    fun read() {
-    }
-
-    @Test
-    fun delete() {
+    fun delete(): Unit = runBlocking {
         val record = doCreate()
         val id = record.id!!
         readLogs()
@@ -318,10 +342,6 @@ internal class RecordRepositoryImplTest {
         assertThat(repository.readRecordContent(id, "Gibson.mp3"), nullValue())
         assertThat(repository.readLogs(id), nullValue())
         assertThat(repository.readMetadata(id), nullValue())
-    }
-
-    @Test
-    fun close() {
     }
 
     private fun RecordRepository.BlobReader.asString(): String = use { it.stream.readBytes().toString(UTF_8) }

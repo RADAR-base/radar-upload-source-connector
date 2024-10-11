@@ -1,30 +1,20 @@
 ---
 version: '3.9'
 
-networks:
-  management:
-    driver: bridge
-    internal: true
-
-
 services:
 
   #---------------------------------------------------------------------------#
   # Management Portal                                                         #
   #---------------------------------------------------------------------------#
   managementportal-app:
-    image: radarbase/management-portal:0.8.1
-    networks:
-      - default
-      - management
-    platform: linux/amd64
+    image: radarbase/management-portal:2.1.0
     depends_on:
       - radarbase-postgresql
     ports:
       - "8090:8080"
     environment:
       SPRING_PROFILES_ACTIVE: dev
-      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.PostgreSQL95Dialect
+      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.PostgreSQLDialect
       SERVER_CONTEXT_PATH: /managementportal
 #      ZUUL_ROUTES_MANAGEMENT_PORTAL_URL: http://localhost:8080/managementportal/oauth
       SPRING_DATASOURCE_URL: jdbc:postgresql://radarbase-postgresql:5432/managementportal
@@ -40,24 +30,18 @@ services:
     volumes:
       - ../etc/mp-config/:/mp-includes/config
     healthcheck:
-      test: "curl -f http://localhost:8080/oauth/token -d grant_type=client_credentials -d client_id=radar_upload_test_client -d client_secret=test"
-      start_period: 600s
+      test: "curl -f http://localhost:8080/managementportal/oauth/token -d grant_type=client_credentials -d client_id=radar_upload_test_client -d client_secret=test"
+      start_period: 20s
 
   radarbase-postgresql:
-    image: postgres:14
-    networks:
-      - management
-      - default
+    image: postgres:16
     environment:
       - POSTGRES_USER=radarcns
       - POSTGRES_PASSWORD=radarcns
       - POSTGRES_DB=managementportal
 
   radarbase-upload:
-    image: postgres:14
-    networks:
-      - management
-      - default
+    image: postgres:16
     ports:
       - "5434:5432"
     environment:
@@ -67,8 +51,6 @@ services:
 
   sftp-server:
     image: emberstack/sftp
-    networks:
-      - default
     ports:
       - "2222:22"
     volumes:

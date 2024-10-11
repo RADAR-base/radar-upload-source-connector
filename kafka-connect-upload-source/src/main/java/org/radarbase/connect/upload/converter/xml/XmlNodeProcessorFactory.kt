@@ -66,7 +66,7 @@ abstract class XmlNodeProcessorFactory {
         .mapNotNull { convertToSingleRecord(it as Element, timeReceived, assessmentName) }
 
     fun createNodeProcessor(
-        context: ConverterFactory.ContentsContext
+        context: ConverterFactory.ContentsContext,
     ): XmlNodeProcessor = XmlNodeProcessor(context, nodeName) { l, t, a ->
         nodeConversions(l, t, a)
     }
@@ -151,4 +151,3 @@ abstract class XmlNodeProcessorFactory {
         }
     }
 }
-

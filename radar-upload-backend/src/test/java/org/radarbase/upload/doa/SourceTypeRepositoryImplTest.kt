@@ -19,29 +19,35 @@
 
 package org.radarbase.upload.doa
 
+import jakarta.inject.Provider
+import jakarta.persistence.EntityManager
+import jakarta.persistence.EntityManagerFactory
+import kotlinx.coroutines.runBlocking
 import org.glassfish.jersey.server.monitoring.ApplicationEvent
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.*
+import org.hamcrest.Matchers.equalTo
+import org.hamcrest.Matchers.`is`
+import org.hamcrest.Matchers.notNullValue
+import org.hamcrest.Matchers.nullValue
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.io.TempDir
 import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.MockitoAnnotations
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.mock
 import org.radarbase.jersey.hibernate.DatabaseInitialization
 import org.radarbase.jersey.hibernate.RadarEntityManagerFactoryFactory
 import org.radarbase.jersey.hibernate.config.DatabaseConfig
-import org.radarbase.upload.Config
 import org.radarbase.upload.api.SourceTypeMapper
 import org.radarbase.upload.api.SourceTypeMapperImpl
-import org.radarbase.upload.doa.entity.*
-import java.nio.file.Path
-import jakarta.inject.Provider
-import org.mockito.kotlin.doReturn
-import org.mockito.kotlin.mock
-import jakarta.persistence.EntityManager
-import jakarta.persistence.EntityManagerFactory
+import org.radarbase.upload.doa.entity.Record
+import org.radarbase.upload.doa.entity.RecordContent
+import org.radarbase.upload.doa.entity.RecordLogs
+import org.radarbase.upload.doa.entity.RecordMetadata
+import org.radarbase.upload.doa.entity.SourceType
+import org.radarbase.upload.mock.MockAsyncCoroutineService
 import kotlin.reflect.jvm.jvmName
 
 internal class SourceTypeRepositoryImplTest {
@@ -70,21 +76,22 @@ internal class SourceTypeRepositoryImplTest {
             ),
             url = "jdbc:hsqldb:mem:test1;DB_CLOSE_DELAY=-1",
             dialect = "org.hibernate.dialect.HSQLDialect",
+            driver = "org.hsqldb.jdbc.JDBCDriver",
         )
         doaEMFFactory = RadarEntityManagerFactoryFactory(config)
         doaEMF = doaEMFFactory.get()
         val eventStart = mock<ApplicationEvent> {
             on(ApplicationEvent::getType) doReturn ApplicationEvent.Type.INITIALIZATION_APP_FINISHED
         }
-        DatabaseInitialization({ doaEMF }, config).onEvent(eventStart)
+        DatabaseInitialization({ doaEMF }, config, MockAsyncCoroutineService()).onEvent(eventStart)
         entityManager = doaEMF.createEntityManager()
         sourceTypeMapper = SourceTypeMapperImpl()
-        repository = SourceTypeRepositoryImpl(mockEntityManagerProvider, Config(), sourceTypeMapper)
+        repository = SourceTypeRepositoryImpl(mockEntityManagerProvider, MockAsyncCoroutineService(), sourceTypeMapper)
         Mockito.`when`(mockEntityManagerProvider.get()).thenReturn(entityManager)
     }
 
     @AfterEach
-    fun tearDown() {
+    fun tearDown() = runBlocking {
         repository.readAll().forEach { repository.delete(it) }
         doaEMFFactory.dispose(doaEMF)
         entityManager.close()
@@ -92,14 +99,14 @@ internal class SourceTypeRepositoryImplTest {
     }
 
     @Test
-    fun readAll() {
+    fun readAll() = runBlocking {
         val sourceType = SourceType().apply {
             name = "Mp3Audio"
             topics = setOf("topic1", "topic2")
             contentTypes = setOf("application/mp3", "audio/mp3")
             configuration = mapOf(
-                    Pair("a", "c"),
-                    Pair("b", "d")
+                Pair("a", "c"),
+                Pair("b", "d"),
             )
         }
 
@@ -108,8 +115,8 @@ internal class SourceTypeRepositoryImplTest {
             topics = setOf("topic3", "topic4")
             contentTypes = setOf("application/text")
             configuration = mapOf(
-                    Pair("a", "c"),
-                    Pair("b", "d")
+                Pair("a", "c"),
+                Pair("b", "d"),
             )
         }
         repository.create(sourceType)
@@ -118,19 +125,17 @@ internal class SourceTypeRepositoryImplTest {
         val result = repository.readAll()
         assertThat(result, notNullValue())
         assertThat(result.size, equalTo(2))
-
     }
 
-
     @Test
-    fun read() {
+    fun read() = runBlocking {
         val sourceType = SourceType().apply {
             name = "Mp3Audio"
             topics = setOf("topic1", "topic2")
             contentTypes = setOf("application/mp3", "audio/mp3")
             configuration = mapOf(
-                    Pair("a", "c"),
-                    Pair("b", "d")
+                Pair("a", "c"),
+                Pair("b", "d"),
             )
         }
         repository.create(sourceType)
@@ -143,14 +148,14 @@ internal class SourceTypeRepositoryImplTest {
     }
 
     @Test
-    fun delete() {
+    fun delete() = runBlocking {
         val sourceType = SourceType().apply {
             name = "Mp3Audio"
             topics = setOf("topic1", "topic2")
             contentTypes = setOf("application/mp3", "audio/mp3")
             configuration = mapOf(
-                    Pair("a", "c"),
-                    Pair("b", "d")
+                Pair("a", "c"),
+                Pair("b", "d"),
             )
         }
         assertThat(repository.read("Mp3Audio"), nullValue())

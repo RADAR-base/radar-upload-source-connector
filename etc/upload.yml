@@ -5,7 +5,7 @@ jdbcUrl: "jdbc:postgresql://radarbase-postgresql:5432/uploadconnector"
 jdbcUser: "radarcns"
 jdbcPassword: "radarcns"
 additionalPersistenceConfig:
-  "hibernate.dialect": "org.hibernate.dialect.PostgreSQL95Dialect"
+  "hibernate.dialect": "org.hibernate.dialect.PostgreSQLDialect"
 sourceTypes:
   - name: "phone-acceleration"
     topics:

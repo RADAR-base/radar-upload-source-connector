@@ -23,16 +23,18 @@ import org.radarbase.upload.doa.entity.SourceType
 
 class SourceTypeMapperImpl : SourceTypeMapper {
     override fun fromSourceType(sourceType: SourceType) = SourceTypeDTO(
-            name = sourceType.name,
-            topics = sourceType.topics,
-            contentTypes = sourceType.contentTypes,
-            timeRequired = sourceType.timeRequired,
-            sourceIdRequired = sourceType.sourceIdRequired,
-            configuration = sourceType.configuration,
-            resetProcessingStatusTimeoutMin = null)
+        name = sourceType.name,
+        topics = sourceType.topics,
+        contentTypes = sourceType.contentTypes,
+        timeRequired = sourceType.timeRequired,
+        sourceIdRequired = sourceType.sourceIdRequired,
+        configuration = sourceType.configuration,
+        resetProcessingStatusTimeoutMin = null,
+    )
 
     override fun fromSourceTypes(sourceTypes: List<SourceType>) = SourceTypeContainerDTO(
-            sourceTypes = sourceTypes.map(::fromSourceType))
+        sourceTypes = sourceTypes.map(::fromSourceType),
+    )
 
     override fun toSourceType(sourceType: SourceTypeDTO) = SourceType().apply {
         name = sourceType.name

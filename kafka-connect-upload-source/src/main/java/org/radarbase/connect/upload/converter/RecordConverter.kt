@@ -146,7 +146,7 @@ class RecordConverter(
                 .with(AvroDataConfig.CONNECT_META_DATA_CONFIG, false)
                 .with(AvroDataConfig.SCHEMAS_CACHE_SIZE_CONFIG, 20)
                 .with(AvroDataConfig.ENHANCED_AVRO_SCHEMA_SUPPORT_CONFIG, true)
-                .build()
+                .build(),
         )
     }
 }

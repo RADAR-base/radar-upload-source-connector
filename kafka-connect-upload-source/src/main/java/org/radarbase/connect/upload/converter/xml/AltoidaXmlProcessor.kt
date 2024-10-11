@@ -23,7 +23,7 @@ import org.w3c.dom.Element
  */
 open class AltoidaXmlProcessor(
     processorFactories: List<XmlNodeProcessorFactory>,
-): XmlProcessor(processorFactories) {
+) : XmlProcessor(processorFactories) {
     override fun findMetadata(element: Element, metadata: String): String {
         val nodeName = element.nodeName
         if (nodeName == "part") {

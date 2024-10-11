@@ -68,7 +68,9 @@ class DelegatingProcessor(
         return preProcessorFactories.mapNotNull { factory ->
             if (factory.matches(context.contents)) {
                 factory.createPreProcessor(context.record)
-            } else null
+            } else {
+                null
+            }
         }
     }
 
@@ -78,7 +80,9 @@ class DelegatingProcessor(
         return processorFactories.mapNotNull { factory ->
             if (factory.matches(context.contents)) {
                 factory.createProcessor(context.record)
-            } else null
+            } else {
+                null
+            }
         }
     }
 }

@@ -19,13 +19,13 @@
 
 package org.radarbase.connect.upload.util
 
-import com.fasterxml.jackson.core.JsonFactory
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.*
+import com.fasterxml.jackson.module.kotlin.jsonMapper
+import com.fasterxml.jackson.module.kotlin.kotlinModule
 import jakarta.ws.rs.core.Response
 import okhttp3.Credentials
 import okhttp3.FormBody
@@ -35,7 +35,11 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.*
+import org.hamcrest.Matchers.equalTo
+import org.hamcrest.Matchers.greaterThan
+import org.hamcrest.Matchers.`is`
+import org.hamcrest.Matchers.not
+import org.hamcrest.Matchers.nullValue
 import org.junit.jupiter.api.Assertions
 import org.mockito.Mockito
 import org.radarbase.connect.upload.api.ContentsDTO
@@ -58,7 +62,7 @@ import java.time.LocalDateTime
 object TestBase {
     const val baseUri = "http://0.0.0.0:8085/upload/api"
 
-    const val tokenUrl = "http://localhost:8090/oauth/token"
+    const val tokenUrl = "http://localhost:8090/managementportal/oauth/token"
 
     const val sourceTypeName = "phone-acceleration"
 
@@ -113,7 +117,7 @@ object TestBase {
     )
 
     val uploadBackendConfig = Config(
-        managementPortalUrl = "http://localhost:8090",
+        managementPortalUrl = "http://localhost:8090/managementportal",
         clientId = "radar_upload_backend",
         clientSecret = "secret",
         baseUri = URI.create(baseUri),
@@ -124,10 +128,9 @@ object TestBase {
         sourceTypes = listOf(
             sourceType,
             altoidaZip,
-            accelerationZip
+            accelerationZip,
         ),
     )
-
 
     private val oxfordZipContents = ContentsDTO(
         contentType = "application/zip",
@@ -159,7 +162,7 @@ object TestBase {
             "connect_upload_oxford_camera_image",
             "connect_upload_oxford_camera_data",
         ),
-        contentTypes = setOf("application/zip")
+        contentTypes = setOf("application/zip"),
     )
 
     private val mapper: ObjectMapper = jsonMapper {
@@ -177,9 +180,9 @@ object TestBase {
     )
 
     private fun call(
-            httpClient: OkHttpClient,
-            expectedStatus: Int,
-            requestSupplier: (Request.Builder) -> Request.Builder
+        httpClient: OkHttpClient,
+        expectedStatus: Int,
+        requestSupplier: (Request.Builder) -> Request.Builder,
     ): JsonNode? {
         val request = requestSupplier(Request.Builder()).build()
         println(request.url)
@@ -198,7 +201,7 @@ object TestBase {
         httpClient: OkHttpClient,
         expectedStatus: Int,
         parseClass: Class<T>,
-        requestSupplier: Request.Builder.() -> Request.Builder
+        requestSupplier: Request.Builder.() -> Request.Builder,
     ): T {
         val request = requestSupplier(Request.Builder()).build()
         println(request.url)
@@ -216,27 +219,27 @@ object TestBase {
     private fun call(
         httpClient: OkHttpClient,
         expectedStatus: Response.Status,
-        requestSupplier: (Request.Builder) -> Request.Builder
+        requestSupplier: (Request.Builder) -> Request.Builder,
     ): JsonNode? = call(httpClient, expectedStatus.statusCode, requestSupplier)
 
     private fun call(
         httpClient: OkHttpClient,
         expectedStatus: Response.Status,
         stringProperty: String,
-        requestSupplier: Request.Builder.() -> Request.Builder
+        requestSupplier: Request.Builder.() -> Request.Builder,
     ): String = call(httpClient, expectedStatus, requestSupplier)
-            ?.get(stringProperty)
-            ?.asText()
-            ?: throw AssertionError("String property $stringProperty not found")
+        ?.get(stringProperty)
+        ?.asText()
+        ?: throw AssertionError("String property $stringProperty not found")
 
     fun retrieveRecordMetadata(accessToken: String, recordId: Long): RecordMetadataDTO {
-        return call(httpClient,200, RecordMetadataDTO::class.java) {
+        return call(httpClient, 200, RecordMetadataDTO::class.java) {
             url("$baseUri/records/$recordId/metadata")
             addHeader("Authorization", BEARER + accessToken)
         }
     }
 
-    fun getAccessToken() : String = call(httpClient, Response.Status.OK, "access_token") {
+    fun getAccessToken(): String = call(httpClient, Response.Status.OK, "access_token") {
         url(tokenUrl)
         addHeader("Authorization", Credentials.basic("radar_upload_test_client", "test"))
         post(
@@ -249,7 +252,7 @@ object TestBase {
     fun createRecordAndUploadContent(accessToken: String, sourceType: String, fileName: String, type: okhttp3.MediaType = TEXT_CSV): RecordDTO {
         val recordCreated = createRecord(accessToken, sourceType)
 
-        //Test uploading request contentFile for created record
+        // Test uploading request contentFile for created record
         uploadContent(recordCreated.id!!, fileName, accessToken, type)
         markReady(recordCreated.id!!, accessToken)
         return recordCreated
@@ -257,15 +260,15 @@ object TestBase {
 
     fun createRecord(accessToken: String, sourceType: String): RecordDTO {
         val record = RecordDTO(
-                id = null,
-                data = RecordDataDTO(
-                        projectId = PROJECT,
-                        userId = USER,
-                        sourceId = SOURCE,
-                        time = LocalDateTime.now()
-                ),
-                sourceType = sourceType,
-                metadata = null
+            id = null,
+            data = RecordDataDTO(
+                projectId = PROJECT,
+                userId = USER,
+                sourceId = SOURCE,
+                time = LocalDateTime.now(),
+            ),
+            sourceType = sourceType,
+            metadata = null,
         )
 
         val recordCreated = call(httpClient, 201, RecordDTO::class.java) {
@@ -281,7 +284,7 @@ object TestBase {
     }
 
     fun uploadContent(recordId: Long, fileName: String, clientUserToken: String, type: okhttp3.MediaType = TEXT_CSV) {
-        //Test uploading request contentFile
+        // Test uploading request contentFile
         val file = File(fileName)
 
         val content = call(httpClient, 201, ContentsDTO::class.java) {

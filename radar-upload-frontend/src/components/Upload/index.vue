@@ -4,7 +4,7 @@
     persistent
     max-width="700px"
   >
-    <template v-slot:activator="{ on }">
+    <template #activator="{ on }">
       <v-btn
         v-if="!buttonIsIcon"
         color="primary lighten-1"

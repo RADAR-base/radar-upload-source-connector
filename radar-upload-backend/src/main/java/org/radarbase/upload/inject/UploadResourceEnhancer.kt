@@ -16,8 +16,8 @@ import org.radarbase.upload.doa.SourceTypeRepositoryImpl
 import org.radarbase.upload.dto.CallbackManager
 import org.radarbase.upload.dto.QueuedCallbackManager
 
-class UploadResourceEnhancer(private val config: Config): JerseyResourceEnhancer {
-    override val classes: Array<Class<*>>  get() {
+class UploadResourceEnhancer(private val config: Config) : JerseyResourceEnhancer {
+    override val classes: Array<Class<*>> get() {
         return if (config.enableCors == true) {
             arrayOf(
                 Filters.logResponse,
@@ -36,32 +36,32 @@ class UploadResourceEnhancer(private val config: Config): JerseyResourceEnhancer
         "org.radarbase.upload.exception",
         "org.radarbase.upload.filter",
         "org.radarbase.upload.lifecycle",
-        "org.radarbase.upload.resource"
+        "org.radarbase.upload.resource",
     )
 
     override fun AbstractBinder.enhance() {
         // Bind instances. These cannot use any injects themselves
         bind(config)
-                .to(Config::class.java)
+            .to(Config::class.java)
 
         bind(QueuedCallbackManager::class.java)
-                .to(CallbackManager::class.java)
-                .`in`(Singleton::class.java)
+            .to(CallbackManager::class.java)
+            .`in`(Singleton::class.java)
 
         bind(RecordMapperImpl::class.java)
-                .to(RecordMapper::class.java)
-                .`in`(Singleton::class.java)
+            .to(RecordMapper::class.java)
+            .`in`(Singleton::class.java)
 
         bind(SourceTypeMapperImpl::class.java)
-                .to(SourceTypeMapper::class.java)
-                .`in`(Singleton::class.java)
+            .to(SourceTypeMapper::class.java)
+            .`in`(Singleton::class.java)
 
         bind(RecordRepositoryImpl::class.java)
-                .to(RecordRepository::class.java)
-                .`in`(Singleton::class.java)
+            .to(RecordRepository::class.java)
+            .`in`(Singleton::class.java)
 
         bind(SourceTypeRepositoryImpl::class.java)
-                .to(SourceTypeRepository::class.java)
-                .`in`(Singleton::class.java)
+            .to(SourceTypeRepository::class.java)
+            .`in`(Singleton::class.java)
     }
 }

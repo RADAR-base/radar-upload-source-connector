@@ -11,18 +11,20 @@ import okhttp3.OkHttpClient
 import okhttp3.RequestBody
 import okio.BufferedSink
 import org.glassfish.jersey.test.JerseyTest
-import org.glassfish.jersey.test.TestProperties
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.*
+import org.hamcrest.Matchers.equalTo
+import org.hamcrest.Matchers.`is`
+import org.hamcrest.Matchers.not
+import org.hamcrest.Matchers.nullValue
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.io.TempDir
-import org.mockito.kotlin.anyOrNull
-import org.mockito.kotlin.doReturn
-import org.mockito.kotlin.mock
+import org.radarbase.auth.authorization.AuthorityReference
+import org.radarbase.auth.authorization.Permission
+import org.radarbase.auth.authorization.RoleAuthority.PARTICIPANT
+import org.radarbase.auth.authorization.RoleAuthority.SYS_ADMIN
+import org.radarbase.auth.token.DataRadarToken
 import org.radarbase.auth.token.RadarToken
-import org.radarbase.jersey.auth.Auth
 import org.radarbase.jersey.config.ConfigLoader
 import org.radarbase.jersey.enhancer.MapperResourceEnhancer
 import org.radarbase.jersey.hibernate.config.DatabaseConfig
@@ -30,26 +32,33 @@ import org.radarbase.upload.Config
 import org.radarbase.upload.api.RecordDTO
 import org.radarbase.upload.api.RecordDataDTO
 import org.radarbase.upload.api.SourceTypeDTO
-import org.radarbase.upload.doa.entity.*
+import org.radarbase.upload.doa.entity.RecordContent
+import org.radarbase.upload.doa.entity.RecordLogs
+import org.radarbase.upload.doa.entity.RecordMetadata
+import org.radarbase.upload.doa.entity.SourceType
 import org.radarbase.upload.mock.MockResourceEnhancerFactory
 import java.io.IOException
 import java.net.URI
-import java.nio.file.Path
+import java.time.Duration
+import java.time.Instant
 import java.util.*
+import kotlin.collections.HashSet
 import kotlin.reflect.jvm.jvmName
 
-internal class RecordResourceTest: JerseyTest() {
+internal class RecordResourceTest : JerseyTest() {
     lateinit var config: Config
 
-    lateinit var authQueue: Queue<Pair<Auth?, Boolean>>
-    lateinit var auth: Auth
+    lateinit var authQueue: Queue<Pair<RadarToken?, Boolean>>
+    lateinit var auth: RadarToken
 
     @BeforeEach
     fun doSetup() {
         assertThat(client, not(nullValue()))
-        client.register(ContextResolver {
-            MapperResourceEnhancer().mapper
-        })
+        client.register(
+            ContextResolver {
+                MapperResourceEnhancer().mapper
+            },
+        )
     }
 
     @AfterEach
@@ -61,23 +70,20 @@ internal class RecordResourceTest: JerseyTest() {
         config = Config(
             baseUri = URI.create("http://localhost:10313/upload/api/"),
             sourceTypes = listOf(
-                SourceTypeDTO("type1", null, null, null, null, null, null)
+                SourceTypeDTO("type1", null, null, null, null, null, null),
             ),
         )
         authQueue = ArrayDeque()
-        val radarToken = mock<RadarToken> {
-            on { hasPermissionOnProject(anyOrNull(), anyOrNull()) } doReturn true
-            on { hasPermissionOnSubject(anyOrNull(), anyOrNull(), anyOrNull()) } doReturn true
-            on { hasPermissionOnSource(anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull()) } doReturn true
-            on { hasPermission(anyOrNull()) } doReturn true
-        }
-
-        auth = mock {
-            on { clientId } doReturn "radar_upload_frontend"
-            on { defaultProject } doReturn "a"
-            on { userId } doReturn "u1"
-            on { token } doReturn radarToken
-        }
+        auth = DataRadarToken(
+            roles = setOf(AuthorityReference(SYS_ADMIN), AuthorityReference(PARTICIPANT, "a")),
+            scopes = Permission.entries.mapTo(HashSet()) { it.scope() },
+            clientId = "radar_upload_frontend",
+            username = "u1",
+            subject = "u1",
+            expiresAt = Instant.now() + Duration.ofMinutes(1),
+            audience = listOf("res_upload"),
+            grantType = "authorization_code",
+        )
         val projects = mapOf(
             "a" to listOf("u1", "u2"),
             "b" to listOf("u3"),
@@ -85,7 +91,7 @@ internal class RecordResourceTest: JerseyTest() {
 
         val databaseConfig = DatabaseConfig(
             managedClasses = listOf(
-                Record::class.jvmName,
+                org.radarbase.upload.doa.entity.Record::class.jvmName,
                 RecordMetadata::class.jvmName,
                 RecordLogs::class.jvmName,
                 RecordContent::class.jvmName,
@@ -97,7 +103,6 @@ internal class RecordResourceTest: JerseyTest() {
         )
         val enhancerFactory = MockResourceEnhancerFactory(config, authQueue, projects, databaseConfig)
         return ConfigLoader.createResourceConfig(enhancerFactory.createEnhancers()).apply {
-
         }
     }
 
@@ -114,16 +119,20 @@ internal class RecordResourceTest: JerseyTest() {
         val record = target("records")
             .request()
             .header("Authorization", "Bearer abcdef")
-            .post(Entity.json(RecordDTO(
-                id = null,
-                data = RecordDataDTO(
-                    projectId = "a",
-                    userId = "u1",
-                    sourceId = "s1",
+            .post(
+                Entity.json(
+                    RecordDTO(
+                        id = null,
+                        data = RecordDataDTO(
+                            projectId = "a",
+                            userId = "u1",
+                            sourceId = "s1",
+                        ),
+                        sourceType = "type1",
+                        metadata = null,
+                    ),
                 ),
-                sourceType = "type1",
-                metadata = null,
-            ))).use { response ->
+            ).use { response ->
                 response.readEntity(RecordDTO::class.java)
             }
 

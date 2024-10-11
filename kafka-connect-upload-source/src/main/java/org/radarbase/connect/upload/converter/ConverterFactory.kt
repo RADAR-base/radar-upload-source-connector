@@ -20,7 +20,12 @@ import io.confluent.connect.avro.AvroData
 import org.apache.kafka.connect.data.SchemaAndValue
 import org.apache.kafka.connect.errors.ConnectException
 import org.apache.kafka.connect.source.SourceRecord
-import org.radarbase.connect.upload.api.*
+import org.radarbase.connect.upload.api.ContentsDTO
+import org.radarbase.connect.upload.api.RecordDTO
+import org.radarbase.connect.upload.api.RecordDataDTO
+import org.radarbase.connect.upload.api.RecordMetadataDTO
+import org.radarbase.connect.upload.api.SourceTypeDTO
+import org.radarbase.connect.upload.api.UploadBackendClient
 import org.radarbase.connect.upload.logging.LogRepository
 import org.radarbase.connect.upload.logging.RecordLogger
 import org.radarcns.kafka.ObservationKey
@@ -93,7 +98,7 @@ interface ConverterFactory {
         fun convertStream(
             record: RecordDTO,
             openStream: (ContentsContext, (InputStream) -> Unit) -> Unit,
-            produce: (SourceRecord) -> Unit
+            produce: (SourceRecord) -> Unit,
         )
 
         /**
@@ -140,7 +145,7 @@ interface ConverterFactory {
                     data.projectId,
                     data.userId,
                     data.sourceId,
-                )
+                ),
             )
         }
 
@@ -206,7 +211,7 @@ interface ConverterFactory {
          * The constructor may not have any arguments.
          */
         fun fromClassName(
-            name: String
+            name: String,
         ): ConverterFactory {
             return try {
                 Class.forName(name)
@@ -226,7 +231,8 @@ interface ConverterFactory {
         /**
          * Creates a record converter.
          */
-        fun createConverter(factoryClassName: String,
+        fun createConverter(
+            factoryClassName: String,
             settings: Map<String, String>,
             client: UploadBackendClient,
             logRepository: LogRepository,
