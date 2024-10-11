@@ -13,7 +13,7 @@ plugins {
 
 allprojects {
     group = "org.radarbase"
-    version = "0.5.13-SNAPSHOT"
+    version = "0.5.13"
 }
 
 
