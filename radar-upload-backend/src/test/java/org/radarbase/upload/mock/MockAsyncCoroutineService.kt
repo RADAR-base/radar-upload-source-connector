@@ -23,4 +23,7 @@ class MockAsyncCoroutineService : AsyncCoroutineService {
     override suspend fun <T> runInRequestScope(block: () -> T): T = block()
 
     override suspend fun <T> suspendInRequestScope(block: (CancellableContinuation<T>) -> Unit): T = suspendCancellableCoroutine(block)
+    override suspend fun <T> withContext(name: String, block: suspend () -> T): T {
+        TODO("Not yet implemented")
+    }
 }

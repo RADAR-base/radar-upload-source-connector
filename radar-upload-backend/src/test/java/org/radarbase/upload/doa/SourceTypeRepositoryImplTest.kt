@@ -83,7 +83,7 @@ internal class SourceTypeRepositoryImplTest {
         val eventStart = mock<ApplicationEvent> {
             on(ApplicationEvent::getType) doReturn ApplicationEvent.Type.INITIALIZATION_APP_FINISHED
         }
-        DatabaseInitialization({ doaEMF }, config).onEvent(eventStart)
+        DatabaseInitialization({ doaEMF }, config, MockAsyncCoroutineService()).onEvent(eventStart)
         entityManager = doaEMF.createEntityManager()
         sourceTypeMapper = SourceTypeMapperImpl()
         repository = SourceTypeRepositoryImpl(mockEntityManagerProvider, MockAsyncCoroutineService(), sourceTypeMapper)

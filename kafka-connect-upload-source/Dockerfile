@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM gradle:8.4-jdk11 as builder
+FROM --platform=$BUILDPLATFORM gradle:8.4-jdk17 as builder
 
 RUN mkdir /code
 WORKDIR /code
@@ -15,7 +15,7 @@ COPY ./kafka-connect-upload-source/src/main/java /code/kafka-connect-upload-sour
 
 RUN gradle jar
 
-FROM confluentinc/cp-kafka-connect-base:7.5.1
+FROM confluentinc/cp-kafka-connect-base:7.7.1
 
 MAINTAINER @nivemaham @blootsvoets
 
