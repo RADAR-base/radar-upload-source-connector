@@ -6,14 +6,30 @@ This can be used to
 1. Upload data from devices and other sources using a web-interface.
 2. Monitor status of the records created
 
-# Components 
+<!-- TOC -->
+* [RADAR-base Data Uploader](#radar-base-data-uploader)
+  * [Components](#components-)
+  * [Screenshots](#screenshots)
+  * [Usage](#usage)
+  * [Installation](#installation)
+  * [Usage](#usage-1)
+    * [Configuring RADAR-base Data Uploader](#configuring-radar-base-data-uploader)
+      * [1. Configuring radar-upload-backend](#1-configuring-radar-upload-backend)
+        * [Adding support to new device type](#adding-support-to-new-device-type)
+      * [2. Configuring Kafka Source Connector](#2-configuring-kafka-source-connector)
+        * [Adding support to new device type](#adding-support-to-new-device-type-1)
+      * [3. Configuring radar-upload-frontend](#3-configuring-radar-upload-frontend)
+  * [Sentry monitoring](#sentry-monitoring)
+<!-- TOC -->
+
+## Components 
 The project contains three components:
 1. A web-application where user can upload data [radar-upload-frontend](radar-upload-frontend)
 2. A back-end webservice application that stores the uploaded data with metadata. [radar-upload-backend](radar-upload-backend)
 3. A Kafka Connect source-connector that loads data from backend connector and sends it to Kafka. [kafka-connect-upload-source](kafka-connect-upload-source)
 
 
-# Screenshots
+## Screenshots
 ![login using managementportal credentials](https://raw.githubusercontent.com/RADAR-base/radar-upload-source-connector/master/docs/assets/Selection_003.png)
 
 ![create and upload files](https://raw.githubusercontent.com/RADAR-base/radar-upload-source-connector/master/docs/assets/Selection_010.png)
@@ -22,7 +38,7 @@ The project contains three components:
 
 ![view participants and records](https://raw.githubusercontent.com/RADAR-base/radar-upload-source-connector/master/docs/assets/Selection_012.png)
 
-# Usage
+## Usage
 If you are a user who would like to upload data to RADAR-base, you require an account on ManagementPortal application of your environment. Please request an account from your System administer if you do not have done.
 
 1. Please log in to the uploader application using your account credentials from ManagementPortal.
@@ -37,7 +53,7 @@ If you are a user who would like to upload data to RADAR-base, you require an ac
 
 Please see the [step-by-step guide](https://radar-base.org/index.php/2019/10/31/a-step-by-step-on-how-to-manually-upload-data-radar-base/) with screenshots if you like more information.
 
-# Installation
+## Installation
 
 To install fully functional RADAR-base data uploader from source, please use the `docker-compose.yml` under the root directory
 
@@ -46,9 +62,9 @@ docker-compose up -d --build
 ```
 
 
-# Usage
+## Usage
 
-## Configuring RADAR-base Data Uploader
+### Configuring RADAR-base Data Uploader
 
 **Disclaimer:** This section does not cover how to install or configure the complete RADAR-Base stack. Please visit [RADAR-Docker](https://github.com/RADAR-base/RADAR-Docker) or [RADAR-Kubernetes](https://github.com/RADAR-base/RADAR-Kubernetes) for complete installation guidelines. 
 
@@ -56,7 +72,7 @@ docker-compose up -d --build
 
 Configuring Data Uploader involves configuring the three components mentioned above.
 
-### 1. Configuring radar-upload-backend
+#### 1. Configuring radar-upload-backend
 Please copy `etc/upload.yml.template` to `etc/upload.yml` and modify the database credentials and the oauth client credentials. The following tables shows the possible properties and explanation.
 
 ```yaml
@@ -134,12 +150,11 @@ sourceTypes: # these are the data source types that are supported to upload data
       logEvents: "true"
 ```
 
-#### Adding support to new device type
+##### Adding support to new device type
 To add support to additional device types, add a new entry of sourceType to the `sourceTypes` list.
 A single sourceType entry is defined as below.
 
 ```yaml
-
 - name: acceleration-zip # unique identifier of the data source or device (*required)
     topics: # list of topics to send data
       - android_phone_acceleration
@@ -155,7 +170,7 @@ If the `upload.yml` file has been modified after starting the serve, restart the
 docker-compose restart radar-upload-backend
 ```
 
-### 2. Configuring Kafka Source Connector
+#### 2. Configuring Kafka Source Connector
 
 Please copy `etc/source-upload.properties.template` to `etc/source-upload.properties` and modify the oauth client credentials and supported converter classes. The following tables shows the possible properties and explanation.
 
@@ -185,10 +200,10 @@ Please copy `etc/source-upload.properties.template` to `etc/source-upload.proper
 <td>upload.source.record.converter.classes</td><td>List of classes to be used to convert a record.</td><td>list</td><td>org.radarbase.connect.upload.converter.phone.AccelerometerConverterFactory</td><td>Class extending org.radarbase.connect.upload.converter.ConverterFactory</td><td>high</td></tr>
 </tbody></table>
 
-#### Adding support to new device type
+##### Adding support to new device type
 To add processing data from new device type, please implement a ConverterFactory that can process the data from corresponding device and add the name of the class to the list of `upload.source.record.converter.classes`.
 
-### 3. Configuring radar-upload-frontend
+#### 3. Configuring radar-upload-frontend
 
 Configuring radar-upload-frontend requires configuring the right environment variables for the docker container.
 
@@ -215,4 +230,10 @@ Configuring radar-upload-frontend requires configuring the right environment var
 <tr>
 </tbody></table>
 
+## Sentry monitoring
 
+To enable Sentry monitoring:
+
+1. Set a `SENTRY_DSN` environment variable that points to the desired Sentry DSN.
+2. (Optional) Set the `SENTRY_LOG_LEVEL` environment variable to control the minimum log level of events sent to Sentry.
+   The default log level for Sentry is `WARN`. Possible values are `TRACE`, `DEBUG`, `INFO`, `WARN`, and `ERROR`.
