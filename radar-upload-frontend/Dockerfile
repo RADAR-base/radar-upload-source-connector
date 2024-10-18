@@ -11,7 +11,7 @@ COPY . /app/
 
 RUN npm run build --prod
 
-FROM nginx:1.22
+FROM nginx:1.27.2
 
 # add init script
 COPY ./docker/nginx.conf /etc/nginx/nginx.conf
