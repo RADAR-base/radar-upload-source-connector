@@ -7,7 +7,7 @@ object Versions {
     const val wrapper = "8.9"
     const val dockerCompose = "0.17.5"
 
-    const val radarCommons = "1.1.1"
+    const val radarCommons = "1.1.3"
     const val confluent = "7.5.1"
     const val kafka = "$confluent-ce"
 
@@ -16,7 +16,7 @@ object Versions {
     const val ktor = "2.3.5"
 
     const val log4j2 = "2.21.1"
-    const val slf4j = "2.0.9"
+    const val sentryLog4j = "1.7.30"
 
     const val okhttp = "4.12.0"
 

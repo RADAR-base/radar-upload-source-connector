@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "1.9.10"
+    id("org.radarbase.radar-kotlin") version "1.1.3"
 }
 
 repositories {

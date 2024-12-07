@@ -2,8 +2,8 @@ import org.jetbrains.kotlin.cli.common.toBooleanLenient
 import java.time.Duration
 
 plugins {
-    kotlin("jvm")
-    id("com.avast.gradle.docker-compose")
+    id("com.avast.gradle.docker-compose") version Versions.dockerCompose
+    id("org.radarbase.radar-kotlin")
 }
 
 sourceSets {
@@ -16,8 +16,6 @@ sourceSets {
 }
 
 dependencies {
-    implementation(kotlin("stdlib-jdk8"))
-
     testImplementation("io.confluent:kafka-connect-avro-converter:${Versions.confluent}")
     testImplementation(platform("com.fasterxml.jackson:jackson-bom:${Versions.jackson}"))
     testImplementation("com.squareup.okhttp3:okhttp:${Versions.okhttp}")
@@ -49,4 +47,9 @@ dockerCompose {
     waitForTcpPortsTimeout.set(Duration.ofMinutes(3))
     environment.put("SERVICES_HOST", "localhost")
     isRequiredBy(tasks["integrationTest"])
+}
+
+radarKotlin {
+    // TODO remove after using new release of radar-kotlin plugin
+    javaVersion.set(Versions.java)
 }

@@ -1,6 +1,5 @@
 plugins {
-    java
-    kotlin("jvm")
+    id("org.radarbase.radar-kotlin")
 }
 
 sourceSets {
@@ -32,7 +31,6 @@ dependencies {
 
     // Included in connector runtime
     compileOnly("org.apache.kafka:connect-api:${Versions.kafka}")
-    implementation(kotlin("stdlib-jdk8"))
     implementation(kotlin("reflect"))
 
     testImplementation("io.confluent:kafka-connect-avro-converter:${Versions.confluent}")
@@ -40,6 +38,13 @@ dependencies {
     testImplementation("org.hamcrest:hamcrest:${Versions.hamcrest}")
     testImplementation("org.apache.kafka:connect-api:${Versions.kafka}")
     testImplementation("org.mockito.kotlin:mockito-kotlin:${Versions.mockitoKotlin}")
+
+    // Application monitoring
+    // This dependency is not used by the upload connector, but copied into the Docker image (Dockerfile)
+    compileOnly("io.sentry:sentry-log4j:${Versions.sentryLog4j}") {
+        // Exclude log4j with security vulnerability (safe version is provided by docker image).
+        exclude(group = "log4j", module = "log4j")
+    }
 }
 
 task<Test>("integrationTest") {
@@ -48,4 +53,8 @@ task<Test>("integrationTest") {
     testClassesDirs = sourceSets["integrationTest"].output.classesDirs
     classpath = sourceSets["integrationTest"].runtimeClasspath
     mustRunAfter(tasks["test"])
+}
+
+radarKotlin {
+    javaVersion.set(Versions.java)
 }
