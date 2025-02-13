@@ -1,7 +1,12 @@
-name: Snyk test
+name: Snyk test on PR commits
+
 on:
   pull_request:
-    branches: [ master, dev ]
+    branches:
+      - main
+      - dev
+      - release-*
+
 jobs:
   security:
     runs-on: ubuntu-latest
@@ -13,4 +18,10 @@ jobs:
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          args: --all-projects --configuration-matching='^runtimeClasspath$' --severity-threshold=high --policy-path=$PWD/.snyk
+          args: >-
+            --all-projects
+            --configuration-matching="^runtimeClasspath$"
+            --severity-threshold=high
+            --fail-on=upgradable
+            --org=radar-base
+            --policy-path=.snyk
