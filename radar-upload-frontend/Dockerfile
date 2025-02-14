@@ -11,10 +11,11 @@ COPY . /app/
 
 RUN npm run build --prod
 
-FROM nginx:1.27.2
+FROM nginxinc/nginx-unprivileged:1.27.4-alpine3.21-perl
+USER root
 
 # add init script
-COPY ./docker/nginx.conf /etc/nginx/nginx.conf
+COPY ./docker/nginx.conf /etc/nginx/conf.d/default.conf
 
 WORKDIR /usr/share/nginx/html
 
@@ -23,7 +24,9 @@ COPY --from=builder /app/dist/ .
 COPY ./docker/entrypoint.sh /entrypoint.sh
 
 # expose internal port:80 and run init.sh
-EXPOSE 80
+EXPOSE 8080
 
+USER 101
+ENV NGINX_ENTRYPOINT_WORKER_PROCESSES_AUTOTUNE=1
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["nginx", "-g", "daemon off;"]
