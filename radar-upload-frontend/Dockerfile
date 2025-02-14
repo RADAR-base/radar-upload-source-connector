@@ -15,15 +15,13 @@ FROM nginxinc/nginx-unprivileged:1.27.4-alpine3.21-perl
 USER root
 
 # add init script
-COPY ./docker/nginx.conf /etc/nginx/conf.d/nginx.conf
+COPY ./docker/nginx.conf /etc/nginx/conf.d/default.conf
 
 WORKDIR /usr/share/nginx/html
 
 COPY --from=builder /app/dist/ .
 
 COPY ./docker/entrypoint.sh /entrypoint.sh
-
-RUN chmod a+w -R /usr/share/nginx/html
 
 # expose internal port:80 and run init.sh
 EXPOSE 8080

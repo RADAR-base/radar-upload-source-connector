@@ -1,10 +1,14 @@
 #!/bin/sh
 
 ROOT_DIR=/usr/share/nginx/html
+TMP_DIR=/tmp/html
+
+echo "Copying files to writable location..."
+cp -r $ROOT_DIR $TMP_DIR
 
 # Replace env vars in JavaScript files
 echo "Replacing env vars in JS"
-for file in $ROOT_DIR/js/app.*.js* $ROOT_DIR/index.html;
+for file in $TMP_DIR/js/app.*.js* $TMP_DIR/index.html;
 do
   echo "Processing $file ...";
 
