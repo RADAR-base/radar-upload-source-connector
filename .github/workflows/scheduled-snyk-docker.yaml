@@ -18,6 +18,7 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Run Snyk to check for vulnerabilities on backend image
+        continue-on-error: true # To make sure that SARIF upload gets called
         uses: snyk/actions/docker@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
@@ -32,9 +33,17 @@ jobs:
             --policy-path=.snyk
             --exclude-app-vulns
             --org=radar-base
-            --sarif-file-output=backend.sarif
+            --sarif-file-output=snyk.sarif
+
+      # Detected vulnerabilities will appear on Github in Security->Code_scanning_alerts tab
+      - name: Upload bacekend result to GitHub Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          category: backend
+          sarif_file: snyk.sarif
 
       - name: Run Snyk to check for vulnerabilities on frontend image
+        continue-on-error: true # To make sure that SARIF upload gets called
         uses: snyk/actions/docker@master
         env:
             SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
@@ -49,9 +58,17 @@ jobs:
             --policy-path=.snyk
             --exclude-app-vulns
             --org=radar-base
-            --sarif-file-output=frontend.sarif
+            --sarif-file-output=snyk.sarif
+
+      # Detected vulnerabilities will appear on Github in Security->Code_scanning_alerts tab
+      - name: Upload frontend result to GitHub Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          category: frontend
+          sarif_file: snyk.sarif
 
       - name: Run Snyk to check for vulnerabilities on connector image
+        continue-on-error: true # To make sure that SARIF upload gets called
         uses: snyk/actions/docker@master
         env:
             SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
@@ -66,22 +83,11 @@ jobs:
             --policy-path=.snyk
             --exclude-app-vulns
             --org=radar-base
-            --sarif-file-output=connector.sarif
-
+            --sarif-file-output=snyk.sarif
 
       # Detected vulnerabilities will appear on Github in Security->Code_scanning_alerts tab
-      - name: Upload bacekend result to GitHub Code Scanning
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: backend.sarif
-
-      - name: Upload frontend result to GitHub Code Scanning
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: frontend.sarif
-
       - name: Upload connector result to GitHub Code Scanning
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: connector.sarif
-
+          category: connector
+          sarif_file: snyk.sarif
