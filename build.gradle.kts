@@ -37,6 +37,6 @@ subprojects {
 
 project(":kafka-connect-upload-source") {
     radarKotlin {
-        javaVersion.set(17)
+        javaVersion.set(Versions.java)
     }
 }
