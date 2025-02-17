@@ -1,10 +1,9 @@
 plugins {
-    java
     application
-    kotlin("jvm")
-    id("org.jetbrains.kotlin.plugin.noarg")
-    id("org.jetbrains.kotlin.plugin.jpa")
-    id("org.jetbrains.kotlin.plugin.allopen")
+    id("org.jetbrains.kotlin.plugin.noarg") version Versions.kotlin
+    id("org.jetbrains.kotlin.plugin.jpa") version Versions.kotlin
+    id("org.jetbrains.kotlin.plugin.allopen") version Versions.kotlin
+    id("org.radarbase.radar-kotlin")
 }
 
 application {
@@ -12,7 +11,6 @@ application {
 }
 
 dependencies {
-    api(kotlin("stdlib-jdk8"))
     implementation(kotlin("reflect"))
 
     implementation("org.radarbase:radar-jersey:${Versions.radarJersey}") {
@@ -51,4 +49,11 @@ noArg {
     annotation("jakarta.persistence.Entity")
     annotation("jakarta.persistence.MappedSuperclass")
     annotation("jakarta.persistence.Embeddable")
+}
+
+radarKotlin {
+    // TODO remove after using new release of radar-kotlin plugin
+    javaVersion.set(Versions.java)
+    sentryEnabled.set(true)
+    log4j2Version.set(Versions.log4j2)
 }

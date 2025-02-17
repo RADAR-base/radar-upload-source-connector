@@ -1,5 +1,21 @@
 # RADAR-base Data Uploader
 
+<!-- TOC -->
+* [RADAR-base Data Uploader](#radar-base-data-uploader)
+* [Components](#components-)
+* [Screenshots](#screenshots)
+* [Usage](#usage)
+* [Installation](#installation)
+* [Usage](#usage-1)
+  * [Configuring RADAR-base Data Uploader](#configuring-radar-base-data-uploader)
+    * [1. Configuring radar-upload-backend](#1-configuring-radar-upload-backend)
+      * [Adding support to new device type](#adding-support-to-new-device-type)
+    * [2. Configuring Kafka Source Connector](#2-configuring-kafka-source-connector)
+      * [Adding support to new device type](#adding-support-to-new-device-type-1)
+    * [3. Configuring radar-upload-frontend](#3-configuring-radar-upload-frontend)
+  * [Sentry monitoring](#sentry-monitoring)
+<!-- TOC -->
+
 RADAR-base Data Uploader is a web-application that enables uploading data to RADAR-Base. It has a Kafka Connect source connector that processes the uploaded data, parse it in appropriate format and send them to Kafka.
 
 This can be used to 
@@ -216,3 +232,21 @@ Configuring radar-upload-frontend requires configuring the right environment var
 </tbody></table>
 
 
+## Sentry monitoring
+
+To enable Sentry monitoring for the kafka-connect-upload-source and radar-upload-backend services:
+
+1. Set a `SENTRY_DSN` environment variable that points to the desired Sentry DSN.
+2. (Optional) Set the `SENTRY_LOG_LEVEL` environment variable to control the minimum log level of
+   events sent to Sentry.
+   The default log level for Sentry is `ERROR`. Possible values are `TRACE`, `DEBUG`, `INFO`, `WARN`,
+   and `ERROR`.
+
+For further configuration of Sentry via environmental variables see [here](https://docs.sentry.io/platforms/java/configuration/#configuration-via-the-runtime-environment). For instance:
+
+```
+SENTRY_LOG_LEVEL: 'ERROR'
+SENTRY_DSN: 'https://000000000000.ingest.de.sentry.io/000000000000'
+SENTRY_ATTACHSTACKTRACE: true
+SENTRY_STACKTRACE_APP_PACKAGES: io.confluent.connect,org.radarbase.connect.rest
+```
