@@ -10,7 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM --platform=$BUILDPLATFORM gradle:8.4-jdk17 as builder
+FROM --platform=$BUILDPLATFORM gradle:8.9-jdk17 as builder
 
 RUN mkdir /code
 WORKDIR /code
@@ -28,7 +28,7 @@ RUN gradle jar
 
 FROM eclipse-temurin:17-jre
 
-MAINTAINER @nivemaham @blootsvoets
+LABEL org.opencontainers.image.authors="@pvannierop"
 
 LABEL description="RADAR-base data upload connector backend container"
 

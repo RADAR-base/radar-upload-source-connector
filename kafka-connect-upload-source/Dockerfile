@@ -1,4 +1,5 @@
-FROM --platform=$BUILDPLATFORM gradle:8.4-jdk17 as builder
+ARG BASE_IMAGE=confluentinc/cp-kafka-connect-base:7.8.1
+FROM --platform=$BUILDPLATFORM gradle:8.9-jdk17 AS builder
 
 RUN mkdir /code
 WORKDIR /code
@@ -15,10 +16,9 @@ COPY ./kafka-connect-upload-source/src/main/java /code/kafka-connect-upload-sour
 
 RUN gradle jar
 
-FROM confluentinc/cp-kafka-connect-base:7.7.1
+FROM ${BASE_IMAGE}
 
-MAINTAINER @nivemaham @blootsvoets
-
+LABEL org.opencontainers.image.authors="@pvannierop"
 LABEL description="Kafka Data Upload Source connector"
 
 ENV CONNECT_PLUGIN_PATH /usr/share/java/kafka-connect/plugins
