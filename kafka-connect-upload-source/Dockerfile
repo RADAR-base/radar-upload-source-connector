@@ -21,7 +21,7 @@ FROM ${BASE_IMAGE}
 LABEL org.opencontainers.image.authors="@pvannierop"
 LABEL description="Kafka Data Upload Source connector"
 
-ENV CONNECT_PLUGIN_PATH /usr/share/java/kafka-connect/plugins
+ENV CONNECT_PLUGIN_PATH=/usr/share/java/kafka-connect/plugins
 
 # To isolate the classpath from the plugin path as recommended
 COPY --from=builder /code/kafka-connect-upload-source/build/third-party/*.jar ${CONNECT_PLUGIN_PATH}/kafka-connect-upload-source/
