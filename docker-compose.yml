@@ -182,7 +182,7 @@ services:
     build:
       context: .
       dockerfile: kafka-connect-upload-source/Dockerfile
-    image: radarbase/radar-connect-upload-source:0.5.1
+    image: radarbase/radar-connect-upload-source:latest
     restart: on-failure
     volumes:
       - ./etc/source-upload.properties:/etc/kafka-connect/source-upload.properties
@@ -194,7 +194,7 @@ services:
       - kafka-2
       - kafka-3
       - schema-registry-1
-      - radar-upload-backend
+      #- radar-upload-backend
     environment:
       CONNECT_BOOTSTRAP_SERVERS: PLAINTEXT://kafka-1:9092,PLAINTEXT://kafka-2:9092,PLAINTEXT://kafka-3:9092
       CONNECT_REST_PORT: 8083
@@ -216,31 +216,37 @@ services:
       KAFKA_HEAP_OPTS: "-Xms256m -Xmx768m"
       KAFKA_BROKERS: 3
       CONNECT_LOG4J_LOGGERS: "org.reflections=ERROR"
+      # SENTRY_LOG_LEVEL: 'ERROR'
+      # SENTRY_DSN: 'https://000000000000.ingest.de.sentry.io/000000000000'
+      # SENTRY_ATTACHSTACKTRACE: true
+      # SENTRY_STACKTRACE_APP_PACKAGES: io.confluent.connect,org.radarbase.connect.rest
 
-  radar-upload-backend:
-    build:
-      context: .
-      dockerfile: radar-upload-backend/Dockerfile
-    image: radarbase/radar-upload-connect-backend:0.5.1
-    ports:
-      - "8085:8085"
-    depends_on:
-      - managementportal-app
-      - radarbase-postgresql
-    volumes:
-      - ./etc/upload.yml:/etc/upload-backend/upload.yml
-      - ./etc/logback.xml:/etc/upload-backend/logback.xml
-    environment:
-      JAVA_OPTS: "-Dlogback.configurationFile=/etc/upload-backend/logback.xml"
-    command: ["radar-upload-backend", "/etc/upload-backend/upload.yml"]
+#  radar-upload-backend:
+#    build:
+#      context: .
+#      dockerfile: radar-upload-backend/Dockerfile
+#    image: radarbase/radar-upload-connect-backend:latest
+#    ports:
+#      - "8085:8085"
+#    depends_on:
+#      - managementportal-app
+#      - radarbase-postgresql
+#    volumes:
+#      - ./etc/upload.yml:/etc/upload-backend/upload.yml
+#    command: ["radar-upload-backend", "/etc/upload-backend/upload.yml"]
+    # environment:
+    #   SENTRY_LOG_LEVEL: 'ERROR'
+    #   SENTRY_DSN: 'https://000000000000.ingest.de.sentry.io/000000000000'
+    #   SENTRY_ATTACHSTACKTRACE: true
+    #   SENTRY_STACKTRACE_APP_PACKAGES: io.confluent.connect,org.radarbase.upload
 
   radar-upload-frontend:
     build:
       context: radar-upload-frontend
       dockerfile: Dockerfile
-    image: radarbase/radar-upload-connect-frontend:0.5.1
+    image: radarbase/radar-upload-connect-frontend:latest
     depends_on:
-      - radar-upload-backend
+      #- radar-upload-backend
       - managementportal-app
     environment:
       VUE_APP_BASE_URL: "/upload"
@@ -260,7 +266,7 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - radar-upload-backend
+      #- radar-upload-backend
       - managementportal-app
       - radar-upload-frontend
     volumes:

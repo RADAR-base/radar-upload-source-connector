@@ -28,10 +28,15 @@ COPY --from=builder /code/kafka-connect-upload-source/build/third-party/*.jar ${
 COPY --from=builder /code/kafka-connect-upload-source/build/libs/kafka-connect-upload-source-*.jar ${CONNECT_PLUGIN_PATH}/kafka-connect-upload-source/
 
 # Load topics validator
-COPY ./kafka-connect-upload-source/src/main/docker/kafka-wait /usr/bin/kafka-wait
+COPY ./kafka-connect-upload-source/src/main/docker/ensure /etc/confluent/docker/ensure
 
 # Load modified launcher
 COPY ./kafka-connect-upload-source/src/main/docker/launch /etc/confluent/docker/launch
+
+# Overwrite the log4j configuration to include Sentry monitoring.
+COPY ./kafka-connect-upload-source/src/main/docker/log4j.properties.template /etc/confluent/docker/log4j.properties.template
+# Copy Sentry monitoring jars.
+COPY --from=builder /code/kafka-connect-upload-source/build/third-party/sentry-* /etc/kafka-connect/jars
 
 USER "root"
 # create parent directory for storing offsets in standalone mode
