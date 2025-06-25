@@ -55,5 +55,6 @@ radarKotlin {
     // TODO remove after using new release of radar-kotlin plugin
     javaVersion.set(Versions.java)
     sentryEnabled.set(true)
+    openTelemetryAgentEnabled.set(true)
     log4j2Version.set(Versions.log4j2)
 }
