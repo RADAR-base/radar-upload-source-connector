@@ -57,4 +57,8 @@ task<Test>("integrationTest") {
 
 radarKotlin {
     javaVersion.set(Versions.java)
+    // Kafka connectors use log4j (not log4j2) for logging, so we cannot use
+    // the radarKotlin plugin to enable Sentry loggin support. The log4j dependency
+    // is added in the gradle 'dependencies' block above.
+    openTelemetryAgentEnabled.set(true)
 }
