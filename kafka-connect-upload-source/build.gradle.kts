@@ -41,7 +41,7 @@ dependencies {
 
     // Application monitoring
     // This dependency is not used by the upload connector, but copied into the Docker image (Dockerfile)
-    compileOnly("io.sentry:sentry-log4j:${Versions.sentryLog4j}") {
+    runtimeOnly("io.sentry:sentry-log4j:${Versions.sentryLog4j}") {
         // Exclude log4j with security vulnerability (safe version is provided by docker image).
         exclude(group = "log4j", module = "log4j")
     }
@@ -57,4 +57,8 @@ task<Test>("integrationTest") {
 
 radarKotlin {
     javaVersion.set(Versions.java)
+    // Kafka connectors use log4j (not log4j2) for logging, so we cannot use
+    // the radarKotlin plugin to enable Sentry logging support. The log4j dependency
+    // is added in the gradle 'dependencies' block above.
+    openTelemetryAgentEnabled.set(true)
 }
