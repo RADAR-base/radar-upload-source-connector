@@ -1,13 +1,13 @@
 @Suppress("ConstPropertyName", "MemberVisibilityCanBePrivate")
 object Versions {
-    const val project = "0.6.2"
+    const val project = "0.7.0"
 
     const val java = 17
     const val kotlin = "1.9.10"
     const val wrapper = "8.9"
     const val dockerCompose = "0.17.5"
 
-    const val radarCommons = "1.1.3"
+    const val radarCommons = "1.2.2"
     const val confluent = "7.5.1"
     const val kafka = "$confluent-ce"
 
