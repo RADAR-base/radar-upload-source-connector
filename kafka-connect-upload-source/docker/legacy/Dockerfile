@@ -6,7 +6,7 @@ WORKDIR /code
 ENV GRADLE_USER_HOME=/code/.gradlecache \
     GRADLE_OPTS="-Djdk.lang.Process.launchMechanism=vfork -Dorg.gradle.vfs.watch=false"
 
-COPY ./build.gradle.kts ./settings.gradle.kts ./gradle.properties /code/
+COPY ../../build.gradle.kts ./settings.gradle.kts ./gradle.properties /code/
 COPY buildSrc /code/buildSrc
 COPY kafka-connect-upload-source/build.gradle.kts  /code/kafka-connect-upload-source/
 
@@ -28,13 +28,13 @@ COPY --from=builder /code/kafka-connect-upload-source/build/third-party/*.jar ${
 COPY --from=builder /code/kafka-connect-upload-source/build/libs/kafka-connect-upload-source-*.jar ${CONNECT_PLUGIN_PATH}/kafka-connect-upload-source/
 
 # Load topics validator
-COPY ./kafka-connect-upload-source/src/main/docker/ensure /etc/confluent/docker/ensure
+COPY ./kafka-connect-upload-source/docker/legacy/ensure /etc/confluent/docker/ensure
 
 # Load modified launcher
-COPY ./kafka-connect-upload-source/src/main/docker/launch /etc/confluent/docker/launch
+COPY ./kafka-connect-upload-source/docker/legacy/launch /etc/confluent/docker/launch
 
 # Overwrite the log4j configuration to include Sentry monitoring.
-COPY ./kafka-connect-upload-source/src/main/docker/log4j.properties.template /etc/confluent/docker/log4j.properties.template
+COPY ./kafka-connect-upload-source/docker/legacy/log4j.properties.template /etc/confluent/docker/log4j.properties.template
 # Copy Sentry monitoring jars.
 COPY --from=builder /code/kafka-connect-upload-source/build/third-party/sentry-* /etc/kafka-connect/jars
 
