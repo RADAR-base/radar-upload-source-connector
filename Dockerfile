@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-ARG BASE_IMAGE=quay.io/strimzi/kafka:0.46.0-kafka-3.9.0
+ARG BASE_IMAGE=radarbase/kafka-connect-transform-keyvalue:8.0.0
 FROM --platform=$BUILDPLATFORM gradle:8.9-jdk17 AS builder
 
 RUN mkdir /code
@@ -32,6 +32,8 @@ RUN gradle jar
 
 FROM ${BASE_IMAGE}
 
+USER root
+
 LABEL org.opencontainers.image.authors="@pvannierop"
 LABEL description="Kafka Data Upload Source connector"
 
@@ -45,6 +47,3 @@ COPY --from=builder /code/kafka-connect-upload-source/build/third-party/sentry-*
 
 USER 1001
 
-COPY --chown=1001:1001 kafka-connect-upload-source/docker/ensure /opt/kafka/ensure
-COPY --chown=1001:1001 kafka-connect-upload-source/docker/kafka_connect_run.sh /opt/kafka/kafka_connect_run.sh
-RUN chmod +x /opt/kafka/ensure /opt/kafka/kafka_connect_run.sh
