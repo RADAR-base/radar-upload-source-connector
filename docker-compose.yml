@@ -181,7 +181,7 @@ services:
   radar-upload-connector:
     build:
       context: .
-      dockerfile: kafka-connect-upload-source/Dockerfile
+      dockerfile: kafka-connect-upload-source/docker/legacy/Dockerfile
     image: radarbase/radar-connect-upload-source:latest
     restart: on-failure
     volumes:
