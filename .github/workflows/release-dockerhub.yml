@@ -1,61 +1,37 @@
-name: Release Github
+name: Release Docker Hub
 
 on:
   release:
     types: [published]
 
-env:
-  REGISTRY: ghcr.io
-  DOCKER_IMAGE_BACKEND: radarbase/radar-upload-connect-backend
-  DOCKER_IMAGE_FRONTEND: radarbase/radar-upload-connect-frontend
-  DOCKER_IMAGE_CONNECTOR: radarbase/radar-connect-upload-source
-
 jobs:
-  uploadBackend:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - uses: actions/setup-java@v3
-        with:
-          distribution: temurin
-          java-version: 17
-
-      - uses: gradle/gradle-build-action@v2
-
-      - name: Compile code
-        run: ./gradlew :radar-upload-backend:distTar :radar-upload-backend:distZip
-
-      - name: Upload to GitHub
-        uses: AButler/upload-release-assets@v3.0
-        with:
-          files: "radar-upload-backend/build/distributions/*"
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
 
   docker-backend:
     runs-on: ubuntu-latest
 
+    env:
+      DOCKER_IMAGE: radarbase/radar-upload-connect-backend
+
     steps:
       - uses: actions/checkout@v3
 
-      - name: Log in to the Container registry
-        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       # Add Docker labels and tags
       - name: Docker meta
         id: docker_meta
         uses: docker/metadata-action@v4
         with:
-          images: ${{ env.DOCKER_IMAGE_BACKEND }}
+          images: ${{ env.DOCKER_IMAGE }}
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
 
+      # Setup docker build environment
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
 
@@ -63,50 +39,56 @@ jobs:
         uses: docker/setup-buildx-action@v2
 
       - name: Build backend docker
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v3
         with:
           context: .
           file: ./radar-upload-backend/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.docker_meta.outputs.tags }}
+          # Use runtime labels from docker_meta as well as fixed labels
           labels: |
             ${{ steps.docker_meta.outputs.labels }}
-            maintainer=Pim van Nierop<pim@thehyve.nl>
-            org.opencontainers.image.authors=Pim van Nierop<pim@thehyve.nl>, Pauline Conde <pauline.conde@kcl.ac.uk>
+            maintainer=Joris Borgdorff <joris@thehyve.nl>, Nivethika Mahasivam <nivethika@thehyve.nl>, Pauline Conde <pauline.conde@kcl.ac.uk>
+            org.opencontainers.image.description=RADAR-base upload connector backend application
+            org.opencontainers.image.authors=Joris Borgdorff <joris@thehyve.nl>, Nivethika Mahasivam <nivethika@thehyve.nl>, Pauline Conde <pauline.conde@kcl.ac.uk>
             org.opencontainers.image.vendor=RADAR-base
             org.opencontainers.image.licenses=Apache-2.0
 
+      # Push the backend image on the dev and master branches
       - name: Pull images
-        run: docker pull ${{ env.DOCKER_IMAGE_BACKEND }}:${{ steps.docker_meta.outputs.version }}
+        run: docker pull ${{ env.DOCKER_IMAGE }}:${{ steps.docker_meta.outputs.version }}
 
       - name: Inspect docker images
         run: |
-          docker image inspect ${{ env.DOCKER_IMAGE_BACKEND }}:${{ steps.docker_meta.outputs.version }}
-          docker run --rm ${{ env.DOCKER_IMAGE_BACKEND }}:${{ steps.docker_meta.outputs.version }} curl --version
+          docker image inspect ${{ env.DOCKER_IMAGE }}:${{ steps.docker_meta.outputs.version }}
+          docker run --rm ${{ env.DOCKER_IMAGE }}:${{ steps.docker_meta.outputs.version }} curl --version
 
   docker-frontend:
     runs-on: ubuntu-latest
 
+    env:
+      DOCKER_IMAGE: radarbase/radar-upload-connect-frontend
+
     steps:
       - uses: actions/checkout@v3
 
-      - name: Log in to the Container registry
-        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Docker meta frontend
         id: docker_meta
         uses: docker/metadata-action@v4
         with:
-          images: ${{ env.DOCKER_IMAGE_FRONTEND }}
+          images: ${{ env.DOCKER_IMAGE }}
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
 
+      # Setup docker build environment
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
 
@@ -114,7 +96,7 @@ jobs:
         uses: docker/setup-buildx-action@v2
 
       - name: Build frontend docker
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v3
         with:
           context: ./radar-upload-frontend
           platforms: linux/amd64,linux/arm64
@@ -129,34 +111,38 @@ jobs:
             org.opencontainers.image.vendor=RADAR-base
             org.opencontainers.image.licenses=Apache-2.0
 
+      # Push the backend image on the dev and master branches
       - name: Pull images
-        run: docker pull ${{ env.DOCKER_IMAGE_FRONTEND }}:${{ steps.docker_meta.outputs.version }}
+        run: docker pull ${{ env.DOCKER_IMAGE }}:${{ steps.docker_meta.outputs.version }}
 
       - name: Inspect docker images
-        run: docker image inspect ${{ env.DOCKER_IMAGE_FRONTEND }}:${{ steps.docker_meta.outputs.version }}
+        run: docker image inspect ${{ env.DOCKER_IMAGE }}:${{ steps.docker_meta.outputs.version }}
 
   docker-connector:
     runs-on: ubuntu-latest
 
+    env:
+      DOCKER_IMAGE: radarbase/radar-connect-upload-source
+
     steps:
       - uses: actions/checkout@v3
 
-      - name: Log in to the Container registry
-        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Docker meta
         id: docker_meta
         uses: docker/metadata-action@v4
         with:
-          images: ${{ env.DOCKER_IMAGE_CONNECTOR }}
+          images: ${{ env.DOCKER_IMAGE }}
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
 
+      # Setup docker build environment
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
 
@@ -164,24 +150,25 @@ jobs:
         uses: docker/setup-buildx-action@v2
 
       - name: Build upload connector docker
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v3
         with:
           context: .
-          file: ./kafka-connect-upload-source/Dockerfile
+          file: ./kafka-connect-upload-source/docker/legacy/Dockerfile
           platforms: linux/amd64
           push: true
           tags: ${{ steps.docker_meta.outputs.tags }}
           # Use runtime labels from docker_meta as well as fixed labels
           labels: |
             ${{ steps.docker_meta.outputs.labels }}
-            maintainer=Pim van Nierop<pim@thehyve.nl>
-            org.opencontainers.image.authors=Pim van Nierop<pim@thehyve.nl>, Pauline Conde <pauline.conde@kcl.ac.uk>
+            maintainer=Joris Borgdorff <joris@thehyve.nl>, Nivethika Mahasivam <nivethika@thehyve.nl>, Pauline Conde <pauline.conde@kcl.ac.uk>
             org.opencontainers.image.description=RADAR-base kafka connect upload connector
+            org.opencontainers.image.authors=Joris Borgdorff <joris@thehyve.nl>, Nivethika Mahasivam <nivethika@thehyve.nl>, Pauline Conde <pauline.conde@kcl.ac.uk>
             org.opencontainers.image.vendor=RADAR-base
             org.opencontainers.image.licenses=Apache-2.0
 
+      # Push the backend image on the dev and master branches
       - name: Pull images
-        run: docker pull ${{ env.DOCKER_IMAGE_CONNECTOR }}:${{ steps.docker_meta.outputs.version }}
+        run: docker pull ${{ env.DOCKER_IMAGE }}:${{ steps.docker_meta.outputs.version }}
 
       - name: Inspect docker images
-        run: docker image inspect ${{ env.DOCKER_IMAGE_CONNECTOR }}:${{ steps.docker_meta.outputs.version }}
+        run: docker image inspect ${{ env.DOCKER_IMAGE }}:${{ steps.docker_meta.outputs.version }}
