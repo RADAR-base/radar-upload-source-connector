@@ -6,16 +6,49 @@ on:
   workflow_dispatch:
 
 env:
-  DOCKER_IMAGE_BACKEND: radarbase/radar-upload-connect-backend
-  DOCKER_IMAGE_FRONTEND: radarbase/radar-upload-connect-frontend
-  DOCKER_IMAGE_CONNECTOR: radarbase/radar-connect-upload-source
+  REGISTRY: ghcr.io
+  REPOSITORY: ${{ github.repository }}
+  IMAGES: >-
+    [{
+    'name': 'radar-upload-connect-backend',
+    'build_file': 'radar-upload-backend/Dockerfile'
+    },{
+    'name': 'radar-upload-connect-frontend',
+    'build_file': 'radar-upload-frontend/Dockerfile'
+    },{
+    'name': 'radar-connect-upload-source',
+    'build_file': 'kafka-connect-upload-source/Dockerfile'
+    }]
 
 jobs:
-  security:
+
+  prepare-matrix:
+    name: Prepare Matrix Output
     runs-on: ubuntu-latest
+    permissions: {}
+    outputs:
+      images: ${{ steps.step1.outputs.matrix }}
+    steps:
+      - name: Create Matrix Variable
+        id: step1
+        run: echo "matrix=${{ env.IMAGES }}" >> $GITHUB_OUTPUT
+
+  security:
+    needs: prepare-matrix
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    strategy:
+      matrix:
+        image: ${{ fromJson(needs.prepare-matrix.outputs.images ) }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
+
+      - name: Lowercase image name
+        run: |
+          echo "DOCKER_IMAGE=${REGISTRY}/${REPOSITORY,,}/${{ matrix.image.name }}" >>${GITHUB_ENV}
 
       - name: Run Snyk to check for vulnerabilities on backend image
         continue-on-error: true # To make sure that SARIF upload gets called
@@ -23,71 +56,21 @@ jobs:
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          image: ${{ env.DOCKER_IMAGE_BACKEND }}
+          image: ${{ env.DOCKER_IMAGE }}
           # 'exclude-app-vulns' only tests vulnerabilities in the base image.
           # Code base vulnerabilities are tested the scheduled-snyk.yaml action.
           args: >-
-            --file=radar-upload-backend/Dockerfile
+            --file=${{ matrix.image.build_file }}
             --fail-on=upgradable
             --severity-threshold=high
             --policy-path=.snyk
             --exclude-app-vulns
             --org=radar-base
-            --sarif-file-output=snyk.sarif
+            --sarif-file-output=${{ matrix.image.name }}.sarif
 
       # Detected vulnerabilities will appear on Github in Security->Code_scanning_alerts tab
-      - name: Upload bacekend result to GitHub Code Scanning
+      - name: Upload result to GitHub Code Scanning
         uses: github/codeql-action/upload-sarif@v3
         with:
-          category: backend
-          sarif_file: snyk.sarif
-
-      - name: Run Snyk to check for vulnerabilities on frontend image
-        continue-on-error: true # To make sure that SARIF upload gets called
-        uses: snyk/actions/docker@master
-        env:
-            SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          image: ${{ env.DOCKER_IMAGE_FRONTEND }}
-          # 'exclude-app-vulns' only tests vulnerabilities in the base image.
-          # Code base vulnerabilities are tested the scheduled-snyk.yaml action.
-          args: >-
-            --file=radar-upload-frontend/Dockerfile
-            --fail-on=upgradable
-            --severity-threshold=high
-            --policy-path=.snyk
-            --exclude-app-vulns
-            --org=radar-base
-            --sarif-file-output=snyk.sarif
-
-      # Detected vulnerabilities will appear on Github in Security->Code_scanning_alerts tab
-      - name: Upload frontend result to GitHub Code Scanning
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          category: frontend
-          sarif_file: snyk.sarif
-
-      - name: Run Snyk to check for vulnerabilities on connector image
-        continue-on-error: true # To make sure that SARIF upload gets called
-        uses: snyk/actions/docker@master
-        env:
-            SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          image: ${{ env.DOCKER_IMAGE_CONNECTOR }}
-          # 'exclude-app-vulns' only tests vulnerabilities in the base image.
-          # Code base vulnerabilities are tested the scheduled-snyk.yaml action.
-          args: >-
-            --file=kafka-connect-upload-source/Dockerfile
-            --fail-on=upgradable
-            --severity-threshold=high
-            --policy-path=.snyk
-            --exclude-app-vulns
-            --org=radar-base
-            --sarif-file-output=snyk.sarif
-
-      # Detected vulnerabilities will appear on Github in Security->Code_scanning_alerts tab
-      - name: Upload connector result to GitHub Code Scanning
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          category: connector
-          sarif_file: snyk.sarif
+          sarif_file: ${{ matrix.image.name }}.sarif
+          category: ${{ matrix.image.name }}
