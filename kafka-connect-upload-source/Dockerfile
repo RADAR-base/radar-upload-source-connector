@@ -1,5 +1,5 @@
 ARG BASE_IMAGE=confluentinc/cp-kafka-connect-base:7.8.1
-FROM --platform=$BUILDPLATFORM gradle:8.9-jdk17 AS builder
+FROM --platform=$BUILDPLATFORM gradle:8.13-jdk17 AS builder
 
 RUN mkdir /code
 WORKDIR /code
