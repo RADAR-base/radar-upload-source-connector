@@ -3,12 +3,13 @@ object Versions {
     const val project = "0.6.2"
 
     const val java = 17
-    const val kotlin = "1.9.10"
+    const val kotlin = "1.9.24"
     const val wrapper = "8.13"
     const val dockerCompose = "0.17.5"
 
     const val radarCommons = "1.2.4"
-    const val confluent = "7.5.1"
+    const val managementPortal = "2.1.12"
+    const val confluent = "7.8.1"
     const val kafka = "$confluent-ce"
 
     // From image
@@ -25,7 +26,7 @@ object Versions {
     const val junit = "5.10.0"
     const val mockito = "5.3.1"
 
-    const val openCsv = "5.8"
+    const val openCsv = "5.11.2"
     const val minio = "8.5.10"
     const val jsch = "0.1.55"
     const val radarJersey = "0.12.4"
@@ -35,5 +36,4 @@ object Versions {
     const val hamcrest = "2.2"
     const val commonsCompress = "1.26.0"
     const val xz = "1.9"
-    const val managementPortal = "2.1.12"
 }
