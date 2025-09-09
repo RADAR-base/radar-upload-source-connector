@@ -1,4 +1,3 @@
-# Continuous integration, including test and integration test
 name: Main test
 
 # Run in master and dev branches and in all pull requests to those branches
@@ -20,9 +19,9 @@ env:
     'cache_keys_files': ['radar-upload-backend/Dockerfile', '**/*.gradle.kts', 'gradle.properties', 'radar-upload-backend/src/main/**']
     },{
     'name': 'radar-upload-frontend',
-    'build_file': 'radar-upload-frontend/dockerfile',
-    'authors': 'peyman mohtashami <peyman@thehyve.nl>, pauline conde <pauline.conde@kcl.ac.uk>',
-    'description': 'radar-base upload connector frontend application'
+    'build_file': 'radar-upload-frontend/Dockerfile',
+    'authors': 'Peyman Mohtashami <peyman@thehyve.nl>, Pauline Conde <pauline.conde@kcl.ac.uk>',
+    'description': 'RADAR-base upload connector frontend application'
     'cache_keys_files': ['radar-upload-frontend/**']
     },{
     'name': 'radar-connect-upload-source',
@@ -33,7 +32,6 @@ env:
     }]
 
 jobs:
-  # Build and test the code
   kotlin:
     runs-on: ubuntu-latest
 
@@ -54,7 +52,6 @@ jobs:
       - name: Check
         run: ./gradlew check
 
-  # Build and test the code
   node:
     runs-on: ubuntu-latest
 
