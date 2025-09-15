@@ -32,6 +32,10 @@ LABEL org.opencontainers.image.authors="@pvannierop"
 
 LABEL description="RADAR-base data upload connector backend container"
 
+# Globally disables liquibase analytics.
+# (see: https://docs.liquibase.com/pro/user-guide/what-data-does-liquibase-collect-and-how-is-it-used)
+ENV LIQUIBASE_ANALYTICS_ENABLED=false
+
 COPY --from=builder /code/radar-upload-backend/build/scripts/* /usr/bin/
 COPY --from=builder /code/radar-upload-backend/build/third-party/*.jar /usr/lib/
 COPY --from=builder /code/radar-upload-backend/build/libs/radar-upload-backend-*.jar /usr/lib/
