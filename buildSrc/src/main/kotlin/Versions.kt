@@ -8,7 +8,7 @@ object Versions {
     const val dockerCompose = "0.17.5"
 
     const val radarCommons = "1.2.4"
-    const val managementPortal = "2.1.12"
+    const val managementPortal = "2.1.13"
     const val confluent = "7.8.1"
     const val kafka = "$confluent-ce"
 
@@ -29,7 +29,7 @@ object Versions {
     const val openCsv = "5.11.2"
     const val minio = "8.5.10"
     const val jsch = "0.1.55"
-    const val radarJersey = "0.12.4"
+    const val radarJersey = "0.12.5"
     const val jersey = "3.1.3"
     const val hsqldb = "2.7.2"
     const val mockitoKotlin = "5.1.0"
