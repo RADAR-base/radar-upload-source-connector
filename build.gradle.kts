@@ -6,7 +6,7 @@ plugins {
 
 allprojects {
     group = "org.radarbase"
-    version = "0.6.2"
+    version = "0.6.4"
 
     configurations.configureEach {
         /* The entries in the block below are added here to force the version of
