@@ -13,7 +13,7 @@ object Versions {
     const val kafka = "$confluent-ce"
 
     // From image
-    const val jackson = "2.17.3"
+    const val jackson = "2.18.8"
     const val ktor = "2.3.5"
 
     const val log4j2 = "2.21.1"
@@ -28,6 +28,10 @@ object Versions {
 
     const val openCsv = "5.11.2"
     const val minio = "8.5.10"
+    // Forced transitive override for minio, see build.gradle.kts.
+    const val bouncycastle = "1.85"
+    // Maintained drop-in fork of the discontinued org.lz4:lz4-java.
+    const val lz4 = "1.10.1"
     const val jsch = "0.1.55"
     const val radarJersey = "0.12.5"
     const val jersey = "3.1.3"

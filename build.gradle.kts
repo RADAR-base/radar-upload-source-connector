@@ -14,8 +14,16 @@ allprojects {
          */
         resolutionStrategy {
             force(
-                "org.apache.commons:commons-lang3:3.18.0"
+                "org.apache.commons:commons-lang3:3.18.0",
+                // minio pulls in a vulnerable bcprov (CVE-2025-14813, CVE-2026-13506, CVE-2026-8763).
+                "org.bouncycastle:bcprov-jdk18on:${Versions.bouncycastle}",
             )
+            dependencySubstitution {
+                // CVE-2025-12183, CVE-2025-66566: org.lz4 is discontinued, use the maintained fork.
+                substitute(module("org.lz4:lz4-java"))
+                    .using(module("at.yawk.lz4:lz4-java:${Versions.lz4}"))
+                    .because("CVE-2025-12183, CVE-2025-66566")
+            }
         }
     }
 }
