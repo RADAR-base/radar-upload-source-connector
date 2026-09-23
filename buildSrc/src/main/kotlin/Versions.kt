@@ -3,12 +3,12 @@ object Versions {
     const val project = "0.6.4"
 
     const val java = 17
-    const val kotlin = "1.9.24"
+    const val kotlin = "2.3.20"
     const val wrapper = "8.13"
     const val dockerCompose = "0.17.5"
 
-    const val radarCommons = "1.2.4"
-    const val managementPortal = "2.1.13"
+    const val radarCommons = "1.2.8"
+    const val managementPortal = "3.0.1"
     const val confluent = "7.8.1"
     const val kafka = "$confluent-ce"
 
@@ -21,7 +21,7 @@ object Versions {
 
     const val okhttp = "4.12.0"
 
-    const val radarSchemas = "0.8.14"
+    const val radarSchemas = "0.9.1"
 
     const val junit = "5.10.0"
     const val mockito = "5.3.1"
@@ -33,7 +33,7 @@ object Versions {
     // Maintained drop-in fork of the discontinued org.lz4:lz4-java.
     const val lz4 = "1.10.1"
     const val jsch = "0.1.55"
-    const val radarJersey = "0.12.5"
+    const val radarJersey = "0.12.9"
     const val jersey = "3.1.3"
     const val hsqldb = "2.7.2"
     const val mockitoKotlin = "5.1.0"
