@@ -256,7 +256,7 @@ services:
       VUE_APP_CLIENT_ID: "radar_upload_frontend"
 
   minio:
-    image: minio/minio
+    image: cgr.dev/chainguard/minio:latest
     command:
       - server
       - /data
