@@ -57,7 +57,7 @@ services:
       - ./src/integrationTest/resources/sftp.json:/app/config/sftp.json:ro
 
   minio:
-    image: minio/minio
+    image: cgr.dev/chainguard/minio:latest
     ports:
       - "9000:9000"
     command:
