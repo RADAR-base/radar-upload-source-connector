@@ -2,4 +2,110 @@
 version: v1.25.0
 # ignores vulnerabilities until expiry date; change duration by modifying expiry date
 ignore:
+  SNYK-JS-AXIOS-16299921:
+    - '*':
+        reason: >
+          Improperly Controlled Modification of Dynamically-Determined Object Attributes in
+          axios@1.7.7. Fixed by upgrading axios@1.7.7 to 1.16.0, which is not part of this change.
+          Ignored while dependency scanning moves from Snyk to Trivy, which will report it from then
+          on.
+        expires: 2027-01-01T00:00:00.000Z
+        created: 2026-10-01T00:00:00.000Z
+  SNYK-JS-VUETIFY-14412764:
+    - '*':
+        reason: >
+          Prototype Pollution in vuetify@2.7.2. Fixed by upgrading vuetify@2.7.2 to 3.0.0, which is
+          not part of this change. Ignored while dependency scanning moves from Snyk to Trivy, which
+          will report it from then on.
+        expires: 2027-01-01T00:00:00.000Z
+        created: 2026-10-01T00:00:00.000Z
+  SNYK-JS-AXIOS-16299923:
+    - '*':
+        reason: >
+          Uncontrolled Recursion in axios@1.7.7. Fixed by upgrading axios@1.7.7 to 1.16.0, which is
+          not part of this change. Ignored while dependency scanning moves from Snyk to Trivy, which
+          will report it from then on.
+        expires: 2027-01-01T00:00:00.000Z
+        created: 2026-10-01T00:00:00.000Z
+  SNYK-JS-AXIOS-17172681:
+    - '*':
+        reason: >
+          Insertion of Sensitive Information Into Sent Data in axios@1.7.7. Fixed by upgrading
+          axios@1.7.7 to 1.16.0, which is not part of this change. Ignored while dependency scanning
+          moves from Snyk to Trivy, which will report it from then on.
+        expires: 2027-01-01T00:00:00.000Z
+        created: 2026-10-01T00:00:00.000Z
+  SNYK-JS-FOLLOWREDIRECTS-16032162:
+    - '*':
+        reason: >
+          Improper Removal of Sensitive Information Before Storage or Transfer in follow-
+          redirects@1.15.9 (through axios@1.7.7). Fixed by upgrading axios@1.7.7 to 1.16.0, which is
+          not part of this change. Ignored while dependency scanning moves from Snyk to Trivy, which
+          will report it from then on.
+        expires: 2027-01-01T00:00:00.000Z
+        created: 2026-10-01T00:00:00.000Z
+  SNYK-JS-AXIOS-17111062:
+    - '*':
+        reason: >
+          Server-side Request Forgery (SSRF) in axios@1.7.7. Fixed by upgrading axios@1.7.7 to
+          1.16.0, which is not part of this change. Ignored while dependency scanning moves from
+          Snyk to Trivy, which will report it from then on.
+        expires: 2027-01-01T00:00:00.000Z
+        created: 2026-10-01T00:00:00.000Z
+  SNYK-JS-AXIOS-17111060:
+    - '*':
+        reason: >
+          Prototype Pollution in axios@1.7.7. Fixed by upgrading axios@1.7.7 to 1.16.0, which is not
+          part of this change. Ignored while dependency scanning moves from Snyk to Trivy, which
+          will report it from then on.
+        expires: 2027-01-01T00:00:00.000Z
+        created: 2026-10-01T00:00:00.000Z
+  SNYK-JS-AXIOS-15969258:
+    - '*':
+        reason: >
+          HTTP Response Splitting in axios@1.7.7. Fixed by upgrading axios@1.7.7 to 1.16.0, which is
+          not part of this change. Ignored while dependency scanning moves from Snyk to Trivy, which
+          will report it from then on.
+        expires: 2027-01-01T00:00:00.000Z
+        created: 2026-10-01T00:00:00.000Z
+  SNYK-JS-AXIOS-17111079:
+    - '*':
+        reason: >
+          Prototype Pollution in axios@1.7.7. Fixed by upgrading axios@1.7.7 to 1.16.0, which is not
+          part of this change. Ignored while dependency scanning moves from Snyk to Trivy, which
+          will report it from then on.
+        expires: 2027-01-01T00:00:00.000Z
+        created: 2026-10-01T00:00:00.000Z
+  SNYK-JS-AXIOS-15252993:
+    - '*':
+        reason: >
+          Prototype Pollution in axios@1.7.7. Fixed by upgrading axios@1.7.7 to 1.16.0, which is not
+          part of this change. Ignored while dependency scanning moves from Snyk to Trivy, which
+          will report it from then on.
+        expires: 2027-01-01T00:00:00.000Z
+        created: 2026-10-01T00:00:00.000Z
+  SNYK-JS-AXIOS-16417750:
+    - '*':
+        reason: >
+          Prototype Pollution in axios@1.7.7. Fixed by upgrading axios@1.7.7 to 1.16.0, which is not
+          part of this change. Ignored while dependency scanning moves from Snyk to Trivy, which
+          will report it from then on.
+        expires: 2027-01-01T00:00:00.000Z
+        created: 2026-10-01T00:00:00.000Z
+  SNYK-JS-AXIOS-16299904:
+    - '*':
+        reason: >
+          Prototype Pollution in axios@1.7.7. Fixed by upgrading axios@1.7.7 to 1.16.0, which is not
+          part of this change. Ignored while dependency scanning moves from Snyk to Trivy, which
+          will report it from then on.
+        expires: 2027-01-01T00:00:00.000Z
+        created: 2026-10-01T00:00:00.000Z
+  SNYK-JS-AXIOS-16298058:
+    - '*':
+        reason: >
+          HTTP Response Splitting in axios@1.7.7. Fixed by upgrading axios@1.7.7 to 1.16.0, which is
+          not part of this change. Ignored while dependency scanning moves from Snyk to Trivy, which
+          will report it from then on.
+        expires: 2027-01-01T00:00:00.000Z
+        created: 2026-10-01T00:00:00.000Z
 patch: {}
