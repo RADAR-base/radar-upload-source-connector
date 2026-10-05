@@ -1,5 +1,7 @@
 // vue.config.js
 module.exports = {
+  // axios >= 1.16 uses syntax (??) that Vue CLI 4 / webpack 4 can't parse without transpiling it.
+  transpileDependencies: ['axios'],
   publicPath: process.env.VUE_APP_BASE_URL || "VUE_APP_BASE_URL",
   css: {
     loaderOptions: {
