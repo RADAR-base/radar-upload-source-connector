@@ -21,7 +21,7 @@ object Versions {
 
     const val okhttp = "4.12.0"
 
-    const val radarSchemas = "0.9.1"
+    const val radarSchemas = "0.9.2"
 
     const val junit = "5.10.0"
     const val mockito = "5.3.1"
