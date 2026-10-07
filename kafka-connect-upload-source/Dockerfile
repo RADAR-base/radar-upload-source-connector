@@ -1,5 +1,5 @@
 ARG BASE_IMAGE=confluentinc/cp-kafka-connect-base:7.8.1
-FROM --platform=$BUILDPLATFORM gradle:8.13-jdk17 AS builder
+FROM --platform=$BUILDPLATFORM gradle:9.6.0-jdk17 AS builder
 
 RUN mkdir /code
 WORKDIR /code
@@ -9,6 +9,9 @@ ENV GRADLE_USER_HOME=/code/.gradlecache \
 COPY ./build.gradle.kts ./settings.gradle.kts ./gradle.properties /code/
 COPY buildSrc /code/buildSrc
 COPY kafka-connect-upload-source/build.gradle.kts  /code/kafka-connect-upload-source/
+
+# Gradle 9 requires the directory of every included project to exist.
+RUN mkdir -p /code/radar-upload-backend /code/integration-test
 
 RUN gradle :kafka-connect-upload-source:downloadDependencies kafka-connect-upload-source:copyDependencies
 

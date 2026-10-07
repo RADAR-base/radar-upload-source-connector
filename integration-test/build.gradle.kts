@@ -1,4 +1,3 @@
-import org.jetbrains.kotlin.cli.common.toBooleanLenient
 import java.time.Duration
 
 plugins {
@@ -52,4 +51,13 @@ dockerCompose {
 radarKotlin {
     // TODO remove after using new release of radar-kotlin plugin
     javaVersion.set(Versions.java)
+}
+
+// Local copy of org.jetbrains.kotlin.cli.common.toBooleanLenient, which is no longer on the
+// build script classpath since Kotlin Gradle Plugin 2.x.
+fun String?.toBooleanLenient(): Boolean? = when (this?.lowercase()) {
+    null -> false
+    in listOf("", "yes", "true", "on", "y") -> true
+    in listOf("no", "false", "off", "n") -> false
+    else -> null
 }

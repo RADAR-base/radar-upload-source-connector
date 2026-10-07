@@ -1,5 +1,5 @@
 plugins {
-    id("org.radarbase.radar-kotlin") version "1.1.3"
+    `kotlin-dsl`
 }
 
 repositories {
